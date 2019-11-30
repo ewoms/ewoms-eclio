@@ -38,7 +38,7 @@ TOPS
 -- Cell 2,1,10 is inactive
 ACTNUM
   901*1 0 98*1 /
-  
+
 PORO
 1000*0.2 /
 
@@ -49,7 +49,6 @@ COPY
   PERMX PERMY /
   PERMX PERMZ /
 /
-
 
 REGIONS
 
@@ -64,7 +63,6 @@ FIPNUM
    100*8
    100*9
    100*10 /
-   
 
 SUMMARY
 DATE
@@ -140,7 +138,7 @@ BPR
   1  1  7 /
   1  1  8 /
   1  1  9 /
-  1  1  10 /    
+  1  1  10 /
   2  1  10 /  -- This cell is not ACTIVE
 /
 
@@ -148,11 +146,9 @@ BSGAS
   1  1  1 /
 /
 
-
 BSWAT
   1  1  1 /
 /
-
 
 --  Region data
 RPR
@@ -347,7 +343,6 @@ WLPT
 WLPTH
 /
 
-
 -- Production Cummulatives
 WWPT
 /
@@ -383,7 +378,6 @@ WGLR
 /
 WGLRH
 /
-
 
 -- Performance
 WBHP
@@ -439,7 +433,6 @@ WMCTL
 CWIR
   * /
 /
-
 
 CGIT
 * /
@@ -501,7 +494,6 @@ GRUPTREE
   'G_2'  'G' /
 /
 
-
 WELSPECS
      'W_1'        'G_1'   1    1  3.33       'OIL'  7* /
      'W_2'        'G_2'   2    1  3.33       'OIL'  7* /
@@ -524,14 +516,12 @@ WCONHIST
     W_2 'OPEN' ORAT 20.1 20 20.2 /
 /
 
-
 TSTEP
 -- register time steps (in days). This allows us to write *two* report steps (1
 -- and 2. Without this, totals/accumulations would fail (segfault) when looking
 -- up historical rates and volumes. These volumes however don't change, i.e.
 -- every time step has the same set of values
 10 10 /
-
 
 TSTEP
 10 10 /

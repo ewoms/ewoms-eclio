@@ -47,7 +47,7 @@ TOPS
 -- Cell 2,1,10 is inactive
 ACTNUM
   901*1 0 98*1 /
-  
+
 PORO
 1000*0.2 /
 
@@ -73,7 +73,6 @@ FIPNUM
    100*8
    100*9
    100*10 /
-   
 
 SUMMARY
 DATE
@@ -168,14 +167,13 @@ BPR
   1  1  7 /
   1  1  8 /
   1  1  9 /
-  1  1  10 /    
+  1  1  10 /
   2  1  10 /  -- This cell is not ACTIVE
 /
 
 BSGAS
   1  1  1 /
 /
-
 
 BSWAT
   1  1  1 /
@@ -550,7 +548,6 @@ WGLR
 WGLRH
 /
 
-
 -- Performance
 WBHP
 /
@@ -696,7 +693,6 @@ CTFAC
 
 WUBHP
 /
-
 
 SCHEDULE
 

@@ -1,332 +1,232 @@
-project(opm-common C CXX)
-cmake_minimum_required (VERSION 2.8)
+# -*- mode: cmake; tab-width: 2; indent-tabs-mode: t; truncate-lines: t
+# vim: set filetype=cmake autoindent tabstop=2 shiftwidth=2 noexpandtab softtabstop=2 nowrap:
+cmake_minimum_required(VERSION 3.10)
 
-option(SIBLING_SEARCH "Search for other modules in sibling directories?" ON)
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
-set(OPM_MACROS_ROOT ${PROJECT_SOURCE_DIR})
+# set up project and specify the minimum cmake version
+project("ewoms-eclio" C CXX)
 
-option(ENABLE_ECL_INPUT "Enable eclipse input support?" ON)
-option(ENABLE_ECL_OUTPUT "Enable eclipse output support?" ON)
-option(ENABLE_MOCKSIM "Build the mock simulator for io testing" ON)
-option(OPM_ENABLE_PYTHON "Enable python bindings?" OFF)
-option(OPM_INSTALL_PYTHON "Enable python bindings?" OFF)
-option(OPM_ENABLE_EMBEDDED_PYTHON "Enable python bindings?" OFF)
-option(ENABLE_3DPROPS_TESTING "Enable the in-constructor testing of 3D properties" OFF)
+# find the build system (i.e., ewoms-common) and set cmake's module path
+find_package(ewoms-common REQUIRED)
+list(APPEND CMAKE_MODULE_PATH ${ewoms-common_MODULE_PATH})
 
-if (ENABLE_3DPROPS_TESTING)
-  add_definitions(-DENABLE_3DPROPS_TESTING)
-endif()
+# include the eWoms cmake macros
+include(EwomsMacros)
 
-# Output implies input
-if(ENABLE_ECL_OUTPUT)
-  set(ENABLE_ECL_INPUT ON)
-endif()
+# do most of the book-keeping required
+ewoms_project()
 
-# And likewise, no input means no output
-if(NOT ENABLE_ECL_INPUT)
-  set(ENABLE_ECL_OUTPUT OFF)
-endif()
+# find the packages needed to compile the module
+find_package(Boost COMPONENTS regex system filesystem unit_test_framework REQUIRED)
 
+# we want all features detected by the build system to be enabled,
+# thank you!
+dune_enable_all_packages()
 
-# not the same location as most of the other projects; this hook overrides
-macro (dir_hook)
-endmacro (dir_hook)
+# set up the library for ECL I/O
+ewoms_recursive_add_library("ewomseclio" "ewoms/eclio")
+target_link_libraries("ewomseclio")
 
-# We need to define this variable in the installed cmake config file.
-set(OPM_PROJECT_EXTRA_CODE_INSTALLED  "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
-                                       set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                       set(OPM_MACROS_ROOT ${CMAKE_INSTALL_PREFIX}/share/opm)
-                                       list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
-                                       include(OpmPackage) #Make macros availabe after find_package(opm-common)")
+# recursively mark all header files beneath the "ewoms" directory for
+# installation.
+ewoms_recusive_export_all_headers("ewoms")
 
-set(OPM_PROJECT_EXTRA_CODE_INTREE "#ENABLE_ECL_INPUT is needed by opm-common-prereq.cmake
-                                   set(ENABLE_ECL_INPUT ${ENABLE_ECL_INPUT})
-                                   set(OPM_MACROS_ROOT ${OPM_MACROS_ROOT})
-                                   list(APPEND CMAKE_MODULE_PATH \${OPM_MACROS_ROOT}/cmake/Modules)
-                                   include(OpmPackage) #Make macros availabe after find_package(opm-common)")
-if(ENABLE_ECL_OUTPUT)
-  set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                        set(COMPARE_ECL_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/compareECL)
-                                        set(OPM_PACK_COMMAND ${CMAKE_INSTALL_PREFIX}/bin${${name}_VER_DIR}/opmpack)")
+# the code generator
+file(GLOB_RECURSE genkw_SOURCES RELATIVE "${CMAKE_SOURCE_DIR}" "genkw/*.cc" "genkw/*.c")
+ewoms_add_application("genkw" SOURCES "${genkw_SOURCES}")
 
-  set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                     set(COMPARE_ECL_COMMAND ${PROJECT_BINARY_DIR}/bin/compareECL)
-                                     set(OPM_PACK_COMMAND ${PROJECT_BINARY_DIR}/bin/opmpack)")
-endif()
+# comparison tool for binary ECL files
+ewoms_add_application(utils
+  SOURCES utils/compareecl.cc utils/eclregressiontest.cc utils/eclfilescomparator.cc)
 
-# project information is in dune.module. Read this file and set variables.
-# we cannot generate dune.module since it is read by dunecontrol before
-# the build starts, so it makes sense to keep the data there then.
-include (OpmInit)
+# conversion tool for binary ECL to ASCII files
+ewoms_add_application(convert_ecl SOURCES utils/convertecl.cc)
 
-# Look for the opm-tests repository; if found the variable
-# HAVE_OPM_TESTS will be set to true.
-include(Findopm-tests)
+# tool for inspecting summary files
+ewoms_add_application(inspect_summary SOURCES utils/summary.cc)
 
-# list of prerequisites for this particular project; this is in a
-# separate file (in cmake/Modules sub-directory) because it is shared
-# with the find module
-include (${project}-prereqs)
+ewoms_add_test(calculateCellVol SOURCES tests/test_calculatecellvol.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(cmp SOURCES tests/test_cmp.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(cubic SOURCES tests/test_cubic.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(messagelimiter SOURCES tests/test_messagelimiter.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(nonuniformtablelinear SOURCES tests/test_nonuniformtablelinear.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(OpmLog SOURCES tests/test_opmlog.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(SimulationDataContainer SOURCES tests/test_simulationdatacontainer.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(sparsevector SOURCES tests/test_sparsevector.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(uniformtablelinear SOURCES tests/test_uniformtablelinear.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ACTIONX SOURCES tests/actionx.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ADDREGTests SOURCES tests/addregtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AquiferCTTests SOURCES tests/aquifercttests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AquifetpTests SOURCES tests/aquifetptests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AqudimsTests SOURCES tests/aqudimstests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AquanconTests SOURCES tests/aquancontests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(BoxTests SOURCES tests/boxtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ColumnSchemaTests SOURCES tests/columnschematests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ConnectionTests SOURCES tests/connectiontests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(COMPSEGUnits SOURCES tests/compsegunits.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(CopyRegTests SOURCES tests/copyregtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(DeckValueTests SOURCES tests/deckvaluetests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(DeckTests SOURCES tests/decktests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(DynamicStateTests SOURCES tests/dynamicstatetests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(DynamicVectorTests SOURCES tests/dynamicvectortests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(Eclipse3DPropertiesTests SOURCES tests/eclipse3dpropertiestests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(EclipseGridTests SOURCES tests/eclipsegridtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(EqualRegTests SOURCES tests/equalregtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(EventTests SOURCES tests/eventtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(FaceDirTests SOURCES tests/facedirtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(FaultTests SOURCES tests/faulttests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(FieldPropsTests SOURCES tests/fieldpropstests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(FoamTests SOURCES tests/foamtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(FunctionalTests SOURCES tests/functionaltests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(GeomodifierTests SOURCES tests/geomodifiertests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(GridPropertyTests SOURCES tests/gridpropertytests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(GroupTests SOURCES tests/grouptests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(InitConfigTest SOURCES tests/initconfigtest.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(IOConfigTests SOURCES tests/ioconfigtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(MessageLimitTests SOURCES tests/messagelimittests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(MultiRegTests SOURCES tests/multiregtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(MultisegmentWellTests SOURCES tests/multisegmentwelltests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(MULTREGTScannerTests SOURCES tests/multregtscannertests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(OrderedMapTests SOURCES tests/orderedmaptests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ParseContextTests SOURCES tests/parsecontexttests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ParseContext_EXIT1 SOURCES tests/parsecontext_exit1.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ParseDATAWithDefault SOURCES tests/parsedatawithdefault.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(PYACTION SOURCES tests/pyaction.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(PORVTests SOURCES tests/porvtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(RawKeywordTests SOURCES tests/rawkeywordtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ResinsightTest SOURCES tests/resinsighttest.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(RestartConfigTests SOURCES tests/restartconfigtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(RockTableTests SOURCES tests/rocktabletests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(RunspecTests SOURCES tests/runspectests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(SatfuncPropertyInitializersTests SOURCES tests/satfuncpropertyinitializerstests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ScheduleTests SOURCES tests/scheduletests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(SectionTests SOURCES tests/sectiontests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(SimpleTableTests SOURCES tests/simpletabletests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(SimulationConfigTest SOURCES tests/simulationconfigtest.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(StarTokenTests SOURCES tests/startokentests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(StringTests SOURCES tests/stringtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(SummaryConfigTests SOURCES tests/summaryconfigtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TabdimsTests SOURCES tests/tabdimstests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TableColumnTests SOURCES tests/tablecolumntests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TableContainerTests SOURCES tests/tablecontainertests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TableManagerTests SOURCES tests/tablemanagertests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TableSchemaTests SOURCES tests/tableschematests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ThresholdPressureTest SOURCES tests/thresholdpressuretest.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TimeMapTest SOURCES tests/timemaptest.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TransMultTests SOURCES tests/transmulttests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(TuningTests SOURCES tests/tuningtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(UDQTests SOURCES tests/udqtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(UnitTests SOURCES tests/unittests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ValueTests SOURCES tests/valuetests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(WellSolventTests SOURCES tests/wellsolventtests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(WellTracerTests SOURCES tests/welltracertests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(WellTests SOURCES tests/welltests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(WLIST SOURCES tests/wlist.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(WTEST SOURCES tests/wtest.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AggregateActionxData SOURCES tests/test_aggregateactionxdata.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AggregateWellData SOURCES tests/test_aggregatewelldata.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AggregateGroupData SOURCES tests/test_aggregategroupdata.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AggregateMSWData SOURCES tests/test_aggregatemswdata.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AggregateConnectionData SOURCES tests/test_aggregateconnectiondata.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(AggregateUDQData SOURCES tests/test_aggregateudqdata.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ArrayDimChecker SOURCES tests/test_arraydimchecker.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(EclipseIO SOURCES tests/test_eclipseio.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(DoubHEAD SOURCES tests/test_doubhead.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(InteHEAD SOURCES tests/test_intehead.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(LinearisedOutputTable SOURCES tests/test_linearisedoutputtable.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(LogiHEAD SOURCES tests/test_logihead.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(OutputStream SOURCES tests/test_outputstream.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(regionCache SOURCES tests/test_regioncache.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(PaddedOutputString SOURCES tests/test_paddedoutputstring.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(Restart SOURCES tests/test_restart.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(RFT SOURCES tests/test_rft.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(Solution SOURCES tests/test_solution.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(Summary SOURCES tests/test_summary.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(Tables SOURCES tests/test_tables.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(Wells SOURCES tests/test_wells.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(WindowedArray SOURCES tests/test_windowedarray.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(restartwellinfo SOURCES tests/test_restartwellinfo.cc LIBRARIES "${Boost_LIBRARIES}")
 
-# read the list of components from this file (in the project directory);
-# it should set various lists with the names of the files to include
-include (CMakeLists_files.cmake)
+# "extra" tests
+set(_testdir ${PROJECT_SOURCE_DIR}/tests/data)
 
-macro (config_hook)
-  if(ENABLE_ECL_INPUT)
-    if(NOT cjson_FOUND)
-      list(APPEND EXTRA_INCLUDES ${PROJECT_SOURCE_DIR}/external/cjson)
-    endif()
-    # For this project
-    include_directories(${EXTRA_INCLUDES} ${PROJECT_BINARY_DIR}/include)
+ewoms_add_test(LoaderTest
+  SOURCES tests/keywordloadertests.cc ${PROJECT_SOURCE_DIR}/genkw/keywordloader.cc
+  TEST_ARGS "--" ${_testdir}/parser/keyword-generator/
+  LIBRARIES "${Boost_LIBRARIES}")
 
-    # For downstreams
-    list(APPEND EXTRA_INCLUDES ${PROJECT_BINARY_DIR}/include)
-    set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                       list(APPEND opm-common_INCLUDE_DIRS ${EXTRA_INCLUDES})")
-    if(ENABLE_ECL_INPUT)
-      set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                         set(HAVE_ECL_INPUT 1)")
-      set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                            set(HAVE_ECL_INPUT 1)")
-    endif()
-    if(ENABLE_ECL_OUTPUT)
-      set(OPM_PROJECT_EXTRA_CODE_INTREE "${OPM_PROJECT_EXTRA_CODE_INTREE}
-                                         set(HAVE_ECL_OUTPUT 1)")
-      set(OPM_PROJECT_EXTRA_CODE_INSTALLED "${OPM_PROJECT_EXTRA_CODE_INSTALLED}
-                                            set(HAVE_ECL_OUTPUT 1)")
-    endif()
+ewoms_add_test(ParserTests
+  SOURCES tests/parsertests.cc
+  TEST_ARGS "--" ${_testdir}/
+  LIBRARIES "${Boost_LIBRARIES}")
 
-    # Configure boost targets for old cmake
-    include(cmake/Modules/BoostTargets.cmake)
+ewoms_add_test(ParserIncludeTests
+  SOURCES tests/parserincludetests.cc
+  LIBRARIES "${Boost_LIBRARIES}"
+  TEST_ARGS "--" ${_testdir}/parser/)
+target_compile_definitions(ParserIncludeTests PRIVATE -DHAVE_CASE_SENSITIVE_FILESYSTEM=1)
 
-    if (HAVE_DYNAMIC_BOOST_TEST)
-      set_target_properties(Boost::unit_test_framework PROPERTIES INTERFACE_COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK=1)
-    endif()
-  endif()
-endmacro (config_hook)
+ewoms_add_test(PvtxTableTests
+  SOURCES tests/pvtxtabletests.cc
+  LIBRARIES "${Boost_LIBRARIES}"
+  TEST_ARGS "--" ${_testdir}/integration_tests/)
 
-macro (prereqs_hook)
-endmacro (prereqs_hook)
+ewoms_add_test(EclipseStateTests
+  SOURCES tests/eclipsestatetests.cc
+  LIBRARIES "${Boost_LIBRARIES}"
+  TEST_ARGS "--" ${_testdir}/integration_tests/)
 
-macro (sources_hook)
-  if(ENABLE_ECL_INPUT)
-    # Keyword generation
-    include(GenerateKeywords.cmake)
+foreach(TEST_NAME BoxTest
+    CheckDeckValidity
+    EclipseGridCreateFromDeck
+    EDITNNCTests
+    IncludeTest
+    IntegrationTests
+    IOConfigIntegrationTest
+    NNCTests
+    ParseKEYWORD
+    Polymer
+    ScheduleCreateFromDeck
+    TransMultIntegrationTests)
 
-    # Append generated sources
-    list(INSERT opm-common_SOURCES 0 ${PROJECT_BINARY_DIR}/ParserKeywords.cpp)
-  endif()
-  set_source_files_properties(src/opm/parser/eclipse/Python/Python.cpp
-                              PROPERTIES COMPILE_FLAGS -Wno-shadow)
-endmacro (sources_hook)
+  string(TOLOWER "${TEST_NAME}.cc" "TEST_SOURCE_FILE")
+  message("${TEST_NAME} -> tests/integration/${TEST_SOURCE_FILE}")
+  ewoms_add_test(${TEST_NAME}
+    SOURCES tests/integration/${TEST_SOURCE_FILE}
+    LIBRARIES "${Boost_LIBRARIES}"
+    TEST_ARGS "--" ${_testdir}/integration_tests/)
+endforeach ()
 
-macro (fortran_hook)
-endmacro (fortran_hook)
+ewoms_add_test(jsonTests
+  SOURCES tests/json/jsontests.cc
+  LIBRARIES "${Boost_LIBRARIES}"
+  TEST_ARGS "--" ${PROJECT_SOURCE_DIR}/tests/json/example1.json)
 
-macro (files_hook)
-endmacro (files_hook)
+ewoms_add_test(EclFilesComparator
+  SOURCES
+  tests/test_eclfilescomparator.cc
+  utils/eclfilescomparator.cc
+  LIBRARIES "${Boost_LIBRARIES}")
 
-macro (tests_hook)
-  if(ENABLE_ECL_INPUT)
-    include(ExtraTests.cmake)
-  endif()
-endmacro (tests_hook)
+ewoms_add_test(EclRegressionTest
+  SOURCES
+  tests/test_eclregressiontest.cc
+  utils/eclfilescomparator.cc
+  utils/eclregressiontest.cc
+  LIBRARIES "${Boost_LIBRARIES}")
 
-macro (install_hook)
-  install(DIRECTORY ${PROJECT_BINARY_DIR}/include/
-          DESTINATION include
-          PATTERN *.hpp)
-endmacro (install_hook)
+foreach(TEST_NAME EclIO EGrid ERft ERst ESmry)
+  string(TOLOWER "test_${TEST_NAME}.cc" "TEST_SOURCE_FILE")
+  ewoms_add_test(${TEST_NAME}
+    SOURCES "tests/${TEST_SOURCE_FILE}"
+    LIBRARIES "${Boost_LIBRARIES}")
+endforeach()
 
-# If opm-common is configured to embed the python interpreter we must make sure
-# that all downstream modules link libpython transitively. Due to the required
-# integration with Python+cmake machinery provided by pybind11 this is done by
-# manually adding to the opm-common_LIBRARIES variable here, and not in the
-# OpmnLibMain function. Here only the library dependency is implemented, the
-# bulk of the python configuration is further down in the file.
-if (OPM_ENABLE_PYTHON)
-  find_package(PythonInterp REQUIRED)
-  if (OPM_ENABLE_EMBEDDED_PYTHON)
-    find_package(PythonLibs REQUIRED)
-    list(APPEND opm-common_LIBRARIES ${PYTHON_LIBRARY})
-  endif()
-endif()
+ewoms_add_test(RootFinders
+  SOURCES tests/test_rootfinders.cc
+  LIBRARIES "${Boost_LIBRARIES}")
 
+# deal with the data required by the unit tests
+ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/ECLFILE*" "tests/*.json" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA")
 
-# all setup common to the OPM library modules is done here
-include (OpmLibMain)
-
-if (ENABLE_MOCKSIM)
-  add_library(mocksim
-              msim/src/msim.cpp)
-  target_link_libraries(mocksim opmcommon)
-  target_include_directories(mocksim PUBLIC msim/include)
-  add_executable(msim examples/msim.cpp)
-  target_link_libraries(msim mocksim)
-
-  set(_libs mocksim opmcommon
-    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-
-  foreach( test test_msim test_msim_ACTIONX )
-    opm_add_test(${test} SOURCES tests/msim/${test}.cpp
-                         LIBRARIES ${_libs}
-                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
-  endforeach()
-endif()
-
-# Build the compare utilities
-if(ENABLE_ECL_INPUT)
-  add_executable(compareECL
-    test_util/EclFilesComparator.cpp
-    test_util/EclRegressionTest.cpp
-    test_util/compareECL.cpp
-    )
-
-  add_executable(convertECL
-    test_util/convertECL.cpp
-    )
-
-  add_executable(summary
-    test_util/summary.cpp
-    )
-
-  foreach(target compareECL convertECL summary)
-    target_link_libraries(${target} opmcommon)
-    install(TARGETS ${target} DESTINATION bin)
-  endforeach()
-
-  # Add the tests
-  set(_libs opmcommon
-            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-
-  opm_add_test(test_EclFilesComparator
-    CONDITION
-      ENABLE_ECL_INPUT
-    SOURCES
-      tests/test_EclFilesComparator.cpp
-      test_util/EclFilesComparator.cpp
-    LIBRARIES
-      ${_libs}
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/tests
-    )
-
-  opm_add_test(test_EclRegressionTest
-    CONDITION
-      ENABLE_ECL_INPUT
-    SOURCES
-      tests/test_EclRegressionTest.cpp
-      test_util/EclFilesComparator.cpp
-      test_util/EclRegressionTest.cpp
-    LIBRARIES
-      ${_libs}
-    WORKING_DIRECTORY
-      ${PROJECT_BINARY_DIR}/tests
-    )
-
-  foreach(test test_EclIO test_EGrid test_ERft test_ERst test_ESmry)
-    opm_add_test(${test} CONDITION ENABLE_ECL_INPUT
-                         LIBRARIES ${_libs}
-                         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/tests)
-  endforeach()
-endif()
-
-# Install build system files
-install(DIRECTORY cmake DESTINATION share/opm)
-
-# Install tab completion skeleton
-install(FILES etc/opm_bash_completion.sh.in DESTINATION share/opm/etc)
-
-if (OPM_ENABLE_PYTHON)
-  # -------------------------------------------------------------------------
-  # 1: Wrap C++ functionality in Python
-  set(PYTHON_PACKAGE_PATH "site-packages")
-  set(PYTHON_INSTALL_PREFIX "lib/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_PACKAGE_PATH}" CACHE STRING "Subdirectory to install Python modules in")
-
-  make_directory(${CMAKE_BINARY_DIR}/python)
-  get_target_property(_opmcommon_include_dirs opmcommon INCLUDE_DIRECTORIES)
-  list(APPEND _opmcommon_include_dirs ${_ecl_include_dirs})
-  string(REPLACE ";" ":" _setup_include_dirs "${_opmcommon_include_dirs}")
-
-  if (CMAKE_PREFIX_PATH)
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib ${CMAKE_PREFIX_PATH}/lib)
-  else()
-    set(_opmcommon_lib_dirs ${PROJECT_BINARY_DIR}/lib)
-  endif()
-  string(REPLACE ";" ":" _setup_lib_dirs "${_opmcommon_lib_dirs}")
-
-  execute_process(COMMAND ${PYTHON_EXECUTABLE} target_name.py
-                  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/python
-                  OUTPUT_VARIABLE python_lib_target)
-
-  add_custom_target(copy_python ALL
-                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/python/install.py ${CMAKE_SOURCE_DIR}/python ${CMAKE_BINARY_DIR} 0)
-
-  add_custom_command(OUTPUT python/python/opm/${python_lib_target}
-                     DEPENDS ${PYTHON_CXX_DEPENDS}
-                     DEPENDS copy_python
-                     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/setup.py
-                                                      build
-                                                      build_ext
-                                                      --build-lib=${CMAKE_BINARY_DIR}/python/python/opm
-                                                      --library-dirs=${_setup_lib_dirs}
-                                                      --include-dirs=${_setup_include_dirs}
-                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
-                     COMMENT "Building python bindings")
-  add_custom_target(opmcommon_python ALL DEPENDS python/python/opm/${python_lib_target})
-  add_dependencies(opmcommon_python opmcommon)
-
-  # The install target is based on manually copying the python file tree to the
-  # installation area with a small installation script 'install.py'. Would have
-  # preferred to use standard setup.py install, but the setup.py based solution
-  # refuses to install to a location which the current python executable can not
-  # load from, and the use of eggs in the setup.py based installation makes
-  # debugging quite difficult.
-  #
-  # Since the installation of Python code is nonstandard it is protected by an
-  # extra cmake switch, OPM_INSTALL_PYTHON. If you prefer you can still invoke
-  # setup.py install manually - optionally with the generated script
-  # setup-install.sh - and completely bypass cmake in the installation phase.
-  if (OPM_INSTALL_PYTHON)
-    install( CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_BINARY_DIR}/python/install.py ${CMAKE_BINARY_DIR}/python/python/opm ${DEST_PREFIX}${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_PREFIX} 1)")
-  endif()
-
-  add_test(NAME python_tests
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/python
-            COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --dry-run --build-lib ${CMAKE_BINARY_DIR}/python/python/opm test
-           )
-
-  set_target_properties(opmcommon PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/python/python)
-
-  # -------------------------------------------------------------------------
-  # Let cmake configure some small shell scripts which can be used to simplify
-  # building, testing and installation of the Python extensions.
-  configure_file(python/setup-build.sh.in tmp/setup-build.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-build.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
-
-  configure_file(python/setup-test.sh.in tmp/setup-test.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-test.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
-
-  configure_file(python/setup-install.sh.in tmp/setup-install.sh)
-  file( COPY ${PROJECT_BINARY_DIR}/tmp/setup-install.sh
-        DESTINATION ${PROJECT_BINARY_DIR}
-        FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE )
-
-  configure_file(python/enable-python.sh.in enable-python.sh)
-
-  # -------------------------------------------------------------------------
-  # 2: Embed the Python interpreter for keywords like PYACTION and PYINPUT
-  if (OPM_ENABLE_EMBEDDED_PYTHON)
-    add_subdirectory(python/pybind11)
-    target_include_directories(opmcommon PRIVATE "python/pybind11/include;${PYTHON_INCLUDE_DIRS}")
-    target_link_libraries(opmcommon PUBLIC ${PYTHON_LIBRARY})
-
-    add_definitions(-DEMBEDDED_PYTHON)
-  endif()
-endif()
+# finalize the project, e.g. generate the config.h etc.
+finalize_ewoms_project()

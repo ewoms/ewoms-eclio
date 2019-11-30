@@ -47,7 +47,6 @@ COPY
   PERMX PERMZ /
 /
 
-
 PORO
 1000*0.2 /
 
@@ -111,7 +110,6 @@ GRUPTREE
   'G_2'  'G' /
   'G_3'  'G_4' /
 /
-
 
 WELSPECS
      'W_1'        'G_1'   1    1  3.33       'OIL'  7* /

@@ -44,6 +44,7 @@ Testing/
 
 # Build directory in source.
 build/
+build-cmake/
 
 gmon.out
 log.log
@@ -51,7 +52,6 @@ build
 install
 .cproject
 .project
-/testdata/statoil
 .idea
 /Debug/
 

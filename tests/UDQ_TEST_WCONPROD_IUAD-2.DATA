@@ -6,7 +6,6 @@ TITLE
 DIMENS
  10  5  10  /
 
-
 OIL
 
 WATER
@@ -154,7 +153,6 @@ SOF3
     0.879    1        1
     0.88     1        1    /
 
-
 -- PVT PROPERTIES OF WATER
 --
 --    REF. PRES. REF. FVF  COMPRESSIBILITY  REF VISCOSITY  VISCOSIBILITY
@@ -214,14 +212,12 @@ PVTO
            9014.7 1.726  0.605   /
 /
 
-
 RPTPROPS
 -- PROPS Reporting Options
 --
 /
 
 REGIONS    ===========================================================
-
 
 FIPNUM
 
@@ -257,7 +253,6 @@ RPTRST
 -- Restart File Output Control
 --
 'BASIC=2' 'FLOWS' 'POT' 'PRES' /
-
 
 SUMMARY      ===========================================================
 
@@ -300,7 +295,6 @@ RPTSCHED
 
 NOECHO
 
-
 ECHO
 
 GRUPTREE
@@ -331,10 +325,8 @@ COMPDAT
  'WINJ2'   6 1  9 9   3*  0.2   3*  'X' /
 /
 
-
-
 UDQ
--- test 
+-- test
 --oil & liquid capacities at GEFAC = 0.8995
 DEFINE WUOPRL (WOPR PROD1 - 150) * 0.90 /
 DEFINE WULPRL (WLPR PROD1 - 200) * 0.90 /
@@ -357,13 +349,12 @@ UNITS  FULPR  SM3/DAY /
 -- Well production rate targets/limits:
 -- testing UDQs as production constrains
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq
   'PROD1'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
 /
 
-
 WCONPROD
--- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq 
+-- name      status  ctrl   qo     qw  qg  ql	 qr bhp  thp  vfp  alq
   'PROD2'     'OPEN'  'GRUP' WUOPRU  1*  1*  WULPRU 1* 60.0   / single wells
  /
 
@@ -371,7 +362,6 @@ WCONINJE
  'WINJ1' 'WAT' 'OPEN' 'BHP'  1*  1200  3500  1*  /
  'WINJ2' 'WAT' 'OPEN' 'BHP'  1*    800  3500  1*  /
  /
-
 
 TUNING
  /
@@ -381,6 +371,5 @@ TUNING
 TSTEP
  4
 /
-
 
 END
