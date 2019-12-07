@@ -647,6 +647,7 @@ p.addKeyword< ParserKeywords::PVTO >();
 p.addKeyword< ParserKeywords::PVTW >();
 p.addKeyword< ParserKeywords::PVT_M >();
 p.addKeyword< ParserKeywords::PYACTION >();
+p.addKeyword< ParserKeywords::PYINPUT >();
 p.addKeyword< ParserKeywords::QDRILL >();
 p.addKeyword< ParserKeywords::QHRATING >();
 p.addKeyword< ParserKeywords::QMOBIL >();
@@ -23742,14 +23743,7 @@ const std::string PVT_M::keywordName = "PVT_M";
 PYACTION::PYACTION( ) : ParserKeyword("PYACTION")
 {
   setSizeType(FIXED_CODE);
-  addValidSectionName("EDIT");
-  addValidSectionName("GRID");
-  addValidSectionName("PROPS");
-  addValidSectionName("REGIONS");
-  addValidSectionName("RUNSPEC");
   addValidSectionName("SCHEDULE");
-  addValidSectionName("SOLUTION");
-  addValidSectionName("SUMMARY");
   clearDeckNames();
   addDeckName("PYACTION");
   setCodeEnd("<<<");
@@ -23765,6 +23759,34 @@ PYACTION::PYACTION( ) : ParserKeyword("PYACTION")
 }
 const std::string PYACTION::keywordName = "PYACTION";
 const std::string PYACTION::code::itemName = "code";
+
+
+PYINPUT::PYINPUT( ) : ParserKeyword("PYINPUT")
+{
+  setSizeType(FIXED_CODE);
+  addValidSectionName("EDIT");
+  addValidSectionName("GRID");
+  addValidSectionName("PROPS");
+  addValidSectionName("REGIONS");
+  addValidSectionName("RUNSPEC");
+  addValidSectionName("SCHEDULE");
+  addValidSectionName("SOLUTION");
+  addValidSectionName("SUMMARY");
+  clearDeckNames();
+  addDeckName("PYINPUT");
+  setCodeEnd("<<<");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("code", ParserItem::itype::RAW_STRING);
+        item.setSizeType(ParserItem::item_size::ALL);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PYINPUT::keywordName = "PYINPUT";
+const std::string PYINPUT::code::itemName = "code";
 
 
 QDRILL::QDRILL( ) : ParserKeyword("QDRILL")
@@ -37224,7 +37246,7 @@ WSEGSICD::WSEGSICD( ) : ParserKeyword("WSEGSICD")
      }
      {
         ParserItem item("STRENGTH", ParserItem::itype::DOUBLE);
-        item.push_backDimension("Pressure*Time*Time/Length*Length*Length*Length*Length*Length");
+        item.push_backDimension("Pressure*Time*Time/GeometricVolume*GeometricVolume");
         record.addItem(item);
      }
      {
@@ -37270,7 +37292,7 @@ WSEGSICD::WSEGSICD( ) : ParserKeyword("WSEGSICD")
      }
      {
         ParserItem item("MAX_ABS_RATE", ParserItem::itype::DOUBLE);
-        item.push_backDimension("Length*Length*Length/Time");
+        item.push_backDimension("GeometricVolume/Time");
         record.addItem(item);
      }
      {

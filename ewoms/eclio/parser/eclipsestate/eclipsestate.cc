@@ -63,7 +63,7 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
                                              "PVTNUM",
                                              "SATNUM"};
 
-    std::vector<std::string> double_keywords = {"MULTPV",
+    std::vector<std::string> double_keywords = {//"MULTPV",
                                                 //"NTG",
                                                 "PORO",
                                                 "PERMX",
@@ -134,10 +134,14 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
         field_props(         deck, m_inputGrid, m_tables),
 #endif
         m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props, m_eclipseProperties ),
-        m_transMult(         GridDims(deck), deck, m_eclipseProperties )
+        m_transMult(         GridDims(deck), deck, field_props, m_eclipseProperties )
     {
+#ifdef ENABLE_3DPROPS_TESTING
+        m_eclipseProperties.getIntGridProperty("ACTNUM").getData();
+        m_inputGrid.resetACTNUM(this->field_props.actnum());
+#else
         m_inputGrid.resetACTNUM(m_eclipseProperties.getIntGridProperty("ACTNUM").getData());
-
+#endif
         if( this->runspec().phases().size() < 3 )
             OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
                                                                 + " fluid phases are enabled" );
@@ -258,21 +262,33 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
     }
 
     void EclipseState::initTransMult() {
+#ifdef ENABLE_3DPROPS_TESTING
+        const auto& fp = this->field_props;
+        if (fp.has<double>("MULTX"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTX") , FaceDir::XPlus);
+        if (fp.has<double>("MULTX-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTX-"), FaceDir::XMinus);
+
+        if (fp.has<double>("MULTY"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTY") , FaceDir::YPlus);
+        if (fp.has<double>("MULTY-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTY-"), FaceDir::YMinus);
+
+        if (fp.has<double>("MULTZ"))  this->m_transMult.applyMULT(fp.get_global<double>("MULTZ") , FaceDir::ZPlus);
+        if (fp.has<double>("MULTZ-")) this->m_transMult.applyMULT(fp.get_global<double>("MULTZ-"), FaceDir::ZMinus);
+#else
         const auto& p = m_eclipseProperties;
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX"), FaceDir::XPlus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX").getData(), FaceDir::XPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTX-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-"), FaceDir::XMinus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTX-").getData(), FaceDir::XMinus);
 
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY"), FaceDir::YPlus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY").getData(), FaceDir::YPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTY-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-"), FaceDir::YMinus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTY-").getData(), FaceDir::YMinus);
 
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ"), FaceDir::ZPlus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ").getData(), FaceDir::ZPlus);
         if (m_eclipseProperties.hasDeckDoubleGridProperty("MULTZ-"))
-            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-"), FaceDir::ZMinus);
+            m_transMult.applyMULT(p.getDoubleGridProperty("MULTZ-").getData(), FaceDir::ZMinus);
+#endif
     }
 
     void EclipseState::initFaults(const Deck& deck) {

@@ -597,3 +597,13 @@ Ewoms::DeckRecord createDeckRecord(int day, const std::string &month, int year, 
 
     return deckRecord;
 }
+
+BOOST_AUTO_TEST_CASE(TimeServiceOperatorPlus) {
+    Ewoms::TimeStampUTC t0(Ewoms::TimeMap::mkdatetime(2010,1,1,0,0,0));
+    auto t1 = t0 + std::chrono::duration<double>(3600*24);
+
+    BOOST_CHECK_EQUAL(t1.year(), 2010);
+    BOOST_CHECK_EQUAL(t1.month(), 1);
+    BOOST_CHECK_EQUAL(t1.day(), 2);
+}
+

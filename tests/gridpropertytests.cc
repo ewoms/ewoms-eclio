@@ -36,6 +36,7 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 
 static const Ewoms::DeckKeyword createSATNUMKeyword( ) {
@@ -289,6 +290,8 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
         "TOPS\n"
         "9*100 /\n"
         "\n"
+        "PORO \n"
+        "  27*0.15 /\n"
         "PROPS\n"
         "\n"
         "SWOF\n"
@@ -368,36 +371,55 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg(deck);
     Ewoms::Eclipse3DProperties props(deck, tm, eg);
+    Ewoms::FieldPropsManager fp(deck, eg, tm);
 
     // make sure that Eclipse3DProperties throws if it is bugged about an _unsupported_ keyword
     BOOST_CHECK_THROW(props.hasDeckIntGridProperty("ISWU"), std::logic_error);
     BOOST_CHECK_THROW(props.hasDeckDoubleGridProperty("FLUXNUM"), std::logic_error);
 
+    // The FieldPropsManager will just return false if you ask for a unsupported keyword.
+    BOOST_CHECK(!fp.has<int>("ISWU"));
+    BOOST_CHECK(!fp.has<double>("FLUXNUM"));
+
     // make sure that Eclipse3DProperties does not throw if it is asked for a supported
     // grid property that is not contained in the deck
     BOOST_CHECK_NO_THROW(props.hasDeckDoubleGridProperty("ISWU"));
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));
+    BOOST_CHECK(!fp.has<int>("FLUXNUM"));
+    BOOST_CHECK(!fp.has<double>("ISWU"));
 
     BOOST_CHECK(!props.hasDeckDoubleGridProperty("ISWU"));
     BOOST_CHECK(!props.hasDeckIntGridProperty("FLUXNUM"));
 
-    BOOST_CHECK(props.hasDeckIntGridProperty("SATNUM"));
-    BOOST_CHECK(props.hasDeckIntGridProperty("IMBNUM"));
+    for (const auto& kw : {"SATNUM", "IMBNUM"}) {
+        BOOST_CHECK(props.hasDeckIntGridProperty(kw));
+        BOOST_CHECK(fp.has<int>(kw));
+    }
 
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("SWU"));
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("ISGU"));
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("SGCR"));
-    BOOST_CHECK(props.hasDeckDoubleGridProperty("ISGCR"));
+    for (const auto& kw : {"SWU", "ISGU", "SGCR", "ISGCR"}) {
+        BOOST_CHECK(props.hasDeckDoubleGridProperty(kw));
+        BOOST_CHECK(fp.has<double>(kw));
+    }
 
     const auto& swuPropData = props.getDoubleGridProperty("SWU").getData();
-    BOOST_CHECK_EQUAL(swuPropData[0 * 3*3], 0.93);
-    BOOST_CHECK_EQUAL(swuPropData[1 * 3*3], 0.852);
-    BOOST_CHECK_EQUAL(swuPropData[2 * 3*3], 0.801);
+    BOOST_CHECK_EQUAL(swuPropData[1 + 0 * 3*3], 0.93);
+    BOOST_CHECK_EQUAL(swuPropData[1 + 1 * 3*3], 0.852);
+    BOOST_CHECK_EQUAL(swuPropData[1 + 2 * 3*3], 0.801);
+
+    const auto& fp_swu = fp.get_global<double>("SWU");
+    BOOST_CHECK_EQUAL(fp_swu[1 + 0 * 3*3], 0.93);
+    BOOST_CHECK_EQUAL(fp_swu[1 + 1 * 3*3], 0.852);
+    BOOST_CHECK_EQUAL(fp_swu[1 + 2 * 3*3], 0.801);
 
     const auto& sguPropData = props.getDoubleGridProperty("ISGU").getData();
-    BOOST_CHECK_EQUAL(sguPropData[0 * 3*3], 0.9);
-    BOOST_CHECK_EQUAL(sguPropData[1 * 3*3], 0.85);
-    BOOST_CHECK_EQUAL(sguPropData[2 * 3*3], 0.80);
+    BOOST_CHECK_EQUAL(sguPropData[1 + 0 * 3*3], 0.9);
+    BOOST_CHECK_EQUAL(sguPropData[1 + 1 * 3*3], 0.85);
+    BOOST_CHECK_EQUAL(sguPropData[1 + 2 * 3*3], 0.80);
+
+    const auto& fp_sgu = fp.get_global<double>("ISGU");
+    BOOST_CHECK_EQUAL(fp_sgu[1 + 0 * 3*3], 0.9);
+    BOOST_CHECK_EQUAL(fp_sgu[1 + 1 * 3*3], 0.85);
+    BOOST_CHECK_EQUAL(fp_sgu[1 + 2 * 3*3], 0.80);
 
     const auto& satnum = props.getIntGridProperty("SATNUM");
     {
@@ -416,6 +438,19 @@ BOOST_AUTO_TEST_CASE(GridPropertyInitialization) {
             BOOST_CHECK_EQUAL( cells3[i] , i + 16);
         }
     }
+    const auto& fp_satnum = fp.get_global<int>("SATNUM");
+    {
+        BOOST_CHECK_EQUAL(8, std::count(fp_satnum.begin(), fp_satnum.end(), 1));
+        BOOST_CHECK_EQUAL(8, std::count(fp_satnum.begin(), fp_satnum.end(), 2));
+        BOOST_CHECK_EQUAL(8, std::count(fp_satnum.begin(), fp_satnum.end(), 3));
+
+        for (size_t i = 0; i < 7; i++) {
+            BOOST_CHECK_EQUAL( fp_satnum[1 + i] , 1 );
+            BOOST_CHECK_EQUAL( fp_satnum[1 + i + 9]  , 2);
+            BOOST_CHECK_EQUAL( fp_satnum[1 + i + 18] , 3);
+        }
+    }
+
     {
         const auto cells1 = satnum.indexEqual(1 );
         const auto cells2 = satnum.indexEqual(2 );

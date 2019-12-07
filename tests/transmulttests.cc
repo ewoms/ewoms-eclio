@@ -28,6 +28,7 @@
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
@@ -35,7 +36,9 @@
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Ewoms::Eclipse3DProperties props;
-    Ewoms::TransMult transMult(Ewoms::GridDims(10,10,10) ,{} , props);
+    Ewoms::EclipseGrid grid(10,10,10);
+    Ewoms::FieldPropsManager fp(Ewoms::Deck(), grid, Ewoms::TableManager());
+    Ewoms::TransMult transMult(grid ,{} , fp, props);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Ewoms::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Ewoms::FaceDir::XPlus) , std::invalid_argument );
@@ -68,8 +71,9 @@ MULTZ
     Ewoms::TableManager tables(deck);
     Ewoms::EclipseGrid grid(5,5,5);
     Ewoms::Eclipse3DProperties props(deck, tables, grid);
-    Ewoms::TransMult transMult(grid, deck, props);
+    Ewoms::FieldPropsManager fp(deck, grid, tables);
+    Ewoms::TransMult transMult(grid, deck, fp, props);
 
-    transMult.applyMULT(props.getDoubleGridProperty("MULTZ"), Ewoms::FaceDir::ZPlus);
+    transMult.applyMULT(props.getDoubleGridProperty("MULTZ").getData(), Ewoms::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Ewoms::FaceDir::ZPlus) , 4.0 );
 }

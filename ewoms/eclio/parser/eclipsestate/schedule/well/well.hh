@@ -404,10 +404,11 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
+    bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
-    bool handleWELOPEN(const DeckRecord& record, Connection::State status);
+    bool handleWELOPEN(const DeckRecord& record, Connection::State status, bool action_mode);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 

@@ -19,6 +19,7 @@
 #ifndef EWOMS_TIMESERVICE_H
 #define EWOMS_TIMESERVICE_H
 
+#include <chrono>
 #include <ctime>
 
 namespace Ewoms {
@@ -60,6 +61,7 @@ namespace Ewoms {
         int usec_{0};
     };
 
+    TimeStampUTC operator+(const TimeStampUTC& lhs, std::chrono::duration<double> delta);
     std::time_t asTimeT(const TimeStampUTC& tp);
 
 } // namespace Ewoms

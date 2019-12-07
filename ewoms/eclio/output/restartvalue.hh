@@ -17,11 +17,14 @@
 #ifndef RESTART_VALUE_H
 #define RESTART_VALUE_H
 
-#include <string>
 #include <map>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
+
+#include <ewoms/eclio/output/data/aquifer.hh>
 #include <ewoms/eclio/output/data/solution.hh>
 #include <ewoms/eclio/output/data/wells.hh>
 
@@ -57,16 +60,16 @@ namespace Ewoms {
     };
 
     /*
-      A simple class used to communicate values between the simulator and the
-      RestartIO function.
+      A simple class used to communicate values between the simulator and
+      the RestartIO functions.
     */
-
     class RestartValue {
     public:
         using ExtraVector = std::vector<std::pair<RestartKey, std::vector<double>>>;
         data::Solution solution;
         data::Wells wells;
         ExtraVector extra;
+        std::vector<data::AquiferData> aquifer;
 
         RestartValue(data::Solution sol, data::Wells wells_arg);
 
@@ -90,4 +93,4 @@ namespace Ewoms {
 
 }
 
-#endif
+#endif // RESTART_VALUE_H

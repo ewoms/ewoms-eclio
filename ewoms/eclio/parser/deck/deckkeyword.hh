@@ -27,6 +27,7 @@
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckvalue.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
+#include <ewoms/eclio/parser/deck/value_status.hh>
 #include <ewoms/eclio/opmlog/location.hh>
 
 namespace Ewoms {
@@ -60,6 +61,7 @@ namespace Ewoms {
         const std::vector<double>& getRawDoubleData() const;
         const std::vector<double>& getSIDoubleData() const;
         const std::vector<std::string>& getStringData() const;
+        const std::vector<value::status>& getValueStatus() const;
         const ParserKeyword& parserKeyword() const;
         size_t getDataSize() const;
         void write( DeckOutput& output ) const;

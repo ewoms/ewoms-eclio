@@ -183,3 +183,20 @@ BOOST_AUTO_TEST_CASE(DeckKeywordVectorDouble) {
 
 }
 
+BOOST_AUTO_TEST_CASE(ValueStatus) {
+    const std::string deck_string = R"(
+PERMX
+  100* /
+)";
+
+    Parser parser;
+    Deck deck = parser.parseString(deck_string);
+    const auto& permx = deck.getKeyword("PERMX");
+    const auto& status = permx.getValueStatus();
+    BOOST_CHECK_EQUAL(status.size(), 100);
+    for (const auto& vs : status) {
+        BOOST_CHECK(!value::has_value(vs));
+        BOOST_CHECK(vs == value::status::empty_default);
+    }
+}
+

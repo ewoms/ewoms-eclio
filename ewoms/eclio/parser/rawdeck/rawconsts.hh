@@ -31,6 +31,7 @@ namespace Ewoms {
         const std::string end = "END";
         const std::string endinclude = "ENDINC";
         const std::string paths = "PATHS";
+        const std::string pyinput = "PYINPUT";
         const unsigned int maxKeywordLength = 8;
 
         /* The lookup uses some bit-tricks to achieve branchless lookup in the

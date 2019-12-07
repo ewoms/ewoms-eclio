@@ -51,9 +51,11 @@ namespace Ewoms {
             liquid_surface_volume,
             gas_surface_volume,
             volume,
+            geometric_volume,
             liquid_surface_rate,
             gas_surface_rate,
             rate,
+            geometric_volume_rate,
             transmissibility,
             effective_Kh,
             mass,
@@ -69,7 +71,8 @@ namespace Ewoms {
             water_inverse_formation_volume_factor,
             liquid_productivity_index,
             gas_productivity_index,
-            energy
+            energy,
+            icd_strength,
         };
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);

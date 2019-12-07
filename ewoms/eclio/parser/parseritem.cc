@@ -38,27 +38,6 @@ class UnitSystem;
 
 namespace {
 
-template< typename T > const T& default_value();
-template<> const int& default_value< int >() {
-    static const int value = -1;
-    return value;
-}
-
-template<> const double& default_value< double >() {
-    static constexpr auto value = std::numeric_limits< double >::quiet_NaN();
-    return value;
-}
-
-template<> const UDAValue& default_value< UDAValue >() {
-    static const UDAValue value = UDAValue(std::numeric_limits<double>::quiet_NaN());
-    return value;
-}
-
-template<> const std::string& default_value< std::string >() {
-    static const std::string value = "";
-    return value;
-}
-
 type_tag get_data_type_json( const std::string& str ) {
     if( str == "INT" )       return type_tag::integer;
     if( str == "DOUBLE" )    return type_tag::fdouble;
@@ -238,9 +217,6 @@ template< typename T>
 const T& ParserItem::getDefault() const {
     if( get_type< T >() != this->data_type )
         throw std::invalid_argument( "getDefault: Wrong type." );
-
-    if( !this->hasDefault() && this->m_sizeType == item_size::ALL )
-        return default_value< T >();
 
     if( !this->hasDefault() )
         throw std::invalid_argument( "No default value available for item "
@@ -484,9 +460,14 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
                 continue;
             }
 
-            auto value = parser_item.getDefault< T >();
-            for (size_t i=0; i < st.count(); i++)
-                deck_item.push_backDefault( value );
+            if (parser_item.hasDefault()) {
+                auto value = parser_item.getDefault< T >();
+                for (size_t i=0; i < st.count(); i++)
+                    deck_item.push_backDefault( value );
+            } else {
+                for (size_t i=0; i < st.count(); i++)
+                    deck_item.push_backDummyDefault<T>();
+            }
         }
 
         return;

@@ -30,10 +30,13 @@ class TableManager;
 class FieldPropsManager {
 public:
     // The default constructor should be removed when the FieldPropsManager is mandatory
+    // The default constructed fieldProps object is **NOT** usable
     FieldPropsManager() = default;
     FieldPropsManager(const Deck& deck, const EclipseGrid& grid, const TableManager& tables);
     void reset_grid(const EclipseGrid& grid);
     const std::string& default_region() const;
+    std::vector<int> actnum() const;
+    std::vector<double> porv(bool global = false) const;
 
     /*
       Because the FieldProps class can autocreate properties the semantics of

@@ -68,6 +68,12 @@ PORO
 BOX
   1 3 1 3 1 3 /
 
+PORV
+  27*100 /
+
+ACTNUM
+   27*1 /
+
 PERMX
   27*0.6/
 
@@ -98,10 +104,16 @@ PERMX
         BOOST_CHECK_EQUAL(keys.size(), 1);
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORO")  != keys.end());
         BOOST_CHECK(std::find(keys.begin(), keys.end(), "PERMX") == keys.end());
+
+        // The PORV property should be extracted with the special function
+        // fp.porv() and not the general get<double>() functionality.
+        BOOST_CHECK(std::find(keys.begin(), keys.end(), "PORV") == keys.end());
     }
     {
         const auto& keys = fpm.keys<int>();
         BOOST_CHECK_EQUAL(keys.size(), 0);
+
+        BOOST_CHECK(std::find(keys.begin(), keys.end(), "ACTNUM") == keys.end());
     }
 }
 
@@ -217,5 +229,103 @@ NTG
 
         BOOST_CHECK_EQUAL(ntg[g + 100], 1);
         BOOST_CHECK_EQUAL(defaulted[g + 100], true);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(PORV) {
+    std::string deck_string = R"(
+GRID
+
+PORO
+  400*0.10 /
+
+BOX
+  1 10 1 10 2 2 /
+
+NTG
+  100*2 /
+
+ENDBOX
+
+EDIT
+
+BOX
+  1 10 1 10 3 3 /
+
+PORV
+  100*3 /
+
+ENDBOX
+
+BOX
+  1 10 1 10 4 4 /
+
+MULTPV
+  100*4 /
+
+ENDBOX
+)";
+
+    EclipseGrid grid(EclipseGrid(10,10, 4));
+    Deck deck = Parser{}.parseString(deck_string);
+    FieldPropsManager fpm(deck, grid, TableManager());
+    const auto& poro = fpm.get<double>("PORO");
+    const auto& ntg = fpm.get<double>("NTG");
+    const auto& multpv = fpm.get<double>("MULTPV");
+    const auto& defaulted = fpm.defaulted<double>("PORV");
+    const auto& porv = fpm.porv();
+
+    // All cells should be active for this grid
+    BOOST_CHECK_EQUAL(porv.size(), grid.getNumActive());
+    BOOST_CHECK_EQUAL(porv.size(), grid.getCartesianSize());
+
+    // k = 0: poro * V
+    for (std::size_t g = 0; g < 100; g++) {
+        BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g]);
+        BOOST_CHECK_EQUAL(porv[g], 0.10);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 1.0);
+        BOOST_CHECK_EQUAL(multpv[g], 1.0);
+    }
+
+    // k = 1: poro * NTG * V
+    for (std::size_t g = 100; g < 200; g++) {
+        BOOST_CHECK_EQUAL(porv[g], grid.getCellVolume(g) * poro[g] * ntg[g]);
+        BOOST_CHECK_EQUAL(porv[g], 0.20);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 2.0);
+        BOOST_CHECK_EQUAL(multpv[g], 1.0);
+    }
+
+    // k = 2: PORV - explicitly set
+    for (std::size_t g = 200; g < 300; g++) {
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 1.0);
+        BOOST_CHECK_EQUAL(multpv[g], 1.0);
+        BOOST_CHECK_EQUAL(porv[g],3.0);
+    }
+
+    // k = 3: poro * V * multpv
+    for (std::size_t g = 300; g < 400; g++) {
+        BOOST_CHECK_EQUAL(porv[g], multpv[g] * grid.getCellVolume(g) * poro[g] * ntg[g]);
+        BOOST_CHECK_EQUAL(porv[g], 0.40);
+        BOOST_CHECK_EQUAL(poro[g], 0.10);
+        BOOST_CHECK_EQUAL(ntg[g], 1.0);
+        BOOST_CHECK_EQUAL(multpv[g], 4.0);
+    }
+
+    std::vector<int> actnum(400, 1);
+    actnum[0] = 0;
+    grid.resetACTNUM(actnum);
+
+    fpm.reset_grid(grid);
+    auto porv_global = fpm.porv(true);
+    auto porv_active = fpm.porv(false);
+    BOOST_CHECK_EQUAL( porv_active.size(), grid.getNumActive());
+    BOOST_CHECK_EQUAL( porv_global.size(), grid.getCartesianSize());
+    BOOST_CHECK_EQUAL( porv_global[0], 0);
+    for (std::size_t g = 1; g < grid.getCartesianSize(); g++) {
+        BOOST_CHECK_EQUAL(porv_active[g - 1], porv_global[g]);
+        BOOST_CHECK_EQUAL(porv_global[g], porv[g]);
     }
 }

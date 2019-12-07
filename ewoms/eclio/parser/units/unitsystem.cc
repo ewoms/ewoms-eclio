@@ -70,7 +70,10 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        0.0,
+        0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -86,9 +89,11 @@ namespace {
         1 / Metric::LiquidSurfaceVolume,
         1 / Metric::GasSurfaceVolume,
         1 / Metric::ReservoirVolume,
+        1 / Metric::GeomVolume,
         1 / ( Metric::LiquidSurfaceVolume / Metric::Time ),
         1 / ( Metric::GasSurfaceVolume / Metric::Time ),
         1 / ( Metric::ReservoirVolume / Metric::Time ),
+        1 / ( Metric::GeomVolume / Metric::Time ),
         1 / Metric::Transmissibility,
         1 / (Metric::Permeability * Metric::Length),
         1 / Metric::Mass,
@@ -104,8 +109,8 @@ namespace {
         1, /* water inverse formation volume factor */
         1 / (Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / (Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure),
-        1 / Metric::Energy
-
+        1 / Metric::Energy,
+        1 / (Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time)),
     };
 
     static const double from_metric[] = {
@@ -121,9 +126,11 @@ namespace {
         Metric::LiquidSurfaceVolume,
         Metric::GasSurfaceVolume,
         Metric::ReservoirVolume,
+        Metric::GeomVolume,
         Metric::LiquidSurfaceVolume / Metric::Time,
         Metric::GasSurfaceVolume / Metric::Time,
         Metric::ReservoirVolume / Metric::Time,
+        Metric::GeomVolume / Metric::Time,
         Metric::Transmissibility,
         Metric::Permeability * Metric::Length,
         Metric::Mass,
@@ -139,8 +146,8 @@ namespace {
         1, /* water inverse formation volume factor */
         Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure,
-        Metric::Energy
-
+        Metric::Energy,
+        Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time),
     };
 
     static constexpr const char* metric_names[] = {
@@ -156,9 +163,11 @@ namespace {
         "SM3",
         "SM3",
         "RM3",
+        "SM3",  // Should possibly be RM3
         "SM3/DAY",
         "SM3/DAY",
         "RM3/DAY",
+        "SM3/DAY",  // Should possibly be RM3/DAY
         "CPR3/DAY/BARS",
         "MDM",
         "KG",
@@ -175,7 +184,7 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
-
+        "BARS/(RM3/DAY)2", /* ICD strength parameter */
     };
 
     // =================================================================
@@ -212,7 +221,10 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        0.0,
+        0.0,
+        0.0,
     };
 
     static const double to_field[] = {
@@ -228,9 +240,11 @@ namespace {
         1 / Field::LiquidSurfaceVolume,
         1 / Field::GasSurfaceVolume,
         1 / Field::ReservoirVolume,
+        1 / Field::GeomVolume,
         1 / ( Field::LiquidSurfaceVolume / Field::Time ),
         1 / ( Field::GasSurfaceVolume / Field::Time ),
         1 / ( Field::ReservoirVolume / Field::Time ),
+        1 / ( Field::GeomVolume / Field::Time ),
         1 / Field::Transmissibility,
         1 / (Field::Permeability * Field::Length),
         1 / Field::Mass,
@@ -246,8 +260,8 @@ namespace {
         1, /* water inverse formation volume factor */
         1 / (Field::LiquidSurfaceVolume / Field::Time / Field::Pressure),
         1 / (Field::GasSurfaceVolume / Field::Time / Field::Pressure),
-        1 / Field::Energy
-
+        1 / Field::Energy,
+        1 / (Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time)),
     };
 
     static const double from_field[] = {
@@ -263,9 +277,11 @@ namespace {
          Field::LiquidSurfaceVolume,
          Field::GasSurfaceVolume,
          Field::ReservoirVolume,
+         Field::GeomVolume,
          Field::LiquidSurfaceVolume / Field::Time,
          Field::GasSurfaceVolume / Field::Time,
          Field::ReservoirVolume / Field::Time,
+         Field::GeomVolume / Field::Time,
          Field::Transmissibility,
          Field::Permeability * Field::Length,
          Field::Mass,
@@ -281,8 +297,8 @@ namespace {
          1, /* water inverse formation volume factor */
          Field::LiquidSurfaceVolume / Field::Time / Field::Pressure,
          Field::GasSurfaceVolume / Field::Time / Field::Pressure,
-         Field::Energy
-
+         Field::Energy,
+         Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time),
     };
 
     static constexpr const char* field_names[] = {
@@ -298,9 +314,11 @@ namespace {
         "STB",
         "MSCF",
         "RB",
+        "FT3",       // Should possibly be RFT3
         "STB/DAY",
         "MSCF/DAY",
         "RB/DAY",
+        "FT3/DAY",   // Should possibly be RFT3/DAY
         "CPRB/DAY/PSI",
         "MDFT",
         "LB",
@@ -317,7 +335,7 @@ namespace {
         "STB/DAY/PSIA",
         "MSCF/DAY/PSIA",
         "BTU", /* energy */
-
+        "PSI/(RFT3/DAY)2", /* ICD strength parameter */
     };
 
     // =================================================================
@@ -354,7 +372,10 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        0.0,
+        0.0,
+        0.0,
     };
 
     static const double to_lab[] = {
@@ -370,9 +391,11 @@ namespace {
         1 / Lab::LiquidSurfaceVolume,
         1 / Lab::GasSurfaceVolume,
         1 / Lab::ReservoirVolume,
+        1 / Lab::GeomVolume,
         1 / ( Lab::LiquidSurfaceVolume / Lab::Time ),
         1 / ( Lab::GasSurfaceVolume / Lab::Time ),
         1 / ( Lab::ReservoirVolume / Lab::Time ),
+        1 / ( Lab::GeomVolume / Lab::Time ),
         1 / Lab::Transmissibility,
         1 / (Lab::Permeability * Lab::Length),
         1 / Lab::Mass,
@@ -388,8 +411,8 @@ namespace {
         1, /* water inverse formation volume factor */
         1 / (Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / (Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure),
-        1 / Lab::Energy
-
+        1 / Lab::Energy,
+        1 / (Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time)),
     };
 
     static const double from_lab[] = {
@@ -405,9 +428,11 @@ namespace {
         Lab::LiquidSurfaceVolume,
         Lab::GasSurfaceVolume,
         Lab::ReservoirVolume,
+        Lab::GeomVolume,
         Lab::LiquidSurfaceVolume / Lab::Time,
         Lab::GasSurfaceVolume / Lab::Time,
         Lab::ReservoirVolume / Lab::Time,
+        Lab::GeomVolume / Lab::Time,
         Lab::Transmissibility,
         Lab::Permeability * Lab::Length,
         Lab::Mass,
@@ -423,8 +448,8 @@ namespace {
         1, /* water inverse formation volume factor */
         Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure,
-        Lab::Energy
-
+        Lab::Energy,
+        Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time),
     };
 
     static constexpr const char* lab_names[] = {
@@ -440,9 +465,11 @@ namespace {
         "SCC",
         "SCC",
         "RCC",
+        "SCC",      // Should possibly be RCC
         "SCC/HR",
         "SCC/HR",
         "RCC/HR",
+        "SCC/HR",   // Should possibly be RCC/HR
         "CPRCC/HR/ATM",
         "MDCC",
         "G",
@@ -459,7 +486,7 @@ namespace {
         "SCC/HR/ATM",
         "SCC/HR/ATM",
         "J", /* energy */
-
+        "ATM/(RCC/H)2", /* ICD strength parameter */
     };
 
     // =================================================================
@@ -496,7 +523,10 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        0.0,
+        0.0,
+        0.0,
     };
 
     static const double to_pvt_m[] = {
@@ -512,9 +542,11 @@ namespace {
         1 / PVT_M::LiquidSurfaceVolume,
         1 / PVT_M::GasSurfaceVolume,
         1 / PVT_M::ReservoirVolume,
+        1 / PVT_M::GeomVolume,
         1 / ( PVT_M::LiquidSurfaceVolume / PVT_M::Time ),
         1 / ( PVT_M::GasSurfaceVolume / PVT_M::Time ),
         1 / ( PVT_M::ReservoirVolume / PVT_M::Time ),
+        1 / ( PVT_M::GeomVolume / PVT_M::Time ),
         1 / PVT_M::Transmissibility,
         1 / (PVT_M::Permeability * PVT_M::Length),
         1 / PVT_M::Mass,
@@ -530,8 +562,8 @@ namespace {
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume), /* 1/Bw */
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
-        1 / PVT_M::Energy
-
+        1 / PVT_M::Energy,
+        1 / (PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
     };
 
     static const double from_pvt_m[] = {
@@ -547,9 +579,11 @@ namespace {
         PVT_M::LiquidSurfaceVolume,
         PVT_M::GasSurfaceVolume,
         PVT_M::ReservoirVolume,
+        PVT_M::GeomVolume,
         PVT_M::LiquidSurfaceVolume / PVT_M::Time,
         PVT_M::GasSurfaceVolume / PVT_M::Time,
         PVT_M::ReservoirVolume / PVT_M::Time,
+        PVT_M::GeomVolume / PVT_M::Time,
         PVT_M::Transmissibility,
         PVT_M::Permeability * PVT_M::Length,
         PVT_M::Mass,
@@ -565,8 +599,8 @@ namespace {
         PVT_M::LiquidSurfaceVolume / PVT_M::ReservoirVolume, /* 1/Bw */
         PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
-        PVT_M::Energy
-
+        PVT_M::Energy,
+        PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time),
     };
 
     static constexpr const char* pvt_m_names[] = {
@@ -582,9 +616,11 @@ namespace {
         "SM3",
         "SM3",
         "RM3",
+        "SM3",         // Should possibly be RM3
         "SM3/DAY",
         "SM3/DAY",
         "RM3/DAY",
+        "SM3/DAY",     // Should possibly be SM3/DAY
         "CPR3/DAY/ATM",
         "MDM",
         "KG",
@@ -601,7 +637,7 @@ namespace {
         "SM3/DAY/ATM",
         "SM3/DAY/ATM",
         "KJ" /* energy */,
-
+        "ATM/(RM3/DAY)2" /* ICD strength parameter */,
     };
 
     // =================================================================
@@ -638,7 +674,10 @@ namespace {
         0.0,
         0.0,
         0.0,
-        0.0
+        0.0,
+        0.0,
+        0.0,
+        0.0,
     };
 
     static const double to_input[] = {
@@ -672,7 +711,10 @@ namespace {
         1,
         1,
         1,
-        1
+        1,
+        1,
+        1,
+        1,
     };
 
     static const double from_input[] = {
@@ -706,7 +748,10 @@ namespace {
         1,
         1,
         1,
-        1
+        1,
+        1,
+        1,
+        1,
     };
 
     static constexpr const char* input_names[] = {
@@ -722,9 +767,11 @@ namespace {
         "SM3",
         "SM3",
         "RM3",
+        "SM3",
         "SM3/DAY",
         "SM3/DAY",
         "RM3/DAY",
+        "SM3/DAY",
         "CPR3/DAY/BARS",
         "MDM",
         "KG",
@@ -741,7 +788,7 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
-
+        "BARS/(RM3/DAY)2", /* ICD strength parameter */
     };
 
 } // namespace Anonymous
@@ -798,6 +845,7 @@ namespace {
         this->addDimension("LiquidSurfaceVolume", 1.0);
         this->addDimension("GasSurfaceVolume" , 1.0);
         this->addDimension("ReservoirVolume", 1.0);
+        this->addDimension("GeometricVolume", 1.0 );
         this->addDimension("Density"   , 1.0);
         this->addDimension("PolymerDensity", 1.0);
         this->addDimension("FoamDensity", 1.0);
@@ -832,6 +880,7 @@ namespace {
         this->addDimension("LiquidSurfaceVolume", PVT_M::LiquidSurfaceVolume );
         this->addDimension("GasSurfaceVolume" , PVT_M::GasSurfaceVolume );
         this->addDimension("ReservoirVolume", PVT_M::ReservoirVolume );
+        this->addDimension("GeometricVolume", PVT_M::GeomVolume );
         this->addDimension("Density"   , PVT_M::Density );
         this->addDimension("PolymerDensity", PVT_M::PolymerDensity);
         this->addDimension("FoamDensity", PVT_M::FoamDensity);
@@ -866,6 +915,7 @@ namespace {
         this->addDimension("LiquidSurfaceVolume", Lab::LiquidSurfaceVolume );
         this->addDimension("GasSurfaceVolume", Lab::GasSurfaceVolume );
         this->addDimension("ReservoirVolume", Lab::ReservoirVolume );
+        this->addDimension("GeometricVolume", Lab::GeomVolume );
         this->addDimension("Density", Lab::Density );
         this->addDimension("PolymerDensity", Lab::PolymerDensity);
         this->addDimension("FoamDensity", Lab::FoamDensity);
@@ -900,6 +950,7 @@ namespace {
         this->addDimension("LiquidSurfaceVolume", Metric::LiquidSurfaceVolume );
         this->addDimension("GasSurfaceVolume" , Metric::GasSurfaceVolume );
         this->addDimension("ReservoirVolume", Metric::ReservoirVolume );
+        this->addDimension("GeometricVolume", Metric::GeomVolume );
         this->addDimension("Density"   , Metric::Density );
         this->addDimension("PolymerDensity", Metric::PolymerDensity);
         this->addDimension("FoamDensity", Metric::FoamDensity);
@@ -934,6 +985,7 @@ namespace {
         this->addDimension("LiquidSurfaceVolume", Field::LiquidSurfaceVolume );
         this->addDimension("GasSurfaceVolume", Field::GasSurfaceVolume );
         this->addDimension("ReservoirVolume", Field::ReservoirVolume );
+        this->addDimension("GeometricVolume", Field::GeomVolume );
         this->addDimension("Density", Field::Density );
         this->addDimension("PolymerDensity", Field::PolymerDensity);
         this->addDimension("FoamDensity", Field::FoamDensity);
@@ -1021,7 +1073,8 @@ namespace {
     }
 
     void UnitSystem::addDimension( Dimension dimension ) {
-        this->m_dimensions[ dimension.getName() ] = std::move( dimension );
+        const auto dimname = dimension.getName();
+        this->m_dimensions[ dimname ] = std::move( dimension );
     }
 
     void UnitSystem::addDimension(const std::string& dimension , double SIfactor, double SIoffset) {

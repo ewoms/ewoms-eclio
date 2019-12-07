@@ -1817,6 +1817,19 @@ namespace ParserKeywords {
 
 
 
+   class PYINPUT : public ParserKeyword {
+   public:
+       PYINPUT();
+       static const std::string keywordName;
+
+       class code {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
 }
 }
 #endif

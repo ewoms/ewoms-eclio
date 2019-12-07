@@ -21,14 +21,20 @@
 #include <ewoms/eclio/io/erst.hh>
 #include <ewoms/eclio/io/ecliodata.hh>
 
-#include <ewoms/eclio/output/restartvalue.hh>
+#include <ewoms/eclio/output/data/aquifer.hh>
+#include <ewoms/eclio/output/data/cells.hh>
+#include <ewoms/eclio/output/data/solution.hh>
+#include <ewoms/eclio/output/data/wells.hh>
 
+#include <ewoms/eclio/output/vectoritems/aquifer.hh>
 #include <ewoms/eclio/output/vectoritems/connection.hh>
 #include <ewoms/eclio/output/vectoritems/doubhead.hh>
 #include <ewoms/eclio/output/vectoritems/group.hh>
 #include <ewoms/eclio/output/vectoritems/intehead.hh>
 #include <ewoms/eclio/output/vectoritems/msw.hh>
 #include <ewoms/eclio/output/vectoritems/well.hh>
+
+#include <ewoms/eclio/output/restartvalue.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
@@ -45,6 +51,7 @@
 #include <functional>
 #include <initializer_list>
 #include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -475,6 +482,89 @@ SegmentVectors::rseg(const std::size_t mswID, const std::size_t segID) const
 
 // ---------------------------------------------------------------------
 
+class AquiferVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<
+        typename std::vector<T>::const_iterator
+    >;
+
+    explicit AquiferVectors(const std::vector<int>&          intehead,
+                            std::shared_ptr<RestartFileView> rst_view);
+
+    bool hasDefinedValues() const;
+
+    Window<int>    iaaq(const std::size_t aquiferID) const;
+    Window<float>  saaq(const std::size_t aquiferID) const;
+    Window<double> xaaq(const std::size_t aquiferID) const;
+
+private:
+    std::size_t maxAnalyticAquifer_;
+    std::size_t numIntAnalyticAquiferElm_;
+    std::size_t numFloatAnalyticAquiferElm_;
+    std::size_t numDoubleAnalyticAquiferElm_;
+
+    std::shared_ptr<RestartFileView> rstView_;
+};
+
+AquiferVectors::AquiferVectors(const std::vector<int>&          intehead,
+                               std::shared_ptr<RestartFileView> rst_view)
+    : maxAnalyticAquifer_         (intehead[VI::intehead::MAX_AN_AQUIFERS])
+    , numIntAnalyticAquiferElm_   (intehead[VI::intehead::NIAAQZ])
+    , numFloatAnalyticAquiferElm_ (intehead[VI::intehead::NSAAQZ])
+    , numDoubleAnalyticAquiferElm_(intehead[VI::intehead::NXAAQZ])
+    , rstView_                    (std::move(rst_view))
+{}
+
+bool AquiferVectors::hasDefinedValues() const
+{
+    return this->rstView_->hasKeyword<int>   ("IAAQ")
+        && this->rstView_->hasKeyword<float> ("SAAQ")
+        && this->rstView_->hasKeyword<double>("XAAQ");
+}
+
+AquiferVectors::Window<int>
+AquiferVectors::iaaq(const std::size_t aquiferID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request IAAQ Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(this->rstView_->getKeyword<int>("IAAQ"),
+                         this->numIntAnalyticAquiferElm_, aquiferID);
+}
+
+AquiferVectors::Window<float>
+AquiferVectors::saaq(const std::size_t aquiferID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request SAAQ Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(this->rstView_->getKeyword<float>("SAAQ"),
+                         this->numFloatAnalyticAquiferElm_, aquiferID);
+}
+
+AquiferVectors::Window<double>
+AquiferVectors::xaaq(const std::size_t aquiferID) const
+{
+    if (! this->hasDefinedValues()) {
+        throw std::logic_error {
+            "Cannot Request XAAQ Values Unless Defined"
+        };
+    }
+
+    return getDataWindow(this->rstView_->getKeyword<double>("XAAQ"),
+                         this->numDoubleAnalyticAquiferElm_, aquiferID);
+}
+
+// ---------------------------------------------------------------------
+
 namespace {
     void throwIfMissingRequired(const Ewoms::RestartKey& rst_key)
     {
@@ -485,6 +575,16 @@ namespace {
                 "' is not available in restart file"
             };
         }
+    }
+
+    bool hasAnalyticAquifers(const RestartFileView& rst_view)
+    {
+        return rst_view.hasKeyword<double>("XAAQ");
+    }
+
+    std::size_t numAnalyticAquifers(RestartFileView& rst_view)
+    {
+        return rst_view.intehead()[VI::intehead::MAX_AN_AQUIFERS];
     }
 
     std::vector<double>
@@ -1081,6 +1181,89 @@ namespace {
         return soln;
     }
 
+    Ewoms::data::AquiferType
+    determineAquiferType(const AquiferVectors::Window<int>& iaaq)
+    {
+        const auto t1 = iaaq[VI::IAnalyticAquifer::TypeRelated1];
+        const auto t2 = iaaq[VI::IAnalyticAquifer::TypeRelated2];
+
+        if ((t1 == 1) && (t2 == 1)) {
+            return Ewoms::data::AquiferType::CarterTracey;
+        }
+
+        if ((t1 == 0) && (t2 == 0)) {
+            return Ewoms::data::AquiferType::Fetkovich;
+        }
+
+        throw std::runtime_error {
+            "Unknown Aquifer Type:"
+                  " T1 = "  + std::to_string(t1)
+                + ", T2 = " + std::to_string(t2)
+        };
+    }
+
+    std::shared_ptr<Ewoms::data::FetkovichData>
+    extractFetkcovichData(const Ewoms::UnitSystem&               usys,
+                          const AquiferVectors::Window<float>& saaq)
+    {
+        using M = ::Ewoms::UnitSystem::measure;
+
+        auto data = std::make_shared<Ewoms::data::FetkovichData>();
+
+        data->initVolume =
+            usys.to_si(M::liquid_surface_volume,
+                       saaq[VI::SAnalyticAquifer::FetInitVol]);
+
+        data->prodIndex =
+            usys.to_si(M::liquid_surface_rate,
+            usys.from_si(M::pressure,
+                         saaq[VI::SAnalyticAquifer::FetProdIndex]));
+
+        data->timeConstant = saaq[VI::SAnalyticAquifer::FetTimeConstant];
+
+        return data;
+    }
+
+    void restore_aquifers(const ::Ewoms::EclipseState&       es,
+                          std::shared_ptr<RestartFileView> rst_view,
+                          Ewoms::RestartValue&               rst_value)
+    {
+        using M  = ::Ewoms::UnitSystem::measure;
+        using Ix = VI::XAnalyticAquifer::index;
+
+        const auto& intehead    = rst_view->intehead();
+        const auto  aquiferData = AquiferVectors{ intehead, rst_view };
+
+        const auto  numAq = numAnalyticAquifers(*rst_view);
+        const auto& units = es.getUnits();
+
+        for (auto aquiferID = 0*numAq; aquiferID < numAq; ++aquiferID) {
+            const auto& saaq = aquiferData.saaq(aquiferID);
+            const auto& xaaq = aquiferData.xaaq(aquiferID);
+
+            rst_value.aquifer.emplace_back();
+
+            auto& aqData = rst_value.aquifer.back();
+
+            aqData.aquiferID = 1 + static_cast<int>(aquiferID);
+            aqData.pressure  = units.to_si(M::pressure, xaaq[Ix::Pressure]);
+            aqData.volume    = units.to_si(M::liquid_surface_volume,
+                                           xaaq[Ix::ProdVolume]);
+
+            aqData.initPressure =
+                units.to_si(M::pressure, saaq[VI::SAnalyticAquifer::InitPressure]);
+
+            aqData.datumDepth =
+                units.to_si(M::length, saaq[VI::SAnalyticAquifer::DatumDepth]);
+
+            aqData.type = determineAquiferType(aquiferData.iaaq(aquiferID));
+
+            if (aqData.type == Ewoms::data::AquiferType::Fetkovich) {
+                aqData.aquFet = extractFetkcovichData(units, saaq);
+            }
+        }
+    }
+
     void assign_well_cumulatives(const std::string& well,
                                  const std::size_t  wellID,
                                  const WellVectors& wellData,
@@ -1230,6 +1413,10 @@ namespace Ewoms { namespace RestartIO  {
 
         if (! extra_keys.empty()) {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);
+        }
+
+        if (hasAnalyticAquifers(*rst_view)) {
+            restore_aquifers(es, rst_view, rst_value);
         }
 
         restore_cumulative(summary_state, schedule, std::move(rst_view));

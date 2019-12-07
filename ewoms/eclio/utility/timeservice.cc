@@ -116,3 +116,8 @@ std::time_t Ewoms::asTimeT(const TimeStampUTC& tp)
 
     return makeUTCTime(timePoint);
 }
+
+Ewoms::TimeStampUTC Ewoms::operator+(const Ewoms::TimeStampUTC& lhs, std::chrono::duration<double> delta) {
+    return Ewoms::TimeStampUTC( advance(Ewoms::asTimeT(lhs) , delta.count()) );
+}
+

@@ -245,6 +245,10 @@ namespace Ewoms {
         return this->getDataRecord().getDataItem().getSIDoubleData();
     }
 
+    const std::vector<value::status>& DeckKeyword::getValueStatus() const {
+        return this->getDataRecord().getDataItem().getValueStatus();
+   }
+
     void DeckKeyword::write_data( DeckOutput& output ) const {
         for (const auto& record: *this)
             record.write( output );

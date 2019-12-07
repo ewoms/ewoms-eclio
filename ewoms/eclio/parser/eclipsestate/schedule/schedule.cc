@@ -89,8 +89,14 @@ namespace {
       means that we do not inform the user about "our fix", but it is *not* possible
       to configure the parser to leave the spaces intact.
     */
+
     std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard errors) {
         std::string wgname = boost::algorithm::trim_copy(wgname_arg);
+        if (wgname != wgname_arg)  {
+            const auto& location = keyword.location();
+            std::string msg = "Illegal space: \"" + wgname_arg + "\" found when defining WELL/GROUP in keyword: " + keyword.name() + " at " + location.filename + ":" + std::to_string(location.lineno);
+            parseContext.handleError(ParseContext::PARSE_WGNAME_SPACE, msg, errors);
+        }
         return wgname;
     }
 
@@ -305,6 +311,9 @@ namespace {
 
         else if (keyword.name() == "COMPSEGS")
             handleCOMPSEGS(keyword, currentStep, grid, parseContext, errors);
+
+        else if (keyword.name() == "WSEGSICD")
+            handleWSEGSICD(keyword, currentStep);
 
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext, errors);
@@ -1316,6 +1325,7 @@ namespace {
         };
 
         constexpr auto open = Well::Status::OPEN;
+        bool action_mode = !matching_wells.empty();
 
         for( const auto& record : keyword ) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
@@ -1357,7 +1367,7 @@ namespace {
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status)) {
+                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
                         this->updateWell(well_ptr, currentStep);
                         const auto well_status = Well::StatusFromString( status_str );
@@ -1821,7 +1831,11 @@ namespace {
         }
     }
 
-    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
+#ifdef ENABLE_3DPROPS_TESTING
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties&, const ParseContext& parseContext, ErrorGuard& errors) {
+#else
+    void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& , const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors) {
+#endif
         for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, currentStep);
@@ -1899,6 +1913,25 @@ namespace {
             auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
             if (well_ptr->handleCOMPSEGS(keyword, grid, parseContext, errors))
                 this->updateWell(well_ptr, currentStep);
+        }
+    }
+
+    void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
+
+        const std::map<std::string, std::vector<std::pair<int, SpiralICD> > > spiral_icds =
+                                SpiralICD::fromWSEGSICD(keyword);
+
+        for (const auto& map_elem : spiral_icds) {
+            const std::string& well_name_pattern = map_elem.first;
+            const auto well_names = this->wellNames(well_name_pattern, currentStep);
+            const std::vector<std::pair<int, SpiralICD> >& sicd_pairs = map_elem.second;
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                if (well_ptr -> updateWSEGSICD(sicd_pairs) )
+                    this->updateWell(well_ptr, currentStep);
+            }
         }
     }
 

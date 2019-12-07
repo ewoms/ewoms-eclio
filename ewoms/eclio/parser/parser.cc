@@ -340,6 +340,7 @@ class ParserState {
 
         std::map< std::string, std::string > pathMap;
         boost::filesystem::path rootPath;
+
     public:
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
         std::string lastKeyWord;
@@ -814,12 +815,16 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 OpmLog::info(ss.str());
             }
             try {
-                parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
-                                                                  parserState.errors,
-                                                                  *rawKeyword,
-                                                                  parserState.deck.getActiveUnitSystem(),
-                                                                  parserState.deck.getDefaultUnitSystem(),
-                                                                  filename ) );
+                if (rawKeyword->getKeywordName() ==  Ewoms::RawConsts::pyinput) {
+                    throw std::logic_error("ewoms-eclio cannot embed Python.");
+                }
+                else
+                    parserState.deck.addKeyword( parserKeyword.parse( parserState.parseContext,
+                                                                      parserState.errors,
+                                                                      *rawKeyword,
+                                                                      parserState.deck.getActiveUnitSystem(),
+                                                                      parserState.deck.getDefaultUnitSystem(),
+                                                                      filename ) );
             } catch (const std::exception& exc) {
                 /*
                   This catch-all of parsing errors is to be able to write a good

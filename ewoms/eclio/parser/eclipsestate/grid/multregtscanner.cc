@@ -62,6 +62,15 @@ namespace Ewoms {
 
     }
 
+namespace {
+
+std::vector<int> unique(const std::vector<int> data) {
+    std::set<int> set_data(data.begin(), data.end());
+    return { set_data.begin(), set_data.end() };
+}
+
+}
+
     /*****************************************************************/
     /*
       Observe that the (REGION1 -> REGION2) pairs behave like keys;
@@ -90,16 +99,33 @@ namespace Ewoms {
       Then it will go through the different regions and looking for
       interface with the wanted region values.
     */
-    MULTREGTScanner::MULTREGTScanner(const Eclipse3DProperties& e3DProps,
-                                     const std::vector< const DeckKeyword* >& keywords) :
-                m_e3DProps(e3DProps) {
+     MULTREGTScanner::MULTREGTScanner(const GridDims& grid,
+                                      const FieldPropsManager& fp_arg,
+                                      const Eclipse3DProperties& e3DProps,
+                                      const std::vector< const DeckKeyword* >& keywords) :
+         nx(grid.getNX()),
+         ny(grid.getNY()),
+         nz(grid.getNZ()),
+         fp(fp_arg),
+         m_e3DProps(e3DProps) {
+
+#ifdef ENABLE_3DPROPS_TESTING
+         this->default_region = this->fp.default_region();
+#else
+         this->default_region = this->m_e3DProps.getDefaultRegionKeyword();
+#endif
 
         for (size_t idx = 0; idx < keywords.size(); idx++)
-            this->addKeyword(e3DProps, *keywords[idx] , e3DProps.getDefaultRegionKeyword());
+            this->addKeyword(*keywords[idx] , this->default_region);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
-            if (e3DProps.hasDeckIntGridProperty( record->region_name)) {
+            const std::string& region_name = record->region_name;
+#ifdef ENABLE_3DPROPS_TESTING
+            if (this->fp.has<int>( region_name)) {
+#else
+            if (this->m_e3DProps.hasDeckIntGridProperty( region_name)) {
+#endif
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -115,8 +141,16 @@ namespace Ewoms {
             else
                 throw std::logic_error(
                                 "MULTREGT record is based on region: "
-                                +  record->region_name
+                                +  region_name
                                 + " which is not in the deck");
+
+#ifdef ENABLE_3DPROPS_TESTING
+            if (this->regions.count(region_name) == 0)
+                this->regions[region_name] = this->fp.get_global<int>(region_name);
+#else
+            if (this->regions.count(region_name) == 0)
+                this->regions[region_name] = this->m_e3DProps.getIntGridProperty(region_name).getData();
+#endif
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
@@ -130,7 +164,7 @@ namespace Ewoms {
         }
     }
 
-    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword, const std::string& /* defaultRegion */) {
+    void MULTREGTScanner::assertKeywordSupported( const DeckKeyword& deckKeyword) {
         for (const auto& deckRecord : deckKeyword) {
             const auto& srcItem = deckRecord.getItem("SRC_REGION");
             const auto& targetItem = deckRecord.getItem("TARGET_REGION");
@@ -146,9 +180,8 @@ namespace Ewoms {
          }
     }
 
-    void MULTREGTScanner::addKeyword( const Eclipse3DProperties& props, const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
-        assertKeywordSupported( deckKeyword , defaultRegion );
-
+    void MULTREGTScanner::addKeyword( const DeckKeyword& deckKeyword , const std::string& defaultRegion) {
+        assertKeywordSupported( deckKeyword );
         for (const auto& deckRecord : deckKeyword) {
             std::vector<int> src_regions;
             std::vector<int> target_regions;
@@ -169,12 +202,20 @@ namespace Ewoms {
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-                src_regions = props.getRegions( region_name );
+#ifdef ENABLE_3DPROPS_TESTING
+                src_regions = unique(this->fp.get<int>(region_name));
+#else
+                src_regions = unique(this->m_e3DProps.getIntGridProperty( region_name ).getData());
+#endif
             else
                 src_regions.push_back(srcItem.get<int>(0));
 
             if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-                target_regions = props.getRegions(region_name);
+#ifdef ENABLE_3DPROPS_TESTING
+                target_regions = unique(fp.get<int>(region_name));
+#else
+                target_regions = unique(this->m_e3DProps.getIntGridProperty(region_name).getData());
+#endif
             else
                 target_regions.push_back(targetItem.get<int>(0));
 
@@ -211,9 +252,8 @@ namespace Ewoms {
     double MULTREGTScanner::getRegionMultiplier(size_t globalIndex1 , size_t globalIndex2, FaceDir::DirEnum faceDir) const {
 
         for (auto iter = m_searchMap.begin(); iter != m_searchMap.end(); iter++) {
-            const Ewoms::GridProperty<int>& region = m_e3DProps.getIntGridProperty( (*iter).first );
+            const auto& region_data = this->regions.at( iter->first );
             const MULTREGTSearchMap& map = (*iter).second;
-            const auto& region_data = region.getData();
 
             int regionId1 = region_data[globalIndex1];
             int regionId2 = region_data[globalIndex2];
@@ -227,10 +267,10 @@ namespace Ewoms {
             const MULTREGTRecord* record = map.at(pair);
 
             bool applyMultiplier = true;
-            int i1 = globalIndex1 % region.getNX();
-            int i2 = globalIndex2 % region.getNX();
-            int j1 = globalIndex1 / region.getNX() % region.getNY();
-            int j2 = globalIndex2 / region.getNX() % region.getNY();
+            int i1 = globalIndex1 % this->nx;
+            int i2 = globalIndex2 % this->nx;
+            int j1 = globalIndex1 / this->nx % this->nz;
+            int j2 = globalIndex2 / this->nx % this->nz;
 
             if (record->nnc_behaviour == MULTREGT::NNC){
                 applyMultiplier = true;

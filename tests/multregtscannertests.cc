@@ -102,24 +102,25 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg( deck );
     Ewoms::Eclipse3DProperties props(deck, tm, eg);
+    Ewoms::FieldPropsManager fp(deck, eg, tm);
 
     // Invalid direction
     std::vector<const Ewoms::DeckKeyword*> keywords0;
     const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( props, keywords0 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, props, keywords0 ); , std::invalid_argument );
 
     // Not supported region
     std::vector<const Ewoms::DeckKeyword*> keywords1;
     const auto& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( props, keywords1 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, props, keywords1 ); , std::invalid_argument );
 
     // The keyword is ok; but it refers to a region which is not in the deck.
     std::vector<const Ewoms::DeckKeyword*> keywords2;
     const auto& multregtKeyword2 = deck.getKeyword( "MULTREGT", 2 );
     keywords2.push_back( &multregtKeyword2 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( props, keywords2 ); , std::logic_error );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, props, keywords2 ); , std::logic_error );
 }
 
 static Ewoms::Deck createNotSupportedMULTREGTDeck() {
@@ -164,18 +165,19 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg( deck );
     Ewoms::Eclipse3DProperties props(deck, tm, eg);
+    Ewoms::FieldPropsManager fp(deck, eg, tm);
 
     // Not support NOAQUNNC behaviour
     std::vector<const Ewoms::DeckKeyword*> keywords0;
     const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( props, keywords0 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, props, keywords0 ); , std::invalid_argument );
 
     // srcValue == targetValue - not supported
     std::vector<const Ewoms::DeckKeyword*> keywords1;
     const Ewoms::DeckKeyword& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( props, keywords1 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, props, keywords1 ); , std::invalid_argument );
 }
 
 static Ewoms::Deck createDefaultedRegions() {
@@ -223,11 +225,12 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   Ewoms::TableManager tm(deck);
   Ewoms::EclipseGrid eg( deck );
   Ewoms::Eclipse3DProperties props(deck, tm, eg);
+  Ewoms::FieldPropsManager fp(deck, eg, tm);
 
   std::vector<const Ewoms::DeckKeyword*> keywords0;
   const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
   keywords0.push_back( &multregtKeyword0 );
-  Ewoms::MULTREGTScanner scanner0(props, keywords0);
+  Ewoms::MULTREGTScanner scanner0(grid, fp, props, keywords0);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(0,0,1), grid.getGlobalIndex(1,0,1), Ewoms::FaceDir::XPlus ), 1.25);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(2,0,0), Ewoms::FaceDir::XPlus ), 1.0);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(2,0,1), grid.getGlobalIndex(2,0,0), Ewoms::FaceDir::ZMinus ), 0.0);
@@ -235,7 +238,7 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   std::vector<const Ewoms::DeckKeyword*> keywords1;
   const Ewoms::DeckKeyword& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
   keywords1.push_back( &multregtKeyword1 );
-  Ewoms::MULTREGTScanner scanner1( props, keywords1 );
+  Ewoms::MULTREGTScanner scanner1(grid,  fp, props, keywords1 );
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(1,0,0), Ewoms::FaceDir::XMinus ), 0.75);
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1), Ewoms::FaceDir::ZPlus), 0.75);
 }
@@ -279,6 +282,7 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg(deck);
     Ewoms::Eclipse3DProperties props(deck, tm, eg);
+    Ewoms::FieldPropsManager fp(deck, eg, tm);
 
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("FLUXNUM"));
     BOOST_CHECK_NO_THROW(props.hasDeckIntGridProperty("MULTNUM"));

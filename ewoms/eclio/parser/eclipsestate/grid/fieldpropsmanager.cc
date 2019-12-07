@@ -40,7 +40,7 @@ const std::vector<T>& FieldPropsManager::get(const std::string& keyword) const {
     if (!this->fp->has<T>(keyword))
         throw std::out_of_range("No such keyword in deck: " + keyword);
 
-    throw std::logic_error("Internal error - should not be here");
+    throw std::out_of_range("Keyword " + keyword + " is not fully initialized");
 }
 
 template <typename T>
@@ -87,6 +87,14 @@ const std::string& FieldPropsManager::default_region() const {
 template <typename T>
 std::vector<std::string> FieldPropsManager::keys() const {
     return this->fp->keys<T>();
+}
+
+std::vector<int> FieldPropsManager::actnum() const {
+    return this->fp->actnum();
+}
+
+std::vector<double> FieldPropsManager::porv(bool global) const {
+    return this->fp->porv(global);
 }
 
 template bool FieldPropsManager::supported<int>(const std::string&);

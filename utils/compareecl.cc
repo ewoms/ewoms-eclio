@@ -97,6 +97,7 @@ int main(int argc, char** argv) {
         switch (c) {
         case 'a':
             analysis = true;
+            throwOnError = false;
             break;
         case 'h':
             printHelp();
