@@ -23,6 +23,7 @@
 #include <vector>
 
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
+#include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
@@ -283,14 +284,28 @@ namespace Ewoms {
     }
 
     template< typename T >
-    void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox ) {
+    void GridProperty< T >::copyFrom( const GridProperty< T >& src, const Box& inputBox, const UnitSystem* unitSystem ) {
+        std::function<double(double)> convertFn([](double x) { return x; });
+
+        if (unitSystem && src.getDimensionString() != getDimensionString()) {
+            // this deals with assignments of fields that exhibit different units. after the
+            // COPY operation the grid property ought to exhibit the same values in terms of
+            // the unit system used by the deck, which do not necessarily correspond to
+            // identical values in SI units.
+            const auto& srcDim = unitSystem->parse(src.getDimensionString());
+            const auto& dstDim = unitSystem->parse(getDimensionString());
+
+            convertFn = [srcDim, dstDim](double x) { return dstDim.convertRawToSi(srcDim.convertSiToRaw(x)); };
+        }
+
         if (inputBox.isGlobal())
             for (size_t i = 0; i < src.getCartesianSize(); ++i)
-                this->setElement(i, src.m_data[i], src.m_defaulted[i]);
+                this->setElement(i, convertFn(src.m_data[i]), src.m_defaulted[i]);
         else
             for (const auto& i : inputBox.getIndexList())
-                this->setElement(i, src.m_data[i], src.m_defaulted[i]);
+                this->setElement(i, convertFn(src.m_data[i]), src.m_defaulted[i]);
         this->assigned = src.deckAssigned();
+
     }
 
     template< typename T >

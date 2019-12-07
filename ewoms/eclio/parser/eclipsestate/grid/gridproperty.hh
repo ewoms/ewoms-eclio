@@ -36,6 +36,7 @@ namespace Ewoms {
     class DeckKeyword;
     class EclipseGrid;
     class TableManager;
+    class UnitSystem;
     template< typename > class GridProperties;
 
 template< typename T >
@@ -171,7 +172,7 @@ public:
     void loadFromDeckKeyword( const DeckKeyword& , bool);
     void loadFromDeckKeyword( const Box&, const DeckKeyword& , bool);
 
-    void copyFrom( const GridProperty< T >&, const Box& );
+    void copyFrom( const GridProperty< T >&, const Box&, const UnitSystem* unitSystem = nullptr );
     void scale( T scaleFactor, const Box& );
     void maxvalue( T value, const Box& );
     void minvalue( T value, const Box& );

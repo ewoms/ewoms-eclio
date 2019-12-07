@@ -539,6 +539,7 @@ PERMX
 /
 
 COPY
+  'PERMX' 'PRESSURE' /
   'PERMX' 'PERMZ' /
   'PERMX' 'PERMY' /
 /
@@ -655,6 +656,85 @@ BOOST_AUTO_TEST_CASE(TRANXADD) {
   Ewoms::EclipseGrid grid(deck);
 
   BOOST_CHECK_THROW(Ewoms::Eclipse3DProperties(deck, tables, grid), std::invalid_argument);
+}
+
+static Ewoms::Deck createCopyDifferentDeck() {
+    const auto* input = R"(
+RUNSPEC
+
+TITLE
+ 'TITTEL'
+
+DIMENS
+  100 21 20 /
+
+METRIC
+
+OIL
+WATER
+
+TABDIMS
+/
+
+START
+  19 JUN 2017
+/
+
+WELLDIMS
+  3 20 1
+/
+
+EQLDIMS
+    2* 100 2* /
+
+GRID
+
+DXV
+  5.0D0 10.0D0 2*20.0D0 45.0D0 95*50.0D0
+/
+
+DYV
+  21*4.285714D0
+/
+
+DZV
+  20*0.5D0
+/
+
+TOPS
+  2100*1000.0D0
+/
+
+PERMX
+  42000*100.0D0
+/
+
+COPY
+  'PERMX' 'PRESSURE' /
+  'PERMX' 'PERMZ' /
+/
+)";
+
+    Ewoms::Parser parser;
+    return parser.parseString(input, Ewoms::ParseContext() );
+}
+
+BOOST_AUTO_TEST_CASE(CopyDifferentUnits) {
+  const Setup s(createCopyDifferentDeck());
+
+  const auto& permx = s.props.getDoubleGridProperty("PERMX");
+  const auto& permxData = permx.getData();
+  const auto& pressure = s.props.getDoubleGridProperty("PRESSURE");
+  const auto& pressureData = pressure.getData();
+
+  const auto& unitSystem = s.deck.getActiveUnitSystem();
+  const auto& permxDim = unitSystem.parse(permx.getDimensionString());
+  const auto& pressureDim = unitSystem.parse(pressure.getDimensionString());
+  for (unsigned i = 0; i < permxData.size(); ++i) {
+      BOOST_CHECK_CLOSE(permxDim.convertSiToRaw(permxData[i]),
+                        pressureDim.convertSiToRaw(pressureData[i]),
+                        1e-10);
+  }
 }
 
 static Ewoms::Deck createMultiplyPorvDeck() {
