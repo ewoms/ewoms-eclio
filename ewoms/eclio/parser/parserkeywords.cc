@@ -23482,6 +23482,7 @@ PVCDO::PVCDO( ) : ParserKeyword("PVCDO")
      }
      {
         ParserItem item("OIL_VISCOSIBILITY", ParserItem::itype::DOUBLE);
+        item.setDefault( double(0) );
         item.push_backDimension("1/Pressure");
         record.addItem(item);
      }
@@ -23494,6 +23495,7 @@ const std::string PVCDO::OIL_VOL_FACTOR::itemName = "OIL_VOL_FACTOR";
 const std::string PVCDO::OIL_COMPRESSIBILITY::itemName = "OIL_COMPRESSIBILITY";
 const std::string PVCDO::OIL_VISCOSITY::itemName = "OIL_VISCOSITY";
 const std::string PVCDO::OIL_VISCOSIBILITY::itemName = "OIL_VISCOSIBILITY";
+const double PVCDO::OIL_VISCOSIBILITY::defaultValue = 0.000000;
 
 
 PVCO::PVCO( ) : ParserKeyword("PVCO")

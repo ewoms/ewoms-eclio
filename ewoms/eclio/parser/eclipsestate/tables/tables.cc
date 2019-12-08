@@ -1260,7 +1260,8 @@ constexpr const char* pvcdo_err[] = {
 
 template< std::size_t N >
 struct flat_props< PVCDORecord, N > {
-    static constexpr bool can_default() { return false; }
+    static constexpr bool can_default()
+    { return N==4; }
     static constexpr const char* errmsg() {
         return pvcdo_err[ N ];
     }
