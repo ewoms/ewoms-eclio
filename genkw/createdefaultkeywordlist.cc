@@ -58,13 +58,14 @@ int main(int argc, char ** argv) {
             << std::endl;
     }
     const char * keyword_list_file = argv[1];
-    const char * source_file_name = argv[2];
-    const char * header_file_base_path = argv[3];
-    const char * header_file_name = argv[4];
+    const char * header_file_base_path = "./";
+    const char * source_file_base_path = "./";
+    const char * header_dir = argv[2];
+    const char * source_dir = argv[2];
 
     const char * test_file_name = nullptr;
-    if (argc > 5)
-        test_file_name = argv[5];
+    if (argc > 3)
+        test_file_name = argv[3];
 
     Ewoms::KeywordGenerator generator( true );
     Ewoms::KeywordLoader loader( false );
@@ -91,8 +92,8 @@ int main(int argc, char ** argv) {
         }
     }
 
-    generator.updateSource(loader , source_file_name );
-    generator.updateHeader(loader, header_file_base_path, header_file_name );
+    generator.updateSources(loader, source_file_base_path, source_dir );
+    generator.updateHeaders(loader, header_file_base_path, header_dir );
 
     if (test_file_name)
         generator.updateTest( loader , test_file_name );

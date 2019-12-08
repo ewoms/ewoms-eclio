@@ -46,16 +46,6 @@ const std::string testHeader =
     "#include <ewoms/eclio/parser/units/unitsystem.hh>\n"
     "using namespace Ewoms;\n"
     "auto unitSystem =  UnitSystem::newMETRIC();\n";
-
-const std::string sourceHeader =
-    "#include <ewoms/eclio/parser/deck/udavalue.hh>\n"
-    "#include <ewoms/eclio/parser/parserkeyword.hh>\n"
-    "#include <ewoms/eclio/parser/parseritem.hh>\n"
-    "#include <ewoms/eclio/parser/parserrecord.hh>\n"
-    "#include <ewoms/eclio/parser/parser.hh>\n"
-    "#include <ewoms/eclio/parser/parserkeywords.hh>\n\n\n"
-    "namespace Ewoms {\n"
-    "namespace ParserKeywords {\n\n";
 }
 
 namespace Ewoms {
@@ -65,12 +55,47 @@ namespace Ewoms {
     {
     }
 
-    std::string KeywordGenerator::headerHeader(const std::string& suffix) {
+    std::string KeywordGenerator::headerPrelude(const std::string& suffix) {
         std::string header = "#ifndef PARSER_KEYWORDS_" + boost::to_upper_copy(suffix) + "_HH\n"
             "#define PARSER_KEYWORDS_" + boost::to_upper_copy(suffix) + "_HH\n"
             "#include <ewoms/eclio/parser/parserkeyword.hh>\n"
             "namespace Ewoms {\n"
             "namespace ParserKeywords {\n\n";
+
+        return header;
+    }
+
+    std::string KeywordGenerator::headerAllPrelude() {
+        std::string header = "#ifndef PARSER_KEYWORDS_HH\n"
+            "#define PARSER_KEYWORDS_HH\n"
+            "#include <ewoms/eclio/parser/parserkeyword.hh>\n";
+
+        return header;
+    }
+
+    std::string KeywordGenerator::sourcePrelude(const std::string& suffix) {
+        std::string header =
+            "#include <ewoms/eclio/parser/deck/udavalue.hh>\n"
+            "#include <ewoms/eclio/parser/parserkeyword.hh>\n"
+            "#include <ewoms/eclio/parser/parseritem.hh>\n"
+            "#include <ewoms/eclio/parser/parserrecord.hh>\n"
+            "#include <ewoms/eclio/parser/parser.hh>\n"
+            "#include <ewoms/eclio/parser/parserkeywords/"+suffix+".hh>\n\n\n"
+            "namespace Ewoms {\n"
+            "namespace ParserKeywords {\n\n";
+
+        return header;
+    }
+
+    std::string KeywordGenerator::sourceAllPrelude() {
+        std::string header =
+            "#include <ewoms/eclio/parser/deck/udavalue.hh>\n"
+            "#include <ewoms/eclio/parser/parserkeyword.hh>\n"
+            "#include <ewoms/eclio/parser/parseritem.hh>\n"
+            "#include <ewoms/eclio/parser/parserrecord.hh>\n"
+            "#include <ewoms/eclio/parser/parser.hh>\n"
+            "#include <ewoms/eclio/parser/parserkeywords.hh>\n\n\n"
+            "namespace Ewoms {\n";
 
         return header;
     }
@@ -101,35 +126,47 @@ namespace Ewoms {
         return update;
     }
 
-    bool KeywordGenerator::updateSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
-        std::stringstream newSource;
-        newSource << sourceHeader << std::endl;
+    bool KeywordGenerator::updateSources(const KeywordLoader& loader, const std::string& sourceBuildPath, const std::string& sourceDir) const {
+        std::map< char, std::vector< const ParserKeyword* > > keywords;
+        for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter )
+            keywords[ std::tolower( iter->second->className().at(0) ) ].push_back( iter->second.get() );
 
-        newSource << "void addDefaultKeywords(Parser& p);"  << std::endl
-                  << "void addDefaultKeywords(Parser& p) {" << std::endl;
+        for( const auto& iter : keywords ) {
+            std::stringstream stream;
+
+            stream << sourcePrelude( std::string( 1, std::tolower( iter.first ) ) );
+            for( auto& kw : iter.second ) {
+                stream << kw->createCode() << std::endl;
+            }
+
+            stream << "}" << std::endl << "}" << std::endl;
+
+            const auto final_path = sourceBuildPath + sourceDir + "/" + std::string( 1, iter.first ) + ".cc";
+            write_file( stream, final_path, m_verbose, "source" );
+        }
+
+        // generate the global "parserkeywords.cc" source file which registers all
+        // keywords
+        std::stringstream stream;
+
+        stream << sourceAllPrelude() << std::endl;
+
+        stream << "void Parser::addDefaultKeywords()"  << std::endl
+               << "{" << std::endl;
         for( auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter ) {
-            newSource << "p.addKeyword< ParserKeywords::"
-                      << iter->second->className()
-                      << " >();" << std::endl;
+            stream << "  this->addKeyword< ParserKeywords::"
+                   << iter->second->className()
+                   << " >();" << std::endl;
         }
+        stream << "}" << std::endl;
 
-        newSource << "}" << std::endl;
+        stream << "} // namespace Ewoms" << std::endl;
 
-        for (auto iter = loader.keyword_begin(); iter != loader.keyword_end(); ++iter) {
-            std::shared_ptr<ParserKeyword> keyword = (*iter).second;
-            newSource << keyword->createCode() << std::endl;
-        }
-
-        newSource << "}" << std::endl;
-
-        newSource << "void Parser::addDefaultKeywords() {" << std::endl
-                  << "  Ewoms::ParserKeywords::addDefaultKeywords(*this);" << std::endl
-                  << "}}" << std::endl;
-
-        return write_file( newSource, sourceFile, m_verbose, "source" );
+        const auto final_path = sourceBuildPath + sourceDir + "/../parserkeywords.cc";
+        return write_file( stream, final_path, m_verbose, "source" );
     }
 
-    bool KeywordGenerator::updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerFile) const {
+    bool KeywordGenerator::updateHeaders(const KeywordLoader& loader, const std::string& headersBuildPath, const std::string& headersDir) const {
         bool update = false;
 
         std::map< char, std::vector< const ParserKeyword* > > keywords;
@@ -139,31 +176,30 @@ namespace Ewoms {
         for( const auto& iter : keywords ) {
             std::stringstream stream;
 
-            stream << headerHeader( std::string( 1, std::tolower( iter.first ) ) );
+            stream << headerPrelude( std::string( 1, std::tolower( iter.first ) ) );
             for( auto& kw : iter.second )
                 stream << kw->createDeclaration("   ") << std::endl;
 
             stream << "}" << std::endl << "}" << std::endl;
             stream << "#endif" << std::endl;
 
-            const auto final_path = headerBuildPath + headerFile + "/" + std::string( 1, iter.first ) + ".hh";
+            const auto final_path = headersBuildPath + headersDir + "/" + std::string( 1, iter.first ) + ".hh";
             if( write_file( stream, final_path, m_verbose, "header" ) )
                 update = true;
         }
 
         std::stringstream stream;
-        stream << headerHeader("");
-        stream << "}}" << std::endl;
+        stream << headerAllPrelude();
 
         for( const auto& iter : keywords )
             stream << "#include <"
-                << headerFile + "/"
+                << headersDir + "/"
                 << std::string( 1, std::tolower( iter.first ) ) + ".hh>"
                 << std::endl;
 
         stream << "#endif" << std::endl;
 
-        const auto final_path = headerBuildPath + headerFile + ".hh";
+        const auto final_path = headersBuildPath + "/" + headersDir + "/../parserkeywords.hh";
         return write_file( stream, final_path, m_verbose, "header" ) || update;
     }
 

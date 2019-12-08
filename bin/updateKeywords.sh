@@ -68,6 +68,4 @@ echo " Running code generator"
 
 $GENKW \
     "keyword_list.argv" \
-    "./ewoms/eclio/parser/parserkeywords.cc" \
-    "./" \
     "ewoms/eclio/parser/parserkeywords"

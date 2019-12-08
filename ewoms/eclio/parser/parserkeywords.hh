@@ -1,10 +1,6 @@
-#ifndef PARSER_KEYWORDS__HH
-#define PARSER_KEYWORDS__HH
+#ifndef PARSER_KEYWORDS_HH
+#define PARSER_KEYWORDS_HH
 #include <ewoms/eclio/parser/parserkeyword.hh>
-namespace Ewoms {
-namespace ParserKeywords {
-
-}}
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/b.hh>
 #include <ewoms/eclio/parser/parserkeywords/c.hh>
