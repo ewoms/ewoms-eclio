@@ -808,6 +808,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::SSWU >();
   this->addKeyword< ParserKeywords::START >();
   this->addKeyword< ParserKeywords::STCOND >();
+  this->addKeyword< ParserKeywords::STOG >();
   this->addKeyword< ParserKeywords::STONE >();
   this->addKeyword< ParserKeywords::STONE1 >();
   this->addKeyword< ParserKeywords::STONE1EX >();

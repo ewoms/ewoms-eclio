@@ -2020,6 +2020,18 @@ const std::string STCOND::PRESSURE::itemName = "PRESSURE";
 const double STCOND::PRESSURE::defaultValue = 1.013250;
 
 
+STOG::STOG( ) : ParserKeyword("STOG")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("STOG");
+}
+const std::string STOG::keywordName = "STOG";
+
+
 STONE::STONE( ) : ParserKeyword("STONE")
 {
   setFixedSize( (size_t) 0);

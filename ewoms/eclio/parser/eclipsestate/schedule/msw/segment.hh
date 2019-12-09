@@ -51,6 +51,11 @@ namespace Ewoms {
 
         SegmentType segmentType() const;
 
+        bool isSpiralICD() const
+        {
+            return this->segmentType() == SegmentType::SICD;
+        }
+
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
 

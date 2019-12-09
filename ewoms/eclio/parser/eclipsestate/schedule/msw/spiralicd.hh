@@ -54,7 +54,7 @@ namespace Ewoms {
         double criticalValue() const;
         double widthTransitionRegion() const;
         double maxViscosityRatio() const;
-        double methodEFlowScaling() const;
+        int methodEFlowScaling() const;
 
         void updateScalingFactor(const double segment_length, const double completion_length);
         double scalingFactor() const;

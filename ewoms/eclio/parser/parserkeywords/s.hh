@@ -1276,6 +1276,14 @@ namespace ParserKeywords {
 
 
 
+   class STOG : public ParserKeyword {
+   public:
+       STOG();
+       static const std::string keywordName;
+   };
+
+
+
    class STONE : public ParserKeyword {
    public:
        STONE();

@@ -18,6 +18,8 @@
 
 #include <ewoms/eclio/output/aggregatemswdata.hh>
 
+#include <ewoms/eclio/output/vectoritems/msw.hh>
+
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -405,6 +407,28 @@ namespace {
         }
 
         template <class ISegArray>
+        void assignSpiralICDCharacteristics(const Ewoms::Segment& segment,
+                                            const std::size_t   baseIndex,
+                                            ISegArray&          iSeg)
+        {
+            namespace ISegValue = ::Ewoms::RestartIO::Helpers::
+                VectorItems::ISeg::Value;
+
+            using Ix = ::Ewoms::RestartIO::Helpers::
+                VectorItems::ISeg::index;
+
+            const auto& sicd = segment.spiralICD();
+
+            iSeg[baseIndex + Ix::SegmentType]    = ISegValue::SegmentType::SICD;
+            iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodEFlowScaling();
+
+            iSeg[baseIndex + Ix::ICDOpenShutFlag] =
+                (sicd->status() == Ewoms::SpiralICD::Status::OPEN)
+                ? ISegValue::SICDStatus::Open
+                : ISegValue::SICDStatus::Shut;
+        }
+
+        template <class ISegArray>
         void staticContrib(const Ewoms::Well&       well,
                            const std::vector<int>& inteHead,
                            ISegArray&              iSeg)
@@ -417,17 +441,23 @@ namespace {
                 std::size_t segmentInd = 0;
                 auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
                 for (int ind = 0; ind < welSegSet.size(); ind++) {
-                    auto segNumber = welSegSet[ind].segmentNumber();
+                    const auto& segment = welSegSet[ind];
+
+                    auto segNumber = segment.segmentNumber();
                     auto iS = (segNumber-1)*noElmSeg;
                     iSeg[iS + 0] = welSegSet[orderedSegmentNo[ind]].segmentNumber();
-                    iSeg[iS + 1] = welSegSet[ind].outletSegment();
+                    iSeg[iS + 1] = segment.outletSegment();
                     iSeg[iS + 2] = (inflowSegmentCurBranch(welSegSet, ind) == 0) ? 0 : welSegSet[inflowSegmentCurBranch(welSegSet, ind)].segmentNumber();
-                    iSeg[iS + 3] = welSegSet[ind].branchNumber();
+                    iSeg[iS + 3] = segment.branchNumber();
                     iSeg[iS + 4] = noInFlowBranches(welSegSet, ind);
                     iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
                     iSeg[iS + 6] = noConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 8] = iSeg[iS+0];
+
+                    if (segment.isSpiralICD()) {
+                        assignSpiralICDCharacteristics(segment, iS, iSeg);
+                    }
                 }
             }
             else {
@@ -453,6 +483,41 @@ namespace {
                 WV::NumWindows{ nswlmx(inteHead) },
                 WV::WindowSize{ entriesPerMSW(inteHead) }
             };
+        }
+
+        template <class RSegArray>
+        void assignSpiralICDCharacteristics(const ::Ewoms::Segment&    segment,
+                                            const ::Ewoms::UnitSystem& usys,
+                                            const int                baseIndex,
+                                            RSegArray&               rSeg)
+        {
+            using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::RSeg::index;
+            using M  = ::Ewoms::UnitSystem::measure;
+
+            const auto& sicd = segment.spiralICD();
+
+            rSeg[baseIndex + Ix::DeviceBaseStrength] =
+                usys.from_si(M::icd_strength, sicd->strength());
+
+            rSeg[baseIndex + Ix::CalibrFluidDensity] =
+                usys.from_si(M::density, sicd->densityCalibration());
+
+            rSeg[baseIndex + Ix::CalibrFluidViscosity] =
+                usys.from_si(M::viscosity, sicd->viscosityCalibration());
+
+            rSeg[baseIndex + Ix::CriticalWaterFraction] = sicd->criticalValue();
+
+            rSeg[baseIndex + Ix::TransitionRegWidth] =
+                sicd->widthTransitionRegion();
+
+            rSeg[baseIndex + Ix::MaxEmulsionRatio] =
+                sicd->maxViscosityRatio();
+
+            rSeg[baseIndex + Ix::MaxValidEFlowRate] =
+                usys.from_si(M::geometric_volume_rate, sicd->maxAbsoluteRate());
+
+            rSeg[baseIndex + Ix::ICDLength] =
+                usys.from_si(M::length, sicd->length());
         }
 
         template <class RSegArray>
@@ -548,23 +613,24 @@ namespace {
 
                 //Treat subsequent segments
                 for (segIndex = 1; segIndex < welSegSet.size(); segIndex++) {
+                    const auto& segment = welSegSet[segIndex];
 
-                    segNumber = welSegSet[segIndex].segmentNumber();
+                    segNumber = segment.segmentNumber();
                     // 'stringSegNum' is one-based (1 .. #segments inclusive)
                     stringSegNum = std::to_string(segNumber);
 
                     // set the elements of the rSeg array
-                    const auto& outSeg = welSegSet[segIndex].outletSegment();
+                    const auto& outSeg = segment.outletSegment();
                     const auto& ind_ofs = welSegSet.segmentNumberToIndex(outSeg);
                     auto iS = (segNumber-1)*noElmSeg;
-                    rSeg[iS +   0] = units.from_si(M::length, (welSegSet[segIndex].totalLength() - welSegSet[ind_ofs].totalLength()));
-                    rSeg[iS +   1] = units.from_si(M::length, (welSegSet[segIndex].depth() - welSegSet[ind_ofs].depth()));
-                    rSeg[iS +   2] = units.from_si(M::length, (welSegSet[segIndex].internalDiameter()));
-                    rSeg[iS +   3] = units.from_si(M::length, (welSegSet[segIndex].roughness()));
-                    rSeg[iS +   4] = areaFromLengthUnitConv *  welSegSet[segIndex].crossArea();
-                    rSeg[iS +   5] = volFromLengthUnitConv  *  welSegSet[segIndex].volume();
-                    rSeg[iS +   6] = units.from_si(M::length, (welSegSet[segIndex].totalLength()));
-                    rSeg[iS +   7] = units.from_si(M::length, (welSegSet[segIndex].depth()));
+                    rSeg[iS +   0] = units.from_si(M::length, (segment.totalLength() - welSegSet[ind_ofs].totalLength()));
+                    rSeg[iS +   1] = units.from_si(M::length, (segment.depth() - welSegSet[ind_ofs].depth()));
+                    rSeg[iS +   2] = units.from_si(M::length, (segment.internalDiameter()));
+                    rSeg[iS +   3] = units.from_si(M::length, (segment.roughness()));
+                    rSeg[iS +   4] = areaFromLengthUnitConv *  segment.crossArea();
+                    rSeg[iS +   5] = volFromLengthUnitConv  *  segment.volume();
+                    rSeg[iS +   6] = units.from_si(M::length, (segment.totalLength()));
+                    rSeg[iS +   7] = units.from_si(M::length, (segment.depth()));
 
                     //see section above for explanation of values
                     // branch according to whether multisegment well calculations are switched on or not
@@ -599,6 +665,10 @@ namespace {
                     rSeg[iS + 108] = 1.0;
                     rSeg[iS + 109] = 1.0;
                     rSeg[iS + 110] = 1.0;
+
+                    if (segment.isSpiralICD()) {
+                        assignSpiralICDCharacteristics(segment, units, iS, rSeg);
+                    }
                 }
             }
             else {

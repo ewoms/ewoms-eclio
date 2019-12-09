@@ -42,6 +42,11 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
                 SICD  = -7,
                 Valve = -5,
             };
+
+            enum SICDStatus : int {
+                Open = 0, // Yes, Open = 0 is correct
+                Shut = 1,
+            };
         } // Value
     } // ISeg
 
