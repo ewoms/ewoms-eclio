@@ -420,7 +420,7 @@ namespace {
             const auto& sicd = segment.spiralICD();
 
             iSeg[baseIndex + Ix::SegmentType]    = ISegValue::SegmentType::SICD;
-            iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodEFlowScaling();
+            iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodFlowScaling();
 
             iSeg[baseIndex + Ix::ICDOpenShutFlag] =
                 (sicd->status() == Ewoms::SpiralICD::Status::OPEN)
@@ -513,7 +513,7 @@ namespace {
             rSeg[baseIndex + Ix::MaxEmulsionRatio] =
                 sicd->maxViscosityRatio();
 
-            rSeg[baseIndex + Ix::MaxValidEFlowRate] =
+            rSeg[baseIndex + Ix::MaxValidFlowRate] =
                 usys.from_si(M::geometric_volume_rate, sicd->maxAbsoluteRate());
 
             rSeg[baseIndex + Ix::ICDLength] =

@@ -112,7 +112,7 @@ namespace Ewoms {
         return m_max_viscosity_ratio;
     }
 
-    int SpiralICD::methodEFlowScaling() const
+    int SpiralICD::methodFlowScaling() const
     {
         return m_method_flow_scaling;
     }

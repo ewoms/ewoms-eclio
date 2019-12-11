@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     BOOST_CHECK_EQUAL(sicd_ptr->criticalValue(), 0.6);
     BOOST_CHECK_EQUAL(sicd_ptr->widthTransitionRegion(), 0.05);
     BOOST_CHECK_EQUAL(sicd_ptr->maxViscosityRatio(), 5.0);
-    BOOST_CHECK_EQUAL(sicd_ptr->methodEFlowScaling(), -1);
+    BOOST_CHECK_EQUAL(sicd_ptr->methodFlowScaling(), -1);
     // the scaling factor has not been updated properly, so it will throw
     BOOST_CHECK_THROW(sicd_ptr->scalingFactor(), std::runtime_error);
 

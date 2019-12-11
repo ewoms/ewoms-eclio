@@ -57,7 +57,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
 
     namespace XAnalyticAquifer {
         enum index : std::vector<double>::size_type {
-            EFlowRate   = 0,
+            FlowRate   = 0,
             Pressure   = 1,  // Dynamic aquifer pressure
             ProdVolume = 2,  // Liquid volume produced from aquifer (into reservoir)
             TotalArea  = 3,

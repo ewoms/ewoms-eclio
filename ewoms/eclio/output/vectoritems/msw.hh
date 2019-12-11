@@ -70,7 +70,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
 
             ValveLength    = 40, // Length of valve
             ValveArea      = 41, // Cross-sectional area of valve
-            ValveEFlowCoeff = 42, // Valve's dimensionless flow coefficient
+            ValveFlowCoeff = 42, // Valve's dimensionless flow coefficient
             ValveMaxArea   = 43, // Maximal cross-sectional valve area
 
             DeviceBaseStrength = 86,
@@ -81,7 +81,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
             CriticalWaterFraction = 90,
             TransitionRegWidth    = 91,
             MaxEmulsionRatio      = 92,
-            MaxValidEFlowRate      = 97,
+            MaxValidFlowRate      = 97,
 
             ICDLength = 102,
 
