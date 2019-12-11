@@ -22,6 +22,7 @@
 #include <memory>
 #include <vector>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 
 namespace Ewoms {
 
@@ -30,7 +31,8 @@ namespace Ewoms {
 
         enum class SegmentType {
             REGULAR,
-            SICD
+            SICD,
+            VALVE
         };
 
         Segment();
@@ -70,6 +72,10 @@ namespace Ewoms {
         void updateSpiralICD(const SpiralICD& spiral_icd);
 
         const std::shared_ptr<SpiralICD>& spiralICD() const;
+
+        void updateValve(const Valve& valve, const double segment_length);
+
+        const Valve* valve() const;
 
     private:
         // segment number
@@ -116,6 +122,7 @@ namespace Ewoms {
         // indicate if the data related to 'INC' or 'ABS' is ready
         // the volume will be updated at a final step.
         bool m_data_ready;
+
         // indicate the type of the segment
         // regular or spiral ICD
         SegmentType m_segment_type = SegmentType::REGULAR;
@@ -123,6 +130,10 @@ namespace Ewoms {
         // information related to SpiralICD. It is nullptr for segments are not
         // spiral ICD type
         std::shared_ptr<SpiralICD> m_spiral_icd;
+
+        // information related to sub-critical valve. It is nullptr for segments are not
+        // of type of Valve
+        std::shared_ptr<Valve> m_valve;
 
         static constexpr double invalid_value = -1.e100;
         // We are not handling the length of segment projected onto the X-axis and Y-axis.

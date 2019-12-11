@@ -44,6 +44,8 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welltestconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
 
+#include <ewoms/eclio/utility/activegridcells.hh>
+
 /*
   The DynamicState<std::shared_ptr<T>> pattern: The quantities in the Schedule
   section like e.g. wellrates and completion properties are typically
@@ -217,7 +219,7 @@ namespace Ewoms
           Will remove all completions which are connected to cell which is not
           active. Will scan through all wells and all timesteps.
         */
-        void filterConnections(const EclipseGrid& grid);
+        void filterConnections(const ActiveGridCells& grid);
         size_t size() const;
 
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
@@ -274,6 +276,9 @@ namespace Ewoms
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep);
+        // TODO: we should incorporate ParseContext and ErrorGuard, including the above keyword
+        void handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep);
+
         void handleWCONINJE( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWFOAM( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWPOLYMER( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);

@@ -148,17 +148,19 @@ static Ewoms::Deck createValidIntDeck() {
         "25*0.25 /\n"
         "PERMY\n"
         "   25*1.0 /\n"
+        "PERMX\n"
+        "   25*1.0 /\n"
         "PORO\n"
         "   25*1.0 /\n"
-        "REGIONS\n"
-        "SATNUM \n"
+        "MULTNUM \n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
         "/\n"
-        "MULTNUM \n"
+        "REGIONS\n"
+        "SATNUM \n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
         "1  1  2  2 2\n"
@@ -234,6 +236,7 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg(deck);
     Ewoms::Eclipse3DProperties props(deck, tm, eg);
+    Ewoms::FieldPropsManager fp(deck, eg, tm);
 
     const auto& porv_data  = props.getDoubleGridProperty("PORV").getData();
     const auto& permx_data = props.getDoubleGridProperty("PERMX").getData();
@@ -242,5 +245,14 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     BOOST_CHECK_EQUAL( porv_data[0], 0.50 );
     BOOST_CHECK_EQUAL( permx_data[0] / permy_data[0], 0.50 );
     BOOST_CHECK_EQUAL( permx_data[1], permy_data[1]);
+
+    const auto& porv  = fp.porv(true);
+    const auto& permx = fp.get_global<double>("PERMX");
+    const auto& permy = fp.get_global<double>("PERMY");
+
+    BOOST_CHECK_EQUAL( porv[0], 0.50 );
+    BOOST_CHECK_EQUAL( porv[1], 1.00 );
+    BOOST_CHECK_EQUAL( permx[0] / permy[0], 0.50 );
+    BOOST_CHECK_EQUAL( permx[1], permy[1]);
 }
 

@@ -31,6 +31,11 @@ void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {
     this->fp->reset_actnum(actnum);
 }
 
+FieldPropsManager::MemInfo FieldPropsManager::meminfo( ) const {
+    return FieldPropsManager::MemInfo(this->fp->global_size, this->fp->active_size, this->fp->num_int(), this->fp->num_double());
+
+}
+
 template <typename T>
 const std::vector<T>& FieldPropsManager::get(const std::string& keyword) const {
     const auto& data_ptr = this->try_get<T>(keyword);
@@ -59,6 +64,11 @@ template <typename T>
 std::vector<T> FieldPropsManager::get_global(const std::string& keyword) const {
     const auto& data = this->get<T>(keyword);
     return this->fp->global_copy(data);
+}
+
+template <typename T>
+std::vector<T> FieldPropsManager::get_copy(const std::string& keyword, bool global) const {
+    return this->fp->get_copy<T>(keyword, global);
 }
 
 template <typename T>
@@ -94,7 +104,11 @@ std::vector<int> FieldPropsManager::actnum() const {
 }
 
 std::vector<double> FieldPropsManager::porv(bool global) const {
-    return this->fp->porv(global);
+    const auto& data = this->get<double>("PORV");
+    if (global)
+        return this->fp->global_copy(data);
+    else
+        return data;
 }
 
 template bool FieldPropsManager::supported<int>(const std::string&);
@@ -114,6 +128,9 @@ template std::vector<double> FieldPropsManager::get_global(const std::string& ke
 
 template const std::vector<int>& FieldPropsManager::get(const std::string& keyword) const;
 template const std::vector<double>& FieldPropsManager::get(const std::string& keyword) const;
+
+template std::vector<int> FieldPropsManager::get_copy(const std::string& keyword, bool global) const;
+template std::vector<double> FieldPropsManager::get_copy(const std::string& keyword, bool global) const;
 
 template const std::vector<int>* FieldPropsManager::try_get(const std::string& keyword) const;
 template const std::vector<double>* FieldPropsManager::try_get(const std::string& keyword) const;

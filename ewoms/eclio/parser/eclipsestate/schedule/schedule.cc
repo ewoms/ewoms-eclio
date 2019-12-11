@@ -315,6 +315,9 @@ namespace {
         else if (keyword.name() == "WSEGSICD")
             handleWSEGSICD(keyword, currentStep);
 
+        else if (keyword.name() == "WSEGVALV")
+            handleWSEGVALV(keyword, currentStep); //, parseContext, errors);
+
         else if (keyword.name() == "WELOPEN")
             handleWELOPEN(keyword, currentStep, parseContext, errors);
 
@@ -1517,11 +1520,12 @@ namespace {
                         std::string guide_rate_str = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
                         guide_rate_def = Group::GuideRateTargetFromString( guide_rate_str );
 
-                        if ((guide_rate_str == "INJ" || guide_rate_str == "POTN" || guide_rate_str == "FORM")) {
+                        if ((guide_rate_def == Group::GuideRateTarget::INJV ||
+                             guide_rate_def == Group::GuideRateTarget::POTN ||
+                             guide_rate_def == Group::GuideRateTarget::FORM)) {
                             std::string msg = "The supplied guide_rate value will be ignored";
                             parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg, errors);
-                        }
-                        else {
+                        } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
                                 guide_rate_def = Group::GuideRateTarget::POTN;
@@ -1930,6 +1934,23 @@ namespace {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
                 if (well_ptr -> updateWSEGSICD(sicd_pairs) )
+                    this->updateWell(well_ptr, currentStep);
+            }
+        }
+    }
+
+    void Schedule::handleWSEGVALV( const DeckKeyword& keyword, size_t currentStep) {
+        const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(keyword);
+
+        for (const auto& map_elem : valves) {
+            const std::string& well_name_pattern = map_elem.first;
+            const auto well_names = this->wellNames(well_name_pattern, currentStep);
+            const std::vector<std::pair<int, Valve> >& valve_pairs = map_elem.second;
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                if (well_ptr -> updateWSEGVALV(valve_pairs) )
                     this->updateWell(well_ptr, currentStep);
             }
         }
@@ -2539,7 +2560,7 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         }
     }
 
-    void Schedule::filterConnections(const EclipseGrid& grid) {
+    void Schedule::filterConnections(const ActiveGridCells& grid) {
         for (auto& dynamic_pair : this->wells_static) {
             auto& dynamic_state = dynamic_pair.second;
             for (auto& well_pair : dynamic_state.unique()) {

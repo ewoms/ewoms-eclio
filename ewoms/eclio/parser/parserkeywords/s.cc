@@ -417,6 +417,9 @@ SEGMENT_PROBE::SEGMENT_PROBE( ) : ParserKeyword("SEGMENT_PROBE")
   addDeckName("SGFR");
   addDeckName("SOFR");
   addDeckName("SPR");
+  addDeckName("SPRD");
+  addDeckName("SPRDF");
+  addDeckName("SPRDH");
   addDeckName("SWFR");
   {
      ParserRecord record;

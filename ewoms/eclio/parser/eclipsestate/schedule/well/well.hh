@@ -33,6 +33,8 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welleconproductionlimits.hh>
 #include <ewoms/eclio/parser/units/units.hh>
 
+#include <ewoms/eclio/utility/activegridcells.hh>
+
 namespace Ewoms {
 
 class DeckRecord;
@@ -405,6 +407,7 @@ public:
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
     bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
+    bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -412,7 +415,7 @@ public:
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
 
-    void filterConnections(const EclipseGrid& grid);
+    void filterConnections(const ActiveGridCells& grid);
     void switchToInjector();
     void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;

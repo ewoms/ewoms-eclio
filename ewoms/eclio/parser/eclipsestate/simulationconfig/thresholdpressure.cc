@@ -16,6 +16,7 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/section.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
@@ -127,12 +128,13 @@ namespace Ewoms {
                 const int r1 = region1Item.get< int >(0);
                 const int r2 = region2Item.get< int >(0);
                 if (r1 > maxEqlnum || r2 > maxEqlnum) {
-                    throw std::runtime_error("Too high region numbers in THPRES keyword");
+                    OpmLog::warning("The THPRES region values: " + std::to_string(r1) + " and " + std::to_string(r2) + " are not compatible with EQLNUM: 1.." + std::to_string(maxEqlnum) + " ignored");
+                    continue;
                 }
 
-                if (thpressItem.hasValue(0)) {
+                if (thpressItem.hasValue(0))
                     addBarrier( r1 , r2 , thpressItem.getSIDouble( 0 ) );
-                } else
+                else
                     addBarrier( r1 , r2 );
             }
         }

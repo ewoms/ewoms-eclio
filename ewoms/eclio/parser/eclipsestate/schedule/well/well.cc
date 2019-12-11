@@ -24,7 +24,6 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellproductionproperties.hh>
-
 #include <fnmatch.h>
 
 namespace Ewoms {
@@ -617,7 +616,16 @@ bool Well::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pa
         return false;
 }
 
-void Well::filterConnections(const EclipseGrid& grid) {
+bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs) {
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+    if (new_segments->updateWSEGVALV(valve_pairs)) {
+        this->segments = new_segments;
+        return true;
+    } else
+        return false;
+}
+
+void Well::filterConnections(const ActiveGridCells& grid) {
     this->connections->filter(grid);
 }
 

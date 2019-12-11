@@ -21,6 +21,8 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 
+#include <ewoms/eclio/utility/activegridcells.hh>
+
 namespace Ewoms {
     class EclipseGrid;
     class Eclipse3DProperties;
@@ -60,7 +62,7 @@ namespace Ewoms {
 
         const_iterator begin() const { return this->m_connections.begin(); }
         const_iterator end() const { return this->m_connections.end(); }
-        void filter(const EclipseGrid& grid);
+        void filter(const ActiveGridCells& grid);
         bool allConnectionsShut() const;
         /// Order connections irrespective of input order.
         /// The algorithm used is the following:
