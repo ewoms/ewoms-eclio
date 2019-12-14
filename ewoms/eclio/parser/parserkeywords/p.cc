@@ -2687,6 +2687,18 @@ const std::string PVTW::WATER_VISCOSIBILITY::itemName = "WATER_VISCOSIBILITY";
 const double PVTW::WATER_VISCOSIBILITY::defaultValue = 0.000000;
 
 
+PVTWSALT::PVTWSALT( ) : ParserKeyword("PVTWSALT")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PVTWSALT");
+}
+const std::string PVTWSALT::keywordName = "PVTWSALT";
+
+
 PVT_M::PVT_M( ) : ParserKeyword("PVT_M")
 {
   setFixedSize( (size_t) 0);

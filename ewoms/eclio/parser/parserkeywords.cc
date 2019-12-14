@@ -643,6 +643,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::PVTNUM >();
   this->addKeyword< ParserKeywords::PVTO >();
   this->addKeyword< ParserKeywords::PVTW >();
+  this->addKeyword< ParserKeywords::PVTWSALT >();
   this->addKeyword< ParserKeywords::PVT_M >();
   this->addKeyword< ParserKeywords::PYACTION >();
   this->addKeyword< ParserKeywords::PYINPUT >();
@@ -813,6 +814,8 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::STONE1 >();
   this->addKeyword< ParserKeywords::STONE1EX >();
   this->addKeyword< ParserKeywords::STONE2 >();
+  this->addKeyword< ParserKeywords::STOW >();
+  this->addKeyword< ParserKeywords::STWG >();
   this->addKeyword< ParserKeywords::SUMMARY >();
   this->addKeyword< ParserKeywords::SUMTHIN >();
   this->addKeyword< ParserKeywords::SURF >();

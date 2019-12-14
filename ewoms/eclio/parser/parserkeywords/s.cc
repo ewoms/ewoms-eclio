@@ -2088,6 +2088,30 @@ STONE2::STONE2( ) : ParserKeyword("STONE2")
 const std::string STONE2::keywordName = "STONE2";
 
 
+STOW::STOW( ) : ParserKeyword("STOW")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("STOW");
+}
+const std::string STOW::keywordName = "STOW";
+
+
+STWG::STWG( ) : ParserKeyword("STWG")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("STWG");
+}
+const std::string STWG::keywordName = "STWG";
+
+
 SUMMARY::SUMMARY( ) : ParserKeyword("SUMMARY")
 {
   setFixedSize( (size_t) 0);

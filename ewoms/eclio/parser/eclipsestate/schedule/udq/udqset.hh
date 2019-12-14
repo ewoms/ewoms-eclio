@@ -81,6 +81,7 @@ public:
     std::vector<UDQScalar>::const_iterator begin() const;
     std::vector<UDQScalar>::const_iterator end() const;
 
+    std::vector<std::string> wgnames() const;
     std::vector<double> defined_values() const;
     std::size_t defined_size() const;
     const std::string& name() const;
@@ -90,7 +91,7 @@ private:
     UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
 
     std::string m_name;
-    UDQVarType m_var_type;
+    UDQVarType m_var_type = UDQVarType::NONE;
     std::unordered_map<std::string, std::size_t> wgname_index;
     std::vector<UDQScalar> values;
 };

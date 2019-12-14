@@ -1322,6 +1322,22 @@ namespace ParserKeywords {
 
 
 
+   class STOW : public ParserKeyword {
+   public:
+       STOW();
+       static const std::string keywordName;
+   };
+
+
+
+   class STWG : public ParserKeyword {
+   public:
+       STWG();
+       static const std::string keywordName;
+   };
+
+
+
    class SUMMARY : public ParserKeyword {
    public:
        SUMMARY();

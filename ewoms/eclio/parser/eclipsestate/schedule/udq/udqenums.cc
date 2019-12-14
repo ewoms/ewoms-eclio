@@ -21,6 +21,7 @@
 #include <map>
 #include <set>
 #include <stdexcept>
+#include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
@@ -117,6 +118,7 @@ namespace {
                                                                      {"NORM2", UDQTokenType::scalar_func_norm2},
                                                                      {"NORMI", UDQTokenType::scalar_func_normi},
                                                                      {"PROD", UDQTokenType::scalar_func_prod}};
+
 }
 
 UDQVarType targetType(const std::string& keyword) {
@@ -221,16 +223,6 @@ UDQTokenType funcType(const std::string& func_name) {
     return UDQTokenType::error;
 }
 
-bool compatibleTypes(UDQVarType lhs, UDQVarType rhs) {
-    if (lhs == rhs)
-        return true;
-
-    if (rhs == UDQVarType::SCALAR)
-        return true;
-
-    return false;
-}
-
 std::string typeName(UDQVarType var_type) {
     switch (var_type) {
     case UDQVarType::NONE:
@@ -254,7 +246,7 @@ std::string typeName(UDQVarType var_type) {
     case UDQVarType::BLOCK_VAR:
         return "BLOCK_VAR";
     default:
-        throw std::runtime_error("Should not be here");
+        throw std::runtime_error("Should not be here: " + std::to_string(static_cast<int>(var_type)));
     }
 }
 

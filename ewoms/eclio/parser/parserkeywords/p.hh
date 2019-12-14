@@ -1797,6 +1797,14 @@ namespace ParserKeywords {
 
 
 
+   class PVTWSALT : public ParserKeyword {
+   public:
+       PVTWSALT();
+       static const std::string keywordName;
+   };
+
+
+
    class PVT_M : public ParserKeyword {
    public:
        PVT_M();
