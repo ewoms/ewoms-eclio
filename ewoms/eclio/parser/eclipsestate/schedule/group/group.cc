@@ -181,9 +181,6 @@ bool Group::wellgroup() const {
 }
 
 bool Group::addWell(const std::string& well_name) {
-    if (!this->m_groups.empty())
-        throw std::logic_error("Groups can not mix group and well children. Trying to add well: " + well_name + " to group: " + this->name());
-
     if (this->m_wells.count(well_name) == 0) {
         this->m_wells.insert(well_name);
         return true;
