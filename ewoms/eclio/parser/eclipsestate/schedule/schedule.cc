@@ -45,8 +45,10 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicstate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicvector.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/events.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/oilvaporizationproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>

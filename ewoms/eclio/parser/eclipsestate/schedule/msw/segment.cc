@@ -17,6 +17,9 @@
 */
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
+
 #include <cassert>
 
 namespace Ewoms {
@@ -183,4 +186,3 @@ namespace Ewoms {
     }
 
 }
-

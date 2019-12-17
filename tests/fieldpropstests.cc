@@ -151,6 +151,7 @@ SATNUM
     BOOST_CHECK_EQUAL(s1[3], 6);
     BOOST_CHECK_EQUAL(s1[4], 7);
     BOOST_CHECK_EQUAL(s1[5], 8);
+    BOOST_CHECK_EQUAL(fpm.active_size(), 6);
 
     std::vector<int> actnum2 = {1,0,1,0,0,0,1,0,1};
     fpm.reset_actnum(actnum2);
@@ -160,6 +161,7 @@ SATNUM
     BOOST_CHECK_EQUAL(s1[1], 2);
     BOOST_CHECK_EQUAL(s1[2], 6);
     BOOST_CHECK_EQUAL(s1[3], 8);
+    BOOST_CHECK_EQUAL(fpm.active_size(), 4);
 
     BOOST_CHECK_THROW(fpm.reset_actnum(actnum1), std::logic_error);
 }
@@ -486,4 +488,29 @@ PORO
 
     //The PERMY keyword can not be default initialized
     BOOST_CHECK_THROW(fpm.get_copy<double>("PERMY"), std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(GET_TEMPI) {
+    std::string deck_string = R"(
+RUNSPEC
+
+EQLDIMS
+/
+PROPS
+
+RTEMPVD
+   0.5 0
+   1.5 100 /
+
+)";
+
+    EclipseGrid grid(1,1, 2);
+    Deck deck = Parser{}.parseString(deck_string);
+    Ewoms::TableManager tm(deck);
+    FieldPropsManager fpm(deck, grid, tm);
+
+    const auto& tempi = fpm.get<double>("TEMPI");
+    double celcius_offset = 273.15;
+    BOOST_CHECK_CLOSE( tempi[0], 0 + celcius_offset , 1e-6);
+    BOOST_CHECK_CLOSE( tempi[1], 100 + celcius_offset , 1e-6);
 }

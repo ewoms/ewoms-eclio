@@ -21,12 +21,15 @@
 #include <ewoms/eclio/output/vectoritems/msw.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
-
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
+
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
+
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
 #include <algorithm>
@@ -429,6 +432,33 @@ namespace {
         }
 
         template <class ISegArray>
+        void assignValveCharacteristics(const std::size_t baseIndex,
+                                        ISegArray&        iSeg)
+        {
+            namespace ISegValue = ::Ewoms::RestartIO::Helpers::
+                VectorItems::ISeg::Value;
+
+            using Ix = ::Ewoms::RestartIO::Helpers::
+                VectorItems::ISeg::index;
+
+            iSeg[baseIndex + Ix::SegmentType] = ISegValue::SegmentType::Valve;
+        }
+
+        template <class ISegArray>
+        void assignSegmentTypeCharacteristics(const Ewoms::Segment& segment,
+                                              const std::size_t   baseIndex,
+                                              ISegArray&          iSeg)
+        {
+            if (isSpiralICD(segment)) {
+                assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
+            }
+
+            if (isValve(segment)) {
+                assignValveCharacteristics(baseIndex, iSeg);
+            }
+        }
+
+        template <class ISegArray>
         void staticContrib(const Ewoms::Well&       well,
                            const std::vector<int>& inteHead,
                            ISegArray&              iSeg)
@@ -455,8 +485,8 @@ namespace {
                     iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 8] = iSeg[iS+0];
 
-                    if (segment.isSpiralICD()) {
-                        assignSpiralICDCharacteristics(segment, iS, iSeg);
+                    if (! isRegular(segment)) {
+                        assignSegmentTypeCharacteristics(segment, iS, iSeg);
                     }
                 }
             }
@@ -483,6 +513,64 @@ namespace {
                 WV::NumWindows{ nswlmx(inteHead) },
                 WV::WindowSize{ entriesPerMSW(inteHead) }
             };
+        }
+
+        float valveEFlowUnitCoefficient(const Ewoms::UnitSystem::UnitType uType)
+        {
+            using UType = Ewoms::UnitSystem::UnitType;
+
+            // Numerical values taken from written sources.  Nothing known
+            // about their origins, other than the fact that they depend on
+            // the active unit conventions.
+            switch (uType) {
+                case UType::UNIT_TYPE_METRIC:
+                    return 1.340e-15f;
+
+                case UType::UNIT_TYPE_FIELD:
+                    return 2.892e-14f;
+
+                case UType::UNIT_TYPE_LAB:
+                    return 7.615e-14f;
+
+                case UType::UNIT_TYPE_PVT_M:
+                    return 1.322e-15f;
+            }
+
+            throw std::invalid_argument {
+                "Unsupported Unit Convention: '" +
+                std::to_string(static_cast<int>(uType)) + '\''
+            };
+        }
+
+        template <class RSegArray>
+        void assignValveCharacteristics(const ::Ewoms::Segment&    segment,
+                                        const ::Ewoms::UnitSystem& usys,
+                                        const int                baseIndex,
+                                        RSegArray&               rSeg)
+        {
+            using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::RSeg::index;
+            using M  = ::Ewoms::UnitSystem::measure;
+
+            const auto* valve = segment.valve();
+
+            rSeg[baseIndex + Ix::ValveLength] =
+                usys.from_si(M::length, valve->pipeAdditionalLength());
+
+            rSeg[baseIndex + Ix::ValveArea] =
+                usys.from_si(M::length, usys.from_si(M::length, valve->conCrossArea()));
+
+            rSeg[baseIndex + Ix::ValveFlowCoeff] = valve->conEFlowCoefficient();
+            rSeg[baseIndex + Ix::ValveMaxArea]   =
+                usys.from_si(M::length, usys.from_si(M::length, valve->conMaxCrossArea()));
+
+            const auto Cu   = valveEFlowUnitCoefficient(usys.getType());
+            const auto CvAc = rSeg[baseIndex + Ix::ValveFlowCoeff]
+                *             rSeg[baseIndex + Ix::ValveArea];
+
+            rSeg[baseIndex + Ix::DeviceBaseStrength] = Cu / (2.0f * CvAc * CvAc);
+            rSeg[baseIndex + Ix::ValveAreaFraction] =
+                  rSeg[baseIndex + Ix::ValveArea]
+                / rSeg[baseIndex + Ix::ValveMaxArea];
         }
 
         template <class RSegArray>
@@ -518,6 +606,21 @@ namespace {
 
             rSeg[baseIndex + Ix::ICDLength] =
                 usys.from_si(M::length, sicd->length());
+        }
+
+        template <class RSegArray>
+        void assignSegmentTypeCharacteristics(const ::Ewoms::Segment&    segment,
+                                              const ::Ewoms::UnitSystem& usys,
+                                              const int                baseIndex,
+                                              RSegArray&               rSeg)
+        {
+            if (isSpiralICD(segment)) {
+                assignSpiralICDCharacteristics(segment, usys, baseIndex, rSeg);
+            }
+
+            if (isValve(segment)) {
+                assignValveCharacteristics(segment, usys, baseIndex, rSeg);
+            }
         }
 
         template <class RSegArray>
@@ -666,8 +769,8 @@ namespace {
                     rSeg[iS + 109] = 1.0;
                     rSeg[iS + 110] = 1.0;
 
-                    if (segment.isSpiralICD()) {
-                        assignSpiralICDCharacteristics(segment, units, iS, rSeg);
+                    if (! isRegular(segment)) {
+                        assignSegmentTypeCharacteristics(segment, units, iS, rSeg);
                     }
                 }
             }

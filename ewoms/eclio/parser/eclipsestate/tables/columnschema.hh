@@ -28,9 +28,11 @@ namespace Ewoms {
 
     class ColumnSchema {
     public:
+        ColumnSchema();
         ColumnSchema(const std::string& name , Table::ColumnOrderEnum order, Table::DefaultAction defaultAction);
         ColumnSchema(const std::string& name , Table::ColumnOrderEnum order, double defaultValue);
         const std::string& name() const;
+        Table::ColumnOrderEnum order() const;
         bool validOrder( double value1 , double value2) const;
         bool lookupValid( ) const;
         bool acceptsDefault( ) const;
@@ -38,6 +40,9 @@ namespace Ewoms {
         bool isDecreasing( ) const;
         Table::DefaultAction getDefaultMode( ) const;
         double getDefaultValue( ) const;
+
+        bool operator==(const ColumnSchema& data) const;
+
     private:
         std::string m_name;
         Table::ColumnOrderEnum m_order;

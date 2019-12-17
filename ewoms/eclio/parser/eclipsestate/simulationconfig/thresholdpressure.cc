@@ -140,6 +140,16 @@ namespace Ewoms {
         }
     }
 
+    ThresholdPressure::ThresholdPressure(bool active, bool restart,
+                                         const ThresholdPressureTable& thpTable,
+                                         const PressureTable& pTable)
+      : m_active(active)
+      , m_restart(restart)
+      , m_thresholdPressureTable(thpTable)
+      , m_pressureTable(pTable)
+    {
+    }
+
     bool ThresholdPressure::hasRegionBarrier(int r1 , int r2) const {
         std::pair<int,int> indexPair = makeIndex(r1,r2);
         if (m_pressureTable.find( indexPair ) == m_pressureTable.end())
@@ -213,6 +223,13 @@ namespace Ewoms {
             auto value_pair = pair_pair.second;
             return value_pair.first;
         }
+    }
+
+    bool ThresholdPressure::operator==(const ThresholdPressure& data) const {
+        return this->active() == data.active() &&
+               this->restart() == data.restart() &&
+               this->thresholdPressureTable() == data.thresholdPressureTable() &&
+               this->pressureTable() == data.pressureTable();
     }
 
 } //namespace Ewoms

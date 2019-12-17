@@ -40,7 +40,7 @@ namespace Ewoms {
         typedef std::vector< DeckRecord >::const_iterator const_iterator;
 
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
-        DeckKeyword(const ParserKeyword& parserKeyword, const Location& location, const std::string& keywordName);
+        DeckKeyword(const Location& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default);
@@ -62,7 +62,6 @@ namespace Ewoms {
         const std::vector<double>& getSIDoubleData() const;
         const std::vector<std::string>& getStringData() const;
         const std::vector<value::status>& getValueStatus() const;
-        const ParserKeyword& parserKeyword() const;
         size_t getDataSize() const;
         void write( DeckOutput& output ) const;
         void write_data( DeckOutput& output ) const;
@@ -91,7 +90,6 @@ namespace Ewoms {
         std::vector< DeckRecord > m_recordList;
         bool m_isDataKeyword;
         bool m_slashTerminated;
-        ParserKeyword parser_keyword;
     };
 }
 

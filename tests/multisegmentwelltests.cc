@@ -32,6 +32,8 @@
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 
@@ -42,16 +44,17 @@
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
     Ewoms::WellConnections connection_set(10,10);
     Ewoms::EclipseGrid grid(20,20,20);
-    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
 
-    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -192,16 +195,17 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
 BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
     Ewoms::WellConnections connection_set(10,10);
     Ewoms::EclipseGrid grid(20,20,20);
-    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
 
-    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -249,16 +253,17 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
     Ewoms::WellConnections connection_set(10,10);
     Ewoms::EclipseGrid grid(20,20,20);
-    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
 
-    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 
@@ -307,16 +312,17 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
 
 BOOST_AUTO_TEST_CASE(testwsegvalv) {
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
     Ewoms::WellConnections connection_set(10,10);
     Ewoms::EclipseGrid grid(20,20,20);
-    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 0, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 19, 0, 2, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true) );
 
-    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
-    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X,0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 18, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 17, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 16, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
+    connection_set.add(Ewoms::Connection( 15, 0, 1, 1, 0.0, Ewoms::Connection::State::OPEN , 200, 17.29, 0.25, 0.0, 0.0, 0,  Ewoms::Connection::Direction::X, kind, 0, 0., 0., true) );
 
     BOOST_CHECK_EQUAL( 7U , connection_set.size() );
 

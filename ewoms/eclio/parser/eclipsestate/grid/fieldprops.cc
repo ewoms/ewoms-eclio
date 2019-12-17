@@ -26,6 +26,7 @@
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/rtempvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/satfuncpropertyinitializers.hh>
@@ -51,7 +52,11 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
                                                                {"NTG", "1"},
-                                                               {"SWATINIT", "1"}};
+                                                               {"TEMPI", "Temperature"},
+                                                               {"THCROCK", "Energy/AnsoluteTemperature*Length*Time"},
+                                                               {"THCOIL", "Energy/AnsoluteTemperature*Length*Time"},
+                                                               {"THCGAS", "Energy/AnsoluteTemperature*Length*Time"},
+                                                               {"THCWATER", "Energy/AnsoluteTemperature*Length*Time"}};
 
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
@@ -70,8 +75,11 @@ static const std::map<std::string, double> double_scalar_init = {{"NTG", 1},
 
 static const std::map<std::string, int> int_scalar_init = {{"SATNUM", 1},
                                                            {"ENDNUM", 1},
+                                                           {"EQLNUM", 1},
                                                            {"IMBNUM", 1},
                                                            {"FIPNUM", 1},   // All FIPxxx keywords should (probably) be added with init==1
+                                                           {"EQLNUM", 1},
+                                                           {"PVTNUM", 1},
                                                            {"ACTNUM", 1}};
 
 /*
@@ -86,7 +94,8 @@ bool isFipxxx< int >(const std::string& keyword) {
 */
 
 namespace GRID {
-static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
+static const std::set<std::string> double_keywords = {"MULTPV", "NTG", "PORO", "PERMX", "PERMY", "PERMZ", "THCONR", "MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-",
+                                                      "THCONSF", "THCROCK", "THCOIL", "THCGAS", "THCWATER"};    // The THxxxx keywords are related to thermal properties - they are all E300 keywords.
 static const std::set<std::string> int_keywords    = {"ACTNUM", "FLUXNUM", "MULTNUM", "OPERNUM", "ROCKNUM"};
 static const std::set<std::string> top_keywords    = {"PORO", "PERMX", "PERMY", "PERMZ"};
 }
@@ -137,6 +146,21 @@ static const std::set<std::string> satfunc = {"SWLPC", "ISWLPC", "SGLPC", "ISGLP
                                               dirfunc("IKRG"),
                                               dirfunc("KRGR"),
                                               dirfunc("IKRGR")};
+
+static const std::map<std::string,std::string> sogcr_shift = {{"SOGCR",    "SWL"},
+                                                              {"SOGCRX",   "SWLX"},
+                                                              {"SOGCRX-",  "SWLX-"},
+                                                              {"SOGCRY",   "SWLY"},
+                                                              {"SOGCRY-",  "SWLY-"},
+                                                              {"SOGCRZ",   "SWLZ"},
+                                                              {"SOGCRZ-",  "SWLZ-"},
+                                                              {"ISOGCR",   "ISWL"},
+                                                              {"ISOGCRX",  "ISWLX"},
+                                                              {"ISOGCRX-", "ISWLX-"},
+                                                              {"ISOGCRY",  "ISWLY"},
+                                                              {"ISOGCRY-", "ISWLY-"},
+                                                              {"ISOGCRZ",  "ISWLZ"},
+                                                              {"ISOGCRZ-", "ISWLZ-"}};
 
 }
 
@@ -486,11 +510,21 @@ FieldProps::FieldData<double>& FieldProps::get(const std::string& keyword) {
         if (init_iter != keywords::double_scalar_init.end())
             this->double_data[keyword].default_assign(init_iter->second);
 
-        if (keywords::PROPS::satfunc.count(keyword) == 1)
-            this->init_satfunc(keyword, this->double_data[keyword]);
-
         if (keyword == ParserKeywords::PORV::keywordName)
             this->init_porv(this->double_data[keyword]);
+
+        if (keyword == ParserKeywords::TEMPI::keywordName)
+            this->init_tempi(this->double_data[keyword]);
+
+        if (keywords::PROPS::satfunc.count(keyword) == 1) {
+            this->init_satfunc(keyword, this->double_data[keyword]);
+
+            if (this->tables.hasTables("SGOF")) {
+                const auto shift_iter = keywords::PROPS::sogcr_shift.find(keyword);
+                if (shift_iter != keywords::PROPS::sogcr_shift.end())
+                    this->subtract_swl(this->double_data[keyword], shift_iter->second);
+            }
+        }
 
         return this->double_data[keyword];
     } else
@@ -802,6 +836,23 @@ void FieldProps::handle_keyword(const DeckKeyword& keyword, Box& box) {
 
 /**********************************************************************/
 
+void FieldProps::init_tempi(FieldData<double>& tempi) {
+    if (this->tables.hasTables("RTEMPVD")) {
+        const auto& eqlnum = this->get_valid_data<int>("EQLNUM");
+        const auto& rtempvd = this->tables.getRtempvdTables();
+        std::vector< double > tempi_values( this->active_size, 0 );
+
+        for (size_t active_index = 0; active_index < this->active_size; active_index++) {
+            const auto& table = rtempvd.getTable<RtempvdTable>(eqlnum[active_index] - 1);
+            double depth = this->cell_depth[active_index];
+            tempi_values[active_index] = table.evaluate("Temperature", depth);
+        }
+
+        tempi.default_update(tempi_values);
+    } else
+        tempi.default_assign(this->tables.rtemp());
+}
+
 void FieldProps::init_porv(FieldData<double>& porv) {
     auto& porv_data = porv.data;
     auto& porv_status = porv.value_status;
@@ -920,6 +971,23 @@ void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& sat
     } else {
         const auto& satnum = this->get_valid_data<int>("SATNUM");
         satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, satnum, endnum));
+    }
+}
+
+/**
+ * Special purpose operation to make various *SOGCR* data elements
+ * account for (scaled) connate water saturation.
+ *
+ * Must only be called if run uses SGOF, because that table is implicitly
+ * defined in terms of connate water saturation.  Subtracts SWL only
+ * if the data item was defaulted (i.e., extracted from unscaled table).
+ */
+void FieldProps::subtract_swl(FieldProps::FieldData<double>& sogcr, const std::string& swl_kw)
+{
+    const auto& swl = this->get<double>(swl_kw);
+    for (std::size_t i = 0; i < sogcr.size(); i++) {
+        if (value::defaulted(sogcr.value_status[i]))
+            sogcr.data[i] -= swl.data[i];
     }
 }
 

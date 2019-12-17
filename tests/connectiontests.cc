@@ -60,9 +60,10 @@ BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
 
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
     Ewoms::WellConnections completionSet(1,1);
-    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true);
-    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0, 0., 0., true);
+    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true);
+    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -74,8 +75,9 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 
 BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
     auto dir = Ewoms::Connection::Direction::Z;
-    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
-    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
+    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
     Ewoms::WellConnections completionSet(1,1);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
@@ -89,10 +91,11 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
     Ewoms::WellConnections completionSet(10,10);
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::DeckValue;
 
-    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
-    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
-    Ewoms::Connection completion3( 10,10,12, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
+    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion3( 10,10,12, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );
@@ -110,10 +113,11 @@ BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
 BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     Ewoms::EclipseGrid grid(10,20,20);
     auto dir = Ewoms::Connection::Direction::Z;
+    const auto kind = Ewoms::Connection::CTFKind::Defaulted;
     Ewoms::WellConnections completions(10,10);
-    Ewoms::Connection completion1( 0,0,0, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
-    Ewoms::Connection completion2( 0,0,1, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
-    Ewoms::Connection completion3( 0,0,2, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir,0,0., 0., true);
+    Ewoms::Connection completion1( 0,0,0, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion2( 0,0,1, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion3( 0,0,2, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
 
     completions.add( completion1 );
     completions.add( completion2 );
@@ -158,6 +162,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTEST) {
         const auto& conn0 = connections[0];
         BOOST_CHECK_EQUAL(conn0.CF(), units.to_si(Ewoms::UnitSystem::measure::transmissibility, 1.168));
         BOOST_CHECK_EQUAL(conn0.Kh(), units.to_si(Ewoms::UnitSystem::measure::effective_Kh, 107.872));
+        BOOST_CHECK_MESSAGE(conn0.ctfAssignedFromInput(), "CTF Must be Assigned From Input");
     }
 
     {
@@ -198,6 +203,7 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE1) {
     /* Expected values come from Eclipse simulation. */
     BOOST_CHECK_CLOSE(conn0.CF(), units.to_si(Ewoms::UnitSystem::measure::transmissibility, 10.609), 2e-2);
     BOOST_CHECK_CLOSE(conn0.Kh(), units.to_si(Ewoms::UnitSystem::measure::effective_Kh, 10000), 1e-6);
+    BOOST_CHECK_MESSAGE(!conn0.ctfAssignedFromInput(), "Calculated CTF must NOT be assigned from input");
 }
 
 struct exp_conn {
@@ -310,5 +316,6 @@ BOOST_AUTO_TEST_CASE(loadCOMPDATTESTSPE9) {
 
        BOOST_CHECK_CLOSE( conn.CF(), units.to_si(Ewoms::UnitSystem::measure::transmissibility, ec.CF), 2e-1);
        BOOST_CHECK_CLOSE( conn.Kh(), units.to_si(Ewoms::UnitSystem::measure::effective_Kh, ec.Kh), 1e-1);
+       BOOST_CHECK_MESSAGE( !conn.ctfAssignedFromInput(), "Calculated SPE9 CTF values must NOT be assigned from input");
    }
 }

@@ -77,6 +77,11 @@ EDITNNC::EDITNNC(const Deck& deck)
     std::sort(m_editnnc.begin(), m_editnnc.end(), compare);
 }
 
+EDITNNC::EDITNNC(const std::vector<NNCdata>& data)
+    : m_editnnc(data)
+{
+}
+
 size_t EDITNNC::size() const {
     return(m_editnnc.size());
 }
@@ -84,4 +89,9 @@ size_t EDITNNC::size() const {
 bool EDITNNC::empty() const {
     return m_editnnc.empty();
 }
+
+bool EDITNNC::operator==(const EDITNNC& data) const {
+    return m_editnnc == data.m_editnnc;
+}
+
 } // namespace Ewoms

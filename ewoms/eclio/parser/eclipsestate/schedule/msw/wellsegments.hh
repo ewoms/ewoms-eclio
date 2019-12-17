@@ -25,6 +25,11 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
 
 namespace Ewoms {
+    class SpiralICD;
+    class Valve;
+}
+
+namespace Ewoms {
 
     class DeckKeyword;
 

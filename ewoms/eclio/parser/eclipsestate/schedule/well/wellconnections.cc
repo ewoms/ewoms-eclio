@@ -140,6 +140,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                         double skin_factor,
                                         const int satTableId,
                                         const Connection::Direction direction,
+                                        const Connection::CTFKind ctf_kind,
                                         const std::size_t seqIndex,
                                         const double segDistStart,
                                         const double segDistEnd,
@@ -147,7 +148,9 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, r0, skin_factor, satTableId, direction, seqIndex, segDistStart, segDistEnd, defaultSatTabId);
+        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, r0,
+                        skin_factor, satTableId, direction, ctf_kind,
+                        seqIndex, segDistStart, segDistEnd, defaultSatTabId);
         this->add(conn);
     }
 
@@ -161,6 +164,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                         double skin_factor,
                                         const int satTableId,
                                         const Connection::Direction direction,
+                                        const Connection::CTFKind ctf_kind,
                                         const std::size_t seqIndex,
                                         const double segDistStart,
                                         const double segDistEnd,
@@ -180,6 +184,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                             skin_factor,
                             satTableId,
                             direction,
+                            ctf_kind,
                             seqIndex,
                             segDistStart,
                             segDistEnd,
@@ -259,6 +264,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             size_t active_index = grid.activeIndex(I,J,k);
             double CF = -1;
             double Kh = -1;
+            auto ctf_kind = ::Ewoms::Connection::CTFKind::DeckValue;
 
             if (defaultSatTable)
                 satTableId = satnum_data[active_index];
@@ -298,6 +304,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                     if (Kh < 0)
                         Kh = std::sqrt(K[0] * K[1]) * D[2];
                     CF = angle * Kh / (std::log(r0 / std::min(rw, r0)) + skin_factor);
+                    ctf_kind = ::Ewoms::Connection::CTFKind::Defaulted;
                 } else {
                     if (KhItem.defaultApplied(0) || KhItem.getSIDouble(0) < 0) {
                         Kh = CF * (std::log(r0 / std::min(r0, rw)) + skin_factor) / angle;
@@ -324,7 +331,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                     r0,
                                     skin_factor,
                                     satTableId,
-                                    direction,
+                                    direction, ctf_kind,
                                     noConn, 0., 0., defaultSatTable);
             } else {
                 std::size_t noConn = prev->getSeqIndex();
@@ -347,7 +354,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                    r0,
                                    skin_factor,
                                    satTableId,
-                                   direction,
+                                   direction, ctf_kind,
                                    noConn, conSDStart, conSDEnd, defaultSatTable);
                 prev->setCompSegSeqIndex(css_ind);
                 prev->updateSegment(conSegNo, conCDepth, con_SIndex);
