@@ -43,6 +43,11 @@
 
 namespace Ewoms {
 
+    SimulationConfig::SimulationConfig() :
+        SimulationConfig(ThresholdPressure(), false, false, false, false)
+    {
+    }
+
     SimulationConfig::SimulationConfig(bool restart,
                                        const Deck& deck,
                                        const FieldPropsManager& fp,
@@ -74,6 +79,17 @@ namespace Ewoms {
         }
     }
 
+    SimulationConfig::SimulationConfig(const ThresholdPressure& thresholdPressure,
+                                       bool useCPR, bool DISGAS,
+                                       bool VAPOIL, bool isThermal) :
+        m_ThresholdPressure(thresholdPressure),
+        m_useCPR(useCPR),
+        m_DISGAS(DISGAS),
+        m_VAPOIL(VAPOIL),
+        m_isThermal(isThermal)
+    {
+    }
+
     const ThresholdPressure& SimulationConfig::getThresholdPressure() const {
         return m_ThresholdPressure;
     }
@@ -96,6 +112,14 @@ namespace Ewoms {
 
     bool SimulationConfig::isThermal() const {
         return this->m_isThermal;
+    }
+
+    bool SimulationConfig::operator==(const SimulationConfig& data) const {
+        return this->getThresholdPressure() == data.getThresholdPressure() &&
+               this->useCPR() == data.useCPR() &&
+               this->hasDISGAS() == data.hasDISGAS() &&
+               this->hasVAPOIL() == data.hasVAPOIL() &&
+               this->isThermal() == data.isThermal();
     }
 
 } //namespace Ewoms

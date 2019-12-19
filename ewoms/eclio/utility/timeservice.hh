@@ -31,6 +31,13 @@ namespace Ewoms {
             int year{0};
             int month{0};
             int day{0};
+
+            bool operator==(const YMD& data) const
+            {
+                return year == data.year &&
+                       month == data.month &&
+                       day == data.day;
+            }
         };
 
         TimeStampUTC() = default;
@@ -39,6 +46,7 @@ namespace Ewoms {
         explicit TimeStampUTC(const YMD& ymd);
 
         TimeStampUTC& operator=(const std::time_t tp);
+        bool operator==(const TimeStampUTC& data) const;
 
         TimeStampUTC& hour(const int h);
         TimeStampUTC& minutes(const int m);

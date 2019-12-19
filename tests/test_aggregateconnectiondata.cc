@@ -50,7 +50,7 @@ struct MockIH
 	   const int nsegWell 	  =  1,  // E100
 	   const int ncwMax       = 20,
 	   const int iConnPerConn =  25,  // NICONZ
-	   const int sConnPerConn =  40,  // NSCONZ
+	   const int sConnPerConn =  41,  // NSCONZ
 	   const int xConnPerConn =  58);  // NXCONZ
 
     std::vector<int> value;

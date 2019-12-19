@@ -294,6 +294,16 @@ const std::string CECON::FOLLOW_ON_WELL::itemName = "FOLLOW_ON_WELL";
 const std::string CECON::FOLLOW_ON_WELL::defaultValue = "";
 
 
+CECONT::CECONT( ) : ParserKeyword("CECONT")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("CECONT");
+}
+const std::string CECONT::keywordName = "CECONT";
+
+
 CIRCLE::CIRCLE( ) : ParserKeyword("CIRCLE")
 {
   setFixedSize( (size_t) 0);

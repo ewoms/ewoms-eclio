@@ -22,7 +22,7 @@
 #include <ewoms/eclio/output/windowedarray.hh>
 
 #include <ewoms/eclio/io/paddedoutputstring.hh>
-
+#include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -31,7 +31,8 @@
 namespace Ewoms {
 class Schedule;
 class SummaryState;
-class Group;
+//class Group;
+class UnitSystem;
 } // namespace Ewoms
 
 namespace Ewoms { namespace RestartIO { namespace Helpers {
@@ -41,10 +42,11 @@ class AggregateGroupData
 public:
     explicit AggregateGroupData(const std::vector<int>& inteHead);
 
-    void captureDeclaredGroupData(const Ewoms::Schedule&                 sched,
-                                  const std::size_t                    simStep,
-                                  const Ewoms::SummaryState&             sumState,
-                                  const std::vector<int>&              inteHead);
+    void captureDeclaredGroupData(const Ewoms::Schedule&        sched,
+                         const Ewoms::UnitSystem&               units,
+                         const std::size_t                    simStep,
+                         const Ewoms::SummaryState&             sumState,
+                         const std::vector<int>&              inteHead);
 
     const std::vector<int>& getIGroup() const
     {
@@ -102,6 +104,18 @@ public:
                                                            {"GWITH", 140},
                                                            {"GGPTH", 143},
                                                            {"GGITH", 144},
+    };
+
+    using inj_cmode_enum = Ewoms::Group::InjectionCMode;
+    const std::map<inj_cmode_enum, int> cmodeToNum = {
+
+        {inj_cmode_enum::NONE, 0},
+        {inj_cmode_enum::RATE, 1},
+        {inj_cmode_enum::RESV, 2},
+        {inj_cmode_enum::REIN, 3},
+        {inj_cmode_enum::VREP, 4},
+        {inj_cmode_enum::FLD,  0},
+        {inj_cmode_enum::SALE, 0},
     };
 
     const std::map<std::string, size_t> fieldKeyToIndex = {

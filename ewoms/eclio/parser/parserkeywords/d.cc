@@ -2001,6 +2001,28 @@ const std::string DY::keywordName = "DY";
 const std::string DY::data::itemName = "data";
 
 
+DYNAMICR::DYNAMICR( ) : ParserKeyword("DYNAMICR")
+{
+  setSizeType(FIXED_CODE);
+  addValidSectionName("SCHEDULE");
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("DYNAMICR");
+  setCodeEnd("ENDDYN");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("code", ParserItem::itype::RAW_STRING);
+        item.setSizeType(ParserItem::item_size::ALL);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string DYNAMICR::keywordName = "DYNAMICR";
+const std::string DYNAMICR::code::itemName = "code";
+
+
 DYNRDIMS::DYNRDIMS( ) : ParserKeyword("DYNRDIMS")
 {
   setFixedSize( (size_t) 1);

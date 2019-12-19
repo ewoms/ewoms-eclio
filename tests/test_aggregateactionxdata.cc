@@ -40,20 +40,7 @@ namespace {
         return Ewoms::Parser{}.parseFile(fname);
     }
 }
-/*
-Ewoms::SummaryState sum_state_TEST1_FLOW()
-    {
-        auto state = Ewoms::SummaryState{std::chrono::system_clock::now()};
-        state.update_well_var("OPU01", "WUPR3", 4);
-        state.update_well_var("OPU02", "WUPR3", 3);
-        state.update_well_var("OPL01", "WUPR3", 1);
-        state.update_well_var("OPL02", "WUPR3", 2);
 
-        state.update("FMWPR", 4);
-
-        return state;
-}
-*/
 Ewoms::SummaryState sum_state_TEST1()
     {
         auto state = Ewoms::SummaryState{std::chrono::system_clock::now()};
@@ -142,24 +129,6 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     auto  actionxData = Ewoms::RestartIO::Helpers::AggregateActionxData(actDims);
     actionxData.captureDeclaredActionxData(sched, st, actDims, rptStep);
 
-#if 0
-    rstFile.write("IUDQ", udqData.getIUDQ());
-    rstFile.write("IUAD", udqData.getIUAD());
-    rstFile.write("IGPH", udqData.getIGPH());
-    rstFile.write("IUAP", udqData.getIUAP());
-    rstFile.write("ZUDN", udqData.getZUDN());
-    rstFile.write("ZUDL", udqData.getZUDL());
-
-    rstFile.write("IACT", actionxData.getIACT());
-    rstFile.write("SACT", actionxData.getSACT());
-    rstFile.write("ZACT", actionxData.getZACT());
-    rstFile.write("ZLACT", actionxData.getZLACT());
-    rstFile.write("ZACN", actionxData.getZACN());
-    rstFile.write("IACN", actionxData.getIACN());
-    rstFile.write("SACN", actionxData.getSACN());
-#endif
-
-#if 0
     {
         /*
         Check of InteHEAD and DoubHEAD data for UDQ variables
@@ -183,7 +152,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         const auto ih_2 = Ewoms::RestartIO::Helpers::createInteHead(es, grid, sched,
                                                 secs_elapsed, rptStep, rptStep_2);
         BOOST_CHECK_EQUAL(ih_2[156] ,       3);
-        BOOST_CHECK_EQUAL(ih_2[157] ,       7);
+        BOOST_CHECK_EQUAL(ih_2[157] ,      10);
 
         const auto rptStep_3 = std::size_t{2};
         const auto ih_3 = Ewoms::RestartIO::Helpers::createInteHead(es, grid, sched,
@@ -193,8 +162,6 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(ih_3[157] ,      10);
 
     }
-
-#endif
 
     {
         /*
@@ -215,7 +182,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
 
         auto start = 0*actDims[1];
         BOOST_CHECK_EQUAL(iAct[start + 0] ,  0);
-        BOOST_CHECK_EQUAL(iAct[start + 1] ,  4);
+        BOOST_CHECK_EQUAL(iAct[start + 1] , 10);
         BOOST_CHECK_EQUAL(iAct[start + 2] ,  1);
         BOOST_CHECK_EQUAL(iAct[start + 3] ,  7);
         BOOST_CHECK_EQUAL(iAct[start + 4] ,  0);
@@ -293,7 +260,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "/       ");
 
         start = start_a +  3*actDims[8];
-        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "ENDACTIO");
+        BOOST_CHECK_EQUAL(zLact[start + 0].c_str() ,   "WELOPEN ");
 
         //Second action
         start_a = 1*actDims[4];
@@ -336,18 +303,18 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         //First action
         auto start_a = 0*actDims[5];
         auto start = start_a + 0*13;
-        BOOST_CHECK_EQUAL(zAcn[start + 0].c_str() ,   "WWPR    ");
-        BOOST_CHECK_EQUAL(zAcn[start + 1].c_str() ,   "        ");
-        BOOST_CHECK_EQUAL(zAcn[start + 2].c_str() ,   ">       ");
-        BOOST_CHECK_EQUAL(zAcn[start + 3].c_str() ,   "OP*     ");
-
-        start = start_a + 1*13;
-        BOOST_CHECK_EQUAL(zAcn[start + 0].c_str() ,   "GMWPR   ");
+        BOOST_CHECK_EQUAL(zAcn[start + 0].c_str() ,   "FMWPR   ");
         BOOST_CHECK_EQUAL(zAcn[start + 1].c_str() ,   "        ");
         BOOST_CHECK_EQUAL(zAcn[start + 2].c_str() ,   ">       ");
         BOOST_CHECK_EQUAL(zAcn[start + 3].c_str() ,   "        ");
+
+        start = start_a + 1*13;
+        BOOST_CHECK_EQUAL(zAcn[start + 0].c_str() ,   "WUPR3   ");
+        BOOST_CHECK_EQUAL(zAcn[start + 1].c_str() ,   "        ");
+        BOOST_CHECK_EQUAL(zAcn[start + 2].c_str() ,   ">       ");
+        BOOST_CHECK_EQUAL(zAcn[start + 3].c_str() ,   "OP*     ");
         BOOST_CHECK_EQUAL(zAcn[start + 4].c_str() ,   "        ");
-        BOOST_CHECK_EQUAL(zAcn[start + 5].c_str() ,   "T*      ");
+        BOOST_CHECK_EQUAL(zAcn[start + 5].c_str() ,   "        ");
 
         start = start_a + 2*13;
         BOOST_CHECK_EQUAL(zAcn[start + 0].c_str() ,   "        ");
@@ -402,10 +369,10 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start +  7] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start +  8] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start +  9] ,  0);
-        BOOST_CHECK_EQUAL(iAcn[start + 10] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 10] ,  1);
         BOOST_CHECK_EQUAL(iAcn[start + 11] ,  8);
         BOOST_CHECK_EQUAL(iAcn[start + 12] ,  0);
-        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
@@ -422,10 +389,10 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start +  7] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start +  8] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start +  9] ,  0);
-        BOOST_CHECK_EQUAL(iAcn[start + 10] ,  3);
+        BOOST_CHECK_EQUAL(iAcn[start + 10] ,  2);
         BOOST_CHECK_EQUAL(iAcn[start + 11] ,  8);
         BOOST_CHECK_EQUAL(iAcn[start + 12] ,  0);
-        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 13] ,  2);
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 16] ,  1);
@@ -485,7 +452,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         BOOST_CHECK_EQUAL(iAcn[start +  9] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 10] , 11);
         BOOST_CHECK_EQUAL(iAcn[start + 11] ,  8);
-        BOOST_CHECK_EQUAL(iAcn[start + 12] ,  1);
+        BOOST_CHECK_EQUAL(iAcn[start + 12] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 13] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 14] ,  0);
         BOOST_CHECK_EQUAL(iAcn[start + 15] ,  0);
@@ -507,14 +474,14 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         auto start = start_a + 0*16;
         BOOST_CHECK_EQUAL(sAcn[start +  0] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start +  1] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  2] , 17);
+        BOOST_CHECK_EQUAL(sAcn[start +  2] , 45);
         BOOST_CHECK_EQUAL(sAcn[start +  3] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  4] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  5] , 17);
-        BOOST_CHECK_EQUAL(sAcn[start +  6] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  7] , 17);
-        BOOST_CHECK_EQUAL(sAcn[start +  8] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  9] , 17);
+        BOOST_CHECK_EQUAL(sAcn[start +  4] ,  4);
+        BOOST_CHECK_EQUAL(sAcn[start +  5] , 45);
+        BOOST_CHECK_EQUAL(sAcn[start +  6] ,  4);
+        BOOST_CHECK_EQUAL(sAcn[start +  7] , 45);
+        BOOST_CHECK_EQUAL(sAcn[start +  8] ,  4);
+        BOOST_CHECK_EQUAL(sAcn[start +  9] , 45);
         BOOST_CHECK_EQUAL(sAcn[start + 10] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start + 11] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start + 12] ,  0);
@@ -525,14 +492,14 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         start = start_a + 1*16;
         BOOST_CHECK_EQUAL(sAcn[start +  0] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start +  1] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  2] , 14);
+        BOOST_CHECK_EQUAL(sAcn[start +  2] , 46);
         BOOST_CHECK_EQUAL(sAcn[start +  3] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start +  4] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  5] , 14);
+        BOOST_CHECK_EQUAL(sAcn[start +  5] , 46);
         BOOST_CHECK_EQUAL(sAcn[start +  6] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  7] , 14);
+        BOOST_CHECK_EQUAL(sAcn[start +  7] , 46);
         BOOST_CHECK_EQUAL(sAcn[start +  8] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  9] , 14);
+        BOOST_CHECK_EQUAL(sAcn[start +  9] , 46);
         BOOST_CHECK_EQUAL(sAcn[start + 10] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start + 11] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start + 12] ,  0);
@@ -543,7 +510,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
         start = start_a + 2*16;
         BOOST_CHECK_EQUAL(sAcn[start +  0] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start +  1] ,  0);
-        BOOST_CHECK_EQUAL(sAcn[start +  2] ,  3);
+        BOOST_CHECK_EQUAL(sAcn[start +  2] , 10);
         BOOST_CHECK_EQUAL(sAcn[start +  3] ,  0);
         BOOST_CHECK_EQUAL(sAcn[start +  4] ,  1.E+20);
         BOOST_CHECK_EQUAL(sAcn[start +  5] ,  1.E+20);
@@ -560,9 +527,6 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
 
     }
 
-#if 0
-
-#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()

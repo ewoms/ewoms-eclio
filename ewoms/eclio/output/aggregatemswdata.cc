@@ -29,7 +29,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
-
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
 #include <algorithm>
@@ -414,7 +414,7 @@ namespace {
                                             const std::size_t   baseIndex,
                                             ISegArray&          iSeg)
         {
-            namespace ISegValue = ::Ewoms::RestartIO::Helpers::
+             namespace ISegValue = ::Ewoms::RestartIO::Helpers::
                 VectorItems::ISeg::Value;
 
             using Ix = ::Ewoms::RestartIO::Helpers::
@@ -463,6 +463,12 @@ namespace {
                            const std::vector<int>& inteHead,
                            ISegArray&              iSeg)
         {
+            using IsTyp = ::Ewoms::RestartIO::Helpers::
+                VectorItems::ISeg::Value::SegmentType;
+
+            using Ix = ::Ewoms::RestartIO::Helpers::
+                VectorItems::ISeg::index;
+
             if (well.isMultiSegment()) {
                 //loop over segment set and print out information
                 const auto& welSegSet     = well.getSegments();
@@ -470,6 +476,12 @@ namespace {
                 const auto& noElmSeg      = nisegz(inteHead);
                 std::size_t segmentInd = 0;
                 auto orderedSegmentNo = segmentOrder(welSegSet, segmentInd);
+                std::vector<int> seg_reorder (welSegSet.size(),0);
+                for (int ind = 0; ind < welSegSet.size(); ind++ ){
+                    const auto s_no = welSegSet[orderedSegmentNo[ind]].segmentNumber();
+                    const auto s_ind = welSegSet.segmentNumberToIndex(s_no);
+                    seg_reorder[s_ind] = ind+1;
+                }
                 for (int ind = 0; ind < welSegSet.size(); ind++) {
                     const auto& segment = welSegSet[ind];
 
@@ -483,10 +495,13 @@ namespace {
                     iSeg[iS + 5] = sumNoInFlowBranches(welSegSet, ind);
                     iSeg[iS + 6] = noConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
-                    iSeg[iS + 8] = iSeg[iS+0];
+                    iSeg[iS + 8] = seg_reorder[ind];
 
                     if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
+                    }
+                    if (segment.segmentType() == Ewoms::Segment::SegmentType::REGULAR) {
+                       iSeg[iS + Ix::SegmentType] =  IsTyp::REGULAR;
                     }
                 }
             }
@@ -534,6 +549,9 @@ namespace {
 
                 case UType::UNIT_TYPE_PVT_M:
                     return 1.322e-15f;
+
+                default:
+                    break;
             }
 
             throw std::invalid_argument {

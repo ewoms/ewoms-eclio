@@ -31,10 +31,13 @@ namespace Ewoms {
 
     public:
 
+        SimulationConfig();
         SimulationConfig(bool restart,
                          const Deck& deck,
                          const FieldPropsManager& fp,
                          const Eclipse3DProperties& gridProperties);
+        SimulationConfig(const ThresholdPressure& thresholdPressure,
+                         bool useCPR, bool DISGAS, bool VAPOIL, bool isThermal);
 
         const ThresholdPressure& getThresholdPressure() const;
         bool useThresholdPressure() const;
@@ -42,6 +45,8 @@ namespace Ewoms {
         bool hasDISGAS() const;
         bool hasVAPOIL() const;
         bool isThermal() const;
+
+        bool operator==(const SimulationConfig& data) const;
 
     private:
         ThresholdPressure m_ThresholdPressure;

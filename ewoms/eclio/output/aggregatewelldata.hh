@@ -22,6 +22,7 @@
 #include <ewoms/eclio/output/windowedarray.hh>
 
 #include <ewoms/eclio/io/paddedoutputstring.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 
 #include <cstddef>
 #include <string>
@@ -38,6 +39,11 @@ namespace Ewoms { namespace data {
 }} // Ewoms::data
 
 namespace Ewoms { namespace RestartIO { namespace Helpers {
+
+    struct ActionResStatus {
+        std::vector<Ewoms::Action::Result> result;
+        std::vector<std::string> name;
+    };
 
     class AggregateWellData
     {

@@ -529,6 +529,14 @@ namespace ParserKeywords {
 
 
 
+   class MPFNNC : public ParserKeyword {
+   public:
+       MPFNNC();
+       static const std::string keywordName;
+   };
+
+
+
    class MSFN : public ParserKeyword {
    public:
        MSFN();

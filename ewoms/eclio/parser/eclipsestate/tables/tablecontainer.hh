@@ -58,6 +58,9 @@ namespace Ewoms {
             container.gteTable(10 ) ==> exception
         */
     public:
+        using TableMap = std::map<size_t, std::shared_ptr<const SimpleTable>>;
+
+        TableContainer();
         explicit TableContainer( size_t maxTables );
         bool empty() const;
 
@@ -65,6 +68,9 @@ namespace Ewoms {
           This is the number of actual tables in the container.
         */
         size_t size() const;
+
+        size_t max() const;
+        const TableMap& tables() const;
         void addTable(size_t tableNumber , std::shared_ptr<const SimpleTable> table);
 
         /*
@@ -82,9 +88,11 @@ namespace Ewoms {
             return *table;
         }
 
+        bool operator==(const TableContainer& data) const;
+
     private:
         size_t m_maxTables;
-        std::map<size_t , std::shared_ptr<const SimpleTable> > m_tables;
+        TableMap m_tables;
     };
 
 }

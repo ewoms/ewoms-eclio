@@ -30,6 +30,11 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/units/units.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionast.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 
 #include <algorithm>
 #include <cassert>
@@ -406,11 +411,11 @@ namespace {
                 zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
                 infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)
                 one  , zero , zero , zero , zero , zero ,    //  24.. 29  ( 4)
-                zero , one  , zero , zero,  zero , zero ,    //  30.. 35  ( 5)
+                zero , one  , zero , infty,  zero , zero ,    //  30.. 35  ( 5)
                 zero , zero , zero , zero , zero , zero ,    //  36.. 41  ( 6)
                 zero , zero , zero , zero , zero , zero ,    //  42.. 47  ( 7)
                 zero , zero , zero , zero , zero , zero ,    //  48.. 53  ( 8)
-                zero,  zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
+                infty,  zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
                 zero , zero , zero , zero , zero , zero ,    //  60.. 65  (10)
                 zero , zero , zero , zero , zero , zero ,    //  66.. 71  (11)
                 zero , zero , zero , zero , zero , zero ,    //  72.. 77  (12)
@@ -459,28 +464,28 @@ namespace {
                 const auto& pc = well.productionControls(smry);
                 const auto& predMode = well.predictionMode();
 
-                if ((pc.oil_rate != 0.0) || (!predMode)) {
+                if (pc.oil_rate != 0.0) {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pc.oil_rate);
                 }
 
-                if ((pc.water_rate != 0.0) || (!predMode)) {
+                if (pc.water_rate != 0.0) {
                     sWell[Ix::WatRateTarget] =
                         swprop(M::liquid_surface_rate, pc.water_rate);
                 }
 
-                if ((pc.gas_rate != 0.0) || (!predMode)) {
+                if (pc.gas_rate != 0.0) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pc.gas_rate);
                     sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
                 }
 
-                if (pc.liquid_rate != 0.0 || (!predMode)) {
+                if (pc.liquid_rate != 0.0) {    // check if this works - may need to be rewritten
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pc.liquid_rate);
                     sWell[Ix::HistLiqRateTarget] = sWell[Ix::LiqRateTarget];
                 }
-                else  {
+                else if (!predMode)  {
                     sWell[Ix::LiqRateTarget] =
                         swprop(M::liquid_surface_rate, pc.oil_rate + pc.water_rate);
                 }
@@ -760,12 +765,31 @@ namespace {
             };
         }
 
+        Ewoms::RestartIO::Helpers::ActionResStatus
+        act_res_stat(const Ewoms::Schedule& sched, const Ewoms::SummaryState&  smry, const std::size_t sim_step) {
+            std::vector<Ewoms::Action::Result> act_res;
+            std::vector<std::string> act_name;
+            const auto acts = sched.actions(sim_step);
+            Ewoms::Action::Context context(smry);
+            auto sim_time = sched.simTime(sim_step);
+            for (const auto& action : acts.pending(sim_time)) {
+                act_res.push_back(action->eval(sim_time, context));
+                act_name.push_back(action->name());
+            }
+            return {act_res, act_name};
+        }
+
         template <class ZWellArray>
-        void staticContrib(const Ewoms::Well& well, ZWellArray& zWell)
+        void staticContrib(const Ewoms::Well& well, const Ewoms::RestartIO::Helpers::ActionResStatus& actResStat, ZWellArray& zWell)
         {
             using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::ZWell::index;
-
             zWell[Ix::WellName] = well.name();
+            //loop over actions to assign action name for relevant wells
+            for (std::size_t ind = 0; ind < actResStat.result.size(); ind++) {
+                if (actResStat.result[ind].has_well(well.name())) {
+                    zWell[Ix::ActionX] = actResStat.name[ind];
+                }
+            }
         }
     } // ZWell
 } // Anonymous
@@ -827,14 +851,16 @@ captureDeclaredWellData(const Schedule&   sched,
         XWell::staticContrib(well, smry, units, xw);
     });
 
-    // Static contributions to ZWEL array.
-    wellLoop(wells,
-        [this](const Well& well, const std::size_t wellID) -> void
     {
-        auto zw = this->zWell_[wellID];
-
-        ZWell::staticContrib(well, zw);
-    });
+        const auto actResStat = ZWell::act_res_stat(sched, smry, sim_step);
+        // Static contributions to ZWEL array.
+        wellLoop(wells,
+            [&actResStat, this](const Well& well, const std::size_t wellID) -> void
+        {
+            auto zw = this->zWell_[wellID];
+            ZWell::staticContrib(well, actResStat, zw);
+        });
+    }
 }
 
 // ---------------------------------------------------------------------

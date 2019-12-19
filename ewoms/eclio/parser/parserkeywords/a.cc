@@ -196,6 +196,64 @@ const std::string ACTIONR::INCREMENT::itemName = "INCREMENT";
 const double ACTIONR::INCREMENT::defaultValue = 0.000000;
 
 
+ACTIONS::ACTIONS( ) : ParserKeyword("ACTIONS")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("ACTIONS");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("ACTION", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("WELL", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("WELL_SEGMENT", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("QUANTITY", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("OPERATOR", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TRIGGER_VALUE", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("REPETITIONS", ParserItem::itype::INT);
+        item.setDefault( 1 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("INCREMENT", ParserItem::itype::DOUBLE);
+        item.setDefault( double(0) );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string ACTIONS::keywordName = "ACTIONS";
+const std::string ACTIONS::ACTION::itemName = "ACTION";
+const std::string ACTIONS::WELL::itemName = "WELL";
+const std::string ACTIONS::WELL_SEGMENT::itemName = "WELL_SEGMENT";
+const std::string ACTIONS::QUANTITY::itemName = "QUANTITY";
+const std::string ACTIONS::OPERATOR::itemName = "OPERATOR";
+const std::string ACTIONS::TRIGGER_VALUE::itemName = "TRIGGER_VALUE";
+const std::string ACTIONS::REPETITIONS::itemName = "REPETITIONS";
+const int ACTIONS::REPETITIONS::defaultValue = 1;
+const std::string ACTIONS::INCREMENT::itemName = "INCREMENT";
+const double ACTIONS::INCREMENT::defaultValue = 0.000000;
+
+
 ACTIONW::ACTIONW( ) : ParserKeyword("ACTIONW")
 {
   setFixedSize( (size_t) 1);
@@ -690,6 +748,26 @@ const std::string ALSURFST::keywordName = "ALSURFST";
 const std::string ALSURFST::DATA::itemName = "DATA";
 
 
+AMALGAM::AMALGAM( ) : ParserKeyword("AMALGAM")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("AMALGAM");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("LGR_GROUPS", ParserItem::itype::STRING);
+        item.setSizeType(ParserItem::item_size::ALL);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string AMALGAM::keywordName = "AMALGAM";
+const std::string AMALGAM::LGR_GROUPS::itemName = "LGR_GROUPS";
+
+
 API::API( ) : ParserKeyword("API")
 {
   setFixedSize( (size_t) 0);
@@ -719,6 +797,74 @@ APIGROUP::APIGROUP( ) : ParserKeyword("APIGROUP")
 const std::string APIGROUP::keywordName = "APIGROUP";
 const std::string APIGROUP::MAX_OIL_PVT_GROUP_COUNT::itemName = "MAX_OIL_PVT_GROUP_COUNT";
 const int APIGROUP::MAX_OIL_PVT_GROUP_COUNT::defaultValue = 1;
+
+
+APILIM::APILIM( ) : ParserKeyword("APILIM")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("APILIM");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("LIMITER", ParserItem::itype::STRING);
+        item.setDefault( std::string("NONE") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("SCOPE", ParserItem::itype::STRING);
+        item.setDefault( std::string("BOTH") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("LOWER_API_LIMIT", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("UPPER_API_LIMIT", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("NUM_ROWS", ParserItem::itype::INT);
+        item.setDefault( 10 );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string APILIM::keywordName = "APILIM";
+const std::string APILIM::LIMITER::itemName = "LIMITER";
+const std::string APILIM::LIMITER::defaultValue = "NONE";
+const std::string APILIM::SCOPE::itemName = "SCOPE";
+const std::string APILIM::SCOPE::defaultValue = "BOTH";
+const std::string APILIM::LOWER_API_LIMIT::itemName = "LOWER_API_LIMIT";
+const std::string APILIM::UPPER_API_LIMIT::itemName = "UPPER_API_LIMIT";
+const std::string APILIM::NUM_ROWS::itemName = "NUM_ROWS";
+const int APILIM::NUM_ROWS::defaultValue = 10;
+
+
+APIVID::APIVID( ) : ParserKeyword("APIVID")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("EQLDIMS","NTEQUL",0);
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("APIVID");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Length");
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string APIVID::keywordName = "APIVID";
+const std::string APIVID::DATA::itemName = "DATA";
 
 
 AQANCONL::AQANCONL( ) : ParserKeyword("AQANCONL")
@@ -870,6 +1016,31 @@ const std::string AQANTRC::TRACER::itemName = "TRACER";
 const std::string AQANTRC::VALUE::itemName = "VALUE";
 
 
+AQUALIST::AQUALIST( ) : ParserKeyword("AQUALIST")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("AQUALIST");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("AQUIFER_LIST", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("LIST", ParserItem::itype::INT);
+        item.setSizeType(ParserItem::item_size::ALL);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string AQUALIST::keywordName = "AQUALIST";
+const std::string AQUALIST::AQUIFER_LIST::itemName = "AQUIFER_LIST";
+const std::string AQUALIST::LIST::itemName = "LIST";
+
+
 AQUANCON::AQUANCON( ) : ParserKeyword("AQUANCON")
 {
   setSizeType(SLASH_TERMINATED);
@@ -944,6 +1115,171 @@ const std::string AQUANCON::INFLUX_MULT::itemName = "INFLUX_MULT";
 const double AQUANCON::INFLUX_MULT::defaultValue = 1.000000;
 const std::string AQUANCON::CONNECT_ADJOINING_ACTIVE_CELL::itemName = "CONNECT_ADJOINING_ACTIVE_CELL";
 const std::string AQUANCON::CONNECT_ADJOINING_ACTIVE_CELL::defaultValue = "NO";
+
+
+AQUCHGAS::AQUCHGAS( ) : ParserKeyword("AQUCHGAS")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SCHEDULE");
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("AQUCHGAS");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("AQUIFER_ID", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATUM_DEPTH", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Length");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("GAS_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("AQUIFER_PROD_INDEX", ParserItem::itype::DOUBLE);
+        item.push_backDimension("GasSurfaceVolume/Time*Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TABLE_NUM", ParserItem::itype::INT);
+        item.setDefault( 1 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TEMPERATURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Temperature");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string AQUCHGAS::keywordName = "AQUCHGAS";
+const std::string AQUCHGAS::AQUIFER_ID::itemName = "AQUIFER_ID";
+const std::string AQUCHGAS::DATUM_DEPTH::itemName = "DATUM_DEPTH";
+const std::string AQUCHGAS::GAS_PRESSURE::itemName = "GAS_PRESSURE";
+const std::string AQUCHGAS::AQUIFER_PROD_INDEX::itemName = "AQUIFER_PROD_INDEX";
+const std::string AQUCHGAS::TABLE_NUM::itemName = "TABLE_NUM";
+const int AQUCHGAS::TABLE_NUM::defaultValue = 1;
+const std::string AQUCHGAS::TEMPERATURE::itemName = "TEMPERATURE";
+
+
+AQUCHWAT::AQUCHWAT( ) : ParserKeyword("AQUCHWAT")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SCHEDULE");
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("AQUCHWAT");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("AQUIFER_ID", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATUM_DEPTH", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Length");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("INPUT_4", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("ITEM4", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("AQUIFER_PROD_INDEX", ParserItem::itype::DOUBLE);
+        item.push_backDimension("LiquidSurfaceVolume/Time*Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TABLE_NUM", ParserItem::itype::INT);
+        item.setDefault( 1 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("INIT_SALT_CONC", ParserItem::itype::DOUBLE);
+        item.setDefault( double(1.000000) );
+        item.push_backDimension("Mass/LiquidSurfaceVolume");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MINIMUM", ParserItem::itype::DOUBLE);
+        item.setDefault( double(-99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000) );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MAXIMUM", ParserItem::itype::DOUBLE);
+        item.setDefault( double(99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000) );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("IGNORE_CAP_PRESSURE", ParserItem::itype::STRING);
+        item.setDefault( std::string("NO") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MIN_FLOW_PR_CONN", ParserItem::itype::DOUBLE);
+        item.setDefault( double(-99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000) );
+        item.push_backDimension("LiquidSurfaceVolume/Time");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MAX_FLOW_PR_CONN", ParserItem::itype::DOUBLE);
+        item.setDefault( double(99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000) );
+        item.push_backDimension("LiquidSurfaceVolume/Time");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("REMOVE_DEPTH_TERM", ParserItem::itype::STRING);
+        item.setDefault( std::string("NO") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("IMPORT_MAX_MIN_FLOW_RATE", ParserItem::itype::INT);
+        item.setDefault( 0 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TEMPERATURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Temperature");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string AQUCHWAT::keywordName = "AQUCHWAT";
+const std::string AQUCHWAT::AQUIFER_ID::itemName = "AQUIFER_ID";
+const std::string AQUCHWAT::DATUM_DEPTH::itemName = "DATUM_DEPTH";
+const std::string AQUCHWAT::INPUT_4::itemName = "INPUT_4";
+const std::string AQUCHWAT::ITEM4::itemName = "ITEM4";
+const std::string AQUCHWAT::AQUIFER_PROD_INDEX::itemName = "AQUIFER_PROD_INDEX";
+const std::string AQUCHWAT::TABLE_NUM::itemName = "TABLE_NUM";
+const int AQUCHWAT::TABLE_NUM::defaultValue = 1;
+const std::string AQUCHWAT::INIT_SALT_CONC::itemName = "INIT_SALT_CONC";
+const double AQUCHWAT::INIT_SALT_CONC::defaultValue = 1.000000;
+const std::string AQUCHWAT::MINIMUM::itemName = "MINIMUM";
+const double AQUCHWAT::MINIMUM::defaultValue = -99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000;
+const std::string AQUCHWAT::MAXIMUM::itemName = "MAXIMUM";
+const double AQUCHWAT::MAXIMUM::defaultValue = 99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000;
+const std::string AQUCHWAT::IGNORE_CAP_PRESSURE::itemName = "IGNORE_CAP_PRESSURE";
+const std::string AQUCHWAT::IGNORE_CAP_PRESSURE::defaultValue = "NO";
+const std::string AQUCHWAT::MIN_FLOW_PR_CONN::itemName = "MIN_FLOW_PR_CONN";
+const double AQUCHWAT::MIN_FLOW_PR_CONN::defaultValue = -99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000;
+const std::string AQUCHWAT::MAX_FLOW_PR_CONN::itemName = "MAX_FLOW_PR_CONN";
+const double AQUCHWAT::MAX_FLOW_PR_CONN::defaultValue = 99999999999999996973312221251036165947450327545502362648241750950346848435554075534196338404706251868027512415973882408182135734368278484639385041047239877871023591066789981811181813306167128854888448.000000;
+const std::string AQUCHWAT::REMOVE_DEPTH_TERM::itemName = "REMOVE_DEPTH_TERM";
+const std::string AQUCHWAT::REMOVE_DEPTH_TERM::defaultValue = "NO";
+const std::string AQUCHWAT::IMPORT_MAX_MIN_FLOW_RATE::itemName = "IMPORT_MAX_MIN_FLOW_RATE";
+const int AQUCHWAT::IMPORT_MAX_MIN_FLOW_RATE::defaultValue = 0;
+const std::string AQUCHWAT::TEMPERATURE::itemName = "TEMPERATURE";
 
 
 AQUCON::AQUCON( ) : ParserKeyword("AQUCON")

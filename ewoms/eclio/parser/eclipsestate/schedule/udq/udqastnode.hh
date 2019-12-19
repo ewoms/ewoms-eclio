@@ -22,6 +22,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <memory>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqcontext.hh>
@@ -31,24 +32,32 @@ namespace Ewoms {
 
 class UDQASTNode {
 public:
-    UDQASTNode(UDQTokenType type_arg);
-    UDQASTNode(double scalar_value);
-    UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
+    explicit UDQASTNode(UDQTokenType type_arg);
+    explicit UDQASTNode(double scalar_value);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& arg);
     UDQASTNode(UDQTokenType type_arg, const std::string& func_name, const UDQASTNode& left, const UDQASTNode& right);
+    UDQASTNode(UDQTokenType type_arg, const std::string& func_name);
+    UDQASTNode(UDQTokenType type_arg, const std::string& string_value, const std::vector<std::string>& selector);
 
     UDQSet eval(UDQVarType eval_target, const UDQContext& context) const;
 
-    UDQTokenType type;
+    bool valid() const;
     UDQVarType var_type = UDQVarType::NONE;
     std::set<UDQTokenType> func_tokens() const;
+    void update_type(const UDQASTNode& arg);
+    void set_left(const UDQASTNode& arg);
+    void set_right(const UDQASTNode& arg);
+    UDQASTNode* get_left() const;
+    UDQASTNode* get_right() const;
 private:
+    UDQTokenType type;
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 
     std::string string_value;
     std::vector<std::string> selector;
     double scalar_value;
-    std::vector<UDQASTNode> arglist;
+    std::shared_ptr<UDQASTNode> left;
+    std::shared_ptr<UDQASTNode> right;
 };
 
 }

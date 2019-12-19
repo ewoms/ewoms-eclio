@@ -74,6 +74,15 @@ Ewoms::TimeStampUTC& Ewoms::TimeStampUTC::operator=(const std::time_t tp)
     return *this;
 }
 
+bool Ewoms::TimeStampUTC::operator==(const TimeStampUTC& data) const
+{
+    return ymd_ == data.ymd_ &&
+           hour_ == data.hour_ &&
+           minutes_ == data.minutes_ &&
+           seconds_ == data.seconds_ &&
+           usec_ == data.usec_;
+}
+
 Ewoms::TimeStampUTC::TimeStampUTC(const YMD& ymd)
     : ymd_{ std::move(ymd) }
 {}

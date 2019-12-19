@@ -38,6 +38,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
 
         namespace Value {
             enum SegmentType : int {
+                REGULAR = -1,
                 AICD  = -8,
                 SICD  = -7,
                 Valve = -5,

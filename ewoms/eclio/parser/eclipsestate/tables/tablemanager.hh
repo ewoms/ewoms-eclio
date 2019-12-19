@@ -56,6 +56,31 @@ namespace Ewoms {
     public:
         explicit TableManager( const Deck& deck );
         TableManager() = default;
+        TableManager(const std::map<std::string, TableContainer>& simpleTables,
+                     const std::vector<PvtgTable>& pvtgTables,
+                     const std::vector<PvtoTable>& pvtoTables,
+                     const std::vector<Rock2dTable>& rock2dTables,
+                     const std::vector<Rock2dtrTable>& rock2dtrTables,
+                     const PvtwTable& pvtwTable,
+                     const PvcdoTable& pvcdoTable,
+                     const DensityTable& densityTable,
+                     const RockTable& rockTable,
+                     const ViscrefTable& viscrefTable,
+                     const WatdentTable& watdentTable,
+                     const std::map<int, PlymwinjTable>& plymwinjTables,
+                     const std::map<int, SkprwatTable>& skprwatTables,
+                     const std::map<int, SkprpolyTable>& skprpolyTables,
+                     const Tabdims& tabdims,
+                     const Regdims& regdims,
+                     const Eqldims& eqldims,
+                     const Aqudims& aqudims,
+                     bool useImptvd,
+                     bool useEnptvd,
+                     bool useEqlnum,
+                     std::shared_ptr<JFunc> jfunc_param,
+                     double rtemp);
+
+        TableManager& operator=(const TableManager& data);
 
         const TableContainer& getTables( const std::string& tableName ) const;
         const TableContainer& operator[](const std::string& tableName) const;
@@ -133,6 +158,7 @@ namespace Ewoms {
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
         const std::map<int, SkprpolyTable>& getSkprpolyTables() const;
+        const std::map<std::string, TableContainer>& getSimpleTables() const;
 
         /// deck has keyword "IMPTVD" --- Imbition end-point versus depth tables
         bool useImptvd() const;
@@ -147,6 +173,8 @@ namespace Ewoms {
         bool useJFunc() const;
 
         double rtemp() const;
+
+        bool operator==(const TableManager& data) const;
     private:
         TableContainer& forceGetTables( const std::string& tableName , size_t numTables);
 
@@ -343,9 +371,9 @@ namespace Ewoms {
         std::shared_ptr<Eqldims> m_eqldims;
         Aqudims m_aqudims;
 
-        const bool hasImptvd = false;// if deck has keyword IMPTVD
-        const bool hasEnptvd = false;// if deck has keyword ENPTVD
-        const bool hasEqlnum = false;// if deck has keyword EQLNUM
+        bool hasImptvd = false;// if deck has keyword IMPTVD
+        bool hasEnptvd = false;// if deck has keyword ENPTVD
+        bool hasEqlnum = false;// if deck has keyword EQLNUM
         std::shared_ptr<JFunc> jfunc;
 
         double m_rtemp;

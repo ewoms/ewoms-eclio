@@ -66,6 +66,14 @@ namespace Ewoms {
             return m_NPLMIX;
         }
 
+        bool operator==(const Regdims& data) const {
+            return this->getNTFIP() == data.getNTFIP() &&
+                   this->getNMFIPR() == data.getNMFIPR() &&
+                   this->getNRFREG() == data.getNRFREG() &&
+                   this->getNTFREG() == data.getNTFREG() &&
+                   this->getNPLMIX() == data.getNPLMIX();
+        }
+
     private:
         size_t m_NTFIP;
         size_t m_NMFIPR;

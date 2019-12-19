@@ -14,6 +14,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::ACTION >();
   this->addKeyword< ParserKeywords::ACTIONG >();
   this->addKeyword< ParserKeywords::ACTIONR >();
+  this->addKeyword< ParserKeywords::ACTIONS >();
   this->addKeyword< ParserKeywords::ACTIONW >();
   this->addKeyword< ParserKeywords::ACTIONX >();
   this->addKeyword< ParserKeywords::ACTNUM >();
@@ -31,12 +32,18 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::ALPOLADS >();
   this->addKeyword< ParserKeywords::ALSURFAD >();
   this->addKeyword< ParserKeywords::ALSURFST >();
+  this->addKeyword< ParserKeywords::AMALGAM >();
   this->addKeyword< ParserKeywords::API >();
   this->addKeyword< ParserKeywords::APIGROUP >();
+  this->addKeyword< ParserKeywords::APILIM >();
+  this->addKeyword< ParserKeywords::APIVID >();
   this->addKeyword< ParserKeywords::AQANCONL >();
   this->addKeyword< ParserKeywords::AQANNC >();
   this->addKeyword< ParserKeywords::AQANTRC >();
+  this->addKeyword< ParserKeywords::AQUALIST >();
   this->addKeyword< ParserKeywords::AQUANCON >();
+  this->addKeyword< ParserKeywords::AQUCHGAS >();
+  this->addKeyword< ParserKeywords::AQUCHWAT >();
   this->addKeyword< ParserKeywords::AQUCON >();
   this->addKeyword< ParserKeywords::AQUCT >();
   this->addKeyword< ParserKeywords::AQUCWFAC >();
@@ -52,10 +59,13 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::AUTOCOAR >();
   this->addKeyword< ParserKeywords::AUTOREF >();
   this->addKeyword< ParserKeywords::BC >();
+  this->addKeyword< ParserKeywords::BDENSITY >();
+  this->addKeyword< ParserKeywords::BGGI >();
   this->addKeyword< ParserKeywords::BIGMODEL >();
   this->addKeyword< ParserKeywords::BLACKOIL >();
   this->addKeyword< ParserKeywords::BLOCK_PROBE >();
   this->addKeyword< ParserKeywords::BLOCK_PROBE300 >();
+  this->addKeyword< ParserKeywords::BOGI >();
   this->addKeyword< ParserKeywords::BOUNDARY >();
   this->addKeyword< ParserKeywords::BOX >();
   this->addKeyword< ParserKeywords::BPARA >();
@@ -69,6 +79,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::CART >();
   this->addKeyword< ParserKeywords::CBMOPTS >();
   this->addKeyword< ParserKeywords::CECON >();
+  this->addKeyword< ParserKeywords::CECONT >();
   this->addKeyword< ParserKeywords::CIRCLE >();
   this->addKeyword< ParserKeywords::COAL >();
   this->addKeyword< ParserKeywords::COALADS >();
@@ -164,6 +175,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::DX >();
   this->addKeyword< ParserKeywords::DXV >();
   this->addKeyword< ParserKeywords::DY >();
+  this->addKeyword< ParserKeywords::DYNAMICR >();
   this->addKeyword< ParserKeywords::DYNRDIMS >();
   this->addKeyword< ParserKeywords::DYV >();
   this->addKeyword< ParserKeywords::DZ >();
@@ -272,6 +284,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::GCONSUMP >();
   this->addKeyword< ParserKeywords::GCONTOL >();
   this->addKeyword< ParserKeywords::GCUTBACK >();
+  this->addKeyword< ParserKeywords::GCUTBACT >();
   this->addKeyword< ParserKeywords::GCVD >();
   this->addKeyword< ParserKeywords::GDCQ >();
   this->addKeyword< ParserKeywords::GDCQECON >();
@@ -280,6 +293,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::GDORIENT >();
   this->addKeyword< ParserKeywords::GDRILPOT >();
   this->addKeyword< ParserKeywords::GECON >();
+  this->addKeyword< ParserKeywords::GECONT >();
   this->addKeyword< ParserKeywords::GEFAC >();
   this->addKeyword< ParserKeywords::GETGLOB >();
   this->addKeyword< ParserKeywords::GI >();
@@ -477,6 +491,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::MLANGSLV >();
   this->addKeyword< ParserKeywords::MONITOR >();
   this->addKeyword< ParserKeywords::MPFANUM >();
+  this->addKeyword< ParserKeywords::MPFNNC >();
   this->addKeyword< ParserKeywords::MSFN >();
   this->addKeyword< ParserKeywords::MSGFILE >();
   this->addKeyword< ParserKeywords::MULSGGD >();

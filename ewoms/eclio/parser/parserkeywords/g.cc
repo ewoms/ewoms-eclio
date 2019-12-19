@@ -1263,6 +1263,16 @@ const std::string GCUTBACK::RATE_CUTBACK_FACTOR::itemName = "RATE_CUTBACK_FACTOR
 const std::string GCUTBACK::CONTROL_PHASE::itemName = "CONTROL_PHASE";
 
 
+GCUTBACT::GCUTBACT( ) : ParserKeyword("GCUTBACT")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("GCUTBACT");
+}
+const std::string GCUTBACT::keywordName = "GCUTBACT";
+
+
 GCVD::GCVD( ) : ParserKeyword("GCVD")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);
@@ -1541,6 +1551,16 @@ const std::string GECON::END_RUN::itemName = "END_RUN";
 const std::string GECON::END_RUN::defaultValue = "NO";
 const std::string GECON::MAX_OPEN_WELLS::itemName = "MAX_OPEN_WELLS";
 const int GECON::MAX_OPEN_WELLS::defaultValue = 0;
+
+
+GECONT::GECONT( ) : ParserKeyword("GECONT")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("GECONT");
+}
+const std::string GECONT::keywordName = "GECONT";
 
 
 GEFAC::GEFAC( ) : ParserKeyword("GEFAC")

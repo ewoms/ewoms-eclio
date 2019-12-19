@@ -39,7 +39,7 @@ struct UDQParseNode {
         selector(selector_arg)
     {
         if (type_arg == UDQTokenType::ecl_expr)
-            this->var_type = UDQ::targetType(value_arg);
+            this->var_type = UDQ::targetType(value_arg, selector_arg);
     }
 
     UDQParseNode(UDQTokenType type_arg, const std::string& value_arg) :
@@ -78,6 +78,7 @@ private:
     UDQParseNode next();
     UDQTokenType get_type(const std::string& arg) const;
     std::size_t current_size() const;
+    bool empty() const;
 
     const UDQParams& udq_params;
     UDQFunctionTable udqft;

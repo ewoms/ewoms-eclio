@@ -27,6 +27,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/arraydimchecker.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/tuning.hh>
@@ -42,6 +43,28 @@
 #include <vector>
 
 namespace {
+
+    using nph_enum = Ewoms::GuideRateModel::Target;
+    const std::map<nph_enum, int> nph_enumToECL = {
+        {nph_enum::NONE, 0},
+        {nph_enum::OIL,  1},
+        {nph_enum::GAS,  3},
+        {nph_enum::LIQ,  4},
+        {nph_enum::RES,  6},
+        {nph_enum::COMB, 9},
+    };
+
+    using prod_cmode = Ewoms::Well::ProducerCMode;
+    const std::map<prod_cmode, int> prod_cmodeToECL = {
+        {prod_cmode::NONE,  0},
+        {prod_cmode::ORAT,  1},
+        {prod_cmode::WRAT,  2},
+        {prod_cmode::GRAT,  3},
+        {prod_cmode::LRAT,  4},
+        {prod_cmode::RESV,  5},
+        {prod_cmode::BHP,   7},
+    };
+
     int maxConnPerWell(const Ewoms::Schedule& sched,
                        const std::size_t    lookup_step)
     {
@@ -70,6 +93,60 @@ namespace {
         // Number of non-FIELD groups.
         return ngmax - 1;
     }
+
+    int GroupControl(const Ewoms::Schedule& sched,
+                         const std::size_t    lookup_step)
+    {
+        int gctrl = 0;
+
+        for (const auto& group_name : sched.groupNames(lookup_step)) {
+            const auto& group = sched.getGroup(group_name, lookup_step);
+            if (group.isProductionGroup()) {
+                gctrl = 1;
+            }
+            if (group.isInjectionGroup()) {
+                gctrl = 2;
+            }
+        }
+
+        // Index for group control
+        return gctrl;
+    }
+
+    int noWellUdqs(const Ewoms::Schedule& sched,
+               const std::size_t    simStep)
+    {
+        const auto& udqCfg = sched.getUDQConfig(simStep);
+        std::size_t i_wudq = 0;
+        for (const auto& udq_input : udqCfg.input()) {
+            if (udq_input.var_type() ==  Ewoms::UDQVarType::WELL_VAR) {
+                i_wudq++;
+            }
+        }
+        return i_wudq;
+    }
+
+    int noGroupUdqs(const Ewoms::Schedule& sched,
+                const std::size_t    simStep)
+    {
+        const auto& udqCfg = sched.getUDQConfig(simStep);
+        const auto& input = udqCfg.input();
+        return std::count_if(input.begin(), input.end(), [](const Ewoms::UDQInput inp) { return (inp.var_type() == Ewoms::UDQVarType::GROUP_VAR); });
+
+    }
+
+    int noFieldUdqs(const Ewoms::Schedule& sched,
+                const std::size_t    simStep)
+    {
+        const auto& udqCfg = sched.getUDQConfig(simStep);
+        std::size_t i_fudq = 0;
+        for (const auto& udq_input : udqCfg.input()) {
+            if (udq_input.var_type() ==  Ewoms::UDQVarType::FIELD_VAR) {
+                i_fudq++;
+            }
+        }
+        return i_fudq;
+}
 
     Ewoms::RestartIO::InteHEAD::WellTableDim
     getWellTableDims(const int              nwgmax,
@@ -188,14 +265,21 @@ namespace {
         };
     }
 
-    /*Ewoms::RestartIO::InteHEAD::UdqParam
-    getUdqParam(const ::Ewoms::Runspec& rspec, const ::Ewoms::UDQConfig& udqcfg )
+    Ewoms::RestartIO::InteHEAD::UdqParam
+    getUdqParam(const ::Ewoms::Runspec& rspec, const Ewoms::Schedule& sched,
+               const std::size_t simStep )
     {
         const auto& udq_par = rspec.udqParams();
-        const auto r_seed = udq_par.rand_seed();
-        const auto no_udq = udqcfg.size();
+        const auto& udqActive = sched.udqActive(simStep);
+        const auto r_seed   = udq_par.rand_seed();
+        const auto no_wudq  = noWellUdqs(sched, simStep);
+        const auto no_gudq  = noGroupUdqs(sched, simStep);
+        const auto no_fudq  = noFieldUdqs(sched, simStep);
+        const auto no_iuads = udqActive.IUAD_size();
+        const auto no_iuaps = udqActive.IUAP_size();
 
-        return { r_seed, static_cast<int>(no_udq)};
+        return { r_seed, static_cast<int>(no_wudq), static_cast<int>(no_gudq), static_cast<int>(no_fudq),
+            static_cast<int>(no_iuads), static_cast<int>(no_iuaps)};
     }
 
     Ewoms::RestartIO::InteHEAD::ActionParam
@@ -207,7 +291,7 @@ namespace {
         const auto max_characters_per_line = rspec.actdims().max_characters();
 
         return { static_cast<int>(no_act), max_lines_pr_action, static_cast<int>(max_cond_per_action), static_cast<int>(max_characters_per_line)};
-    }*/
+    }
 
     Ewoms::RestartIO::InteHEAD::WellSegDims
     getWellSegDims(const ::Ewoms::Runspec&  rspec,
@@ -261,6 +345,44 @@ namespace {
             static_cast<int>(nplmix),
         };
     }
+
+    Ewoms::RestartIO::InteHEAD::GuideRateNominatedPhase
+    setGuideRateNominatedPhase(const ::Ewoms::Schedule& sched,
+                     const std::size_t    lookup_step)
+    {
+            int nom_phase = 0;
+
+            const auto& guideCFG = sched.guideRateConfig(lookup_step);
+            if (guideCFG.has_model()) {
+                const auto& guideRateModel = guideCFG.model();
+
+                const auto& targPhase = guideRateModel.target();
+                const auto& allow_incr = guideRateModel.allow_increase();
+
+                const auto it_nph = nph_enumToECL.find(targPhase);
+                    if (it_nph != nph_enumToECL.end()) {
+                    nom_phase = it_nph->second;
+                    }
+                //nominated phase has negative sign for allow increment set to 'NO'
+                if (!allow_incr) nom_phase *= -1;
+            }
+
+            return {nom_phase};
+    }
+
+    int getWhistctlMode(const ::Ewoms::Schedule& sched,
+                     const std::size_t    lookup_step)
+    {
+            int mode = 0;
+            const auto& w_hist_ctl_mode = sched.getGlobalWhistctlMmode(lookup_step);
+            const auto it_ctl = prod_cmodeToECL.find(w_hist_ctl_mode);
+                if (it_ctl != prod_cmodeToECL.end()) {
+                    mode = it_ctl->second;
+                }
+
+            return mode;
+    }
+
 } // Anonymous
 
 // #####################################################################
@@ -278,8 +400,7 @@ createInteHead(const EclipseState& es,
 {
     const auto  nwgmax = maxGroupSize(sched, lookup_step);
     const auto  ngmax  = numGroupsInField(sched, lookup_step);
-    //const auto& udqCfg = sched.getUDQConfig(lookup_step);
-    //const auto& acts   = sched.actions(lookup_step);
+    const auto& acts   = sched.actions(lookup_step);
     const auto& rspec  = es.runspec();
     const auto& tdim   = es.getTableManager();
     const auto& rdim   = tdim.getRegdims();
@@ -296,7 +417,7 @@ createInteHead(const EclipseState& es,
              // across a range of reference cases, but are not guaranteed to be
              // universally valid.
         .params_NWELZ       (155, 122, 130, 3) // n{isxz}welz: number of data elements per well in {ISXZ}WELL
-        .params_NCON        (25, 40, 58)       // n{isx}conz: number of data elements per completion in ICON
+        .params_NCON        (25, 41, 58)       // n{isx}conz: number of data elements per completion in ICON
         .params_GRPZ        (getNGRPZ(nwgmax, ngmax, rspec))
              // ncamax: max number of analytical aquifer connections
              // n{isx}aaqz: number of data elements per aquifer in {ISX}AAQ
@@ -307,9 +428,13 @@ createInteHead(const EclipseState& es,
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })
-        .variousParam       (201702, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
-        //.udqParam_1         (getUdqParam(rspec, udqCfg))
-        //.actionParam        (getActionParam(rspec, acts))
+        .params_NGCTRL      (GroupControl(sched,lookup_step))
+        .variousParam       (201802, 100)  // Output should be compatible with Eclipse 100, 2017.02 version.
+        .udqParam_1         (getUdqParam(rspec, sched, lookup_step ))
+        .actionParam        (getActionParam(rspec, acts))
+        .variousUDQ_ACTIONXParam()
+        .nominatedPhaseGuideRate(setGuideRateNominatedPhase(sched,lookup_step))
+        .whistControlMode(getWhistctlMode(sched,lookup_step))
         ;
 
     return ih.data();

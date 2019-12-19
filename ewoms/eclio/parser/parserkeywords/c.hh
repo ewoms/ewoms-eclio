@@ -241,6 +241,14 @@ namespace ParserKeywords {
 
 
 
+   class CECONT : public ParserKeyword {
+   public:
+       CECONT();
+       static const std::string keywordName;
+   };
+
+
+
    class CIRCLE : public ParserKeyword {
    public:
        CIRCLE();

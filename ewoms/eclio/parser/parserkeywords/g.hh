@@ -970,6 +970,14 @@ namespace ParserKeywords {
 
 
 
+   class GCUTBACT : public ParserKeyword {
+   public:
+       GCUTBACT();
+       static const std::string keywordName;
+   };
+
+
+
    class GCVD : public ParserKeyword {
    public:
        GCVD();
@@ -1177,6 +1185,14 @@ namespace ParserKeywords {
            static const std::string itemName;
            static const int defaultValue;
        };
+   };
+
+
+
+   class GECONT : public ParserKeyword {
+   public:
+       GECONT();
+       static const std::string keywordName;
    };
 
 

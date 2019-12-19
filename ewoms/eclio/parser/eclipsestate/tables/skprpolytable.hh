@@ -27,11 +27,20 @@ namespace Ewoms {
     class SkprpolyTable : public PolyInjTable {
     public:
 
+        SkprpolyTable() = default;
+        SkprpolyTable(const std::vector<double>& throughputs,
+                     const std::vector<double>& velocities,
+                     int tableNumber,
+                     const std::vector<std::vector<double>>& data,
+                     double ref_polymer_concentration);
         explicit SkprpolyTable(const DeckKeyword& table);
 
         double referenceConcentration() const;
+        void setReferenceConcentration(double refConcentration);
 
         const std::vector<std::vector<double>>& getSkinPressures() const;
+
+        bool operator==(const SkprpolyTable& data) const;
 
     private:
         double m_ref_polymer_concentration;

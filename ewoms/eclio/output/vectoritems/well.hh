@@ -179,6 +179,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
     namespace ZWell {
         enum index : std::vector<const char*>::size_type {
             WellName = 0, // Well name
+            ActionX  = 2, // ActionX name
         };
     } // ZWell
 }}}} // Ewoms::RestartIO::Helpers::VectorItems

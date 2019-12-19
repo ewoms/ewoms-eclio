@@ -22,6 +22,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/group/guiderateconfig.hh>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/units/units.hh>
@@ -65,6 +66,44 @@ namespace {
 
         return static_cast<double>(Ewoms::Metric::Time);
     }
+
+    Ewoms::RestartIO::DoubHEAD::guideRate
+    computeGuideRate(const ::Ewoms::Schedule& sched,
+                     const std::size_t    lookup_step)
+    {
+            double a = 0.;
+            double b = 0.;
+            double c = 0.;
+            double d = 0.;
+            double e = 0.;
+            double f = 0.;
+            double delay = 0.;
+            double damping_fact = 0.;
+
+            const auto& guideCFG = sched.guideRateConfig(lookup_step);
+            if (guideCFG.has_model()) {
+                const auto& guideRateModel = guideCFG.model();
+
+                a = guideRateModel.getA();
+                b = guideRateModel.getB();
+                c = guideRateModel.getC();
+                d = guideRateModel.getD();
+                e = guideRateModel.getE();
+                f = guideRateModel.getF();
+                delay = guideRateModel.update_delay();
+                damping_fact = guideRateModel.damping_factor();
+            }
+            return {
+                a,
+                b,
+                c,
+                d,
+                e,
+                f,
+                delay,
+                damping_fact
+            };
+    }
 } // Anonymous
 
 // #####################################################################
@@ -80,14 +119,15 @@ createDoubHead(const EclipseState& es,
                const double        nextTimeStep)
 {
     const auto& usys  = es.getDeckUnitSystem();
-    //const auto& rspec  = es.runspec();
+    const auto& rspec  = es.runspec();
     const auto  tconv = getTimeConv(usys);
 
     auto dh = DoubHEAD{}
         .tuningParameters(sched.getTuning(), lookup_step, tconv)
         .timeStamp       (computeTimeStamp(sched, simTime))
         .drsdt           (sched, lookup_step, tconv)
-        //.udq_param(rspec.udqParams())
+        .udq_param(rspec.udqParams())
+        .guide_rate_param(computeGuideRate(sched, lookup_step))
         ;
 
     if (nextTimeStep > 0.0) {

@@ -78,6 +78,56 @@ const std::string BC::RATE::itemName = "RATE";
 const double BC::RATE::defaultValue = 0.000000;
 
 
+BDENSITY::BDENSITY( ) : ParserKeyword("BDENSITY")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("BDENSITY");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Mass/LiquidSurfaceVolume");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string BDENSITY::keywordName = "BDENSITY";
+const std::string BDENSITY::DATA::itemName = "DATA";
+
+
+BGGI::BGGI( ) : ParserKeyword("BGGI")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("BGGI");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("GAS_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string BGGI::keywordName = "BGGI";
+const std::string BGGI::GAS_PRESSURE::itemName = "GAS_PRESSURE";
+const std::string BGGI::DATA::itemName = "DATA";
+
+
 BIGMODEL::BIGMODEL( ) : ParserKeyword("BIGMODEL")
 {
   setFixedSize( (size_t) 0);
@@ -279,6 +329,34 @@ const std::string BLOCK_PROBE300::keywordName = "BLOCK_PROBE300";
 const std::string BLOCK_PROBE300::I::itemName = "I";
 const std::string BLOCK_PROBE300::J::itemName = "J";
 const std::string BLOCK_PROBE300::K::itemName = "K";
+
+
+BOGI::BOGI( ) : ParserKeyword("BOGI")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("BOGI");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("OIL_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string BOGI::keywordName = "BOGI";
+const std::string BOGI::OIL_PRESSURE::itemName = "OIL_PRESSURE";
+const std::string BOGI::DATA::itemName = "DATA";
 
 
 BOUNDARY::BOUNDARY( ) : ParserKeyword("BOUNDARY")

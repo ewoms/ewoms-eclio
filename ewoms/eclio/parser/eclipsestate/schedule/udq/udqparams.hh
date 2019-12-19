@@ -30,6 +30,11 @@ namespace Ewoms {
     public:
         explicit UDQParams(const Deck& deck);
         UDQParams();
+        UDQParams(bool reseed, int seed,
+                  double range, double undefined,
+                  double cmp);
+
+        bool reseed() const;
         int rand_seed() const noexcept;
         void   reseedRNG(int seed);
         double range() const noexcept;
@@ -38,6 +43,8 @@ namespace Ewoms {
 
         std::mt19937& sim_rng();
         std::mt19937& true_rng();
+
+        bool operator==(const UDQParams& data) const;
     private:
         bool reseed_rng;
         int random_seed;

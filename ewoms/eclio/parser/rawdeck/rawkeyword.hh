@@ -70,6 +70,7 @@ namespace Ewoms {
         size_t m_fixedSize = 0;
         size_t m_numTables = 0;
         size_t m_currentNumTables = 0;
+        bool m_isTempFinished = false;
         bool m_isFinished = false;
 
         std::vector< RawRecord > m_records;

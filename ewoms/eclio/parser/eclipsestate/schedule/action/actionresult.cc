@@ -17,6 +17,7 @@
 */
 
 #include <vector>
+#include <algorithm>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 
@@ -81,6 +82,14 @@ Result& Result::operator&=(const Result& other) {
     return *this;
 }
 
+Result& Result::operator=(const Result& src)
+{
+    this->result = src.result;
+    if (src.matching_wells) this->matching_wells.reset( new WellSet(*src.matching_wells) );
+
+    return *this;
+}
+
 void Result::assign(bool value) {
     this->result = value;
 }
@@ -91,7 +100,7 @@ void Result::add_well(const std::string& well) {
     this->matching_wells->add(well);
 }
 
-bool Result::has_well(const std::string& well) {
+bool Result::has_well(const std::string& well) const {
     if (!this->matching_wells)
         return false;
 

@@ -1465,6 +1465,19 @@ namespace ParserKeywords {
 
 
 
+   class DYNAMICR : public ParserKeyword {
+   public:
+       DYNAMICR();
+       static const std::string keywordName;
+
+       class code {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class DYNRDIMS : public ParserKeyword {
    public:
        DYNRDIMS();

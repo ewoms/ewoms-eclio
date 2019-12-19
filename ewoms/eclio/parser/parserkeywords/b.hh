@@ -64,6 +64,37 @@ namespace ParserKeywords {
 
 
 
+   class BDENSITY : public ParserKeyword {
+   public:
+       BDENSITY();
+       static const std::string keywordName;
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class BGGI : public ParserKeyword {
+   public:
+       BGGI();
+       static const std::string keywordName;
+
+       class GAS_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class BIGMODEL : public ParserKeyword {
    public:
        BIGMODEL();
@@ -119,6 +150,24 @@ namespace ParserKeywords {
        };
 
        class K {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class BOGI : public ParserKeyword {
+   public:
+       BOGI();
+       static const std::string keywordName;
+
+       class OIL_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATA {
        public:
            static const std::string itemName;
        };

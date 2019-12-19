@@ -37,6 +37,11 @@ namespace Ewoms {
         return Equil( deck.getKeyword<ParserKeywords::EQUIL>(  ) );
     }
 
+    InitConfig::InitConfig()
+        : m_filleps(false)
+    {
+    }
+
     InitConfig::InitConfig(const Deck& deck)
         : equil(equils(deck))
         , foamconfig(deck)
@@ -68,6 +73,18 @@ namespace Ewoms {
             this->setRestart(root, step);
         else
             this->setRestart( input_path + "/" + root, step );
+    }
+
+    InitConfig::InitConfig(const Equil& equils, const FoamConfig& foam,
+                           bool filleps, bool restartReq, int restartStep,
+                           const std::string& restartRootName)
+        : equil(equils)
+        , foamconfig(foam)
+        , m_filleps(filleps)
+        , m_restartRequested(restartReq)
+        , m_restartStep(restartStep)
+        , m_restartRootName(restartRootName)
+    {
     }
 
     void InitConfig::setRestart( const std::string& root, int step) {
@@ -109,6 +126,15 @@ namespace Ewoms {
             throw std::runtime_error( "Error: No foam model configuration keywords present" );
 
         return this->foamconfig;
+    }
+
+    bool InitConfig::operator==(const InitConfig& data) const {
+        return equil == data.equil &&
+               foamconfig == data.foamconfig &&
+               m_filleps == data.m_filleps &&
+               m_restartRequested == data.m_restartRequested &&
+               m_restartStep == data.m_restartStep &&
+               m_restartRootName == data.m_restartRootName;
     }
 
 } //namespace Ewoms

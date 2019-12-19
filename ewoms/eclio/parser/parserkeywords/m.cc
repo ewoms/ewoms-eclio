@@ -745,6 +745,16 @@ const std::string MPFANUM::keywordName = "MPFANUM";
 const std::string MPFANUM::data::itemName = "data";
 
 
+MPFNNC::MPFNNC( ) : ParserKeyword("MPFNNC")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("MPFNNC");
+}
+const std::string MPFNNC::keywordName = "MPFNNC";
+
+
 MSFN::MSFN( ) : ParserKeyword("MSFN")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);

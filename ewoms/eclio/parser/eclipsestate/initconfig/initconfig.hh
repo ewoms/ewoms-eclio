@@ -31,7 +31,11 @@ namespace Ewoms {
     class InitConfig {
 
     public:
+        InitConfig();
         explicit InitConfig(const Deck& deck);
+        InitConfig(const Equil& equil, const FoamConfig& foam,
+                   bool filleps, bool restartReq, int restartStep,
+                   const std::string& restartRootName);
 
         void setRestart( const std::string& root, int step);
         bool restartRequested() const;
@@ -48,6 +52,8 @@ namespace Ewoms {
         {
             return this->m_filleps;
         }
+
+        bool operator==(const InitConfig& config) const;
 
     private:
         Equil equil;

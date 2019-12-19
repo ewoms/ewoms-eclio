@@ -35,6 +35,17 @@ namespace Ewoms{
 
     // PolyInjTable
 
+    PolyInjTable::PolyInjTable(const std::vector<double>& throughputs,
+                               const std::vector<double>& velocities,
+                               int tableNumber,
+                               const std::vector<std::vector<double>>& data)
+        : m_throughputs(throughputs)
+        , m_velocities(velocities)
+        , m_table_number(tableNumber)
+        , m_data(data)
+    {
+    }
+
     int PolyInjTable::getTableNumber() const
     {
         return m_table_number;
@@ -55,7 +66,23 @@ namespace Ewoms{
         return m_data;
     }
 
+    bool PolyInjTable::operator==(const PolyInjTable& data) const
+    {
+        return this->getTableNumber() == data.getTableNumber() &&
+               this->getThroughputs() == data.getThroughputs() &&
+               this->getVelocities() == data.getVelocities() &&
+               this->getTableData() == data.getTableData();
+    }
+
     // PlymwinjTable
+
+    PlymwinjTable::PlymwinjTable(const std::vector<double>& throughputs,
+                                 const std::vector<double>& velocities,
+                                 int tableNumber,
+                                 const std::vector<std::vector<double>>& data)
+        : PolyInjTable(throughputs, velocities, tableNumber, data)
+    {
+    }
 
     PlymwinjTable::PlymwinjTable(const Ewoms::DeckKeyword& table)
     {
@@ -100,7 +127,20 @@ namespace Ewoms{
         return getTableData();
     }
 
+    bool PlymwinjTable::operator==(const PlymwinjTable& data) const
+    {
+        return static_cast<const PolyInjTable&>(*this) == static_cast<const PolyInjTable&>(data);
+    }
+
     // SkprwatTable
+
+    SkprwatTable::SkprwatTable(const std::vector<double>& throughputs,
+                               const std::vector<double>& velocities,
+                               int tableNumber,
+                               const std::vector<std::vector<double>>& data)
+        : PolyInjTable(throughputs, velocities, tableNumber, data)
+    {
+    }
 
     SkprwatTable::SkprwatTable(const Ewoms::DeckKeyword &table)
     {
@@ -145,7 +185,22 @@ namespace Ewoms{
         return getTableData();
     }
 
+    bool SkprwatTable::operator==(const SkprwatTable& data) const
+    {
+        return static_cast<const PolyInjTable&>(*this) == static_cast<const PolyInjTable&>(data);
+    }
+
     // SkprpolyTable
+
+    SkprpolyTable::SkprpolyTable(const std::vector<double>& throughputs,
+                                 const std::vector<double>& velocities,
+                                 int tableNumber,
+                                 const std::vector<std::vector<double>>& data,
+                                 double referenceConcentration)
+        : PolyInjTable(throughputs, velocities, tableNumber, data)
+        , m_ref_polymer_concentration(referenceConcentration)
+    {
+    }
 
     SkprpolyTable::SkprpolyTable(const Ewoms::DeckKeyword &table)
     {
@@ -196,10 +251,21 @@ namespace Ewoms{
         return m_ref_polymer_concentration;
     }
 
+    void SkprpolyTable::setReferenceConcentration(double refConcentration)
+    {
+        m_ref_polymer_concentration = refConcentration;
+    }
+
     const std::vector<std::vector<double>>&
     SkprpolyTable::getSkinPressures() const
     {
         return getTableData();
+    }
+
+    bool SkprpolyTable::operator==(const SkprpolyTable& data) const
+    {
+        return  this->referenceConcentration() == data.referenceConcentration() &&
+                static_cast<const PolyInjTable&>(*this) == static_cast<const PolyInjTable&>(data);
     }
 
 }

@@ -159,6 +159,56 @@ namespace ParserKeywords {
 
 
 
+   class ACTIONS : public ParserKeyword {
+   public:
+       ACTIONS();
+       static const std::string keywordName;
+
+       class ACTION {
+       public:
+           static const std::string itemName;
+       };
+
+       class WELL {
+       public:
+           static const std::string itemName;
+       };
+
+       class WELL_SEGMENT {
+       public:
+           static const std::string itemName;
+       };
+
+       class QUANTITY {
+       public:
+           static const std::string itemName;
+       };
+
+       class OPERATOR {
+       public:
+           static const std::string itemName;
+       };
+
+       class TRIGGER_VALUE {
+       public:
+           static const std::string itemName;
+       };
+
+       class REPETITIONS {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class INCREMENT {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+   };
+
+
+
    class ACTIONW : public ParserKeyword {
    public:
        ACTIONW();
@@ -517,6 +567,19 @@ namespace ParserKeywords {
 
 
 
+   class AMALGAM : public ParserKeyword {
+   public:
+       AMALGAM();
+       static const std::string keywordName;
+
+       class LGR_GROUPS {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class API : public ParserKeyword {
    public:
        API();
@@ -534,6 +597,55 @@ namespace ParserKeywords {
        public:
            static const std::string itemName;
            static const int defaultValue;
+       };
+   };
+
+
+
+   class APILIM : public ParserKeyword {
+   public:
+       APILIM();
+       static const std::string keywordName;
+
+       class LIMITER {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class SCOPE {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class LOWER_API_LIMIT {
+       public:
+           static const std::string itemName;
+       };
+
+       class UPPER_API_LIMIT {
+       public:
+           static const std::string itemName;
+       };
+
+       class NUM_ROWS {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+   };
+
+
+
+   class APIVID : public ParserKeyword {
+   public:
+       APIVID();
+       static const std::string keywordName;
+
+       class DATA {
+       public:
+           static const std::string itemName;
        };
    };
 
@@ -665,6 +777,24 @@ namespace ParserKeywords {
 
 
 
+   class AQUALIST : public ParserKeyword {
+   public:
+       AQUALIST();
+       static const std::string keywordName;
+
+       class AQUIFER_LIST {
+       public:
+           static const std::string itemName;
+       };
+
+       class LIST {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class AQUANCON : public ParserKeyword {
    public:
        AQUANCON();
@@ -725,6 +855,137 @@ namespace ParserKeywords {
        public:
            static const std::string itemName;
            static const std::string defaultValue;
+       };
+   };
+
+
+
+   class AQUCHGAS : public ParserKeyword {
+   public:
+       AQUCHGAS();
+       static const std::string keywordName;
+
+       class AQUIFER_ID {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATUM_DEPTH {
+       public:
+           static const std::string itemName;
+       };
+
+       class GAS_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class AQUIFER_PROD_INDEX {
+       public:
+           static const std::string itemName;
+       };
+
+       class TABLE_NUM {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class TEMPERATURE {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class AQUCHWAT : public ParserKeyword {
+   public:
+       AQUCHWAT();
+       static const std::string keywordName;
+
+       class AQUIFER_ID {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATUM_DEPTH {
+       public:
+           static const std::string itemName;
+       };
+
+       class INPUT_4 {
+       public:
+           static const std::string itemName;
+       };
+
+       class ITEM4 {
+       public:
+           static const std::string itemName;
+       };
+
+       class AQUIFER_PROD_INDEX {
+       public:
+           static const std::string itemName;
+       };
+
+       class TABLE_NUM {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class INIT_SALT_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MINIMUM {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAXIMUM {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class IGNORE_CAP_PRESSURE {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class MIN_FLOW_PR_CONN {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_FLOW_PR_CONN {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class REMOVE_DEPTH_TERM {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class IMPORT_MAX_MIN_FLOW_RATE {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class TEMPERATURE {
+       public:
+           static const std::string itemName;
        };
    };
 

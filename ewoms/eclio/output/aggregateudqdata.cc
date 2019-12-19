@@ -16,9 +16,12 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/output/aggregateudqdata.hh>
 #include <ewoms/eclio/output/aggregategroupdata.hh>
 #include <ewoms/eclio/output/writerestarthelpers.hh>
+#include <ewoms/eclio/output/intehead.hh>
+#include <ewoms/eclio/output/vectoritems/intehead.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -45,6 +48,7 @@
 // Class Ewoms::RestartIO::Helpers::AggregateGroupData
 // ---------------------------------------------------------------------
 
+namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;
 namespace {
 
     // maximum number of groups
@@ -54,10 +58,34 @@ namespace {
     }
 
     // maximum number of wells
-    /*std::size_t nwmaxz(const std::vector<int>& inteHead)
+    std::size_t nwmaxz(const std::vector<int>& inteHead)
     {
         return inteHead[163];
-    }*/
+    }
+
+    // Categorize function in terms of which token-types are used in formula
+    int define_type(const std::set<Ewoms::UDQTokenType> tokens) {
+        int type = -4;
+        std::vector <Ewoms::UDQTokenType> type_1 = {
+        Ewoms::UDQTokenType::elemental_func_sorta,
+        Ewoms::UDQTokenType::elemental_func_sortd,
+        Ewoms::UDQTokenType::elemental_func_undef,
+        Ewoms::UDQTokenType::scalar_func_sum,
+        Ewoms::UDQTokenType::scalar_func_avea,
+        Ewoms::UDQTokenType::scalar_func_aveg,
+        Ewoms::UDQTokenType::scalar_func_aveh,
+        Ewoms::UDQTokenType::scalar_func_max,
+        Ewoms::UDQTokenType::scalar_func_min,
+        Ewoms::UDQTokenType::binary_op_div
+        };
+
+        int num_type_1 = 0;
+        for (const auto& tok_type : type_1) {
+            num_type_1 += tokens.count(tok_type);
+        }
+        type = (num_type_1 > 0) ? -1 : -4;
+        return type;
+    }
 
     namespace iUdq {
 
@@ -76,8 +104,10 @@ namespace {
         void staticContrib(const Ewoms::UDQInput& udq_input, IUDQArray& iUdq)
         {
             if (udq_input.is<Ewoms::UDQDefine>()) {
+                const auto& udq_define = udq_input.get<Ewoms::UDQDefine>();
+                const auto& tokens = udq_define.func_tokens();
                 iUdq[0] = 2;
-                iUdq[1] = -4;
+                iUdq[1] = define_type(tokens);
             } else {
                 iUdq[0] = 0;
                 iUdq[1] = -4;
@@ -435,6 +465,8 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
                        const std::vector<int>&              inteHead)
 {
     const auto& udqCfg = sched.getUDQConfig(simStep);
+    const auto nudq = inteHead[VI::intehead::NO_WELL_UDQS] + inteHead[VI::intehead::NO_GROUP_UDQS] + inteHead[VI::intehead::NO_FIELD_UDQS];
+    int cnt_udq = 0;
     for (const auto& udq_input : udqCfg.input()) {
         auto udq_index = udq_input.index.insert_index;
         {
@@ -449,65 +481,115 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
             auto z_udl = this->zUDL_[udq_index];
             zUdl::staticContrib(udq_input, z_udl);
         }
+        cnt_udq += 1;
+    }
+    if (cnt_udq != nudq) {
+        std::stringstream str;
+        str << "Inconsistent total number of udqs: " << cnt_udq << " and sum of well, group and field udqs: " << nudq;
+        OpmLog::error(str.str());
     }
 
     auto udq_active = sched.udqActive(simStep);
     if (udq_active) {
         const auto& udq_records = udq_active.get_iuad();
+        int cnt_iuad = 0;
         for (std::size_t index = 0; index < udq_records.size(); index++) {
             const auto& record = udq_records[index];
             auto i_uad = this->iUAD_[index];
             iUad::staticContrib(record, i_uad);
+            cnt_iuad += 1;
+        }
+        if (cnt_iuad != inteHead[VI::intehead::NO_IUADS]) {
+            std::stringstream str;
+            str << "Inconsistent number of iuad's: " << cnt_iuad << " number of iuad's from intehead " << inteHead[VI::intehead::NO_IUADS];
+            OpmLog::error(str.str());
         }
 
         const auto& iuap_records = udq_active.get_iuap();
+        int cnt_iuap = 0;
         const auto iuap_vect = iuap_data(sched, simStep,iuap_records);
         for (std::size_t index = 0; index < iuap_vect.size(); index++) {
             const auto& wg_no = iuap_vect[index];
             auto i_uap = this->iUAP_[index];
             iUap::staticContrib(wg_no, i_uap);
+            cnt_iuap += 1;
+        }
+        if (cnt_iuap != inteHead[VI::intehead::NO_IUAPS]) {
+            std::stringstream str;
+            str << "Inconsistent number of iuap's: " << cnt_iuap << " number of iuap's from intehead " << inteHead[VI::intehead::NO_IUAPS];
+            OpmLog::error(str.str());
         }
 
     }
-    Ewoms::RestartIO::Helpers::igphData igph_dat;
-    auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
-    for (std::size_t index = 0; index < igph.size(); index++) {
-            auto i_igph = this->iGPH_[index];
-            iGph::staticContrib(igph[index], i_igph);
+    if (inteHead[VI::intehead::NO_GROUP_UDQS] > 0) {
+        Ewoms::RestartIO::Helpers::igphData igph_dat;
+        int cnt_igph = 0;
+        auto igph = igph_dat.ig_phase(sched, simStep, inteHead);
+        for (std::size_t index = 0; index < igph.size(); index++) {
+                auto i_igph = this->iGPH_[index];
+                iGph::staticContrib(igph[index], i_igph);
+                cnt_igph += 1;
         }
-#if 0
+        if (cnt_igph != inteHead[VI::intehead::NGMAXZ]) {
+            std::stringstream str;
+            str << "Inconsistent number of igph's: " << cnt_igph << " number of igph's from intehead " << inteHead[VI::intehead::NGMAXZ];
+            OpmLog::error(str.str());
+        }
+    }
+
     std::size_t i_wudq = 0;
     const auto& wnames = sched.wellNames(simStep);
     const auto nwmax = nwmaxz(inteHead);
+    int cnt_dudw = 0;
     for (const auto& udq_input : udqCfg.input()) {
         if (udq_input.var_type() ==  UDQVarType::WELL_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudw = this->dUDW_[i_wudq];
             dUdw::staticContrib(st, wnames, udq, nwmax, i_dudw);
             i_wudq++;
+            cnt_dudw += 1;
         }
     }
-#endif
+    if (cnt_dudw != inteHead[VI::intehead::NO_WELL_UDQS]) {
+        std::stringstream str;
+        str << "Inconsistent number of dudw's: " << cnt_dudw << " number of dudw's from intehead " << inteHead[VI::intehead::NO_WELL_UDQS];
+        OpmLog::error(str.str());
+    }
+
     std::size_t i_gudq = 0;
     const auto curGroups = currentGroups(sched, simStep, inteHead);
     const auto ngmax = ngmaxz(inteHead);
+    int cnt_dudg = 0;
     for (const auto& udq_input : udqCfg.input()) {
         if (udq_input.var_type() ==  UDQVarType::GROUP_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudg = this->dUDG_[i_gudq];
             dUdg::staticContrib(st, curGroups, udq, ngmax, i_dudg);
             i_gudq++;
+            cnt_dudg += 1;
         }
+    }
+    if (cnt_dudg != inteHead[VI::intehead::NO_GROUP_UDQS]) {
+        std::stringstream str;
+        str << "Inconsistent number of dudg's: " << cnt_dudg << " number of dudg's from intehead " << inteHead[VI::intehead::NO_GROUP_UDQS];
+        OpmLog::error(str.str());
     }
 
     std::size_t i_fudq = 0;
+    int cnt_dudf = 0;
     for (const auto& udq_input : udqCfg.input()) {
         if (udq_input.var_type() ==  UDQVarType::FIELD_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudf = this->dUDF_[i_fudq];
             dUdf::staticContrib(st, udq, i_dudf);
             i_fudq++;
+            cnt_dudf += 1;
         }
+    }
+    if (cnt_dudf != inteHead[VI::intehead::NO_FIELD_UDQS]) {
+        std::stringstream str;
+        str << "Inconsistent number of dudf's: " << cnt_dudf << " number of dudf's from intehead " << inteHead[VI::intehead::NO_FIELD_UDQS];
+        OpmLog::error(str.str());
     }
 
 }

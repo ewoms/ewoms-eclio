@@ -61,6 +61,12 @@ public:
     bool operator==(const GuideRateModel& other) const;
     bool operator!=(const GuideRateModel& other) const;
     Target target() const;
+    double getA() const;
+    double getB() const;
+    double getC() const;
+    double getD() const;
+    double getE() const;
+    double getF() const;
 
     static Target convert_target(Group::GuideRateTarget group_target);
     static Target convert_target(Well::GuideRateTarget well_target);
