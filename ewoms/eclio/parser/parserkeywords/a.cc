@@ -594,6 +594,73 @@ const std::string ADSALNOD::keywordName = "ADSALNOD";
 const std::string ADSALNOD::DATA::itemName = "DATA";
 
 
+ADSORP::ADSORP( ) : ParserKeyword("ADSORP")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTSFUN",1);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("ADSORP");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("ADSORBING_COMP", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("ADORPTION_ISOTHERM", ParserItem::itype::STRING);
+        item.setDefault( std::string("LANGMUIR") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("A1", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("A2", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("B", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("M", ParserItem::itype::DOUBLE);
+        item.setDefault( double(0.500000) );
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("N", ParserItem::itype::DOUBLE);
+        item.setDefault( double(0.500000) );
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("K_REF", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string ADSORP::keywordName = "ADSORP";
+const std::string ADSORP::ADSORBING_COMP::itemName = "ADSORBING_COMP";
+const std::string ADSORP::ADORPTION_ISOTHERM::itemName = "ADORPTION_ISOTHERM";
+const std::string ADSORP::ADORPTION_ISOTHERM::defaultValue = "LANGMUIR";
+const std::string ADSORP::A1::itemName = "A1";
+const std::string ADSORP::A2::itemName = "A2";
+const std::string ADSORP::B::itemName = "B";
+const std::string ADSORP::M::itemName = "M";
+const double ADSORP::M::defaultValue = 0.500000;
+const std::string ADSORP::N::itemName = "N";
+const double ADSORP::N::defaultValue = 0.500000;
+const std::string ADSORP::K_REF::itemName = "K_REF";
+
+
 AITS::AITS( ) : ParserKeyword("AITS")
 {
   setFixedSize( (size_t) 0);

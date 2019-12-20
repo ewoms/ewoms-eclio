@@ -470,6 +470,57 @@ namespace ParserKeywords {
 
 
 
+   class ADSORP : public ParserKeyword {
+   public:
+       ADSORP();
+       static const std::string keywordName;
+
+       class ADSORBING_COMP {
+       public:
+           static const std::string itemName;
+       };
+
+       class ADORPTION_ISOTHERM {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class A1 {
+       public:
+           static const std::string itemName;
+       };
+
+       class A2 {
+       public:
+           static const std::string itemName;
+       };
+
+       class B {
+       public:
+           static const std::string itemName;
+       };
+
+       class M {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class N {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class K_REF {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class AITS : public ParserKeyword {
    public:
        AITS();

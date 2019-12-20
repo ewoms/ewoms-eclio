@@ -1068,8 +1068,7 @@ const std::string RKTRMDIR::keywordName = "RKTRMDIR";
 
 ROCK::ROCK( ) : ParserKeyword("ROCK")
 {
-  setSizeType(OTHER_KEYWORD_IN_DECK);
-  initSizeKeyword("TABDIMS","NTPVT",0);
+  setSizeType(UNKNOWN);
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("ROCK");

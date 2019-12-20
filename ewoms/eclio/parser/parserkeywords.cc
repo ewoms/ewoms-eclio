@@ -23,6 +23,7 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::ADDREG >();
   this->addKeyword< ParserKeywords::ADDZCORN >();
   this->addKeyword< ParserKeywords::ADSALNOD >();
+  this->addKeyword< ParserKeywords::ADSORP >();
   this->addKeyword< ParserKeywords::AITS >();
   this->addKeyword< ParserKeywords::AITSOFF >();
   this->addKeyword< ParserKeywords::ALKADS >();
