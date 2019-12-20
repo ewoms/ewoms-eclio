@@ -67,6 +67,7 @@ public:
         ALQ_INVALID
     };
 
+    VFPProdTable();
     VFPProdTable(int table_num,
                  double datum_depth,
                  FLO_TYPE flo_type,
@@ -145,6 +146,9 @@ public:
     inline const array_type& getTable() const {
         return m_data;
     }
+
+    bool operator==(const VFPProdTable& data) const;
+    VFPProdTable& operator=(const VFPProdTable& data);
 
 private:
 

@@ -25,6 +25,10 @@ namespace Ewoms {
         m_events( DynamicVector<uint64_t>( timeMap , 0 ) )
     { }
 
+    Events::Events(const DynamicVector<uint64_t>& events) :
+        m_events(events)
+    { }
+
     bool Events::hasEvent(uint64_t eventMask , size_t reportStep) const {
         uint64_t eventSum = m_events[reportStep];
         if (eventSum & eventMask)
@@ -35,6 +39,14 @@ namespace Ewoms {
 
     void Events::addEvent(ScheduleEvents::Events event, size_t reportStep) {
         m_events[reportStep] |= event;
+    }
+
+    const DynamicVector<uint64_t>& Events::events() const {
+        return m_events;
+    }
+
+    bool Events::operator==(const Events& data) const {
+        return this->events().data() == data.events().data();
     }
 
 }

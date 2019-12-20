@@ -19,12 +19,31 @@
 
 namespace Ewoms {
 
+    OilVaporizationProperties::OilVaporizationProperties()
+    {
+        m_type = OilVaporization::UNDEF;
+    }
+
     OilVaporizationProperties::OilVaporizationProperties(const size_t numPvtRegionIdx):
          m_vap1(numPvtRegionIdx, -1.0),
          m_vap2(numPvtRegionIdx, -1.0),
          m_maxDRSDT(numPvtRegionIdx, -1.0),
          m_maxDRSDT_allCells(numPvtRegionIdx),
          m_maxDRVDT(numPvtRegionIdx, -1.0)
+    {  }
+
+    OilVaporizationProperties::OilVaporizationProperties(OilVaporization type,
+                                                         const std::vector<double>& vap1,
+                                                         const std::vector<double>& vap2,
+                                                         const std::vector<double>& maxDRSDT,
+                                                         const std::vector<bool>& maxDRSDT_allCells,
+                                                         const std::vector<double>& maxDRVDT):
+        m_type(type),
+        m_vap1(vap1),
+        m_vap2(vap2),
+        m_maxDRSDT(maxDRSDT),
+        m_maxDRSDT_allCells(maxDRSDT_allCells),
+        m_maxDRVDT(maxDRVDT)
     {  }
 
     double OilVaporizationProperties::getMaxDRVDT(const size_t pvtRegionIdx) const{
@@ -130,5 +149,25 @@ namespace Ewoms {
 
     bool OilVaporizationProperties::operator!=( const OilVaporizationProperties& rhs ) const {
         return !(*this == rhs);
+    }
+
+    const std::vector<double>& OilVaporizationProperties::vap1() const {
+        return m_vap1;
+    }
+
+    const std::vector<double>& OilVaporizationProperties::vap2() const {
+        return m_vap2;
+    }
+
+    const std::vector<double>& OilVaporizationProperties::maxDRSDT() const {
+        return m_maxDRSDT;
+    }
+
+    const std::vector<bool>& OilVaporizationProperties::maxDRSDT_allCells() const {
+        return m_maxDRSDT_allCells;
+    }
+
+    const std::vector<double>& OilVaporizationProperties::maxDRVDT() const {
+        return m_maxDRVDT;
     }
 }

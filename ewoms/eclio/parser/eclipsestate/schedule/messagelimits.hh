@@ -64,6 +64,7 @@ namespace Ewoms {
     class MessageLimits {
     public:
 
+        MessageLimits() = default;
         /*
            This constructor will create a new Messages object which is
            a copy of the input argument, and then all items explicitly
@@ -71,6 +72,7 @@ namespace Ewoms {
         */
 
         explicit MessageLimits( const TimeMap& );
+        explicit MessageLimits( const DynamicState<MLimits>& );
 
         ///Get all the value from MESSAGES keyword.
         int getMessagePrintLimit(size_t timestep) const;
@@ -98,6 +100,9 @@ namespace Ewoms {
         void setProblemStopLimit(size_t timestep, int value);
         void setErrorStopLimit(size_t timestep, int value);
         void setBugStopLimit(size_t timestep, int value);
+
+        const DynamicState<MLimits>& getLimits() const;
+        bool operator==(const MessageLimits& data) const;
 
     private:
         void update(size_t timestep, const MLimits& value);

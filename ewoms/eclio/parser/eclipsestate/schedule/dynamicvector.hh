@@ -35,8 +35,14 @@ namespace Ewoms {
     template <class T>
     class DynamicVector {
     public:
+        DynamicVector() = default;
+
         DynamicVector(const TimeMap& timeMap, T defaultValue) :
             m_data( timeMap.size(), defaultValue )
+        {}
+
+        explicit DynamicVector(const std::vector<T>& data) :
+            m_data(data)
         {}
 
         const T& operator[](size_t index) const {
@@ -53,6 +59,10 @@ namespace Ewoms {
 
         void iset(size_t index, T value) {
             (*this)[index] = std::move( value );
+        }
+
+        const std::vector<T>& data() const {
+            return m_data;
         }
 
     private:

@@ -39,6 +39,7 @@ public:
         FLO_INVALID
     };
 
+    VFPInjTable();
     VFPInjTable(int table_num,
                 double datum_depth,
                 FLO_TYPE flo_type,
@@ -85,6 +86,9 @@ public:
     inline const array_type& getTable() const {
         return m_data;
     }
+
+    bool operator==(const VFPInjTable& data) const;
+    VFPInjTable& operator=(const VFPInjTable& data);
 
 private:
 

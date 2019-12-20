@@ -27,6 +27,10 @@ namespace Ewoms {
         limits( timemap , MLimits())
     { }
 
+    MessageLimits::MessageLimits(const DynamicState<MLimits>& limits_) :
+        limits(limits_)
+    { }
+
     int MessageLimits::getMessagePrintLimit(size_t timestep) const
     {
         const auto& mlimit = limits.get( timestep );
@@ -194,6 +198,16 @@ namespace Ewoms {
         auto mlimit = limits.get( timestep );
         mlimit.bug_stop_limit = value;
         this->update( timestep , mlimit );
+    }
+
+    const DynamicState<MLimits>& MessageLimits::getLimits() const
+    {
+        return limits;
+    }
+
+    bool MessageLimits::operator==(const MessageLimits& data) const
+    {
+        return limits == data.limits;
     }
 
 }
