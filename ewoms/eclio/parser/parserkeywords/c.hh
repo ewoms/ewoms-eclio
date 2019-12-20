@@ -245,6 +245,88 @@ namespace ParserKeywords {
    public:
        CECONT();
        static const std::string keywordName;
+
+       class WELL {
+       public:
+           static const std::string itemName;
+       };
+
+       class I {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class J {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class K_UPPER {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class K_LOWER {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class PROCEDURE {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class CHECK_STOPPED_WELLS {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class TRACER {
+       public:
+           static const std::string itemName;
+       };
+
+       class MAX_TOTAL_TRACER_RATE {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_TOTAL_TRACER_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_FREE_TRACER_RATE {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_FREE_TRACER_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_SOL_TRACER_RATE {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_SOL_TRACER_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
    };
 
 

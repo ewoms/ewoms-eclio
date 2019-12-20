@@ -1801,6 +1801,16 @@ namespace ParserKeywords {
    public:
        PVTWSALT();
        static const std::string keywordName;
+
+       class REF_TEMP {
+       public:
+           static const std::string itemName;
+       };
+
+       class table {
+       public:
+           static const std::string itemName;
+       };
    };
 
 

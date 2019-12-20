@@ -533,6 +533,61 @@ namespace ParserKeywords {
    public:
        MPFNNC();
        static const std::string keywordName;
+
+       class IX {
+       public:
+           static const std::string itemName;
+       };
+
+       class IY {
+       public:
+           static const std::string itemName;
+       };
+
+       class IZ {
+       public:
+           static const std::string itemName;
+       };
+
+       class JX {
+       public:
+           static const std::string itemName;
+       };
+
+       class JY {
+       public:
+           static const std::string itemName;
+       };
+
+       class JZ {
+       public:
+           static const std::string itemName;
+       };
+
+       class TRANP {
+       public:
+           static const std::string itemName;
+       };
+
+       class KX {
+       public:
+           static const std::string itemName;
+       };
+
+       class KY {
+       public:
+           static const std::string itemName;
+       };
+
+       class KZ {
+       public:
+           static const std::string itemName;
+       };
+
+       class TRANS {
+       public:
+           static const std::string itemName;
+       };
    };
 
 

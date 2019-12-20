@@ -2695,8 +2695,32 @@ PVTWSALT::PVTWSALT( ) : ParserKeyword("PVTWSALT")
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("PVTWSALT");
+  setAlternatingKeyword(true);
+  {
+     ParserRecord record;
+     {
+        ParserItem item("REF_TEMP", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Temperature");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("table", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Pressure");
+        item.push_backDimension("1");
+        item.push_backDimension("Viscosity");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
 }
 const std::string PVTWSALT::keywordName = "PVTWSALT";
+const std::string PVTWSALT::REF_TEMP::itemName = "REF_TEMP";
+const std::string PVTWSALT::table::itemName = "table";
 
 
 PVT_M::PVT_M( ) : ParserKeyword("PVT_M")

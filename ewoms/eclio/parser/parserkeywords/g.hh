@@ -974,6 +974,50 @@ namespace ParserKeywords {
    public:
        GCUTBACT();
        static const std::string keywordName;
+
+       class GROUP {
+       public:
+           static const std::string itemName;
+       };
+
+       class RATE_CUTBACK {
+       public:
+           static const std::string itemName;
+       };
+
+       class CONTROL_PHASE {
+       public:
+           static const std::string itemName;
+       };
+
+       class TRACER {
+       public:
+           static const std::string itemName;
+       };
+
+       class UPPER_RATE_LIM {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class LOWER_RATE_LIM {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class UPPER_CONC_LIM {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class LOWER_CONC_LIM {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
    };
 
 
@@ -1193,6 +1237,70 @@ namespace ParserKeywords {
    public:
        GECONT();
        static const std::string keywordName;
+
+       class GROUP {
+       public:
+           static const std::string itemName;
+       };
+
+       class PROCEDURE {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class END_RUN {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class MAX_OPEN_WELLS {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class TRACER {
+       public:
+           static const std::string itemName;
+       };
+
+       class MAX_TOTAL_TRACER_RATE {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_TOTAL_TRACER_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_FREE_TRACER_RATE {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_FREE_TRACER_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_SOL_TRACER_RATE {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+
+       class MAX_SOL_TRACER_CONC {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
    };
 
 

@@ -747,12 +747,78 @@ const std::string MPFANUM::data::itemName = "data";
 
 MPFNNC::MPFNNC( ) : ParserKeyword("MPFNNC")
 {
-  setFixedSize( (size_t) 0);
+  setSizeType(DOUBLE_SLASH_TERMINATED);
   addValidSectionName("GRID");
   clearDeckNames();
   addDeckName("MPFNNC");
+  setDoubleRecordsKeyword(true);
+  {
+     ParserRecord record;
+     {
+        ParserItem item("IX", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("IY", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("IZ", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("JX", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("JY", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("JZ", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TRANP", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Transmissibility");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("KX", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("KY", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("KZ", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("TRANS", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Transmissibility");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
 }
 const std::string MPFNNC::keywordName = "MPFNNC";
+const std::string MPFNNC::IX::itemName = "IX";
+const std::string MPFNNC::IY::itemName = "IY";
+const std::string MPFNNC::IZ::itemName = "IZ";
+const std::string MPFNNC::JX::itemName = "JX";
+const std::string MPFNNC::JY::itemName = "JY";
+const std::string MPFNNC::JZ::itemName = "JZ";
+const std::string MPFNNC::TRANP::itemName = "TRANP";
+const std::string MPFNNC::KX::itemName = "KX";
+const std::string MPFNNC::KY::itemName = "KY";
+const std::string MPFNNC::KZ::itemName = "KZ";
+const std::string MPFNNC::TRANS::itemName = "TRANS";
 
 
 MSFN::MSFN( ) : ParserKeyword("MSFN")

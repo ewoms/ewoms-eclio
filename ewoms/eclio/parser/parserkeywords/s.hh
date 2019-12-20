@@ -1280,6 +1280,16 @@ namespace ParserKeywords {
    public:
        STOG();
        static const std::string keywordName;
+
+       class REF_OIL_PHASE_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class table {
+       public:
+           static const std::string itemName;
+       };
    };
 
 
@@ -1326,6 +1336,16 @@ namespace ParserKeywords {
    public:
        STOW();
        static const std::string keywordName;
+
+       class REF_OIL_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class table {
+       public:
+           static const std::string itemName;
+       };
    };
 
 
@@ -1334,6 +1354,16 @@ namespace ParserKeywords {
    public:
        STWG();
        static const std::string keywordName;
+
+       class REF_OIL_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class table {
+       public:
+           static const std::string itemName;
+       };
    };
 
 

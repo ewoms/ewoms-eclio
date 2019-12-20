@@ -2031,8 +2031,31 @@ STOG::STOG( ) : ParserKeyword("STOG")
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("STOG");
+  setAlternatingKeyword(true);
+  {
+     ParserRecord record;
+     {
+        ParserItem item("REF_OIL_PHASE_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("table", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Pressure");
+        item.push_backDimension("SurfaceTension");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
 }
 const std::string STOG::keywordName = "STOG";
+const std::string STOG::REF_OIL_PHASE_PRESSURE::itemName = "REF_OIL_PHASE_PRESSURE";
+const std::string STOG::table::itemName = "table";
 
 
 STONE::STONE( ) : ParserKeyword("STONE")
@@ -2096,8 +2119,31 @@ STOW::STOW( ) : ParserKeyword("STOW")
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("STOW");
+  setAlternatingKeyword(true);
+  {
+     ParserRecord record;
+     {
+        ParserItem item("REF_OIL_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("table", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Pressure");
+        item.push_backDimension("SurfaceTension");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
 }
 const std::string STOW::keywordName = "STOW";
+const std::string STOW::REF_OIL_PRESSURE::itemName = "REF_OIL_PRESSURE";
+const std::string STOW::table::itemName = "table";
 
 
 STWG::STWG( ) : ParserKeyword("STWG")
@@ -2108,8 +2154,31 @@ STWG::STWG( ) : ParserKeyword("STWG")
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("STWG");
+  setAlternatingKeyword(true);
+  {
+     ParserRecord record;
+     {
+        ParserItem item("REF_OIL_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("table", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Pressure");
+        item.push_backDimension("SurfaceTension");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
 }
 const std::string STWG::keywordName = "STWG";
+const std::string STWG::REF_OIL_PRESSURE::itemName = "REF_OIL_PRESSURE";
+const std::string STWG::table::itemName = "table";
 
 
 SUMMARY::SUMMARY( ) : ParserKeyword("SUMMARY")
