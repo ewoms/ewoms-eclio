@@ -916,6 +916,8 @@ void Parser::addDefaultKeywords()
   this->addKeyword< ParserKeywords::UDQ >();
   this->addKeyword< ParserKeywords::UDQDIMS >();
   this->addKeyword< ParserKeywords::UDQPARAM >();
+  this->addKeyword< ParserKeywords::UDT >();
+  this->addKeyword< ParserKeywords::UDTDIMS >();
   this->addKeyword< ParserKeywords::UNCODHMD >();
   this->addKeyword< ParserKeywords::UNIFIN >();
   this->addKeyword< ParserKeywords::UNIFOUT >();

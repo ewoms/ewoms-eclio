@@ -207,6 +207,58 @@ const std::string UDQPARAM::CMP_EPSILON::itemName = "CMP_EPSILON";
 const double UDQPARAM::CMP_EPSILON::defaultValue = 0.000100;
 
 
+UDT::UDT( ) : ParserKeyword("UDT")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("UDT");
+}
+const std::string UDT::keywordName = "UDT";
+
+
+UDTDIMS::UDTDIMS( ) : ParserKeyword("UDTDIMS")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("RUNSPEC");
+  clearDeckNames();
+  addDeckName("UDTDIMS");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("MAX_TABLES", ParserItem::itype::INT);
+        item.setDefault( 0 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MAX_ROWS", ParserItem::itype::INT);
+        item.setDefault( 0 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MAX_INTERPOLATION_POINTS", ParserItem::itype::INT);
+        item.setDefault( 0 );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MAX_DIMENSIONS", ParserItem::itype::INT);
+        item.setDefault( 0 );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string UDTDIMS::keywordName = "UDTDIMS";
+const std::string UDTDIMS::MAX_TABLES::itemName = "MAX_TABLES";
+const int UDTDIMS::MAX_TABLES::defaultValue = 0;
+const std::string UDTDIMS::MAX_ROWS::itemName = "MAX_ROWS";
+const int UDTDIMS::MAX_ROWS::defaultValue = 0;
+const std::string UDTDIMS::MAX_INTERPOLATION_POINTS::itemName = "MAX_INTERPOLATION_POINTS";
+const int UDTDIMS::MAX_INTERPOLATION_POINTS::defaultValue = 0;
+const std::string UDTDIMS::MAX_DIMENSIONS::itemName = "MAX_DIMENSIONS";
+const int UDTDIMS::MAX_DIMENSIONS::defaultValue = 0;
+
+
 UNCODHMD::UNCODHMD( ) : ParserKeyword("UNCODHMD")
 {
   setFixedSize( (size_t) 0);

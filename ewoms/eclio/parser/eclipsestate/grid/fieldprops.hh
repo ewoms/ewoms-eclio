@@ -20,6 +20,7 @@
 
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include <ewoms/eclio/parser/deck/value_status.hh>
 #include <ewoms/eclio/parser/deck/section.hh>
@@ -34,6 +35,19 @@ class TableManager;
 
 class FieldProps {
 public:
+
+    struct MultregpRecord {
+        int region_value;
+        double multiplier;
+        std::string region_name;
+
+        MultregpRecord(int rv, double m, const std::string& rn) :
+            region_value(rv),
+            multiplier(m),
+            region_name(rn)
+        {}
+
+    };
 
     enum class ScalarOperation {
          ADD = 1,
@@ -326,6 +340,7 @@ private:
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
     const TableManager& tables;
+    std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;
 };

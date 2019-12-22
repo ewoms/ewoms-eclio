@@ -30,6 +30,12 @@ namespace Ewoms {
         int m_skprwattable;
         int m_skprpolytable;
 
+        WellPolymerProperties(double polymerConcentration,
+                              double saltConcentration,
+                              int plymwinjtable,
+                              int skprwattable,
+                              int skprpolytable);
+
         bool operator==(const WellPolymerProperties& other) const;
         bool operator!=(const WellPolymerProperties& other) const;
         WellPolymerProperties();

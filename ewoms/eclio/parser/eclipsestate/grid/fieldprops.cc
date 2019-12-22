@@ -15,6 +15,7 @@
   eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <functional>
+#include <algorithm>
 
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/b.hh>
@@ -47,11 +48,14 @@ namespace keywords {
 static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permeability"},
                                                                {"PERMY", "Permeability"},
                                                                {"PERMZ", "Permeability"},
-                                                               {"PORV", "ReservoirVolume"},
+                                                               {"PORV",  "ReservoirVolume"},
+                                                               {"SPOLY", "Density"},
                                                                {"TRANX", "Transmissibility"},
                                                                {"TRANY", "Transmissibility"},
                                                                {"TRANZ", "Transmissibility"},
                                                                {"NTG", "1"},
+                                                               {"RS", "GasDissolutionFactor"},
+                                                               {"RV", "OilDissolutionFactor"},
                                                                {"TEMPI", "Temperature"},
                                                                {"THCROCK", "Energy/AnsoluteTemperature*Length*Time"},
                                                                {"THCOIL", "Energy/AnsoluteTemperature*Length*Time"},
@@ -169,7 +173,7 @@ static const std::set<std::string> int_keywords = {"ENDNUM", "EQLNUM", "FIPNUM",
 }
 
 namespace SOLUTION {
-static const std::set<std::string> double_keywords = {"PRESSURE", "SWAT", "SGAS", "TEMPI"};
+static const std::set<std::string> double_keywords = {"PRESSURE", "SPOLY", "SPOLYMW", "SSOL", "SWAT", "SGAS", "TEMPI", "RS", "RV"};
 static const std::set<std::string> int_keywords = {};
 }
 
@@ -381,6 +385,28 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
     grid_ptr(&grid),
     tables(tables_arg)
 {
+    if (deck.hasKeyword<ParserKeywords::MULTREGP>()) {
+        const DeckKeyword& multregpKeyword = deck.getKeyword("MULTREGP");
+        for (const auto& record : multregpKeyword) {
+            int region_value = record.getItem("REGION").get<int>(0);
+            if (region_value <= 0)
+                continue;
+
+            std::string region_name = make_region_name( record.getItem("REGION_TYPE").get<std::string>(0) );
+            double multiplier = record.getItem("MULTIPLIER").get<double>(0);
+            auto iter = std::find_if(this->multregp.begin(), this->multregp.end(), [region_value](const MultregpRecord& mregp) { return mregp.region_value == region_value; });
+            /*
+              There is some weirdness if the same region value is entered in several records,
+              then only the last applies.
+            */
+            if (iter != this->multregp.end()) {
+                iter->region_name = region_name;
+                iter->multiplier = multiplier;
+            } else
+                this->multregp.emplace_back( region_value, multiplier, region_name );
+        }
+    }
+
     if (Section::hasGRID(deck))
         this->scanGRIDSection(GRIDSection(deck));
 
@@ -868,8 +894,13 @@ void FieldProps::init_porv(FieldData<double>& porv) {
 
     if (this->has<double>("MULTPV")) {
         const auto& multpv = this->get<double>("MULTPV");
-        printf("Doing MULTPV multiplication");
         std::transform(porv_data.begin(), porv_data.end(), multpv.begin(), porv_data.begin(), std::multiplies<double>());
+    }
+
+    for (const auto& mregp: this->multregp) {
+        const auto& index_list = this->region_index(mregp.region_name, mregp.region_value);
+        for (const auto& cell_index : index_list)
+            porv_data[cell_index.active_index] *= mregp.multiplier;
     }
 }
 

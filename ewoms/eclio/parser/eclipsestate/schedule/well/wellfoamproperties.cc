@@ -26,6 +26,11 @@ void Ewoms::WellFoamProperties::handleWFOAM(const DeckRecord& rec)
     this->m_foamConcentration = rec.getItem("FOAM_CONCENTRATION").get<UDAValue>(0).get<double>();
 }
 
+bool Ewoms::WellFoamProperties::operator==(const WellFoamProperties& other) const
+{
+    return this->m_foamConcentration == other.m_foamConcentration;
+}
+
 bool Ewoms::WellFoamProperties::operator!=(const WellFoamProperties& other) const
 {
     return this->m_foamConcentration != other.m_foamConcentration;

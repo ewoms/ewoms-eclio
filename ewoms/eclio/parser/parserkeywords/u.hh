@@ -159,6 +159,46 @@ namespace ParserKeywords {
 
 
 
+   class UDT : public ParserKeyword {
+   public:
+       UDT();
+       static const std::string keywordName;
+   };
+
+
+
+   class UDTDIMS : public ParserKeyword {
+   public:
+       UDTDIMS();
+       static const std::string keywordName;
+
+       class MAX_TABLES {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class MAX_ROWS {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class MAX_INTERPOLATION_POINTS {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+
+       class MAX_DIMENSIONS {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+   };
+
+
+
    class UNCODHMD : public ParserKeyword {
    public:
        UNCODHMD();

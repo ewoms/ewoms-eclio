@@ -27,7 +27,9 @@ namespace Ewoms {
     class WellTracerProperties {
 
     public:
+        using ConcentrationMap = std::map<std::string,double>;
         WellTracerProperties();
+        WellTracerProperties(const std::map<std::string,double>& concentrations);
 
         void setConcentration(const std::string& name, const double& concentration);
         double getConcentration(const std::string& name) const;
@@ -35,8 +37,10 @@ namespace Ewoms {
         bool operator==(const WellTracerProperties& other) const;
         bool operator!=(const WellTracerProperties& other) const;
 
+        const ConcentrationMap& getConcentrations() const;
+
     private:
-        std::map< std::string, double > m_tracerConcentrations;
+        ConcentrationMap m_tracerConcentrations;
     };
 
 }

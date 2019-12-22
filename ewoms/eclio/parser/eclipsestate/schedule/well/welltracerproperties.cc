@@ -26,6 +26,10 @@ namespace Ewoms {
     WellTracerProperties::WellTracerProperties() {
     }
 
+    WellTracerProperties::WellTracerProperties(const ConcentrationMap& concentrations)
+        : m_tracerConcentrations(concentrations)
+    { }
+
     bool WellTracerProperties::operator==(const WellTracerProperties& other) const {
         if (m_tracerConcentrations == other.m_tracerConcentrations)
             return true;
@@ -47,5 +51,9 @@ namespace Ewoms {
 
     bool WellTracerProperties::operator!=(const WellTracerProperties& other) const {
         return !(*this == other);
+    }
+
+    const WellTracerProperties::ConcentrationMap& WellTracerProperties::getConcentrations() const {
+        return m_tracerConcentrations;
     }
 }
