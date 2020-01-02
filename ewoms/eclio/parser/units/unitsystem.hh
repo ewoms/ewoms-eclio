@@ -77,6 +77,9 @@ namespace Ewoms {
 
         explicit UnitSystem(UnitType unit = UnitType::UNIT_TYPE_METRIC);
         explicit UnitSystem(const std::string& deck_name);
+        UnitSystem(const std::string& name, UnitType unit,
+                   const std::map<std::string,Dimension>& dimensions,
+                   size_t use_count);
 
         const std::string& getName() const;
         UnitType getType() const;
@@ -87,6 +90,7 @@ namespace Ewoms {
         const Dimension& getDimension(const std::string& dimension) const;
         bool hasDimension(const std::string& dimension) const;
         bool equal(const UnitSystem& other) const;
+        const std::map<std::string,Dimension>& getDimensions() const;
 
         bool operator==( const UnitSystem& ) const;
         bool operator!=( const UnitSystem& ) const;

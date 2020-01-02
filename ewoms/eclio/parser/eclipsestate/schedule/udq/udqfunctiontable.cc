@@ -88,7 +88,13 @@ UDQFunctionTable::UDQFunctionTable(const UDQParams& params_arg) :
     this->insert_function( std::make_shared<UDQBinaryFunction>("UMAX", UDQBinaryFunction::UMAX ));
 }
 
-void UDQFunctionTable::insert_function(std::shared_ptr<const UDQFunction> func) {
+UDQFunctionTable::UDQFunctionTable(const UDQParams& param,
+                                   const FunctionMap& map) :
+    params(param),
+    function_table(map)
+{}
+
+void UDQFunctionTable::insert_function(std::shared_ptr<UDQFunction> func) {
     auto name = func->name();
     this->function_table.emplace( std::move(name), std::move(func) );
 }
@@ -104,4 +110,36 @@ const UDQFunction& UDQFunctionTable::get(const std::string& name) const {
     const auto& pair_ptr = this->function_table.find(name);
     return *pair_ptr->second;
 }
+
+const UDQParams& UDQFunctionTable::getParams() const {
+    return this->params;
+}
+
+const UDQFunctionTable::FunctionMap& UDQFunctionTable::functionMap() const {
+    return this->function_table;
+}
+
+bool UDQFunctionTable::operator==(const UDQFunctionTable& data) const {
+    if (!(this->getParams() == data.getParams()))
+        return false;
+
+    if (this->functionMap().size() != data.functionMap().size())
+        return false;
+
+    auto tIt = this->functionMap().begin();
+    auto dIt = data.functionMap().begin();
+    for (; tIt != this->functionMap().end(); ++tIt, ++dIt) {
+        if (tIt->first != dIt->first)
+            return false;
+
+        if ((tIt->second && !dIt->second) || (!tIt->second && dIt->second))
+            return false;
+
+        if (tIt->second && !(*tIt->second == *dIt->second))
+            return false;
+    }
+
+    return true;
+}
+
 }

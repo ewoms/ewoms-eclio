@@ -43,6 +43,14 @@ namespace Ewoms {
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
                 double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
 
+        Segment(int segmentNumber, int branchNumber, int outlegSegment,
+                const std::vector<int>& inletSegments,
+                double totalLength, double depth, double internalDiameter,
+                double roughness, double crossArea, double volume,
+                bool dataReady, SegmentType segmentType,
+                std::shared_ptr<SpiralICD> spiralICD,
+                std::shared_ptr<Valve> valv);
+
         int segmentNumber() const;
         int branchNumber() const;
         int outletSegment() const;
@@ -70,6 +78,7 @@ namespace Ewoms {
         void updateSpiralICD(const SpiralICD& spiral_icd);
 
         const std::shared_ptr<SpiralICD>& spiralICD() const;
+        const std::shared_ptr<Valve>& getValve() const;
 
         void updateValve(const Valve& valve, const double segment_length);
 

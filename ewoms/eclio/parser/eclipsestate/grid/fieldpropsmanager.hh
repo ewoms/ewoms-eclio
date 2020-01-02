@@ -19,6 +19,7 @@
 #define FIELDPROPS_MANAGER_H
 
 #include <memory>
+#include <vector>
 
 namespace Ewoms {
 

@@ -25,6 +25,36 @@
 
 namespace Ewoms {
 
+    SpiralICD::SpiralICD()
+          : SpiralICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, Status::SHUT, 1.0)
+    {
+    }
+
+    SpiralICD::SpiralICD(double strength,
+                         double length,
+                         double densityCalibration,
+                         double viscosityCalibration,
+                         double criticalValue,
+                         double widthTransitionRegion,
+                         double maxViscosityRatio,
+                         int flowScaling,
+                         double maxAbsoluteRate,
+                         Status status,
+                         double scalingFactor)
+            : m_strength(strength),
+              m_length(length),
+              m_density_calibration(densityCalibration),
+              m_viscosity_calibration(viscosityCalibration),
+              m_critical_value(criticalValue),
+              m_width_transition_region(widthTransitionRegion),
+              m_max_viscosity_ratio(maxViscosityRatio),
+              m_method_flow_scaling(flowScaling),
+              m_max_absolute_rate(maxAbsoluteRate),
+              m_status(status),
+              m_scaling_factor(scalingFactor)
+    {
+    }
+
     SpiralICD::SpiralICD(const DeckRecord& record)
             : m_strength(record.getItem("STRENGTH").getSIDouble(0)),
               m_length(record.getItem("LENGTH").getSIDouble(0)),
@@ -150,5 +180,19 @@ namespace Ewoms {
         } else {
             throw std::logic_error(" invalid method specified to calculate flow scaling factor for SICD");
         }
+    }
+
+    bool SpiralICD::operator==(const SpiralICD& data) const {
+        return this->strength() == data.strength() &&
+               this->length() == data.length() &&
+               this->densityCalibration() == data.densityCalibration() &&
+               this->viscosityCalibration() == data.viscosityCalibration() &&
+               this->criticalValue() == data.criticalValue() &&
+               this->widthTransitionRegion() == data.widthTransitionRegion() &&
+               this->maxViscosityRatio() == data.maxViscosityRatio() &&
+               this->methodFlowScaling() == data.methodFlowScaling() &&
+               this->maxAbsoluteRate() == data.maxAbsoluteRate() &&
+               this->status() == data.status() &&
+               this->scalingFactor() == data.scalingFactor();
     }
 }

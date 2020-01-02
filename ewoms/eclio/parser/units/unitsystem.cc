@@ -823,6 +823,41 @@ namespace {
         };
     }
 
+    UnitSystem::UnitSystem(const std::string& name, UnitType unit,
+                           const std::map<std::string,Dimension>& dimensions,
+                           size_t use_count)
+        : m_name(name)
+        , m_unittype(unit)
+        , m_dimensions(dimensions)
+        , m_use_count(use_count)
+    {
+        switch(unit) {
+            case(UnitType::UNIT_TYPE_METRIC):
+                this->initMETRIC();
+                break;
+
+            case(UnitType::UNIT_TYPE_FIELD):
+                this->initFIELD();
+                break;
+
+            case(UnitType::UNIT_TYPE_LAB):
+                this->initLAB();
+                break;
+
+            case(UnitType::UNIT_TYPE_PVT_M):
+                this->initPVT_M();
+                break;
+
+            case(UnitType::UNIT_TYPE_INPUT):
+                this->initINPUT();
+                break;
+
+            default:
+                throw std::runtime_error("Tried to construct UnitSystem with unknown unit family.");
+                break;
+        };
+    }
+
     void UnitSystem::initINPUT() {
         this->m_name = "Input";
         this->measure_table_from_si = to_input;
@@ -1040,7 +1075,7 @@ namespace {
         case(UnitType::UNIT_TYPE_LAB):    return "LAB";
         case(UnitType::UNIT_TYPE_PVT_M):  return "PVT-M";
         default:
-            throw std::invalid_argument("No valuid deckname could be inferred");
+            throw std::invalid_argument("No valid deckname could be inferred");
         }
     }
 
@@ -1203,5 +1238,9 @@ namespace {
         UnitSystem system( UnitType::UNIT_TYPE_INPUT );
         return system;
      }
+
+    const std::map<std::string,Dimension>& UnitSystem::getDimensions() const {
+        return m_dimensions;
+    }
 
 }

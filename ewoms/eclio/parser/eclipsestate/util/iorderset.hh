@@ -44,19 +44,24 @@ namespace Ewoms {
 
 template <typename T>
 class IOrderSet {
-
+public:
     using storage_type = typename std::vector<T>;
     using index_type = typename std::unordered_set<T>;
     using const_iter_type = typename storage_type::const_iterator;
 
 private:
-    index_type index;
+    index_type m_index;
     storage_type m_data;
 
 public:
+    IOrderSet() = default;
+    IOrderSet(const index_type& index, const storage_type& data)
+        : m_index(index)
+        , m_data(data)
+   {}
 
     std::size_t size() const {
-        return this->index.size();
+        return this->m_index.size();
     }
 
     bool empty() const {
@@ -64,7 +69,7 @@ public:
     }
 
     std::size_t count(const T& value) const {
-        return this->index.count(value);
+        return this->m_index.count(value);
     }
 
     bool contains(const T& value) const {
@@ -75,7 +80,7 @@ public:
         if (this->contains(value))
             return false;
 
-        this->index.insert(value);
+        this->m_index.insert(value);
         this->m_data.push_back(value);
         return true;
     }
@@ -84,7 +89,7 @@ public:
         if (!this->contains(value))
             return 0;
 
-        this->index.erase(value);
+        this->m_index.erase(value);
         auto data_iter = std::find(this->m_data.begin(), this->m_data.end(), value);
         this->m_data.erase(data_iter);
         return 1;
@@ -105,6 +110,15 @@ public:
     const std::vector<T>& data() const {
         return this->m_data;
     };
+
+    const index_type& index() const {
+        return this->m_index;
+    };
+
+    bool operator==(const IOrderSet<T>& data) const {
+        return this->index() == data.index() &&
+               this->data() == data.data();
+    }
 
 };
 }

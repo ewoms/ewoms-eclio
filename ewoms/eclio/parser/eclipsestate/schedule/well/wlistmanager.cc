@@ -21,6 +21,11 @@
 
 namespace Ewoms {
 
+    WListManager::WListManager(const std::map<std::string,WList>& list)
+        : wlists(list)
+    {
+    }
+
     bool WListManager::hasList(const std::string& name) const {
         return (this->wlists.find(name) != this->wlists.end());
     }
@@ -44,6 +49,14 @@ namespace Ewoms {
             auto& wlist = pair.second;
             wlist.del(well);
         }
+    }
+
+    const std::map<std::string,WList>& WListManager::lists() const {
+        return this->wlists;
+    }
+
+    bool WListManager::operator==(const WListManager& data) const {
+        return this->lists() == data.lists();
     }
 
 }

@@ -24,6 +24,16 @@
 
 namespace Ewoms {
 
+UDQActive::UDQActive(const std::vector<InputRecord>& inputRecs,
+                     const std::vector<Record>& outputRecs,
+                     const std::unordered_map<std::string,std::size_t>& udqkeys,
+                     const std::unordered_map<std::string,std::size_t>& wgkeys)
+    : input_data(inputRecs)
+    , output_data(outputRecs)
+    , udq_keys(udqkeys)
+    , wg_keys(wgkeys)
+{}
+
 std::size_t UDQActive::IUAD_size() const {
     const auto& output = this->get_iuad();
     return output.size();
@@ -169,6 +179,29 @@ std::vector<UDQActive::InputRecord> UDQActive::get_iuap() const {
 UDQActive::Record UDQActive::operator[](std::size_t index) const {
     const auto& output_record = this->get_iuad()[index];
     return output_record;
+}
+
+const std::vector<UDQActive::InputRecord>& UDQActive::getInputRecords() const {
+    return input_data;
+}
+
+const std::vector<UDQActive::Record>& UDQActive::getOutputRecords() const {
+    return output_data;
+}
+
+const std::unordered_map<std::string, std::size_t>& UDQActive::getUdqKeys() const {
+    return udq_keys;
+}
+
+const std::unordered_map<std::string, std::size_t>& UDQActive::getWgKeys() const {
+    return wg_keys;
+}
+
+bool UDQActive::operator==(const UDQActive& data) const {
+    return this->getInputRecords() == data.getInputRecords() &&
+           this->getOutputRecords() == data.getOutputRecords() &&
+           this->getUdqKeys() == data.getUdqKeys() &&
+           this->getWgKeys() == data.getWgKeys();
 }
 
 }

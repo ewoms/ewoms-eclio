@@ -24,6 +24,30 @@
 
 namespace Ewoms {
 
+    Valve::Valve()
+        : Valve(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Status::SHUT)
+    {
+    }
+
+    Valve::Valve(double conEFlowCoeff,
+                 double conCrossA,
+                 double conMaxCrossA,
+                 double pipeAddLength,
+                 double pipeDiam,
+                 double pipeRough,
+                 double pipeCrossA,
+                 Status stat)
+        : m_con_flow_coeff(conEFlowCoeff)
+        , m_con_cross_area(conCrossA)
+        , m_con_max_cross_area(conMaxCrossA)
+        , m_pipe_additional_length(pipeAddLength)
+        , m_pipe_diameter(pipeDiam)
+        , m_pipe_roughness(pipeRough)
+        , m_pipe_cross_area(pipeCrossA)
+        , m_status(stat)
+    {
+    }
+
     Valve::Valve(const DeckRecord& record)
         : m_con_flow_coeff(record.getItem("CV").get<double>(0))
         , m_con_cross_area(record.getItem("AREA").get<double>(0))
@@ -137,5 +161,16 @@ namespace Ewoms {
 
     void Valve::setPipeAdditionalLength(const double length) {
         m_pipe_additional_length = length;
+    }
+
+    bool Valve::operator==(const Valve& data) const {
+        return this->conEFlowCoefficient() == data.conEFlowCoefficient() &&
+               this->conCrossArea() == data.conCrossArea() &&
+               this->conMaxCrossArea() == data.conMaxCrossArea() &&
+               this->pipeAdditionalLength() == data.pipeAdditionalLength() &&
+               this->pipeDiameter() == data.pipeDiameter() &&
+               this->pipeRoughness() == data.pipeRoughness() &&
+               this->pipeCrossArea() == data.pipeCrossArea() &&
+               this->status() == data.status();
     }
 }

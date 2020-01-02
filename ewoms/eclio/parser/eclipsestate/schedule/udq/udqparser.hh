@@ -21,11 +21,10 @@
 #include <string>
 #include <vector>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqastnode.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
-
-#include "udqastnode.hh"
 
 namespace Ewoms {
 

@@ -46,6 +46,20 @@
 
 namespace Ewoms {
 
+/*
+This Function is used in Python to check if the
+ENABBLE_3DPROPS_TESTING macro has been set.
+*/
+#ifdef ENABLE_3DPROPS_TESTING
+bool enable3DPropsTesting() {
+    return true;
+}
+#else
+bool enable3DPropsTesting() {
+    return false;
+}
+#endif
+
 namespace {
 
 #ifdef ENABLE_3DPROPS_TESTING

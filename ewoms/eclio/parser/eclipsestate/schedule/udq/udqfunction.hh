@@ -31,10 +31,14 @@ namespace Ewoms {
 
 class UDQFunction {
 public:
+    UDQFunction() : func_type(UDQTokenType::error) {}
     UDQFunction(const std::string& name);
+    UDQFunction(const std::string& name, UDQTokenType funcType);
     virtual ~UDQFunction() = default;
     const std::string& name() const;
     UDQTokenType type() const;
+    bool operator==(const UDQFunction& data) const;
+
 private:
     std::string m_name;
     UDQTokenType func_type;

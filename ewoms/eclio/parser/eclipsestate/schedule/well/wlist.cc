@@ -20,6 +20,11 @@
 
 namespace Ewoms {
 
+WList::WList(const storage& wlist) :
+    well_list(wlist)
+{
+}
+
 std::size_t WList::size() const {
     return this->well_list.size();
 }
@@ -46,6 +51,14 @@ WList::storage::const_iterator WList::begin() const {
 
 WList::storage::const_iterator WList::end() const {
     return this->well_list.end();
+}
+
+const WList::storage& WList::wellList() const {
+    return this->well_list;
+}
+
+bool WList::operator==(const WList& data) const {
+    return this->wellList() == data.wellList();
 }
 
 }
