@@ -96,6 +96,7 @@ namespace Ewoms {
 
             DeckView( const_iterator first, const_iterator last );
             explicit DeckView( std::pair< const_iterator, const_iterator > );
+            DeckView() = default;
             void init( const_iterator, const_iterator );
 
         private:
@@ -121,9 +122,15 @@ namespace Ewoms {
             Deck();
 
             Deck( const Deck& );
+            Deck(const std::vector<DeckKeyword>& keywords,
+                 const UnitSystem& defUnits,
+                 const UnitSystem* activeUnits,
+                 const std::string& dataFile,
+                 const std::string& inputPath,
+                 size_t accessCount);
 
-            //! \brief Deleted assignment operator.
-            Deck& operator=(const Deck& rhs) = delete;
+            Deck& operator=(const Deck& rhs);
+            bool operator==(const Deck& data) const;
 
             void addKeyword( DeckKeyword&& keyword );
             void addKeyword( const DeckKeyword& keyword );
@@ -145,6 +152,10 @@ namespace Ewoms {
             iterator end();
             void write( DeckOutput& output ) const ;
             friend std::ostream& operator<<(std::ostream& os, const Deck& deck);
+
+            const std::vector<DeckKeyword>& keywords() const;
+            std::size_t unitSystemAccessCount() const;
+            const std::unique_ptr<UnitSystem>& activeUnitSystem() const;
         private:
             Deck(std::vector<DeckKeyword>&& keywordList);
 

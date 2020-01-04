@@ -54,7 +54,7 @@ namespace Ewoms {
     class IOConfig;
     class ParseContext;
     class RestartConfig;
-    class Section;
+    class DeckSection;
     class SimulationConfig;
     class TableManager;
     class UnitSystem;
@@ -119,7 +119,7 @@ namespace Ewoms {
         void initTransMult();
         void initFaults(const Deck& deck);
 
-        void setMULTFLT(const Ewoms::Section& section);
+        void setMULTFLT(const Ewoms::DeckSection& section);
 
         void complainAboutAmbiguousKeyword(const Deck& deck,
                                            const std::string& keywordName);

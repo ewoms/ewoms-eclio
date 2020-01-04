@@ -29,7 +29,7 @@
 #include <ewoms/eclio/parser/parser.hh>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>

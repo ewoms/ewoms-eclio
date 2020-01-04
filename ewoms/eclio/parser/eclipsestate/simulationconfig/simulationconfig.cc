@@ -18,7 +18,7 @@
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/simulationconfig.hh>
@@ -58,7 +58,7 @@ namespace Ewoms {
         m_VAPOIL(false),
         m_isThermal(false)
     {
-        if (Section::hasRUNSPEC(deck)) {
+        if (DeckSection::hasRUNSPEC(deck)) {
             const RUNSPECSection runspec(deck);
             if (runspec.hasKeyword<ParserKeywords::CPR>()) {
                 const auto& cpr = runspec.getKeyword<ParserKeywords::CPR>();

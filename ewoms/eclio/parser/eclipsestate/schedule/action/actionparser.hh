@@ -22,8 +22,8 @@
 #include <vector>
 #include <string>
 
-#include "astnode.hh"
-#include "actionvalue.hh"
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/astnode.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 
 namespace Ewoms {
 

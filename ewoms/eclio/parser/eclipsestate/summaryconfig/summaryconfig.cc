@@ -26,7 +26,7 @@
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>

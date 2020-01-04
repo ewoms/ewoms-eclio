@@ -39,6 +39,11 @@ public:
     void add_arg(const std::string& arg);
     std::string quantity;
     std::vector<std::string> args;
+
+    bool operator==(const Quantity& data) const {
+        return quantity == data.quantity &&
+               args == data.args;
+    }
 };
 
 class Condition {
@@ -59,6 +64,7 @@ enum class Comparator {
     INVALID
 };
 
+    Condition() = default;
     Condition(const std::vector<std::string>& tokens, const Location& location);
 
     Quantity lhs;
@@ -66,6 +72,8 @@ enum class Comparator {
     Logical logic = Logical::END;
     Comparator cmp = Comparator::INVALID;
     std::string cmp_string;
+
+    bool operator==(const Condition& data) const;
 };
 
 }

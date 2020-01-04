@@ -24,10 +24,10 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionast.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/astnode.hh>
 
-#include "astnode.hh"
 #include "actionparser.hh"
-#include "actionvalue.hh"
 
 namespace Ewoms {
 namespace Action {
@@ -37,11 +37,28 @@ AST::AST(const std::vector<std::string>& tokens) {
     this->condition.reset( new Action::ASTNode(condition_node) );
 }
 
+AST::AST(const std::shared_ptr<ASTNode>& cond)
+    : condition(cond)
+{}
+
 Action::Result AST::eval(const Action::Context& context) const {
     if (this->condition)
         return this->condition->eval(context);
     else
         return Action::Result(false);
 }
+
+std::shared_ptr<ASTNode> AST::getCondition() const {
+    return condition;
+}
+
+bool AST::operator==(const AST& data) const {
+    if ((condition && !data.condition) ||
+        (!condition && data.condition))
+        return false;
+
+    return !condition || (*condition == *data.condition);
+}
+
 }
 }

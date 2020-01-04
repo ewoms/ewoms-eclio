@@ -19,6 +19,8 @@
 #ifndef LOCATION_H
 #define LOCATION_H
 
+namespace Ewoms {
+
 class Location {
 public:
     std::string filename = "<memory string>";
@@ -29,6 +31,13 @@ public:
         filename(std::move(fname)),
         lineno(lno)
     {}
+
+    bool operator==(const Location& data) const {
+        return filename == data.filename &&
+               lineno == data.lineno;
+    }
 };
+
+}
 
 #endif

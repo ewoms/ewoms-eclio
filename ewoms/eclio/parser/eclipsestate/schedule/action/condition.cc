@@ -19,9 +19,9 @@
 #include <string>
 
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/condition.hh>
 
-#include "actionvalue.hh"
 #include "actionparser.hh"
 
 namespace Ewoms {
@@ -120,6 +120,14 @@ Condition::Condition(const std::vector<std::string>& tokens, const Location& loc
 
         token_index++;
     }
+}
+
+bool Condition::operator==(const Condition& data) const {
+    return lhs == data.lhs &&
+           rhs == data.rhs &&
+           logic == data.logic &&
+           cmp == data.cmp &&
+           cmp_string == data.cmp_string;
 }
 
 }

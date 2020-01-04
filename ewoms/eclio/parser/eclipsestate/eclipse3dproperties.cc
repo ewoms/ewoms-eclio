@@ -22,7 +22,7 @@
 #include <string>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/boxmanager.hh>
@@ -749,23 +749,23 @@ namespace Ewoms {
     void Eclipse3DProperties::processGridProperties( const Deck& deck,
                                                      const EclipseGrid& eclipseGrid) {
 
-        if (Section::hasGRID(deck))
+        if (DeckSection::hasGRID(deck))
             scanSection(GRIDSection(deck), eclipseGrid, false);
 
-        if (Section::hasREGIONS(deck))
+        if (DeckSection::hasREGIONS(deck))
             scanSection(REGIONSSection(deck), eclipseGrid, false);
 
-        if (Section::hasEDIT(deck))
+        if (DeckSection::hasEDIT(deck))
             scanSection(EDITSection(deck), eclipseGrid, true);
 
-        if (Section::hasPROPS(deck))
+        if (DeckSection::hasPROPS(deck))
             scanSection(PROPSSection(deck), eclipseGrid, false);
 
-        if (Section::hasSOLUTION(deck))
+        if (DeckSection::hasSOLUTION(deck))
             scanSection(SOLUTIONSection(deck), eclipseGrid, false);
     }
 
-    void Eclipse3DProperties::scanSection(const Section& section,
+    void Eclipse3DProperties::scanSection(const DeckSection& section,
                                           const EclipseGrid& eclipseGrid,
                                           bool edit_section) {
         BoxManager boxManager(eclipseGrid);

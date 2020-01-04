@@ -22,7 +22,7 @@
 #include <boost/filesystem.hpp>
 
 #include <ewoms/eclio/parser/parser.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/parserkeywords/c.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>

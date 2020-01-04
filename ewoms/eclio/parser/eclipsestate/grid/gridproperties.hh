@@ -25,7 +25,7 @@
 #include <map>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>

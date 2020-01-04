@@ -24,6 +24,10 @@
 
 namespace Ewoms {
 
+GConSale::GConSale(const std::map<std::string,GCONSALEGroup>& group)
+    : groups(group)
+{}
+
 bool GConSale::has(const std::string& name) const {
     return (groups.find(name) != groups.end());
 }
@@ -76,6 +80,14 @@ void GConSale::add(const std::string& name, const UDAValue& sales_target, const 
 
 size_t GConSale::size() const {
     return groups.size();
+}
+
+const std::map<std::string, GConSale::GCONSALEGroup>& GConSale::getGroups() const {
+    return groups;
+}
+
+bool GConSale::operator==(const GConSale& data) const {
+    return this->getGroups() == data.getGroups();
 }
 
 }

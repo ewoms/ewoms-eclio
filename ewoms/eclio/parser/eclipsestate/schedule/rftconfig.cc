@@ -16,10 +16,28 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/rftconfig.hh>
 
 namespace Ewoms {
+
+RFTConfig::RFTConfig()
+    : well_open_rft_time{false, 0}
+{
+}
+
+RFTConfig::RFTConfig(const TimeMap& tmap,
+                     const std::pair<bool, std::size_t>& rftTime,
+                     const std::unordered_set<std::string>& rftName,
+                     const std::unordered_map<std::string, std::size_t>& wellOpen,
+                     const RFTMap& rconfig, const PLTMap& pconfig)
+    : tm(tmap)
+    , well_open_rft_time(rftTime)
+    , well_open_rft_name(rftName)
+    , well_open(wellOpen)
+    , rft_config(rconfig)
+    , plt_config(pconfig)
+{
+}
 
 RFTConfig::RFTConfig(const TimeMap& time_map) :
     tm(time_map)
@@ -248,4 +266,38 @@ RFTConfig::PLT RFTConfig::PLTFromString( const std::string& stringValue ){
     else
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
+
+const TimeMap& RFTConfig::timeMap() const {
+    return tm;
+}
+
+const std::pair<bool, std::size_t>& RFTConfig::wellOpenRftTime() const {
+    return well_open_rft_time;
+}
+
+const std::unordered_set<std::string>& RFTConfig::wellOpenRftName() const {
+    return well_open_rft_name;
+}
+
+const std::unordered_map<std::string, std::size_t>& RFTConfig::wellOpen() const {
+    return well_open;
+}
+
+const RFTConfig::RFTMap& RFTConfig::rftConfig() const {
+    return rft_config;
+}
+
+const RFTConfig::PLTMap& RFTConfig::pltConfig() const {
+    return plt_config;
+}
+
+bool RFTConfig::operator==(const RFTConfig& data) const {
+    return this->timeMap() == data.timeMap() &&
+           this->wellOpenRftTime() == data.wellOpenRftTime() &&
+           this->wellOpenRftName() == data.wellOpenRftName() &&
+           this->wellOpen() == data.wellOpen() &&
+           this->rftConfig() == data.rftConfig() &&
+           this->pltConfig() == data.pltConfig();
+}
+
 }

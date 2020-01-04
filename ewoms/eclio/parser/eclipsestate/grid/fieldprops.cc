@@ -62,6 +62,8 @@ static const std::map<std::string, std::string> unit_string = {{"PERMX", "Permea
                                                                {"THCGAS", "Energy/AnsoluteTemperature*Length*Time"},
                                                                {"THCWATER", "Energy/AnsoluteTemperature*Length*Time"}};
 
+static const std::set<std::string> multiplier_keywords = {"MULTX", "MULTX-", "MULTY-", "MULTY", "MULTZ", "MULTZ-"};
+
 static const std::set<std::string> oper_keywords = {"ADD", "EQUALS", "MAXVALUE", "MINVALUE", "MULTIPLY", "OPERATE"};
 static const std::set<std::string> region_oper_keywords = {"ADDREG", "EQUALREG", "OPERATER"};
 static const std::set<std::string> box_keywords = {"BOX", "ENDBOX"};
@@ -226,15 +228,19 @@ std::string default_region_keyword(const Deck& deck) {
 }
 
 template <typename T>
-void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+void verify_deck_data(const DeckKeyword& keyword, const std::vector<T>& deck_data, const Box& box) {
     if (box.size() != deck_data.size()) {
         const auto& location = keyword.location();
         std::string msg = "Fundamental error with keyword: " + keyword.name() +
-                           " at: " + location.filename + ", line: " + std::to_string(location.lineno) +
-                           " got " + std::to_string(deck_data.size()) + " elements - expected : " + std::to_string(box.size());
+            " at: " + location.filename + ", line: " + std::to_string(location.lineno) +
+            " got " + std::to_string(deck_data.size()) + " elements - expected : " + std::to_string(box.size());
         throw std::invalid_argument(msg);
     }
+}
 
+template <typename T>
+void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+    verify_deck_data(keyword, deck_data, box);
     for (const auto& cell_index : box.index_list()) {
         auto active_index = cell_index.active_index;
         auto data_index = cell_index.data_index;
@@ -244,6 +250,20 @@ void assign_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_dat
                 field_data.data[active_index] = deck_data[data_index];
                 field_data.value_status[active_index] = deck_status[data_index];
             }
+        }
+    }
+}
+
+template <typename T>
+void multiply_deck(const DeckKeyword& keyword, FieldProps::FieldData<T>& field_data, const std::vector<T>& deck_data, const std::vector<value::status>& deck_status, const Box& box) {
+    verify_deck_data(keyword, deck_data, box);
+    for (const auto& cell_index : box.index_list()) {
+        auto active_index = cell_index.active_index;
+        auto data_index = cell_index.data_index;
+
+        if (value::has_value(deck_status[data_index]) && value::has_value(field_data.value_status[active_index])) {
+            field_data.data[active_index] *= deck_data[data_index];
+            field_data.value_status[active_index] = deck_status[data_index];
         }
     }
 }
@@ -408,19 +428,19 @@ FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableMan
         }
     }
 
-    if (Section::hasGRID(deck))
+    if (DeckSection::hasGRID(deck))
         this->scanGRIDSection(GRIDSection(deck));
 
-    if (Section::hasEDIT(deck))
+    if (DeckSection::hasEDIT(deck))
         this->scanEDITSection(EDITSection(deck));
 
-    if (Section::hasREGIONS(deck))
+    if (DeckSection::hasREGIONS(deck))
         this->scanREGIONSSection(REGIONSSection(deck));
 
-    if (Section::hasPROPS(deck))
+    if (DeckSection::hasPROPS(deck))
         this->scanPROPSSection(PROPSSection(deck));
 
-    if (Section::hasSOLUTION(deck))
+    if (DeckSection::hasSOLUTION(deck))
         this->scanSOLUTIONSection(SOLUTIONSection(deck));
 }
 
@@ -674,23 +694,23 @@ void FieldProps::handle_int_keyword(const DeckKeyword& keyword, const Box& box) 
     assign_deck(keyword, field_data, deck_data, deck_status, box);
 }
 
-void FieldProps::handle_double_keyword(const DeckKeyword& keyword, const Box& box) {
+void FieldProps::handle_double_keyword(Section section, const DeckKeyword& keyword, const Box& box) {
     auto& field_data = this->init_get<double>(keyword.name());
     const auto& deck_data = keyword.getSIDoubleData();
     const auto& deck_status = keyword.getValueStatus();
-    assign_deck(keyword, field_data, deck_data, deck_status, box);
-}
 
-void FieldProps::handle_grid_section_double_keyword(const DeckKeyword& keyword, const Box& box) {
-    auto& field_data = this->init_get<double>(keyword.name());
-    const auto& deck_data = keyword.getSIDoubleData();
-    const auto& deck_status = keyword.getValueStatus();
-    assign_deck(keyword, field_data, deck_data, deck_status, box);
-    if (field_data.valid())
-        return;
+    if (section == Section::EDIT && keywords::multiplier_keywords.count(keyword.name()) == 1)
+        multiply_deck(keyword, field_data, deck_data, deck_status, box);
+    else
+        assign_deck(keyword, field_data, deck_data, deck_status, box);
 
-    if (keywords::GRID::top_keywords.count(keyword.name()) == 1)
-        this->distribute_toplayer(field_data, deck_data, box);
+    if (section == Section::GRID) {
+        if (field_data.valid())
+            return;
+
+        if (keywords::GRID::top_keywords.count(keyword.name()) == 1)
+            this->distribute_toplayer(field_data, deck_data, box);
+    }
 }
 
 template <typename T>
@@ -956,7 +976,7 @@ void FieldProps::scanGRIDSection(const GRIDSection& grid_section) {
         const std::string& name = keyword.name();
 
         if (keywords::GRID::double_keywords.count(name) == 1) {
-            this->handle_grid_section_double_keyword(keyword, box);
+            this->handle_double_keyword(Section::GRID, keyword, box);
             continue;
         }
 
@@ -974,7 +994,7 @@ void FieldProps::scanEDITSection(const EDITSection& edit_section) {
     for (const auto& keyword : edit_section) {
         const std::string& name = keyword.name();
         if (keywords::EDIT::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(keyword, box);
+            this->handle_double_keyword(Section::EDIT, keyword, box);
             continue;
         }
 
@@ -1021,12 +1041,12 @@ void FieldProps::scanPROPSSection(const PROPSSection& props_section) {
     for (const auto& keyword : props_section) {
         const std::string& name = keyword.name();
         if (keywords::PROPS::satfunc.count(name) == 1) {
-            this->handle_double_keyword(keyword, box);
+            this->handle_double_keyword(Section::PROPS, keyword, box);
             continue;
         }
 
         if (keywords::PROPS::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(keyword, box);
+            this->handle_double_keyword(Section::PROPS, keyword, box);
             continue;
         }
 
@@ -1058,7 +1078,7 @@ void FieldProps::scanSOLUTIONSection(const SOLUTIONSection& solution_section) {
     for (const auto& keyword : solution_section) {
         const std::string& name = keyword.name();
         if (keywords::SOLUTION::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(keyword, box);
+            this->handle_double_keyword(Section::SOLUTION, keyword, box);
             continue;
         }
 
@@ -1071,7 +1091,7 @@ void FieldProps::scanSCHEDULESection(const SCHEDULESection& schedule_section) {
     for (const auto& keyword : schedule_section) {
         const std::string& name = keyword.name();
         if (keywords::SCHEDULE::double_keywords.count(name) == 1) {
-            this->handle_double_keyword(keyword, box);
+            this->handle_double_keyword(Section::SCHEDULE, keyword, box);
             continue;
         }
 

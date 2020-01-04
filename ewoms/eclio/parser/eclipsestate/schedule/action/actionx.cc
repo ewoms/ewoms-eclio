@@ -20,9 +20,9 @@
 #include <unordered_set>
 
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
 
-#include "actionvalue.hh"
 #include "actionparser.hh"
 
 namespace Ewoms {
@@ -31,6 +31,11 @@ namespace Action {
 bool ActionX::valid_keyword(const std::string& keyword) {
     static std::unordered_set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
     return (actionx_whitelist.find(keyword) != actionx_whitelist.end());
+}
+
+ActionX::ActionX() :
+    m_start_time(0)
+{
 }
 
 ActionX::ActionX(const std::string& name, size_t max_run, double min_wait, std::time_t start_time) :
@@ -62,6 +67,27 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
         this->m_conditions.emplace_back(cond_tokens, kw.location());
     }
     this->condition = Action::AST(tokens);
+}
+
+ActionX::ActionX(const std::string& nam,
+                 size_t maxRun,
+                 double minWait,
+                 std::time_t startTime,
+                 const std::vector<DeckKeyword>& keyword,
+                 const AST& cond,
+                 const std::vector<Condition>& conditions,
+                 size_t runCount,
+                 std::time_t lastRun) :
+    m_name(nam),
+    m_max_run(maxRun),
+    m_min_wait(minWait),
+    m_start_time(startTime),
+    keywords(keyword),
+    condition(cond),
+    m_conditions(conditions),
+    run_count(runCount),
+    last_run(lastRun)
+{
 }
 
 void ActionX::addKeyword(const DeckKeyword& kw) {
@@ -136,6 +162,34 @@ std::vector<std::string> ActionX::keyword_strings() const {
 
 const std::vector<Condition>& ActionX::conditions() const {
     return this->m_conditions;
+}
+
+const std::vector<DeckKeyword>& ActionX::getKeywords() const {
+    return this->keywords;
+}
+
+size_t ActionX::getRunCount() const {
+    return run_count;
+}
+
+std::time_t ActionX::getLastRun() const {
+    return last_run;
+}
+
+const AST& ActionX::getCondition() const {
+    return condition;
+}
+
+bool ActionX::operator==(const ActionX& data) const {
+    return this->name() == data.name() &&
+           this->max_run() == data.max_run() &&
+           this->min_wait() == data.min_wait() &&
+           this->start_time() == data.start_time() &&
+           this->getKeywords() == data.getKeywords() &&
+           this->getCondition() == data.getCondition() &&
+           this->conditions() == data.conditions() &&
+           this->getRunCount() == data.getRunCount() &&
+           this->getLastRun() == data.getLastRun();
 }
 
 }

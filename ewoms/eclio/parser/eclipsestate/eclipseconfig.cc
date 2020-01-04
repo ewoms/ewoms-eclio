@@ -19,7 +19,7 @@
 #include <memory>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipseconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/initconfig/initconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>

@@ -65,6 +65,10 @@ namespace Ewoms {
             return m_data;
         }
 
+        bool operator==(const DynamicVector<T>& data) const {
+            return this->data() == data.data();
+        }
+
     private:
         std::vector<T> m_data;
     };

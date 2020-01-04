@@ -28,7 +28,7 @@
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicstate.hh>
 

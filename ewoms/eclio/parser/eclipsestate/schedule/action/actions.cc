@@ -23,6 +23,10 @@
 namespace Ewoms {
 namespace Action {
 
+Actions::Actions(const std::vector<ActionX>& action)
+    : actions(action)
+{}
+
 size_t Actions::size() const {
     return this->actions.size();
 }
@@ -82,6 +86,14 @@ std::vector<ActionX>::const_iterator Actions::begin() const {
 
 std::vector<ActionX>::const_iterator Actions::end() const {
     return this->actions.end();
+}
+
+const std::vector<ActionX>& Actions::getActions() const {
+    return actions;
+}
+
+bool Actions::operator==(const Actions& data) const {
+    return actions == data.actions;
 }
 
 }

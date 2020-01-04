@@ -30,7 +30,7 @@
 #include <ewoms/eclio/parser/parser.hh>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
@@ -540,4 +540,34 @@ RTEMPVD
     double celcius_offset = 273.15;
     BOOST_CHECK_CLOSE( tempi[0], 0 + celcius_offset , 1e-6);
     BOOST_CHECK_CLOSE( tempi[1], 100 + celcius_offset , 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(GridAndEdit) {
+    const std::string deck_string = R"(
+RUNSPEC
+
+GRID
+MULTZ
+  125*2 /
+MULTX
+  125*2 /
+MULTX
+  125*2 /
+PORO
+  125*0.15 /
+EDIT
+MULTZ
+  125*2 /
+)";
+
+    Ewoms::Parser parser;
+    Ewoms::Deck deck = parser.parseString(deck_string);
+    Ewoms::EclipseGrid grid(5,5,5);
+    Ewoms::TableManager tm(deck);
+    FieldPropsManager fpm(deck, grid, tm);
+
+    const auto& multz = fpm.get<double>("MULTZ");
+    const auto& multx = fpm.get<double>("MULTX");
+    BOOST_CHECK_EQUAL( multz[0], 4 );
+    BOOST_CHECK_EQUAL( multx[0], 2 );
 }

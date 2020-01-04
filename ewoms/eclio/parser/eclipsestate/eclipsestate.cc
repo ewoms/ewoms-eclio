@@ -22,7 +22,7 @@
 
 #include <ewoms/eclio/opmlog/logutil.hh>
 
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -306,7 +306,7 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
     }
 
     void EclipseState::initFaults(const Deck& deck) {
-        if (!Section::hasGRID(deck))
+        if (!DeckSection::hasGRID(deck))
             return;
 
         const GRIDSection gridSection ( deck );
@@ -314,14 +314,14 @@ void assert_field_properties(const EclipseGrid& grid, const FieldPropsManager& f
         m_faults = FaultCollection(gridSection, m_inputGrid);
         setMULTFLT(gridSection);
 
-        if (Section::hasEDIT(deck)) {
+        if (DeckSection::hasEDIT(deck)) {
             setMULTFLT(EDITSection ( deck ));
         }
 
         m_transMult.applyMULTFLT( m_faults );
     }
 
-    void EclipseState::setMULTFLT(const Section& section) {
+    void EclipseState::setMULTFLT(const DeckSection& section) {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {

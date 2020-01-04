@@ -21,7 +21,7 @@
 #include <ewoms/eclio/opmlog/logutil.hh>
 
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
@@ -47,7 +47,7 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
     // make sure all mandatory sections are present and that their order is correct
     if (enabledChecks & SectionTopology) {
         bool ensureKeywordSection = enabledChecks & KeywordSection;
-        deckValid = deckValid && Section::checkSectionTopology(deck, parser, ensureKeywordSection);
+        deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, ensureKeywordSection);
     }
 
     const std::string& deckUnitSystem = boost::to_upper_copy(deck.getActiveUnitSystem().getName());

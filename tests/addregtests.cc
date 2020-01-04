@@ -29,7 +29,6 @@
 
 #include <ewoms/eclio/parser/parser.hh>
 
-#include <ewoms/eclio/parser/deck/section.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 

@@ -18,7 +18,7 @@
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/thresholdpressure.hh>
@@ -44,7 +44,7 @@ namespace Ewoms {
         m_restart(restart)
     {
 
-        if( !Section::hasRUNSPEC( deck ) || (!Section::hasSOLUTION( deck ) && !Section::hasGRID( deck )) )
+        if( !DeckSection::hasRUNSPEC( deck ) || (!DeckSection::hasSOLUTION( deck ) && !DeckSection::hasGRID( deck )) )
             return;
 
         RUNSPECSection runspecSection( deck );

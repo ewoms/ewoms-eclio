@@ -31,7 +31,7 @@
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
-#include <ewoms/eclio/parser/deck/section.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
@@ -1155,9 +1155,9 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         return false;
     }
 
-    bool Section::checkSectionTopology(const Deck& deck,
-                                       const Parser& parser,
-                                       bool ensureKeywordSectionAffiliation)
+    bool DeckSection::checkSectionTopology(const Deck& deck,
+                                           const Parser& parser,
+                                           bool ensureKeywordSectionAffiliation)
     {
         if( deck.size() == 0 ) {
             std::string msg = "empty decks are invalid\n";
