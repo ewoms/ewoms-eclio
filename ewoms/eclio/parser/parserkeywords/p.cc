@@ -2692,7 +2692,6 @@ PVTWSALT::PVTWSALT( ) : ParserKeyword("PVTWSALT")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTPVT",0);
-  setTableCollection( true );
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("PVTWSALT");
@@ -2700,8 +2699,14 @@ PVTWSALT::PVTWSALT( ) : ParserKeyword("PVTWSALT")
   {
      ParserRecord record;
      {
-        ParserItem item("REF_TEMP", ParserItem::itype::DOUBLE);
-        item.push_backDimension("Temperature");
+        ParserItem item("P_REF", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("SALT_CONCENTRATION_REF", ParserItem::itype::DOUBLE);
+        item.setDefault( double(0) );
+        item.push_backDimension("Density");
         record.addItem(item);
      }
      addRecord( record );
@@ -2711,16 +2716,20 @@ PVTWSALT::PVTWSALT( ) : ParserKeyword("PVTWSALT")
      {
         ParserItem item("table", ParserItem::itype::DOUBLE);
         item.setSizeType(ParserItem::item_size::ALL);
-        item.push_backDimension("Pressure");
+        item.push_backDimension("Density");
         item.push_backDimension("1");
+        item.push_backDimension("1/Pressure");
         item.push_backDimension("Viscosity");
+        item.push_backDimension("1/Pressure");
         record.addItem(item);
      }
      addRecord( record );
   }
 }
 const std::string PVTWSALT::keywordName = "PVTWSALT";
-const std::string PVTWSALT::REF_TEMP::itemName = "REF_TEMP";
+const std::string PVTWSALT::P_REF::itemName = "P_REF";
+const std::string PVTWSALT::SALT_CONCENTRATION_REF::itemName = "SALT_CONCENTRATION_REF";
+const double PVTWSALT::SALT_CONCENTRATION_REF::defaultValue = 0.000000;
 const std::string PVTWSALT::table::itemName = "table";
 
 
@@ -2738,7 +2747,6 @@ PVZG::PVZG( ) : ParserKeyword("PVZG")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTPVT",0);
-  setTableCollection( true );
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("PVZG");

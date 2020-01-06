@@ -2028,7 +2028,6 @@ STOG::STOG( ) : ParserKeyword("STOG")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTPVT",0);
-  setTableCollection( true );
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("STOG");
@@ -2116,7 +2115,6 @@ STOW::STOW( ) : ParserKeyword("STOW")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTPVT",0);
-  setTableCollection( true );
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("STOW");
@@ -2151,7 +2149,6 @@ STWG::STWG( ) : ParserKeyword("STWG")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTPVT",0);
-  setTableCollection( true );
   addValidSectionName("PROPS");
   clearDeckNames();
   addDeckName("STWG");
