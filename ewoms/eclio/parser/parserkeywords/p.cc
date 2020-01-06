@@ -1,14 +1,15 @@
 #include <ewoms/eclio/parser/deck/udavalue.hh>
-#include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/parseritem.hh>
 #include <ewoms/eclio/parser/parserrecord.hh>
 #include <ewoms/eclio/parser/parser.hh>
+
+
+
+
+
 #include <ewoms/eclio/parser/parserkeywords/p.hh>
-
-
 namespace Ewoms {
 namespace ParserKeywords {
-
 PARALLEL::PARALLEL( ) : ParserKeyword("PARALLEL")
 {
   setFixedSize( (size_t) 1);
@@ -2731,6 +2732,42 @@ PVT_M::PVT_M( ) : ParserKeyword("PVT_M")
   addDeckName("PVT-M");
 }
 const std::string PVT_M::keywordName = "PVT_M";
+
+
+PVZG::PVZG( ) : ParserKeyword("PVZG")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PVZG");
+  setAlternatingKeyword(true);
+  {
+     ParserRecord record;
+     {
+        ParserItem item("REF_TEMP", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Temperature");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("table", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Pressure");
+        item.push_backDimension("1");
+        item.push_backDimension("Viscosity");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PVZG::keywordName = "PVZG";
+const std::string PVZG::REF_TEMP::itemName = "REF_TEMP";
+const std::string PVZG::table::itemName = "table";
 
 
 PYACTION::PYACTION( ) : ParserKeyword("PYACTION")

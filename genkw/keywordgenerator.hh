@@ -33,16 +33,13 @@ namespace Ewoms {
         static void ensurePath( const std::string& file_name);
         static std::string endTest();
         static std::string startTest(const std::string& test_name);
-        static std::string headerPrelude( const std::string& );
-        static std::string headerAllPrelude();
-        static std::string sourcePrelude(const std::string& suffix);
-        static std::string sourceAllPrelude();
-        static bool updateFile(const std::stringstream& newContent, const std::string& filename);
+        static std::string headerHeader( const std::string& );
+        static void updateFile(const std::stringstream& newContent, const std::string& filename);
 
-        bool updateSources(const KeywordLoader& loader, const std::string& sourceBuildPath, const std::string& sourceDir) const;
-        bool updateHeaders(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerDir) const;
-        bool updateTest(const KeywordLoader& loader , const std::string& testFile) const;
-
+        void updateInitSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
+        void updateKeywordSource(const KeywordLoader& loader, const std::string& sourceFile ) const;
+        void updateHeader(const KeywordLoader& loader, const std::string& headerBuildPath, const std::string& headerPath) const;
+        void updateTest(const KeywordLoader& loader , const std::string& testFile) const;
     private:
         bool m_verbose;
     };

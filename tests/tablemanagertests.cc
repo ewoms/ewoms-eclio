@@ -45,8 +45,6 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpinjtable.hh>
 
-#include <ewoms/eclio/parser/parserkeywords.hh>
-
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
 #include <stdexcept>

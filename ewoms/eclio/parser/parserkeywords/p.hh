@@ -1823,6 +1823,24 @@ namespace ParserKeywords {
 
 
 
+   class PVZG : public ParserKeyword {
+   public:
+       PVZG();
+       static const std::string keywordName;
+
+       class REF_TEMP {
+       public:
+           static const std::string itemName;
+       };
+
+       class table {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class PYACTION : public ParserKeyword {
    public:
        PYACTION();

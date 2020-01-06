@@ -90,7 +90,6 @@ ewoms_add_test(OrderedMapTests SOURCES tests/orderedmaptests.cc LIBRARIES "${Boo
 ewoms_add_test(ParseContextTests SOURCES tests/parsecontexttests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(ParseContext_EXIT1 SOURCES tests/parsecontext_exit1.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(ParseDATAWithDefault SOURCES tests/parsedatawithdefault.cc LIBRARIES "${Boost_LIBRARIES}")
-ewoms_add_test(PYACTION SOURCES tests/pyaction.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(PORVTests SOURCES tests/porvtests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(RawKeywordTests SOURCES tests/rawkeywordtests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(ResinsightTest SOURCES tests/resinsighttest.cc LIBRARIES "${Boost_LIBRARIES}")
@@ -148,11 +147,6 @@ ewoms_add_test(restartwellinfo SOURCES tests/test_restartwellinfo.cc LIBRARIES "
 
 # "extra" tests
 set(_testdir ${PROJECT_SOURCE_DIR}/tests/data)
-
-ewoms_add_test(LoaderTest
-  SOURCES tests/keywordloadertests.cc ${PROJECT_SOURCE_DIR}/genkw/keywordloader.cc
-  TEST_ARGS "--" ${_testdir}/parser/keyword-generator/
-  LIBRARIES "${Boost_LIBRARIES}")
 
 ewoms_add_test(ParserTests
   SOURCES tests/parsertests.cc
