@@ -2784,7 +2784,7 @@ PYACTION::PYACTION( ) : ParserKeyword("PYACTION")
   addValidSectionName("SCHEDULE");
   clearDeckNames();
   addDeckName("PYACTION");
-  setCodeEnd("<<<");
+  setCodeEnd("PYEND");
   {
      ParserRecord record;
      {
@@ -2812,7 +2812,7 @@ PYINPUT::PYINPUT( ) : ParserKeyword("PYINPUT")
   addValidSectionName("SUMMARY");
   clearDeckNames();
   addDeckName("PYINPUT");
-  setCodeEnd("<<<");
+  setCodeEnd("PYEND");
   {
      ParserRecord record;
      {

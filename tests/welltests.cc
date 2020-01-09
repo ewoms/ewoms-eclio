@@ -264,16 +264,16 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0);
 
     auto productionProps = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    productionProps->BHPLimit.reset(100);
+    productionProps->BHPTarget.reset(100);
     productionProps->addProductionControl(Ewoms::Well::ProducerCMode::BHP);
     well.updateProduction(productionProps);
-    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPLimit.get<double>());
+    BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPTarget.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::BHP ));
 
     auto injProps = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps->THPLimit.reset(200);
+    injProps->THPTarget.reset(200);
     well.updateInjection(injProps);
-    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPLimit.get<double>());
+    BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPTarget.get<double>());
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::THP ));
 }
 
@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     properties3->GasRate.reset(100);
     properties3->LiquidRate.reset(100);
     properties3->ResVRate.reset(100);
-    properties3->BHPLimit.reset(100);
-    properties3->THPLimit.reset(100);
+    properties3->BHPTarget.reset(100);
+    properties3->THPTarget.reset(100);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::ORAT);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::LRAT);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::BHP);
@@ -356,9 +356,9 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps3 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps3->BHPLimit.reset(100);
+    injProps3->BHPTarget.reset(100);
     injProps3->addInjectionControl(Ewoms::Well::InjectorCMode::BHP);
-    injProps3->THPLimit.reset(100);
+    injProps3->THPTarget.reset(100);
     injProps3->addInjectionControl(Ewoms::Well::InjectorCMode::THP);
     well.updateInjection(injProps3);
 
@@ -532,6 +532,7 @@ namespace {
 
 BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_specified());
 
@@ -544,11 +545,14 @@ BOOST_AUTO_TEST_CASE(WCH_All_Specified_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Ewoms::Well::ProducerCMode::ORAT);
 
     BOOST_CHECK(p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
+
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::orat_defaulted());
 
@@ -560,11 +564,13 @@ BOOST_AUTO_TEST_CASE(WCH_ORAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Ewoms::Well::ProducerCMode::WRAT);
 
     BOOST_CHECK(p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::owrat_defaulted());
 
@@ -576,11 +582,13 @@ BOOST_AUTO_TEST_CASE(WCH_OWRAT_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Ewoms::Well::ProducerCMode::GRAT);
 
     BOOST_CHECK(p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted());
 
@@ -592,11 +600,13 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Defaulted)
     BOOST_CHECK(p.controlMode == Ewoms::Well::ProducerCMode::LRAT);
 
     BOOST_CHECK(p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp());
 
@@ -609,11 +619,13 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_Defaulted_BHP_Specified)
     BOOST_CHECK(p.controlMode == Ewoms::Well::ProducerCMode::RESV);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table());
 
@@ -628,11 +640,13 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 3);
     BOOST_CHECK_EQUAL(p.ALQValue, 10.);
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.);
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 101325.);
 }
 
 BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
 {
+    Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
         WCONHIST::properties(WCONHIST::bhp_defaulted());
 
@@ -645,8 +659,8 @@ BOOST_AUTO_TEST_CASE(WCH_BHP_Specified)
     BOOST_CHECK(p.controlMode == Ewoms::Well::ProducerCMode::BHP);
 
     BOOST_CHECK_EQUAL(true, p.hasProductionControl(Ewoms::Well::ProducerCMode::BHP));
-
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 5.e7); // 500 barsa
+    const auto& controls = p.controls(st, 0);
+    BOOST_CHECK_EQUAL(controls.bhp_limit, 5e7);
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
@@ -686,8 +700,8 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
-    BOOST_CHECK_EQUAL(p.THPLimit.get<double>(), 1000000.); // 10 barsa
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 101325.); // 1 atm.
+    BOOST_CHECK_EQUAL(p.THPTarget.getSI(), 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPTarget.getSI(), 101325.); // 1 atm.
 }
 
 BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
@@ -708,8 +722,10 @@ BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 
     BOOST_CHECK_EQUAL(p.VFPTableNumber, 8);
     BOOST_CHECK_EQUAL(p.ALQValue, 13.);
-    BOOST_CHECK_EQUAL(p.THPLimit.get<double>(), 1000000.); // 10 barsa
-    BOOST_CHECK_EQUAL(p.BHPLimit.get<double>(), 2000000.); // 20 barsa
+    BOOST_CHECK_EQUAL(p.THPTarget.get<double>(), 10.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPTarget.get<double>(), 20.); // 20 barsa
+    BOOST_CHECK_EQUAL(p.THPTarget.getSI(), 1000000.); // 10 barsa
+    BOOST_CHECK_EQUAL(p.BHPTarget.getSI(), 2000000.); // 20 barsa
 }
 
 BOOST_AUTO_TEST_CASE(BHP_CMODE)

@@ -992,6 +992,12 @@ SummaryConfig::SummaryConfig( const Deck& deck,
     SummaryConfig(deck, schedule, tables, ParseContext(), ErrorGuard())
 {}
 
+SummaryConfig::SummaryConfig(const keyword_list& kwds,
+                             const std::set<std::string>& shortKwds,
+                             const std::set<std::string>& smryKwds) :
+    keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
+{}
+
 SummaryConfig::const_iterator SummaryConfig::begin() const {
     return this->keywords.cbegin();
 }
@@ -1063,6 +1069,24 @@ bool SummaryConfig::requireFIPNUM( ) const {
            this->hasKeyword("RGIPG") ||
            this->hasKeyword("RWIP")  ||
            this->hasKeyword("RPR");
+}
+
+const SummaryConfig::keyword_list& SummaryConfig::getKwds() const {
+    return keywords;
+}
+
+const std::set<std::string>& SummaryConfig::getShortKwds() const {
+    return short_keywords;
+}
+
+const std::set<std::string>& SummaryConfig::getSmryKwds() const {
+    return summary_keywords;
+}
+
+bool SummaryConfig::operator==(const Ewoms::SummaryConfig& data) const {
+    return this->getKwds() == data.getKwds() &&
+           this->getShortKwds() == data.getShortKwds() &&
+           this->getSmryKwds() == data.getSmryKwds();
 }
 
 }

@@ -68,6 +68,11 @@ bool UDAValue::is<std::string>() const {
 template<>
 double UDAValue::get() const {
     this->assert_numeric();
+    return this->double_value;
+}
+
+double UDAValue::getSI() const {
+    this->assert_numeric();
     return this->dim.convertRawToSi(this->double_value);
 }
 
@@ -87,6 +92,11 @@ std::string UDAValue::get() const {
         return this->string_value;
 
     throw std::invalid_argument("UDAValue does not hold a string value");
+}
+
+bool UDAValue::zero() const {
+    this->assert_numeric();
+    return (this->double_value == 0.0);
 }
 
 const Dimension& UDAValue::get_dim() const {

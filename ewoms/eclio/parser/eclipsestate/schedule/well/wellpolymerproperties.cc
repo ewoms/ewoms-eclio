@@ -67,8 +67,8 @@ namespace Ewoms {
         if (!group_salt_item.defaultApplied(0))
             throw std::logic_error("Sorry explicit setting of \'GROUP_SALT_CONCENTRATION\' is not supported!");
 
-        this->m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").get<UDAValue>(0).get<double>();
-        this->m_saltConcentration = record.getItem("SALT_CONCENTRATION").get<UDAValue>(0).get<double>();
+        this->m_polymerConcentration = record.getItem("POLYMER_CONCENTRATION").get<UDAValue>(0).getSI();
+        this->m_saltConcentration = record.getItem("SALT_CONCENTRATION").get<UDAValue>(0).getSI();
     }
 
     void WellPolymerProperties::handleWPMITAB(const DeckRecord& record) {

@@ -49,6 +49,7 @@ namespace Ewoms {
             Undefined,
         };
 
+        SummaryNode() = default;
         explicit SummaryNode(std::string keyword, const Category cat, Location loc_arg);
 
         SummaryNode& parameterType(const Type type);
@@ -115,6 +116,7 @@ namespace Ewoms {
             typedef std::vector< keyword_type > keyword_list;
             typedef keyword_list::const_iterator const_iterator;
 
+            SummaryConfig() = default;
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const TableManager&,
@@ -131,6 +133,10 @@ namespace Ewoms {
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const TableManager&);
+
+            SummaryConfig(const keyword_list& kwds,
+                          const std::set<std::string>& shortKwds,
+                          const std::set<std::string>& smryKwds);
 
             const_iterator begin() const;
             const_iterator end() const;
@@ -157,6 +163,13 @@ namespace Ewoms {
             */
             bool require3DField( const std::string& keyword) const;
             bool requireFIPNUM( ) const;
+
+            const keyword_list& getKwds() const;
+            const std::set<std::string>& getShortKwds() const;
+            const std::set<std::string>& getSmryKwds() const;
+
+            bool operator==(const SummaryConfig& data) const;
+
         private:
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
