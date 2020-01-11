@@ -89,16 +89,16 @@ BDENSITY::BDENSITY( ) : ParserKeyword("BDENSITY")
   {
      ParserRecord record;
      {
-        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        ParserItem item("BRINE_DENSITY", ParserItem::itype::DOUBLE);
         item.setSizeType(ParserItem::item_size::ALL);
-        item.push_backDimension("Mass/LiquidSurfaceVolume");
+        item.push_backDimension("Density");
         record.addItem(item);
      }
      addRecord( record );
   }
 }
 const std::string BDENSITY::keywordName = "BDENSITY";
-const std::string BDENSITY::DATA::itemName = "DATA";
+const std::string BDENSITY::BRINE_DENSITY::itemName = "BRINE_DENSITY";
 
 
 BGGI::BGGI( ) : ParserKeyword("BGGI")
@@ -554,22 +554,12 @@ const std::string BRANPROP::ALQ_SURFACE_DENSITY::defaultValue = "NONE";
 
 BRINE::BRINE( ) : ParserKeyword("BRINE")
 {
-  setFixedSize( (size_t) 1);
+  setFixedSize( (size_t) 0);
   addValidSectionName("RUNSPEC");
   clearDeckNames();
   addDeckName("BRINE");
-  {
-     ParserRecord record;
-     {
-        ParserItem item("data", ParserItem::itype::STRING);
-        item.setSizeType(ParserItem::item_size::ALL);
-        record.addDataItem(item);
-     }
-     addDataRecord( record );
-  }
 }
 const std::string BRINE::keywordName = "BRINE";
-const std::string BRINE::data::itemName = "data";
 
 
 BTOBALFA::BTOBALFA( ) : ParserKeyword("BTOBALFA")

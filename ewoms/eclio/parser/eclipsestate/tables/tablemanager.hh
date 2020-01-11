@@ -32,6 +32,8 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtotable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rock2dtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rock2dtrtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/pvtwsalttable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/tables/flattable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sorwmistable.hh>
@@ -67,6 +69,8 @@ namespace Ewoms {
                      const RockTable& rockTable,
                      const ViscrefTable& viscrefTable,
                      const WatdentTable& watdentTable,
+                     const std::vector<PvtwsaltTable>& pvtwsaltTables,
+                     const std::vector<BrineDensityTable>& bdensityTables,
                      const std::map<int, PlymwinjTable>& plymwinjTables,
                      const std::map<int, SkprwatTable>& skprwatTables,
                      const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -109,6 +113,7 @@ namespace Ewoms {
         const TableContainer& getRvvdTables() const;
         const TableContainer& getPbvdTables() const;
         const TableContainer& getPdvdTables() const;
+        const TableContainer& getSaltvdTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
@@ -150,6 +155,9 @@ namespace Ewoms {
         const TableContainer& getOverburdTables() const;
 
         const PvtwTable& getPvtwTable() const;
+        const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
+        const std::vector<BrineDensityTable>& getBrineDensityTables() const;
+
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
         const RockTable& getRockTable() const;
@@ -230,6 +238,37 @@ namespace Ewoms {
                 }
             }
             assert(regionIdx == numTables - 1 );
+        }
+
+        template <class TableType>
+        void initPvtwsaltTables(const Deck& deck,  std::vector<TableType>& pvtwtables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            pvtwtables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("PVTWSALT");
+            size_t numEntries = keyword.size();
+            size_t regionIdx = 0;
+            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+                pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
+                ++regionIdx;
+                ++lineIdx;
+            }
+            assert(regionIdx == numTables);
+        }
+
+        template <class TableType>
+        void initBrineTables(const Deck& deck,  std::vector<TableType>& brinetables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            brinetables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("BDENSITY");
+            size_t numEntries = keyword.size();
+            assert(numEntries == numTables);
+            for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+                brinetables[lineIdx].init(keyword.getRecord(lineIdx));
+            }
         }
 
         /**
@@ -362,6 +401,8 @@ namespace Ewoms {
         RockTable m_rockTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
+        std::vector<PvtwsaltTable> m_pvtwsaltTables;
+        std::vector<BrineDensityTable> m_bdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;
         std::map<int, SkprwatTable> m_skprwatTables;
         std::map<int, SkprpolyTable> m_skprpolyTables;

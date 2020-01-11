@@ -62,6 +62,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellpolymerproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellproductionproperties.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wellbrineproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
@@ -325,6 +326,9 @@ namespace {
 
         else if (keyword.name() == "WPOLYMER")
             handleWPOLYMER(keyword, currentStep, parseContext, errors);
+
+        else if (keyword.name() == "WSALT")
+            handleWSALT(keyword, currentStep, parseContext, errors);
 
         else if (keyword.name() == "WSOLVENT")
             handleWSOLVENT(keyword, currentStep, parseContext, errors);
@@ -905,6 +909,8 @@ namespace {
                 this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
                 this->updateWell(well2, reportStep);
                 update = true;
+                if (status == Well::Status::OPEN)
+                    this->rft_config.addWellOpen(well_name, reportStep);
             }
         }
         return update;
@@ -1069,6 +1075,25 @@ namespace {
                     if (well2->updatePolymerProperties(polymer_properties))
                         this->updateWell(well2, currentStep);
                 }
+            }
+        }
+    }
+
+    void Schedule::handleWSALT( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, currentStep );
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+
+            for (const auto& well_name : well_names) {
+                const auto& dynamic_state = this->wells_static.at(well_name);
+                auto well2 = std::make_shared<Well>(*dynamic_state[currentStep]);
+                auto brine_properties = std::make_shared<WellBrineProperties>(well2->getBrineProperties());
+                brine_properties->handleWSALT(record);
+                if (well2->updateBrineProperties(brine_properties))
+                    this->updateWell(well2, currentStep);
             }
         }
     }

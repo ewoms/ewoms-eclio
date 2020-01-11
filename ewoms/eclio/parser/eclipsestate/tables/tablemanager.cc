@@ -34,6 +34,7 @@
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/enkrvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/enptvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/gasviscttable.hh>
@@ -63,6 +64,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/pdvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rtempvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rvvdtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/saltvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgcwmistable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgoftable.hh>
@@ -101,6 +103,8 @@ namespace Ewoms {
                                const RockTable& rockTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
+                               const std::vector<PvtwsaltTable>& pvtwsaltTables,
+                               const std::vector<BrineDensityTable>& bdensityTables,
                                const std::map<int, PlymwinjTable>& plymwinjTables,
                                const std::map<int, SkprwatTable>& skprwatTables,
                                const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -125,6 +129,8 @@ namespace Ewoms {
         m_rockTable(rockTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
+        m_pvtwsaltTables(pvtwsaltTables),
+        m_bdensityTables(bdensityTables),
         m_plymwinjTables(plymwinjTables),
         m_skprwatTables(skprwatTables),
         m_skprpolyTables(skprpolyTables),
@@ -159,6 +165,7 @@ namespace Ewoms {
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
+
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
 
@@ -188,6 +195,12 @@ namespace Ewoms {
         if ( deck.hasKeyword( "ROCK2DTR") )
             initRockTables(deck, "ROCK2DTR", m_rock2dtrTables );
 
+        if ( deck.hasKeyword( "PVTWSALT") )
+            initPvtwsaltTables(deck, m_pvtwsaltTables );
+
+        if ( deck.hasKeyword( "BDENSITY") )
+            initBrineTables(deck, m_bdensityTables );
+
     }
 
     TableManager& TableManager::operator=(const TableManager& data) {
@@ -201,6 +214,8 @@ namespace Ewoms {
         m_densityTable = data.m_densityTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
+        m_pvtwsaltTables = data.m_pvtwsaltTables;
+        m_bdensityTables = data.m_bdensityTables;
         m_plymwinjTables = data.m_plymwinjTables;
         m_skprwatTables = data.m_skprwatTables;
         m_skprpolyTables = data.m_skprpolyTables;
@@ -283,6 +298,7 @@ namespace Ewoms {
     }
 
     void TableManager::initSimpleTables(const Deck& deck) {
+
         addTables( "SWOF" , m_tabdims.getNumSatTables() );
         addTables( "SGWFN", m_tabdims.getNumSatTables() );
         addTables( "SGOF",  m_tabdims.getNumSatTables() );
@@ -318,6 +334,7 @@ namespace Ewoms {
         addTables( "RVVD", m_eqldims->getNumEquilRegions());
         addTables( "PBVD", m_eqldims->getNumEquilRegions());
         addTables( "PDVD", m_eqldims->getNumEquilRegions());
+        addTables( "SALTVD", m_eqldims->getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -379,6 +396,7 @@ namespace Ewoms {
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims->getNumEquilRegions());
+        initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims->getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
@@ -752,6 +770,10 @@ namespace Ewoms {
         return getTables("PDVD");
     }
 
+    const TableContainer& TableManager::getSaltvdTables() const {
+        return getTables("SALTVD");
+    }
+
     const TableContainer& TableManager::getEnkrvdTables() const {
         return getTables("ENKRVD");
     }
@@ -872,6 +894,14 @@ namespace Ewoms {
         return this->m_pvtwTable;
     }
 
+    const std::vector<PvtwsaltTable>& TableManager::getPvtwSaltTables() const {
+        return this->m_pvtwsaltTables;
+    }
+
+    const std::vector<BrineDensityTable>& TableManager::getBrineDensityTables() const {
+        return this->m_bdensityTables;
+    }
+
     const PvcdoTable& TableManager::getPvcdoTable() const {
         return this->m_pvcdoTable;
     }
@@ -982,6 +1012,8 @@ namespace Ewoms {
                m_densityTable == data.m_densityTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
+               m_pvtwsaltTables == data.m_pvtwsaltTables &&
+               m_bdensityTables == data.m_bdensityTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&

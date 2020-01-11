@@ -2714,7 +2714,7 @@ PVTWSALT::PVTWSALT( ) : ParserKeyword("PVTWSALT")
   {
      ParserRecord record;
      {
-        ParserItem item("table", ParserItem::itype::DOUBLE);
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
         item.setSizeType(ParserItem::item_size::ALL);
         item.push_backDimension("Density");
         item.push_backDimension("1");
@@ -2730,7 +2730,7 @@ const std::string PVTWSALT::keywordName = "PVTWSALT";
 const std::string PVTWSALT::P_REF::itemName = "P_REF";
 const std::string PVTWSALT::SALT_CONCENTRATION_REF::itemName = "SALT_CONCENTRATION_REF";
 const double PVTWSALT::SALT_CONCENTRATION_REF::defaultValue = 0.000000;
-const std::string PVTWSALT::table::itemName = "table";
+const std::string PVTWSALT::DATA::itemName = "DATA";
 
 
 PVT_M::PVT_M( ) : ParserKeyword("PVT_M")

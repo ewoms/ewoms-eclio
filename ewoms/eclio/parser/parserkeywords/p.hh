@@ -1813,7 +1813,7 @@ namespace ParserKeywords {
            static const double defaultValue;
        };
 
-       class table {
+       class DATA {
        public:
            static const std::string itemName;
        };

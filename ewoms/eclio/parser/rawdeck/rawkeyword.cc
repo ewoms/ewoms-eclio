@@ -158,5 +158,9 @@ namespace {
         return this->raw_string_keyword;
     }
 
+    std::size_t RawKeyword::size() const {
+        return this->m_records.size();
+    }
+
 }
 

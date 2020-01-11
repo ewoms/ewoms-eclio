@@ -60,6 +60,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/rvvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pbvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pdvdtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/saltvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgcwmistable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgoftable.hh>
@@ -886,6 +887,21 @@ const TableColumn& PdvdTable::getDepthColumn() const {
 }
 
 const TableColumn& PdvdTable::getPdewColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+SaltvdTable::SaltvdTable( const DeckItem& item ) {
+    m_schema.addColumn( ColumnSchema( "DEPTH" , Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+    m_schema.addColumn( ColumnSchema( "SALT" , Table::RANDOM , Table::DEFAULT_NONE ));
+
+    SimpleTable::init(item);
+}
+
+const TableColumn& SaltvdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& SaltvdTable::getSaltColumn() const {
     return SimpleTable::getColumn(1);
 }
 

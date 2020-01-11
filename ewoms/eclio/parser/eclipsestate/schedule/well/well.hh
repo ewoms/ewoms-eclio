@@ -28,6 +28,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/productioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/injectioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellfoamproperties.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wellbrineproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welltracerproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellpolymerproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welleconproductionlimits.hh>
@@ -402,6 +403,7 @@ public:
          std::shared_ptr<const WellEconProductionLimits> econLimits,
          std::shared_ptr<const WellFoamProperties> foamProperties,
          std::shared_ptr<const WellPolymerProperties> polymerProperties,
+         std::shared_ptr<const WellBrineProperties> brineProperties,
          std::shared_ptr<const WellTracerProperties> tracerProperties,
          std::shared_ptr<WellConnections> connections,
          std::shared_ptr<const WellProductionProperties> production,
@@ -436,6 +438,7 @@ public:
     const WellEconProductionLimits& getEconLimits() const;
     const WellFoamProperties& getFoamProperties() const;
     const WellPolymerProperties& getPolymerProperties() const;
+    const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
@@ -487,6 +490,7 @@ public:
     bool updateTracer(std::shared_ptr<WellTracerProperties> tracer_properties);
     bool updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties);
     bool updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties);
+    bool updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_properties);
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
@@ -540,6 +544,7 @@ private:
     std::shared_ptr<const WellEconProductionLimits> econ_limits;
     std::shared_ptr<const WellFoamProperties> foam_properties;
     std::shared_ptr<const WellPolymerProperties> polymer_properties;
+    std::shared_ptr<const WellBrineProperties> brine_properties;
     std::shared_ptr<const WellTracerProperties> tracer_properties;
     std::shared_ptr<WellConnections> connections; // The WellConnections object can not be const because of the filterConnections method - would be beneficial to rewrite to enable const
     std::shared_ptr<const WellProductionProperties> production;

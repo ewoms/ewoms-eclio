@@ -61,6 +61,7 @@ namespace Ewoms {
         iterator end();
         const_iterator begin() const;
         const_iterator end() const;
+        std::size_t size() const;
     private:
         std::string m_name;
         Location m_location;

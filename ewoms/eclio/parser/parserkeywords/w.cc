@@ -3963,8 +3963,7 @@ WSALT::WSALT( ) : ParserKeyword("WSALT")
         record.addItem(item);
      }
      {
-        ParserItem item("CONCENTRATION", ParserItem::itype::DOUBLE);
-        item.setSizeType(ParserItem::item_size::ALL);
+        ParserItem item("CONCENTRATION", ParserItem::itype::UDA);
         record.addItem(item);
      }
      addRecord( record );

@@ -69,7 +69,7 @@ namespace ParserKeywords {
        BDENSITY();
        static const std::string keywordName;
 
-       class DATA {
+       class BRINE_DENSITY {
        public:
            static const std::string itemName;
        };
@@ -330,11 +330,6 @@ namespace ParserKeywords {
    public:
        BRINE();
        static const std::string keywordName;
-
-       class data {
-       public:
-           static const std::string itemName;
-       };
    };
 
 

@@ -86,6 +86,8 @@ SALTVD::SALTVD( ) : ParserKeyword("SALTVD")
      {
         ParserItem item("DATA", ParserItem::itype::DOUBLE);
         item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Length");
+        item.push_backDimension("Density");
         record.addItem(item);
      }
      addRecord( record );
