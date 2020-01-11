@@ -396,7 +396,7 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
 
     if (!points.empty()) {
         const auto& location = keyword.location();
-        OpmLog::warning("VFP table for production wells has BHP versus THP not "
+        OpmLog::debug("VFP table for production wells has BHP versus THP not "
                            + std::string("monotonically increasing.\nThis may cause convergence ")
                            + "issues due to switching between BHP and THP control mode."
                            + std::string("\nIn keyword VFPPROD table number ")
@@ -404,7 +404,7 @@ void VFPProdTable::check(const DeckKeyword& keyword, const double table_scaling_
                            + ", file " + location.filename
                            + ", line " + std::to_string(location.lineno)
                            + "\n");
-        OpmLog::note(points);
+        OpmLog::debug(points);
     }
 }
 

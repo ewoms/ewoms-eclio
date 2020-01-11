@@ -53,16 +53,16 @@ namespace Log {
             prefix = "Info";
             break;
         case MessageType::Warning:
-            prefix = "\nWarning";
+            prefix = "Warning";
             break;
         case MessageType::Error:
-            prefix = "\nError";
+            prefix = "Error";
             break;
         case MessageType::Problem:
-            prefix = "\nProblem";
+            prefix = "Problem";
             break;
         case MessageType::Bug:
-            prefix = "\nBug";
+            prefix = "Bug";
             break;
         default:
             throw std::invalid_argument("Unhandled messagetype");

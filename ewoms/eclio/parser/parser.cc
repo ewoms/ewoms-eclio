@@ -844,7 +844,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                 ss << std::setw(5) << parserState.deck.size()
                    << " Reading " << std::setw(8) << std::left << rawKeyword->getKeywordName()
                    << " in file " << location.filename << ", line " << std::to_string(location.lineno);
-                OpmLog::info(ss.str());
+                OpmLog::debug(ss.str());
             }
             try {
                 if (rawKeyword->getKeywordName() ==  Ewoms::RawConsts::pyinput) {

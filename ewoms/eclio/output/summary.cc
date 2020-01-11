@@ -1810,11 +1810,12 @@ namespace Evaluator {
 void reportUnsupportedKeywords(std::vector<Ewoms::SummaryNode> keywords)
 {
     std::sort(keywords.begin(), keywords.end());
+    auto node = keywords.begin();
     auto uend = std::unique(keywords.begin(), keywords.end());
 
-    for (auto node = keywords.begin(); node != uend; ++node) {
+    for (; node != uend; ++node) {
         const auto& location = node->location();
-        ::Ewoms::OpmLog::warning("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
+        ::Ewoms::OpmLog::debug("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
     }
 }
 
