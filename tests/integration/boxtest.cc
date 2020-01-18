@@ -25,10 +25,9 @@
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 
 using namespace Ewoms;
 

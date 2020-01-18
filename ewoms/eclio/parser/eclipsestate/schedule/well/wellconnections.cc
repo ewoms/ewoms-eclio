@@ -24,7 +24,6 @@
 #include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 
@@ -214,16 +213,6 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         const auto& satnum_data = field_properties.get<int>("SATNUM");
 
         this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
-    }
-
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const Eclipse3DProperties& eclipseProperties) {
-        const auto& permx = eclipseProperties.getDoubleGridProperty("PERMX").compressedCopy(grid);
-        const auto& permy = eclipseProperties.getDoubleGridProperty("PERMY").compressedCopy(grid);
-        const auto& permz = eclipseProperties.getDoubleGridProperty("PERMZ").compressedCopy(grid);
-        const auto& ntg   = eclipseProperties.getDoubleGridProperty("NTG").compressedCopy(grid);
-        const auto& satnum_data = eclipseProperties.getIntGridProperty("SATNUM").compressedCopy(grid);
-
-        this->loadCOMPDAT(record, grid, satnum_data, std::addressof(permx), std::addressof(permy), std::addressof(permz), ntg);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record,

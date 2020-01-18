@@ -26,6 +26,15 @@ namespace Ewoms {
     {
     }
 
+    Fault::Fault(const std::string& name,
+                 double transMult,
+                 const std::vector<FaultFace>& faceList) :
+        m_name(name),
+        m_transMult(transMult),
+        m_faceList(faceList)
+    {
+    }
+
     const std::string& Fault::getName() const {
         return m_name;
     }
@@ -61,6 +70,10 @@ namespace Ewoms {
 
     bool Fault::operator!=( const Fault& rhs ) const {
         return !( *this == rhs );
+    }
+
+    const std::vector<FaultFace>& Fault::getFaceList() const {
+        return m_faceList;
     }
 
 }

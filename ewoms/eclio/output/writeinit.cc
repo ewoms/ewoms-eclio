@@ -27,12 +27,9 @@
 #include <ewoms/eclio/output/tables.hh>
 #include <ewoms/eclio/output/writerestarthelpers.hh>
 
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/endpointscaling.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/nnc.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>

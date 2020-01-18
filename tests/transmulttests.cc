@@ -27,15 +27,12 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/griddims.hh>
 
 BOOST_AUTO_TEST_CASE(Empty) {
-    Ewoms::Eclipse3DProperties props;
     Ewoms::EclipseGrid grid(10,10,10);
     Ewoms::FieldPropsManager fp(Ewoms::Deck(), grid, Ewoms::TableManager());
     Ewoms::TransMult transMult(grid ,{} , fp);

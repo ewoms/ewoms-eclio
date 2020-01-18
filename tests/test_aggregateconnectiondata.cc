@@ -784,7 +784,7 @@ BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
     const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
     const Ewoms::data::WellRates wrc = wr();
 
-    Ewoms::RestartIO::Header header(ih.value, lh, dh);
+    Ewoms::RestartIO::RstHeader header(ih.value, lh, dh);
     auto conn = Ewoms::RestartIO::Helpers::AggregateConnectionData{ih.value};
     conn.captureDeclaredConnData(simCase.sched,
                                  simCase.grid,
@@ -797,7 +797,7 @@ BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
     const auto scon = conn.getSConn();
     const auto xcon = conn.getXConn();
 
-    std::vector<Ewoms::RestartIO::Connection> connections;
+    std::vector<Ewoms::RestartIO::RstConnection> connections;
     for (int iw = 0; iw < header.num_wells; iw++) {
         for (int ic = 0; ic < header.ncwmax; ic++) {
             std::size_t icon_offset = header.niconz * (header.ncwmax * iw + ic);

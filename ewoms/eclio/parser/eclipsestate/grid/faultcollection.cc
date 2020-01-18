@@ -53,6 +53,11 @@ namespace Ewoms {
         }
     }
 
+    FaultCollection::FaultCollection(const OrderedMap<std::string, Fault>& faults) :
+        m_faults(faults)
+    {
+    }
+
     void FaultCollection::addFaultFaces(const GridDims& grid,
                                         const DeckRecord& faultRecord,
                                         const std::string& faultName)
@@ -108,5 +113,13 @@ namespace Ewoms {
     void FaultCollection::setTransMult(const std::string& faultName , double transMult) {
         Fault& fault = getFault( faultName );
         fault.setTransMult( transMult );
+    }
+
+    const OrderedMap<std::string, Fault>& FaultCollection::getFaults() const {
+        return m_faults;
+    }
+
+    bool FaultCollection::operator==(const FaultCollection& data) const {
+        return this->getFaults() == data.getFaults();
     }
 }

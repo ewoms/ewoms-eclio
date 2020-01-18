@@ -29,12 +29,9 @@ along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/thresholdpressure.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/simulationconfig.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/checkdeck.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fault.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/faultcollection.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>

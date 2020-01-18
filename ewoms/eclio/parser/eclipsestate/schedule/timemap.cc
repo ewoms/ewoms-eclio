@@ -21,11 +21,15 @@
 
 #include <ewoms/eclio/utility/timeservice.hh>
 
+#include <ewoms/eclio/parser/parserkeywords/s.hh>
+
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
+
+constexpr const std::time_t invalid_time = -1;
 
 namespace Ewoms {
 
@@ -48,55 +52,108 @@ namespace {
                                                       {"DES", 12}};
 }
 
-    TimeMap::TimeMap(std::time_t startTime) {
-        m_timeList.push_back(startTime);
+    void TimeMap::init_start(std::time_t start_time) {
+        auto timestamp = TimeStampUTC{start_time};
+
+        this->m_timeList.push_back(start_time);
+        this->m_first_timestep_months.push_back({0, timestamp});
+        this->m_first_timestep_years.push_back({0, timestamp});
     }
 
-    TimeMap::TimeMap( const Deck& deck) {
+    TimeMap::TimeMap(const std::vector<std::time_t>& time_points) {
+        if (time_points.empty())
+            throw std::invalid_argument("Can not initialize with empty list of time points");
 
-        std::time_t time;
-        if (deck.hasKeyword("START")) {
-            // Use the 'START' keyword to find out the start date (if the
-            // keyword was specified)
-            const auto& keyword = deck.getKeyword("START");
-            time = timeFromEclipse(keyword.getRecord(0));
-        } else {
-            // The default start date is not specified in the Eclipse
-            // reference manual. We hence just assume it is same as for
-            // the START keyword for Eclipse R100, i.e., January 1st,
-            // 1983...
-            time = mkdate(1983, 1, 1);
+        this->init_start(time_points[0]);
+        for (std::size_t ti = 1; ti < time_points.size(); ti++) {
+            if (time_points[ti] == invalid_time) {
+                this->m_timeList.push_back(invalid_time);
+                this->restart_offset += 1;
+            }
+            else
+                this->addTime( time_points[ti] );
         }
-        m_timeList.push_back(time);
-        auto timestamp = TimeStampUTC{time};
-        m_first_timestep_months.push_back({0, timestamp});
-        m_first_timestep_years.push_back({0, timestamp});
+        if (this->restart_offset > 0)
+            this->restart_offset += 1;
+    }
 
-        // find all "TSTEP" and "DATES" keywords in the deck and deal
-        // with them one after another
+    TimeMap::TimeMap( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
+        bool skiprest = deck.hasKeyword<ParserKeywords::SKIPREST>();
+        {
+            std::time_t start_time;
+            if (deck.hasKeyword("START")) {
+                // Use the 'START' keyword to find out the start date (if the
+                // keyword was specified)
+                const auto& keyword = deck.getKeyword("START");
+                start_time = timeFromEclipse(keyword.getRecord(0));
+            } else {
+                // The default start date is not specified in the Eclipse
+                // reference manual. We hence just assume it is same as for
+                // the START keyword for Eclipse R100, i.e., January 1st,
+                // 1983...
+                start_time = mkdate(1983, 1, 1);
+            }
+            this->init_start(start_time);
+        }
+
+        auto restart_time = restart.first;
+        this->restart_offset = restart.second;
+        bool skip = false;
+
+        for (std::size_t it = 1; it < this->restart_offset; it++)
+            this->m_timeList.push_back(invalid_time);
+
+        if (this->restart_offset > 0) {
+            if (skiprest)
+                skip = true;
+            else {
+                this->m_timeList.push_back(restart_time);
+                skip = false;
+            }
+        }
+
         for( const auto& keyword : deck ) {
             // We're only interested in "TSTEP" and "DATES" keywords,
             // so we ignore everything else here...
-            if (keyword.name() != "TSTEP" &&
-                keyword.name() != "DATES")
-            {
+            if (keyword.name() != "TSTEP" && keyword.name() != "DATES")
+                continue;
+
+            if (keyword.name() == "DATES") {
+                for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {
+                    const auto &record = keyword.getRecord(recordIndex);
+                    const std::time_t nextTime = TimeMap::timeFromEclipse(record);
+                    if (nextTime == restart_time)
+                        skip = false;
+
+                    if (!skip)
+                        addTime(nextTime);
+                }
+
                 continue;
             }
 
-            if (keyword.name() == "TSTEP")
-                addFromTSTEPKeyword(keyword);
-            else if (keyword.name() == "DATES")
-                addFromDATESKeyword(keyword);
-        }
-    }
+            if (skip)
+                continue;
 
-    TimeMap::TimeMap(const std::vector<std::time_t>& timeList,
-                     const std::vector<StepData>& firstStepMonths,
-                     const std::vector<StepData>& firstStepYears)
-        : m_timeList(timeList)
-        , m_first_timestep_years(firstStepYears)
-        , m_first_timestep_months(firstStepMonths)
-    {
+            addFromTSTEPKeyword(keyword);
+        }
+
+        /*
+          There is a coupling between the presence of the SKIPREST keyword and
+          the restart argument: The restart argument indicates whether this is
+          deck should be parsed as restarted deck. If restart_offset == 0 we do
+          not interpret this as restart situation and the presence of SKIPREST
+          is ignored. In the opposite case we verify - post loading - that we
+          have actually located the restart date - otherwise "something is
+          broken".
+        */
+        if (this->restart_offset != 0) {
+            if (skiprest) {
+                const auto iter = std::find(this->m_timeList.begin(), this->m_timeList.end(), restart_time);
+                if (iter == this->m_timeList.end())
+                    throw std::invalid_argument("Could not find restart date");
+            }
+        }
     }
 
     size_t TimeMap::numTimesteps() const {
@@ -104,7 +161,7 @@ namespace {
     }
 
     std::time_t TimeMap::getStartTime(size_t tStepIdx) const {
-        return this->operator[]( tStepIdx );
+        return this->operator[](tStepIdx);
     }
 
     std::time_t TimeMap::getEndTime() const {
@@ -186,17 +243,6 @@ namespace {
         return date;
     }
 
-    void TimeMap::addFromDATESKeyword(const DeckKeyword &DATESKeyword) {
-        if (DATESKeyword.name() != "DATES")
-            throw std::invalid_argument("Method requires DATES keyword input.");
-
-        for (size_t recordIndex = 0; recordIndex < DATESKeyword.size(); recordIndex++) {
-            const auto &record = DATESKeyword.getRecord(recordIndex);
-            const std::time_t nextTime = TimeMap::timeFromEclipse(record);
-            addTime(nextTime);
-        }
-    }
-
     void TimeMap::addFromTSTEPKeyword(const DeckKeyword &TSTEPKeyword) {
         if (TSTEPKeyword.name() != "TSTEP")
             throw std::invalid_argument("Method requires TSTEP keyword input.");
@@ -231,21 +277,12 @@ namespace {
         return m_timeList;
     }
 
-    const std::vector<TimeMap::StepData>& TimeMap::firstTimeStepMonths() const
-    {
-        return m_first_timestep_months;
-    }
-
-    const std::vector<TimeMap::StepData>& TimeMap::firstTimeStepYears() const
-    {
-        return m_first_timestep_years;
-    }
-
     bool TimeMap::operator==(const TimeMap& data) const
     {
-        return this->timeList() == data.timeList() &&
-               this->firstTimeStepMonths() == data.firstTimeStepMonths() &&
-               this->firstTimeStepYears() == data.firstTimeStepYears();
+        return this->m_timeList == data.m_timeList &&
+               this->m_first_timestep_months == data.m_first_timestep_months &&
+               this->m_first_timestep_years == data.m_first_timestep_years &&
+               this->restart_offset == data.restart_offset;
     }
 
     bool TimeMap::isTimestepInFirstOfMonthsYearsSequence(size_t timestep, bool years, size_t start_timestep, size_t frequency) const {
@@ -332,10 +369,13 @@ namespace {
     }
 
     std::time_t TimeMap::operator[] (size_t index) const {
-        if (index < m_timeList.size()) {
-            return m_timeList[index];
-        } else
+        if (index >= m_timeList.size())
             throw std::invalid_argument("Index out of range");
+
+        if (index > 0 && index < this->restart_offset)
+            throw std::invalid_argument("Tried to get time information from the base case in restarted run");
+
+        return m_timeList[index];
     }
 
     std::time_t TimeMap::mkdate(int in_year, int in_month, int in_day) {

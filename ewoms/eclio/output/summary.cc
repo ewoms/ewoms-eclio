@@ -22,8 +22,6 @@
 #include <ewoms/eclio/opmlog/location.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
@@ -1809,13 +1807,28 @@ namespace Evaluator {
 
 void reportUnsupportedKeywords(std::vector<Ewoms::SummaryNode> keywords)
 {
-    std::sort(keywords.begin(), keywords.end());
-    auto node = keywords.begin();
-    auto uend = std::unique(keywords.begin(), keywords.end());
+    // Sort by location first, then keyword.
+    auto loc_kw_ordering = [](const Ewoms::SummaryNode& n1, const Ewoms::SummaryNode& n2) {
+        if (n1.location() == n2.location()) {
+            return n1.keyword() < n2.keyword();
+        }
+        if (n1.location().filename == n2.location().filename) {
+            return n1.location().lineno < n2.location().lineno;
+        }
+        return n1.location().filename < n2.location().filename;
+    };
+    std::sort(keywords.begin(), keywords.end(), loc_kw_ordering);
 
-    for (; node != uend; ++node) {
+    // Reorder to remove duplicate { keyword, location } pairs, since
+    // that will give duplicate and therefore useless warnings.
+    auto same_kw_and_loc = [](const Ewoms::SummaryNode& n1, const Ewoms::SummaryNode& n2) {
+        return (n1.keyword() == n2.keyword()) && (n1.location() == n2.location());
+    };
+    auto uend = std::unique(keywords.begin(), keywords.end(), same_kw_and_loc);
+
+    for (auto node = keywords.begin(); node != uend; ++node) {
         const auto& location = node->location();
-        ::Ewoms::OpmLog::debug("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
+        ::Ewoms::OpmLog::warning("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
     }
 }
 

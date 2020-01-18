@@ -38,46 +38,26 @@ const std::time_t startDateJan1st2010 = Ewoms::TimeMap::mkdate(2010, 1, 1);
 
 Ewoms::DeckRecord createDeckRecord(int day, const std::string &month, int year, const std::string &time = "00:00:00.000");
 
-BOOST_AUTO_TEST_CASE(CreateTimeMapFromTimeT) {
-    std::time_t startDate = time(NULL);
-    Ewoms::TimeMap timeMap(startDate);
-    BOOST_CHECK_EQUAL(1U , timeMap.size());
-}
-
-BOOST_AUTO_TEST_CASE(AddDateBeforeThrows) {
-    Ewoms::TimeMap timeMap(startDateJan1st2010);
-    const std::time_t dateBefore = Ewoms::TimeMap::mkdate(2009, 2, 1);
-    BOOST_CHECK_THROW(timeMap.addTime(dateBefore), std::invalid_argument);
-}
-
 BOOST_AUTO_TEST_CASE(GetStartDate) {
-    Ewoms::TimeMap timeMap(startDateJan1st2010);
+    Ewoms::TimeMap timeMap({ startDateJan1st2010 });
     BOOST_CHECK_EQUAL( Ewoms::TimeMap::mkdate(2010, 1, 1) , timeMap.getStartTime(/*timeStepIdx=*/0));
 }
 
-BOOST_AUTO_TEST_CASE(AddDateAfterSizeCorrect) {
-    Ewoms::TimeMap timeMap(startDateJan1st2010);
-    const std::time_t dateAfter = Ewoms::TimeMap::mkdate(2010, 2, 1);
-    timeMap.addTime(dateAfter);
-    BOOST_CHECK_EQUAL( 2U , timeMap.size());
-}
-
 BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
-    const std::time_t startDate = time(NULL);
-    Ewoms::TimeMap timeMap(startDate);
-    BOOST_CHECK_THROW(timeMap.addTStep(static_cast<time_t>(-1)) , std::invalid_argument);
+    std::vector<std::time_t> time_points = { Ewoms::asTimeT(Ewoms::TimeStampUTC({2000,1,1})), Ewoms::asTimeT(Ewoms::TimeStampUTC({1999,1,1}))};
+    BOOST_CHECK_THROW(Ewoms::TimeMap timeMap(time_points), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
-    Ewoms::TimeMap timeMap{startDateJan1st2010};
-
-    timeMap.addTStep(static_cast<time_t>(1 * 60 * 60));
-    timeMap.addTStep(static_cast<time_t>(23 * 60 * 60));
+    std::vector<std::time_t> time_points = { Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,1})),
+                                             Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,2})),
+                                             Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,3}))};
+    Ewoms::TimeMap timeMap(time_points);
     BOOST_CHECK_EQUAL(3U, timeMap.size());
 
     BOOST_CHECK_THROW(timeMap[3] , std::invalid_argument );
     BOOST_CHECK_EQUAL(timeMap[0] , Ewoms::TimeMap::mkdate(2010, 1, 1 ));
-    BOOST_CHECK_EQUAL(timeMap[2] , Ewoms::TimeMap::mkdate(2010, 1, 2 ));
+    BOOST_CHECK_EQUAL(timeMap[2] , Ewoms::TimeMap::mkdate(2010, 1, 3 ));
 }
 
 BOOST_AUTO_TEST_CASE( dateFromEclipseThrowsInvalidRecord ) {
@@ -165,20 +145,6 @@ BOOST_AUTO_TEST_CASE( timeFromEclipseInputRecord ) {
     startRecord.addItem( std::move( timeItem ) );
 
     BOOST_CHECK_EQUAL(Ewoms::TimeMap::mkdate(1987, 1 , 10 ), Ewoms::TimeMap::timeFromEclipse( startRecord ));
-}
-
-BOOST_AUTO_TEST_CASE( addDATESFromWrongKeywordThrows ) {
-    Ewoms::Parser parser;
-    Ewoms::TimeMap timeMap(startDateJan1st2010);
-    Ewoms::DeckKeyword deckKeyword( parser.getKeyword("GRID") );
-    BOOST_CHECK_THROW( timeMap.addFromDATESKeyword( deckKeyword ) , std::invalid_argument );
-}
-
-BOOST_AUTO_TEST_CASE( addTSTEPFromWrongKeywordThrows ) {
-    Ewoms::Parser parser;
-    Ewoms::TimeMap timeMap(startDateJan1st2010);
-    Ewoms::DeckKeyword deckKeyword(parser.getKeyword("GRID"));
-    BOOST_CHECK_THROW( timeMap.addFromTSTEPKeyword( deckKeyword ) , std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE(TimeStepsCorrect) {
@@ -607,3 +573,108 @@ BOOST_AUTO_TEST_CASE(TimeServiceOperatorPlus) {
     BOOST_CHECK_EQUAL(t1.day(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(RESTART) {
+    std::string deck_string1 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+SKIPREST
+
+DATES
+ 1 JAN 2001 /
+ 1 JAN 2002 /
+ 1 JAN 2003 /
+ 1 JAN 2004 /
+/
+
+DATES
+ 1  JAN 2005 /
+/
+
+DATES
+ 1 JAN 2006 /
+ 1 JAN 2007 /
+ 1 JAN 2008 /
+ 1 JAN 2009 /
+ 1 JAN 2010 /
+/
+)";
+
+    std::string deck_string2 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+-- The period before the restart dates has been removed - the restart date
+-- should still be picked up as report step 5.
+--DATES
+-- 1 JAN 2001 /
+-- 1 JAN 2002 /
+-- 1 JAN 2003 /
+-- 1 JAN 2004 /
+--/
+
+DATES
+ 1  JUL 2005 /
+/
+
+DATES
+ 1 JAN 2006 /
+ 1 JAN 2007 /
+ 1 JAN 2008 /
+ 1 JAN 2009 /
+ 1 JAN 2010 /
+/
+)";
+
+    std::string deck_string3 = R"(
+START
+ 1 JAN 2000 /
+
+RESTART
+  'CASE'  5 /
+
+SCHEDULE
+
+-- This test does not have SKIPREST
+
+TSTEP
+   1 1 1 /
+)";
+
+    Ewoms::Parser parser;
+    const auto deck1 = parser.parseString(deck_string1);
+    const auto deck2 = parser.parseString(deck_string2);
+    const auto deck3 = parser.parseString(deck_string3);
+
+    // The date 2005-01-02 is not present as a DATES in the deck; invalid input.
+    auto invalid_restart = std::make_pair(Ewoms::asTimeT(Ewoms::TimeStampUTC({2005, 1, 2})), 5);
+    auto valid_restart = std::make_pair(Ewoms::asTimeT(Ewoms::TimeStampUTC({2005, 1, 1})), 5);
+
+    BOOST_CHECK_THROW( Ewoms::TimeMap(deck1, invalid_restart) , std::invalid_argument);
+    Ewoms::TimeMap tm1(deck1, valid_restart);
+    BOOST_CHECK_THROW( tm1[1], std::invalid_argument );
+    BOOST_CHECK_THROW( tm1[4], std::invalid_argument );
+    auto start = tm1[0];
+    BOOST_CHECK_EQUAL(start , Ewoms::asTimeT(Ewoms::TimeStampUTC({2000,1,1})));
+    BOOST_CHECK_EQUAL(tm1[5] , Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,1})));
+
+    Ewoms::TimeMap tm2(deck2, valid_restart);
+    BOOST_CHECK_EQUAL(tm2[5], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,1})));
+    BOOST_CHECK_EQUAL(tm2[6], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,7,1})));
+
+    Ewoms::TimeMap tm3(deck3, valid_restart);
+    BOOST_CHECK_EQUAL(tm3[5], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,1})));
+    BOOST_CHECK_EQUAL(tm3[6], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,2})));
+    BOOST_CHECK_EQUAL(tm3[7], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,3})));
+    BOOST_CHECK_EQUAL(tm3[8], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,4})));
+}

@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .regionDimensions({ntfip, nmfipr, 0,0,0})
          .ngroups({ngroup});
 
-    Ewoms::RestartIO::Header header(ih.data(), std::vector<bool>(100), std::vector<double>(1000));
+    Ewoms::RestartIO::RstHeader header(ih.data(), std::vector<bool>(100), std::vector<double>(1000));
     BOOST_CHECK_EQUAL(header.nx, nx);
     BOOST_CHECK_EQUAL(header.ny, ny);
     BOOST_CHECK_EQUAL(header.nactive, nactive);

@@ -34,7 +34,6 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 
@@ -138,17 +137,13 @@ Ewoms::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Ewoms::TableManager tables;
     Ewoms::Parser parser;
     const auto deck = parser.parseString(compdat_keyword);
-    Ewoms::Eclipse3DProperties props(deck, tables, grid );
     Ewoms::FieldPropsManager field_props(deck, grid, Ewoms::TableManager());
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
-    Ewoms::WellConnections connections1(10,10);
-    Ewoms::WellConnections connections2(10,10);
-    for (const auto& rec : keyword) {
-        connections1.loadCOMPDAT(rec, grid, props);
-        connections2.loadCOMPDAT(rec, grid, field_props);
-    }
-    BOOST_CHECK_EQUAL( connections1, connections2);
-    return connections1;
+    Ewoms::WellConnections connections(10,10);
+    for (const auto& rec : keyword)
+        connections.loadCOMPDAT(rec, grid, field_props);
+
+    return connections;
 }
 
 BOOST_AUTO_TEST_CASE(loadCOMPDATTEST) {

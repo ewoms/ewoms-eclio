@@ -20,8 +20,6 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 
 #include <ewoms/eclio/output/regioncache.hh>

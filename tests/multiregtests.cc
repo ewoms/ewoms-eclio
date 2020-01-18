@@ -29,10 +29,8 @@
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 
 static Ewoms::Deck createDeckInvalidArray() {
     const char* deckData =
@@ -215,36 +213,11 @@ BOOST_AUTO_TEST_CASE(UnInitializedVectorThrows) {
     BOOST_CHECK_THROW( new Ewoms::EclipseState( deck) , std::invalid_argument );
 }
 
-BOOST_AUTO_TEST_CASE(IntSetCorrectly) {
-    Ewoms::Deck deck = createValidIntDeck();
-    Ewoms::TableManager tm(deck);
-    Ewoms::EclipseGrid eg(deck);
-    Ewoms::Eclipse3DProperties props(deck, tm, eg);
-
-    const auto& property_data = props.getIntGridProperty("SATNUM").getData();
-    for (size_t j = 0; j < 5; j++)
-        for (size_t i = 0; i < 5; i++) {
-            if (i < 2)
-                BOOST_CHECK_EQUAL(11, property_data[eg.getGlobalIndex(i,j,0)]);
-            else
-                BOOST_CHECK_EQUAL(40, property_data[eg.getGlobalIndex(i,j,0)]);
-        }
-}
-
 BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Ewoms::Deck deck = createValidIntDeck();
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg(deck);
-    Ewoms::Eclipse3DProperties props(deck, tm, eg);
     Ewoms::FieldPropsManager fp(deck, eg, tm);
-
-    const auto& porv_data  = props.getDoubleGridProperty("PORV").getData();
-    const auto& permx_data = props.getDoubleGridProperty("PERMX").getData();
-    const auto& permy_data = props.getDoubleGridProperty("PERMY").getData();
-
-    BOOST_CHECK_EQUAL( porv_data[0], 0.50 );
-    BOOST_CHECK_EQUAL( permx_data[0] / permy_data[0], 0.50 );
-    BOOST_CHECK_EQUAL( permx_data[1], permy_data[1]);
 
     const auto& porv  = fp.porv(true);
     const auto& permx = fp.get_global<double>("PERMX");

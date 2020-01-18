@@ -25,7 +25,7 @@ namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;
 namespace Ewoms {
 namespace RestartIO {
 
-Header::Header(const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead) :
+RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& logihead, const std::vector<double>& doubhead) :
     nx(intehead[VI::intehead::NX]),
     ny(intehead[VI::intehead::NY]),
     nz(intehead[VI::intehead::NZ]),

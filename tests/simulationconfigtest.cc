@@ -25,7 +25,6 @@
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/parserkeywords/c.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/simulationconfig.hh>
 
 using namespace Ewoms;

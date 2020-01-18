@@ -142,7 +142,6 @@ namespace Ewoms {
         IOConfig(bool write_init, bool write_egrid,
                  bool unifin, bool unifout,
                  bool fmtin, bool fmtout,
-                 int firstRestartStep,
                  const std::string& deck_name,
                  bool output_enabled,
                  const std::string& output_dir,
@@ -183,7 +182,6 @@ namespace Ewoms {
 
         // Proxy methods forwarding directly to corresponding RestartConfig
         bool getWriteRestartFile(size_t timestep) const;
-        int  getFirstRestartStep() const;
         void overrideRestartWriteInterval(size_t interval);
         void setWriteInitialRestartFile(bool writeInitialRestartFile);
 
@@ -196,7 +194,6 @@ namespace Ewoms {
         bool            m_UNIFOUT = false;
         bool            m_FMTIN = false;
         bool            m_FMTOUT = false;
-        int             m_first_restart_step;
         std::string     m_deck_filename;
         bool            m_output_enabled = true;
         std::string     m_output_dir;

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <string>
 
 namespace Ewoms {
 
@@ -19,6 +20,17 @@ typename std::decay< T >::type uppercase( T&& x ) {
     return uppercase( t, t );
 }
 
-}
+template<typename T>
+std::string trim_copy(const T& s) {
+{
+    auto ret = std::string(s.c_str());
 
+    const auto end = ret.find_last_not_of(" \t\n\r\f\v");
+    if (end == std::string::npos)
+        return "";
+
+    return ret.substr(0, end + 1);
+}
+}
+}
 #endif //EWOMS_UTILITY_STRING_H

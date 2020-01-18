@@ -28,6 +28,7 @@
 
 #include <ewoms/eclio/output/data/wells.hh>
 
+#include <ewoms/eclio/io/rst/segment.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -801,6 +802,32 @@ BOOST_AUTO_TEST_CASE (Declared_MSW_Data)
 	BOOST_CHECK_EQUAL(iLBs[start + 0] ,  15); // WINJ-branch   2, first segment in branch
 
     }
+}
+
+BOOST_AUTO_TEST_CASE(MSW_RST) {
+    const auto simCase = SimulationCase{first_sim()};
+
+    // Report Step 1: 2115-01-01 --> 2015-01-03
+    const auto rptStep = std::size_t{1};
+
+    const auto ih = MockIH {
+                            static_cast<int>(simCase.sched.getWells(rptStep).size())
+    };
+
+    const auto smry = sim_state();
+    const Ewoms::data::WellRates wrc = wr();
+    auto amswd = Ewoms::RestartIO::Helpers::AggregateMSWData{ih.value};
+    amswd.captureDeclaredMSWData(simCase.sched,
+                                 rptStep,
+                                 simCase.es.getUnits(),
+                                 ih.value,
+                                 simCase.grid,
+                                 smry,
+                                 wrc
+                                 );
+    const auto& iseg = amswd.getISeg();
+    const auto& rseg = amswd.getRSeg();
+    auto segment = Ewoms::RestartIO::RstSegment(iseg.data(), rseg.data());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

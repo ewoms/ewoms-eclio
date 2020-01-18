@@ -19,10 +19,8 @@
 #include <stdexcept>
 #include <string>
 
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/satfuncpropertyinitializers.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgoftable.hh>
@@ -87,11 +85,15 @@ namespace Ewoms {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getSwColumn().front();
+            if (swofTables.size() > 0)
+                return swofTables.getTable< SwofTable >( i ).getSwColumn().front();
+            return 0.0;
         };
 
         const auto famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getSwColumn().front();
+            if (swfnTables.size() > 0)
+                return swfnTables.getTable< SwfnTable >( i ).getSwColumn().front();
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -108,11 +110,15 @@ namespace Ewoms {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getSwColumn().back();
+            if (swofTables.size() > 0)
+                return swofTables.getTable< SwofTable >( i ).getSwColumn().back();
+            return 1.0;
         };
 
         const auto famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getSwColumn().back();
+            if (swfnTables.size() > 0)
+                return swfnTables.getTable< SwfnTable >( i ).getSwColumn().back();
+            return 1.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -130,15 +136,21 @@ namespace Ewoms {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getSgColumn().front();
+            if (sgofTables.size() > 0)
+                return sgofTables.getTable< SgofTable >( i ).getSgColumn().front();
+            return 0.0;
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return 1.0 - slgofTables.getTable< SlgofTable >( i ).getSlColumn().back();
+            if (slgofTables.size() > 0)
+                return 1.0 - slgofTables.getTable< SlgofTable >( i ).getSlColumn().back();
+            return 0.0;
         };
 
         const auto famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getSgColumn().front();
+            if (sgfnTables.size() > 0)
+                return sgfnTables.getTable< SgfnTable >( i ).getSgColumn().front();
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -169,15 +181,21 @@ namespace Ewoms {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getSgColumn().back();
+            if (sgofTables.size() > 0)
+                return sgofTables.getTable< SgofTable >( i ).getSgColumn().back();
+            return 1.0;
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return 1.0 - slgofTables.getTable< SlgofTable >( i ).getSlColumn().front();
+            if (slgofTables.size() > 0)
+                return 1.0 - slgofTables.getTable< SlgofTable >( i ).getSlColumn().front();
+            return 1.0;
         };
 
         const auto famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getSgColumn().back();
+            if (sgfnTables.size() > 0)
+                return sgfnTables.getTable< SgfnTable >( i ).getSgColumn().back();
+            return 1.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -235,11 +253,16 @@ namespace Ewoms {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto famI = [&swofTables]( int i ) {
-            return critical_water( swofTables.getTable< SwofTable >( i ) );
+            if (swofTables.size() > 0)
+                return critical_water( swofTables.getTable< SwofTable >( i ) );
+
+            return 0.0;
         };
 
         const auto famII = [&swfnTables]( int i ) {
-            return critical_water( swfnTables.getTable< SwfnTable >( i ) );
+            if (swfnTables.size() > 0)
+                return critical_water( swfnTables.getTable< SwfnTable >( i ) );
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -279,15 +302,21 @@ namespace Ewoms {
         const auto& slgofTables = tm.getSlgofTables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_gas( sgofTables.getTable< SgofTable >( i ) );
+            if (sgofTables.size() > 0)
+                return critical_gas( sgofTables.getTable< SgofTable >( i ) );
+            return 0.0;
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_gas( slgofTables.getTable< SlgofTable >( i ) );
+            if (slgofTables.size() > 0)
+                return critical_gas( slgofTables.getTable< SlgofTable >( i ) );
+            return 0.0;
         };
 
         const auto famII = [&sgfnTables]( int i ) {
-            return critical_gas( sgfnTables.getTable< SgfnTable >( i ) );
+            if (sgfnTables.size() > 0)
+                return critical_gas( sgfnTables.getTable< SgfnTable >( i ) );
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -337,12 +366,17 @@ namespace Ewoms {
         const auto& sof3Tables= tm.getSof3Tables();
 
         const auto famI = [&swofTables]( int i ) {
-            return critical_oil_water( swofTables.getTable< SwofTable >( i ) );
+            if (swofTables.size() > 0)
+                return critical_oil_water( swofTables.getTable< SwofTable >( i ) );
+            return 0.0;
         };
 
         const auto famII = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable< Sof3Table >( i );
-            return critical_oil( tb, tb.getKrowColumn() );
+            if (sof3Tables.size() > 0) {
+                const auto& tb = sof3Tables.getTable< Sof3Table >( i );
+                return critical_oil( tb, tb.getKrowColumn() );
+            }
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -385,16 +419,23 @@ namespace Ewoms {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_oil_gas( sgofTables.getTable< SgofTable >( i ) );
+            if (sgofTables.size() > 0)
+                return critical_oil_gas( sgofTables.getTable< SgofTable >( i ) );
+            return 0.0;
         };
 
         const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_oil_gas( slgofTables.getTable< SlgofTable >( i ) );
+            if (slgofTables.size() > 0)
+                return critical_oil_gas( slgofTables.getTable< SlgofTable >( i ) );
+            return 0.0;
         };
 
         const auto famII = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable< Sof3Table >( i );
-            return critical_oil( tb, tb.getKrogColumn() );
+            if (sof3Tables.size() > 0) {
+                const auto& tb = sof3Tables.getTable< Sof3Table >( i );
+                return critical_oil( tb, tb.getKrogColumn() );
+            }
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -422,15 +463,21 @@ namespace Ewoms {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getKrgColumn().back();
+            if (sgofTables.size() > 0)
+                return sgofTables.getTable< SgofTable >( i ).getKrgColumn().back();
+            return 1.0;
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().front();
+            if (slgofTables.size() > 0)
+                return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().front();
+            return 1.0;
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getKrgColumn().back();
+            if (sgfnTables.size() > 0)
+                return sgfnTables.getTable< SgfnTable >( i ).getKrgColumn().back();
+            return 1.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -455,15 +502,21 @@ namespace Ewoms {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getKrgColumn().front();
+            if (sgofTables.size() > 0)
+                return sgofTables.getTable< SgofTable >( i ).getKrgColumn().front();
+            return 0.0;
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().back();
+            if (slgofTables.size() > 0)
+                return slgofTables.getTable< SlgofTable >( i ).getKrgColumn().back();
+            return 0.0;
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getKrgColumn().back();
+            if (sgfnTables.size() > 0)
+                return sgfnTables.getTable< SgfnTable >( i ).getKrgColumn().back();
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -487,11 +540,15 @@ namespace Ewoms {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getKrwColumn().front();
+            if (swofTables.size() > 0)
+                return swofTables.getTable< SwofTable >( i ).getKrwColumn().front();
+            return 0.0;
         };
 
         const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getKrwColumn().front();
+            if (swfnTables.size() > 0)
+                return swfnTables.getTable< SwfnTable >( i ).getKrwColumn().front();
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -510,22 +567,28 @@ namespace Ewoms {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto& famI = [&swofTables]( int i ) {
-            const auto& swofTable = swofTables.getTable< SwofTable >( i );
-            const auto& krwCol = swofTable.getKrwColumn();
-            const auto crit = std::upper_bound( krwCol.begin(), krwCol.end(), 0.0 );
-            const auto index = std::distance( krwCol.begin(), crit );
+            if (swofTables.size() > 0) {
+                const auto& swofTable = swofTables.getTable< SwofTable >( i );
+                const auto& krwCol = swofTable.getKrwColumn();
+                const auto crit = std::upper_bound( krwCol.begin(), krwCol.end(), 0.0 );
+                const auto index = std::distance( krwCol.begin(), crit );
 
-            if( crit == krwCol.end() ) return 0.0;
+                if( crit == krwCol.end() ) return 0.0;
 
-            return swofTable.getKrowColumn()[ index - 1 ];
+                return swofTable.getKrowColumn()[ index - 1 ];
+            }
+            return 0.0;
         };
 
         const auto crit_water = findCriticalWater( tm );
         const auto min_gas = findMinGasSaturation( tm );
         const auto& famII = [&sof3Tables,&crit_water,&min_gas]( int i ) {
-            const double OilSatAtcritialWaterSat = 1.0 - crit_water[ i ] - min_gas[ i ];
-            return sof3Tables.getTable< Sof3Table >( i )
-                .evaluate("KROW", OilSatAtcritialWaterSat);
+            if (sof3Tables.size() > 0) {
+                const double OilSatAtcritialWaterSat = 1.0 - crit_water[ i ] - min_gas[ i ];
+                return sof3Tables.getTable< Sof3Table >( i )
+                    .evaluate("KROW", OilSatAtcritialWaterSat);
+            }
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -545,37 +608,46 @@ namespace Ewoms {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            const auto& sgofTable = sgofTables.getTable< SgofTable >( i );
-            const auto& krgCol = sgofTable.getKrgColumn();
-            const auto crit = std::upper_bound( krgCol.begin(), krgCol.end(), 0.0 );
-            const auto index = std::distance( krgCol.begin(), crit );
+            if (sgofTables.size() > 0) {
+                const auto& sgofTable = sgofTables.getTable< SgofTable >( i );
+                const auto& krgCol = sgofTable.getKrgColumn();
+                const auto crit = std::upper_bound( krgCol.begin(), krgCol.end(), 0.0 );
+                const auto index = std::distance( krgCol.begin(), crit );
 
-            if( crit == krgCol.end() ) return 0.0;
+                if( crit == krgCol.end() ) return 0.0;
 
-            return sgofTable.getKrogColumn()[ index - 1 ];
+                return sgofTable.getKrogColumn()[ index - 1 ];
+            }
+            return 0.0;
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            const auto& slgofTable = slgofTables.getTable< SlgofTable >( i );
-            const auto& col = slgofTable.getKrgColumn();
-            using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-            auto rbegin = reverse( col.begin() + slgofTable.numRows() );
-            auto rend = reverse( col.begin() );
-            const auto crit = std::upper_bound( rbegin, rend, 0.0 );
-            // base() points to the next element in the forward order
-            const auto index = std::distance( col.begin(), crit.base());
+            if (slgofTables.size() > 0) {
+                const auto& slgofTable = slgofTables.getTable< SlgofTable >( i );
+                const auto& col = slgofTable.getKrgColumn();
+                using reverse = std::reverse_iterator< decltype( col.begin() ) >;
+                auto rbegin = reverse( col.begin() + slgofTable.numRows() );
+                auto rend = reverse( col.begin() );
+                const auto crit = std::upper_bound( rbegin, rend, 0.0 );
+                // base() points to the next element in the forward order
+                const auto index = std::distance( col.begin(), crit.base());
 
-            if( crit == rend ) return 0.0;
+                if( crit == rend ) return 0.0;
 
-            return slgofTable.getKrogColumn()[ index ];
+                return slgofTable.getKrogColumn()[ index ];
+            }
+            return 0.0;
         };
 
         const auto crit_gas = findCriticalGas( tm );
         const auto min_water = findMinWaterSaturation( tm );
         const auto& famII = [&sof3Tables,&crit_gas,&min_water]( int i ) {
-            const double OilSatAtcritialGasSat = 1.0 - crit_gas[ i ] - min_water[ i ];
-            return sof3Tables.getTable< Sof3Table >( i )
-                .evaluate("KROG", OilSatAtcritialGasSat);
+            if (sof3Tables.size() > 0) {
+                const double OilSatAtcritialGasSat = 1.0 - crit_gas[ i ] - min_water[ i ];
+                return sof3Tables.getTable< Sof3Table >( i )
+                    .evaluate("KROG", OilSatAtcritialGasSat);
+            }
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -609,15 +681,21 @@ namespace Ewoms {
         const auto& sgfnTables = tm.getSgfnTables();
 
         const auto& famI_sgof = [&sgofTables]( int i ) {
-            return sgofTables.getTable< SgofTable >( i ).getPcogColumn().back();
+            if (sgofTables.size() > 0)
+                return sgofTables.getTable< SgofTable >( i ).getPcogColumn().back();
+            return 0.0;
         };
 
         const auto& famI_slgof = [&slgofTables]( int i ) {
-            return slgofTables.getTable< SlgofTable >( i ).getPcogColumn().front();
+            if (slgofTables.size() > 0)
+                return slgofTables.getTable< SlgofTable >( i ).getPcogColumn().front();
+            return 0.0;
         };
 
         const auto& famII = [&sgfnTables]( int i ) {
-            return sgfnTables.getTable< SgfnTable >( i ).getPcogColumn().back();
+            if (sgfnTables.size() > 0)
+                return sgfnTables.getTable< SgfnTable >( i ).getPcogColumn().back();
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -641,11 +719,15 @@ namespace Ewoms {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getPcowColumn().front();
+            if (swofTables.size() > 0)
+                return swofTables.getTable< SwofTable >( i ).getPcowColumn().front();
+            return 0.0;
         };
 
         const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getPcowColumn().front();
+            if (swfnTables.size() > 0)
+                return swfnTables.getTable< SwfnTable >( i ).getPcowColumn().front();
+            return 0.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -664,11 +746,15 @@ namespace Ewoms {
         const auto& sof3Tables = tm.getSof3Tables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getKrowColumn().front();
+            if (swofTables.size() > 0)
+                return swofTables.getTable< SwofTable >( i ).getKrowColumn().front();
+            return 1.0;
         };
 
         const auto& famII = [&sof3Tables]( int i ) {
-            return sof3Tables.getTable< Sof3Table >( i ).getKrowColumn().back();
+            if (sof3Tables.size() > 0)
+                return sof3Tables.getTable< Sof3Table >( i ).getKrowColumn().back();
+            return 1.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -687,11 +773,15 @@ namespace Ewoms {
         const auto& swfnTables = tm.getSwfnTables();
 
         const auto& famI = [&swofTables]( int i ) {
-            return swofTables.getTable< SwofTable >( i ).getKrwColumn().back();
+            if (swofTables.size() > 0)
+                return swofTables.getTable< SwofTable >( i ).getKrwColumn().back();
+            return 1.0;
         };
 
         const auto& famII = [&swfnTables]( int i ) {
-            return swfnTables.getTable< SwfnTable >( i ).getKrwColumn().back();
+            if (swfnTables.size() > 0)
+                return swfnTables.getTable< SwfnTable >( i ).getKrwColumn().back();
+            return 1.0;
         };
 
         switch( getSaturationFunctionFamily( tm ) ) {
@@ -779,36 +869,6 @@ namespace Ewoms {
         return values;
     }
 
-    static std::vector< double > satnumApply( size_t size,
-                                              const std::string& columnName,
-                                              const std::vector< double >& fallbackValues,
-                                              const TableManager& tableManager,
-                                              const EclipseGrid& grid,
-                                              const GridProperties<int>* intGridProperties,
-                                              bool useOneMinusTableValue ) {
-        auto tabdims = tableManager.getTabdims();
-        const auto& satnum = intGridProperties->getKeyword("SATNUM");
-        const auto& endnum = intGridProperties->getKeyword("ENDNUM");
-        int numSatTables = tabdims.getNumSatTables();
-
-        std::vector<double> cell_depth(grid.getCartesianSize());
-        for (std::size_t g=0; g < grid.getCartesianSize(); g++)
-            cell_depth[g] = grid.getCellDepth(g);
-
-        // SATNUM = 0 *might* occur in deactivated cells
-        satnum.checkLimits( 0 , numSatTables );
-
-        return satnumApply(size,
-                           columnName,
-                           fallbackValues,
-                           tableManager,
-                           cell_depth,
-                           std::addressof(grid.getACTNUM()),
-                           satnum.getData(),
-                           endnum.getData(),
-                           useOneMinusTableValue);
-    }
-
     static std::vector< double > imbnumApply( size_t size,
                                               const std::string& columnName,
                                               const std::vector< double >& fallBackValues,
@@ -859,377 +919,6 @@ namespace Ewoms {
         }
 
         return values;
-    }
-
-    static std::vector< double > imbnumApply( size_t size,
-                                              const std::string& columnName,
-                                              const std::vector< double >& fallbackValues,
-                                              const TableManager& tableManager,
-                                              const EclipseGrid& eclipseGrid,
-                                              const GridProperties<int>* intGridProperties,
-                                              bool useOneMinusTableValue ) {
-        auto tabdims = tableManager.getTabdims();
-        const auto& imbnum = intGridProperties->getKeyword("IMBNUM");
-        const auto& endnum = intGridProperties->getKeyword("ENDNUM");
-        int numSatTables = tabdims.getNumSatTables();
-
-        std::vector<double> cell_depth(eclipseGrid.getCartesianSize());
-        for (std::size_t g=0; g < eclipseGrid.getCartesianSize(); g++)
-            cell_depth[g] = eclipseGrid.getCellDepth(g);
-
-        // IMBNUM = 0 *might* occur in deactivated cells
-        imbnum.checkLimits( 0 , numSatTables );
-
-        return imbnumApply(size,
-                           columnName,
-                           fallbackValues,
-                           tableManager,
-                           cell_depth,
-                           std::addressof(eclipseGrid.getACTNUM()),
-                           imbnum.getData(),
-                           endnum.getData(),
-                           useOneMinusTableValue);
-
-    }
-
-    std::vector< double > SGLEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid* eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto min_gas = findMinGasSaturation( *tableManager );
-        return satnumApply( size, "SGCO", min_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISGLEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid* eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto min_gas = findMinGasSaturation( *tableManager );
-        return imbnumApply( size, "SGCO", min_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > SGUEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid* eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_gas = findMaxGasSaturation( *tableManager );
-        return satnumApply( size, "SGMAX", max_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISGUEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid* eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto max_gas = findMaxGasSaturation( *tableManager );
-        return imbnumApply( size, "SGMAX", max_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > SWLEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid* eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto min_water = findMinWaterSaturation( *tableManager );
-        return satnumApply( size, "SWCO", min_water, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISWLEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto min_water = findMinWaterSaturation( *tableManager );
-        return imbnumApply( size, "SWCO", min_water, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > SWUEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_water = findMaxWaterSaturation( *tableManager );
-        return satnumApply( size, "SWMAX", max_water, *tableManager, *eclipseGrid,
-                            intGridProperties, true );
-    }
-
-    std::vector< double > ISWUEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto max_water = findMaxWaterSaturation( *tableManager );
-        return imbnumApply( size, "SWMAX", max_water, *tableManager, *eclipseGrid,
-                            intGridProperties, true);
-    }
-
-    std::vector< double > SGCREndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto crit_gas = findCriticalGas( *tableManager );
-        return satnumApply( size, "SGCRIT", crit_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISGCREndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto crit_gas = findCriticalGas( *tableManager );
-        return imbnumApply( size, "SGCRIT", crit_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > SOWCREndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto oil_water = findCriticalOilWater( *tableManager );
-        return satnumApply( size, "SOWCRIT", oil_water, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISOWCREndpoint( size_t size,
-                                          const TableManager * tableManager,
-                                          const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties )
-    {
-        const auto oil_water = findCriticalOilWater( *tableManager );
-        return imbnumApply( size, "SOWCRIT", oil_water, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > SOGCREndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto crit_oil_gas = findCriticalOilGas( *tableManager );
-        return satnumApply( size, "SOGCRIT", crit_oil_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISOGCREndpoint( size_t size,
-                                          const TableManager * tableManager,
-                                          const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties )
-    {
-        const auto crit_oil_gas = findCriticalOilGas( *tableManager );
-        return imbnumApply( size, "SOGCRIT", crit_oil_gas, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > SWCREndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto crit_water = findCriticalWater( *tableManager );
-        return satnumApply( size, "SWCRIT", crit_water, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > ISWCREndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto crit_water = findCriticalWater( *tableManager );
-        return imbnumApply( size, "SWCRIT", crit_water, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > PCWEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_pcow = findMaxPcow( *tableManager );
-        return satnumApply( size, "PCW", max_pcow, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IPCWEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto max_pcow = findMaxPcow( *tableManager );
-        return imbnumApply( size, "IPCW", max_pcow, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > PCGEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_pcog = findMaxPcog( *tableManager );
-        return satnumApply( size, "PCG", max_pcog, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IPCGEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto max_pcog = findMaxPcog( *tableManager );
-        return imbnumApply( size, "IPCG", max_pcog, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KRWEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_krw = findMaxKrw( *tableManager );
-        return satnumApply( size, "KRW", max_krw, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKRWEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto krwr = findKrwr( *tableManager );
-        return imbnumApply( size, "IKRW", krwr, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KRWREndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto krwr = findKrwr( *tableManager );
-        return satnumApply( size, "KRWR", krwr, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKRWREndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto krwr = findKrwr( *tableManager );
-        return imbnumApply( size, "IKRWR", krwr, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KROEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_kro = findMaxKro( *tableManager );
-        return satnumApply( size, "KRO", max_kro, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKROEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto max_kro = findMaxKro( *tableManager );
-        return imbnumApply( size, "IKRO", max_kro, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KRORWEndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto krorw = findKrorw( *tableManager );
-        return satnumApply( size, "KRORW", krorw, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKRORWEndpoint( size_t size,
-                                          const TableManager * tableManager,
-                                          const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties )
-    {
-        const auto krorw = findKrorw( *tableManager );
-        return imbnumApply( size, "IKRORW", krorw, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KRORGEndpoint( size_t size,
-                                         const TableManager * tableManager,
-                                         const EclipseGrid  * eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto krorg = findKrorg( *tableManager );
-        return satnumApply( size, "KRORG", krorg, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKRORGEndpoint( size_t size,
-                                          const TableManager * tableManager,
-                                          const EclipseGrid  * eclipseGrid,
-                                          GridProperties<int>* intGridProperties )
-    {
-        const auto krorg = findKrorg( *tableManager );
-        return imbnumApply( size, "IKRORG", krorg, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KRGEndpoint( size_t size,
-                                       const TableManager * tableManager,
-                                       const EclipseGrid  * eclipseGrid,
-                                       GridProperties<int>* intGridProperties )
-    {
-        const auto max_krg = findMaxKrg( *tableManager );
-        return satnumApply( size, "KRG", max_krg, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKRGEndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto max_krg = findMaxKrg( *tableManager );
-        return imbnumApply( size, "IKRG", max_krg, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > KRGREndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                        const EclipseGrid  * eclipseGrid,
-                                        GridProperties<int>* intGridProperties )
-    {
-        const auto krgr = findKrgr( *tableManager );
-        return satnumApply( size, "KRGR", krgr, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
-    }
-
-    std::vector< double > IKRGREndpoint( size_t size,
-                                        const TableManager * tableManager,
-                                         const EclipseGrid* eclipseGrid,
-                                         GridProperties<int>* intGridProperties )
-    {
-        const auto krgr = findKrgr( *tableManager );
-        return imbnumApply( size, "IKRGR", krgr, *tableManager, *eclipseGrid,
-                            intGridProperties, false );
     }
 
 namespace satfunc {

@@ -26,16 +26,17 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/events.hh>
+#include <ewoms/eclio/utility/timeservice.hh>
 
 BOOST_AUTO_TEST_CASE(CreateEmpty) {
-    const std::time_t startDate = Ewoms::TimeMap::mkdate(2010, 1, 1);
-    Ewoms::TimeMap timeMap{ startDate };
-    Ewoms::DynamicVector<double> vector(timeMap , 9.99);
+    std::vector<std::time_t> tp = { Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,1})) };
 
-    for (size_t i = 0; i < 11; i++)
-        timeMap.addTStep((i+1) * 24 * 60 * 60);
+    for (int i = 0; i < 11; i++)
+        tp.push_back( Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,i+2})));
 
+    Ewoms::TimeMap timeMap(tp);
     Ewoms::Events events( timeMap );
+    Ewoms::DynamicVector<double> vector(timeMap , 9.99);
 
     BOOST_CHECK_EQUAL( false , events.hasEvent(Ewoms::ScheduleEvents::NEW_WELL , 10));
 
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(CreateEmpty) {
 
 BOOST_AUTO_TEST_CASE(TestMultiple) {
     const std::time_t startDate = Ewoms::TimeMap::mkdate(2010, 1, 1);
-    Ewoms::TimeMap timeMap{ startDate };
+    Ewoms::TimeMap timeMap( { startDate } );
     Ewoms::DynamicVector<double> vector(timeMap , 9.99);
     Ewoms::Events events( timeMap );
 

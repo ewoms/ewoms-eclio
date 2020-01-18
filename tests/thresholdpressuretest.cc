@@ -25,14 +25,10 @@
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/thresholdpressure.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
-
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
 
 using namespace Ewoms;
 

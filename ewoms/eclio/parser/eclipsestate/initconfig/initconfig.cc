@@ -56,6 +56,8 @@ namespace Ewoms {
             return;
         }
 
+        m_gravity = !deck.hasKeyword("NOGRAV");
+
         const auto& record = deck.getKeyword( "RESTART" ).getRecord(0);
         const auto& save_item = record.getItem(2);
 
@@ -76,11 +78,12 @@ namespace Ewoms {
     }
 
     InitConfig::InitConfig(const Equil& equils, const FoamConfig& foam,
-                           bool filleps, bool restartReq, int restartStep,
+                           bool filleps, bool gravity, bool restartReq, int restartStep,
                            const std::string& restartRootName)
         : equil(equils)
         , foamconfig(foam)
         , m_filleps(filleps)
+        , m_gravity(gravity)
         , m_restartRequested(restartReq)
         , m_restartStep(restartStep)
         , m_restartRootName(restartRootName)
@@ -116,6 +119,10 @@ namespace Ewoms {
         return this->equil;
     }
 
+    bool InitConfig::hasGravity() const {
+        return m_gravity;
+    }
+
     bool InitConfig::hasFoamConfig() const {
         // return !this->foamconfig.empty();
         return true;
@@ -132,6 +139,7 @@ namespace Ewoms {
         return equil == data.equil &&
                foamconfig == data.foamconfig &&
                m_filleps == data.m_filleps &&
+               m_gravity == data.m_gravity &&
                m_restartRequested == data.m_restartRequested &&
                m_restartStep == data.m_restartStep &&
                m_restartRootName == data.m_restartRootName;

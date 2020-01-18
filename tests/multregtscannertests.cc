@@ -32,8 +32,6 @@
 
 #include <ewoms/eclio/parser/eclipsestate/grid/multregtscanner.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
-#include <ewoms/eclio/parser/eclipsestate/grid/gridproperty.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/facedir.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
@@ -106,19 +104,19 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     std::vector<const Ewoms::DeckKeyword*> keywords0;
     const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, keywords0 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, &fp, keywords0 ); , std::invalid_argument );
 
     // Not supported region
     std::vector<const Ewoms::DeckKeyword*> keywords1;
     const auto& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, keywords1 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, &fp, keywords1 ); , std::invalid_argument );
 
     // The keyword is ok; but it refers to a region which is not in the deck.
     std::vector<const Ewoms::DeckKeyword*> keywords2;
     const auto& multregtKeyword2 = deck.getKeyword( "MULTREGT", 2 );
     keywords2.push_back( &multregtKeyword2 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, keywords2 ); , std::logic_error );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, &fp, keywords2 ); , std::logic_error );
 }
 
 static Ewoms::Deck createNotSupportedMULTREGTDeck() {
@@ -168,13 +166,13 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     std::vector<const Ewoms::DeckKeyword*> keywords0;
     const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
     keywords0.push_back( &multregtKeyword0 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, keywords0 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, &fp, keywords0 ); , std::invalid_argument );
 
     // srcValue == targetValue - not supported
     std::vector<const Ewoms::DeckKeyword*> keywords1;
     const Ewoms::DeckKeyword& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
     keywords1.push_back( &multregtKeyword1 );
-    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, fp, keywords1 ); , std::invalid_argument );
+    BOOST_CHECK_THROW( Ewoms::MULTREGTScanner scanner( grid, &fp, keywords1 ); , std::invalid_argument );
 }
 
 static Ewoms::Deck createDefaultedRegions() {
@@ -226,7 +224,7 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   std::vector<const Ewoms::DeckKeyword*> keywords0;
   const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
   keywords0.push_back( &multregtKeyword0 );
-  Ewoms::MULTREGTScanner scanner0(grid, fp, keywords0);
+  Ewoms::MULTREGTScanner scanner0(grid, &fp, keywords0);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(0,0,1), grid.getGlobalIndex(1,0,1), Ewoms::FaceDir::XPlus ), 1.25);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(1,0,0), grid.getGlobalIndex(2,0,0), Ewoms::FaceDir::XPlus ), 1.0);
   BOOST_CHECK_EQUAL( scanner0.getRegionMultiplier(grid.getGlobalIndex(2,0,1), grid.getGlobalIndex(2,0,0), Ewoms::FaceDir::ZMinus ), 0.0);
@@ -234,7 +232,7 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   std::vector<const Ewoms::DeckKeyword*> keywords1;
   const Ewoms::DeckKeyword& multregtKeyword1 = deck.getKeyword( "MULTREGT", 1 );
   keywords1.push_back( &multregtKeyword1 );
-  Ewoms::MULTREGTScanner scanner1(grid,  fp, keywords1 );
+  Ewoms::MULTREGTScanner scanner1(grid, &fp, keywords1 );
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(1,0,0), Ewoms::FaceDir::XMinus ), 0.75);
   BOOST_CHECK_EQUAL( scanner1.getRegionMultiplier(grid.getGlobalIndex(2,0,0), grid.getGlobalIndex(2,0,1), Ewoms::FaceDir::ZPlus), 0.75);
 }

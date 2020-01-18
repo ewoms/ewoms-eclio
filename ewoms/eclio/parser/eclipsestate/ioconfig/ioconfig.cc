@@ -87,7 +87,6 @@ namespace Ewoms {
     IOConfig::IOConfig(bool write_init, bool write_egrid,
                        bool unifin, bool unifout,
                        bool fmtin, bool fmtout,
-                       int firstRestartStep,
                        const std::string& deck_name,
                        bool output_enabled,
                        const std::string& output_dir,
@@ -100,7 +99,6 @@ namespace Ewoms {
         m_UNIFOUT(unifout),
         m_FMTIN(fmtin),
         m_FMTOUT(fmtout),
-        m_first_restart_step(firstRestartStep),
         m_deck_filename(deck_name),
         m_output_enabled(output_enabled),
         m_output_dir(output_dir),
@@ -267,10 +265,6 @@ namespace Ewoms {
         return m_nosim;
     }
 
-    int IOConfig::getFirstRestartStep() const {
-        return m_first_restart_step;
-    }
-
     const std::string& IOConfig::getDeckFileName() const {
         return m_deck_filename;
     }
@@ -286,7 +280,6 @@ namespace Ewoms {
                this->getUNIFOUT() == data.getUNIFOUT() &&
                this->getFMTIN() == data.getFMTIN() &&
                this->getFMTOUT() == data.getFMTOUT() &&
-               this->getFirstRestartStep() == data.getFirstRestartStep() &&
                this->getDeckFileName() == data.getDeckFileName() &&
                this->getOutputEnabled() == data.getOutputEnabled() &&
                this->getOutputDir() == data.getOutputDir() &&

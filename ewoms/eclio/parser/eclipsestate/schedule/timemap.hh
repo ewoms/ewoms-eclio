@@ -24,6 +24,7 @@
 #include <vector>
 #include <ctime>
 #include <map>
+#include <utility>
 
 #include <stddef.h>
 
@@ -35,29 +36,10 @@ namespace Ewoms {
 
     class TimeMap {
     public:
-        struct StepData
-        {
-            size_t stepnumber;
-            TimeStampUTC timestamp;
-
-            bool operator==(const StepData& data) const
-            {
-                return stepnumber == data.stepnumber &&
-                       timestamp == data.timestamp;
-            }
-        };
-
         TimeMap() = default;
-        explicit TimeMap(std::time_t startTime);
-        explicit TimeMap( const Deck& deck);
-        TimeMap(const std::vector<std::time_t>& timeList,
-                const std::vector<StepData>& firstStepMonths,
-                const std::vector<StepData>& firstStepYears);
+        explicit TimeMap(const Deck& deck, const std::pair<std::time_t, std::size_t>& restart = std::make_pair(std::time_t{0}, std::size_t{0}));
+        explicit TimeMap(const std::vector<std::time_t>& time_points);
 
-        void addTime(std::time_t newTime);
-        void addTStep(int64_t step);
-        void addFromDATESKeyword( const DeckKeyword& DATESKeyword );
-        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
         size_t size() const;
         size_t last() const;
         size_t numTimesteps() const;
@@ -74,9 +56,6 @@ namespace Ewoms {
         double getTimeStepLength(size_t tStepIdx) const;
 
         const std::vector<std::time_t>& timeList() const;
-        const std::vector<StepData>& firstTimeStepMonths() const;
-        const std::vector<StepData>& firstTimeStepYears() const;
-
         bool operator==(const TimeMap& data) const;
 
         /// Return true if the given timestep is the first one of a new month or year, or if frequency > 1,
@@ -91,14 +70,29 @@ namespace Ewoms {
         static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
         static const std::map<std::string, int>& eclipseMonthIndices();
     private:
+        struct StepData
+        {
+            size_t stepnumber;
+            TimeStampUTC timestamp;
 
-        std::vector<std::time_t> m_timeList;
+            bool operator==(const StepData& data) const
+            {
+                return stepnumber == data.stepnumber &&
+                       timestamp == data.timestamp;
+            }
+        };
 
         bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
         size_t closest(const std::vector<size_t> & vec, size_t value) const;
+        void addTStep(int64_t step);
+        void addTime(std::time_t newTime);
+        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
+        void init_start(std::time_t start_time);
 
+        std::vector<std::time_t> m_timeList;
         std::vector<StepData> m_first_timestep_years;   // A list of the first timestep of every year
         std::vector<StepData> m_first_timestep_months;  // A list of the first timestep of every month
+        std::size_t restart_offset = 0;
     };
 }
 
