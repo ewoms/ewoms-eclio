@@ -951,10 +951,10 @@ static Ewoms::Deck createActnumBoxDeck() {
 BOOST_AUTO_TEST_CASE(GridBoxActnum) {
     auto deck = createActnumBoxDeck();
     Ewoms::EclipseState es( deck);
-    auto ep = es.get3DProperties();
+    const auto& fp = es.fieldProps();
     const auto& grid = es.getInputGrid();
 
-    BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
+    BOOST_CHECK_NO_THROW(fp.get<int>("ACTNUM"));
 
     size_t active = 10 * 10 * 10     // 1000
                     - (10 * 10 * 1)  // - top layer
@@ -1002,14 +1002,14 @@ BOOST_AUTO_TEST_CASE(GridActnumVia3D) {
     auto deck = createActnumDeck();
 
     Ewoms::EclipseState es( deck);
-    auto ep = es.get3DProperties();
+    const auto& fp = es.fieldProps();
     const auto& grid = es.getInputGrid();
     Ewoms::EclipseGrid grid2( grid );
 
     std::vector<int> actnum = {1, 1, 0, 1, 1, 0, 1, 1};
     Ewoms::EclipseGrid grid3( grid , actnum);
 
-    BOOST_CHECK_NO_THROW(ep.getIntGridProperty("ACTNUM"));
+    BOOST_CHECK_NO_THROW(fp.get<int>("ACTNUM"));
     BOOST_CHECK_NO_THROW(grid.getNumActive());
     BOOST_CHECK_EQUAL(grid.getNumActive(), 2 * 2 * 2 - 1);
 

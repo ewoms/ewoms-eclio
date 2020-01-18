@@ -340,8 +340,8 @@ struct CaseObjects
     CaseObjects(const CaseObjects& rhs) = default;
     CaseObjects(CaseObjects&& rhs) = default;
 
-    CaseObjects& operator=(const CaseObjects& rhs) = default;
-    CaseObjects& operator=(CaseObjects&& rhs) = default;
+    CaseObjects& operator=(const CaseObjects& rhs) = delete;
+    CaseObjects& operator=(CaseObjects&& rhs) = delete;
 
     Ewoms::ErrorGuard   guard;
     Ewoms::EclipseState es;

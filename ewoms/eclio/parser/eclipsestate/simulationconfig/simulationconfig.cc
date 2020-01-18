@@ -50,9 +50,8 @@ namespace Ewoms {
 
     SimulationConfig::SimulationConfig(bool restart,
                                        const Deck& deck,
-                                       const FieldPropsManager& fp,
-                                       const Eclipse3DProperties& eclipseProperties) :
-        m_ThresholdPressure( restart, deck, fp, eclipseProperties ),
+                                       const FieldPropsManager& fp) :
+        m_ThresholdPressure( restart, deck, fp),
         m_useCPR(false),
         m_DISGAS(false),
         m_VAPOIL(false),

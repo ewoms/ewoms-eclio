@@ -22,7 +22,6 @@
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/facedir.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/gridproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/multregtscanner.hh>
@@ -101,31 +100,20 @@ std::vector<int> unique(const std::vector<int> data) {
     */
      MULTREGTScanner::MULTREGTScanner(const GridDims& grid,
                                       const FieldPropsManager& fp_arg,
-                                      const Eclipse3DProperties& e3DProps,
                                       const std::vector< const DeckKeyword* >& keywords) :
          nx(grid.getNX()),
          ny(grid.getNY()),
          nz(grid.getNZ()),
-         fp(fp_arg),
-         m_e3DProps(e3DProps) {
+         fp(fp_arg) {
 
-#ifdef ENABLE_3DPROPS_TESTING
-         this->default_region = this->fp.default_region();
-#else
-         this->default_region = this->m_e3DProps.getDefaultRegionKeyword();
-#endif
-
+        this->default_region = this->fp.default_region();
         for (size_t idx = 0; idx < keywords.size(); idx++)
             this->addKeyword(*keywords[idx] , this->default_region);
 
         MULTREGTSearchMap searchPairs;
         for (std::vector<MULTREGTRecord>::const_iterator record = m_records.begin(); record != m_records.end(); ++record) {
             const std::string& region_name = record->region_name;
-#ifdef ENABLE_3DPROPS_TESTING
             if (this->fp.has<int>( region_name)) {
-#else
-            if (this->m_e3DProps.hasDeckIntGridProperty( region_name)) {
-#endif
                 int srcRegion    = record->src_value;
                 int targetRegion = record->target_value;
 
@@ -144,13 +132,8 @@ std::vector<int> unique(const std::vector<int> data) {
                                 +  region_name
                                 + " which is not in the deck");
 
-#ifdef ENABLE_3DPROPS_TESTING
             if (this->regions.count(region_name) == 0)
                 this->regions[region_name] = this->fp.get_global<int>(region_name);
-#else
-            if (this->regions.count(region_name) == 0)
-                this->regions[region_name] = this->m_e3DProps.getIntGridProperty(region_name).getData();
-#endif
         }
 
         for (auto iter = searchPairs.begin(); iter != searchPairs.end(); ++iter) {
@@ -202,20 +185,12 @@ std::vector<int> unique(const std::vector<int> data) {
                 region_name = MULTREGT::RegionNameFromDeckValue( regionItem.get<std::string>(0) );
 
             if (srcItem.defaultApplied(0) || srcItem.get<int>(0) < 0)
-#ifdef ENABLE_3DPROPS_TESTING
                 src_regions = unique(this->fp.get<int>(region_name));
-#else
-                src_regions = unique(this->m_e3DProps.getIntGridProperty( region_name ).getData());
-#endif
             else
                 src_regions.push_back(srcItem.get<int>(0));
 
             if (targetItem.defaultApplied(0) || targetItem.get<int>(0) < 0)
-#ifdef ENABLE_3DPROPS_TESTING
                 target_regions = unique(fp.get<int>(region_name));
-#else
-                target_regions = unique(this->m_e3DProps.getIntGridProperty(region_name).getData());
-#endif
             else
                 target_regions.push_back(targetItem.get<int>(0));
 

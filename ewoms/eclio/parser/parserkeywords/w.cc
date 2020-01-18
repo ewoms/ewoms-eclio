@@ -433,12 +433,12 @@ WCONHIST::WCONHIST( ) : ParserKeyword("WCONHIST")
         record.addItem(item);
      }
      {
-        ParserItem item("VFPTable", ParserItem::itype::INT);
+        ParserItem item("VFP_TABLE", ParserItem::itype::INT);
         item.setDefault( 0 );
         record.addItem(item);
      }
      {
-        ParserItem item("Lift", ParserItem::itype::DOUBLE);
+        ParserItem item("LIFT", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
         record.addItem(item);
      }
@@ -474,10 +474,10 @@ const std::string WCONHIST::WRAT::itemName = "WRAT";
 const UDAValue WCONHIST::WRAT::defaultValue = UDAValue(0.000000);
 const std::string WCONHIST::GRAT::itemName = "GRAT";
 const UDAValue WCONHIST::GRAT::defaultValue = UDAValue(0.000000);
-const std::string WCONHIST::VFPTable::itemName = "VFPTable";
-const int WCONHIST::VFPTable::defaultValue = 0;
-const std::string WCONHIST::Lift::itemName = "Lift";
-const double WCONHIST::Lift::defaultValue = 0.000000;
+const std::string WCONHIST::VFP_TABLE::itemName = "VFP_TABLE";
+const int WCONHIST::VFP_TABLE::defaultValue = 0;
+const std::string WCONHIST::LIFT::itemName = "LIFT";
+const double WCONHIST::LIFT::defaultValue = 0.000000;
 const std::string WCONHIST::THP::itemName = "THP";
 const UDAValue WCONHIST::THP::defaultValue = UDAValue(0.000000);
 const std::string WCONHIST::BHP::itemName = "BHP";

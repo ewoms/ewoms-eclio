@@ -27,6 +27,13 @@ UDAValue::UDAValue(double value):
 {
 }
 
+UDAValue::UDAValue(double value, const Dimension& dim_):
+    numeric_value(true),
+    double_value(value),
+    dim(dim_)
+{
+}
+
 UDAValue::UDAValue() :
     UDAValue(0)
 {}
@@ -34,6 +41,13 @@ UDAValue::UDAValue() :
 UDAValue::UDAValue(const std::string& value):
     numeric_value(false),
     string_value(value)
+{
+}
+
+UDAValue::UDAValue(const std::string& value, const Dimension& dim_):
+    numeric_value(false),
+    string_value(value),
+    dim(dim_)
 {
 }
 

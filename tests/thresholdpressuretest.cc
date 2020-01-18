@@ -198,7 +198,6 @@ struct Setup
     Deck deck;
     TableManager tablemanager;
     EclipseGrid grid;
-    Eclipse3DProperties props;
     FieldPropsManager fp;
     InitConfig initConfig;
     ThresholdPressure threshPres;
@@ -207,10 +206,9 @@ struct Setup
             deck(createDeck(ParseContext(), input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            props(deck, tablemanager, grid),
             fp(deck, grid, tablemanager),
             initConfig(deck),
-            threshPres(initConfig.restartRequested(), deck, fp, props)
+            threshPres(initConfig.restartRequested(), deck, fp)
     {
     }
 
@@ -218,10 +216,9 @@ struct Setup
             deck(createDeck(parseContextArg, input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            props(deck, tablemanager, grid),
             fp(deck, grid, tablemanager),
             initConfig(deck),
-            threshPres(initConfig.restartRequested(), deck, fp, props)
+            threshPres(initConfig.restartRequested(), deck, fp)
     {
     }
 
@@ -230,7 +227,7 @@ struct Setup
 BOOST_AUTO_TEST_CASE(ThresholdPressureDeckHasEqlnum) {
     Setup s(inputStrWithEqlNum);
 
-    BOOST_CHECK(s.props.hasDeckIntGridProperty("EQLNUM"));
+    BOOST_CHECK(s.fp.has<int>("EQLNUM"));
 }
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {

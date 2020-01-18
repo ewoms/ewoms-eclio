@@ -82,10 +82,9 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     auto deck = parser.parseString(input);
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Ewoms::Runspec runspec (deck);
-    Ewoms::Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Ewoms::Schedule schedule(deck, grid , fp, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -121,10 +120,9 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     auto deck = parser.parseString(input);
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Ewoms::Runspec runspec (deck);
-    Ewoms::Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Ewoms::Schedule schedule(deck, grid , fp, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -164,10 +162,9 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Ewoms::EclipseGrid grid(10,10,10);
     Ewoms::ErrorGuard errors;
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Ewoms::Runspec runspec (deck);
-    Ewoms::Schedule schedule(deck, grid , fp, eclipseProperties, runspec, Ewoms::ParseContext(), errors);
+    Ewoms::Schedule schedule(deck, grid , fp, runspec, Ewoms::ParseContext(), errors);
     const auto& op_1 = schedule.getWell("OP_1", 2);
 
     const auto& completions = op_1.getConnections();
@@ -809,10 +806,9 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
     auto deck = parser.parseString(input);
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp(deck, grid, table);
     Ewoms::Runspec runspec (deck);
-    Ewoms::Schedule schedule(deck, grid , fp, eclipseProperties, runspec);
+    Ewoms::Schedule schedule(deck, grid , fp, runspec);
     {
         const auto& op_1 = schedule.getWell("OP_1", 1);
         BOOST_CHECK(op_1.getStatus() == Well::Status::OPEN);

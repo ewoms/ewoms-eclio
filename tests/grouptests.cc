@@ -111,10 +111,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     Runspec runspec (deck );
     FieldPropsManager fp( deck , grid, table);
-    Ewoms::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
+    Ewoms::Schedule schedule(deck,  grid, fp, runspec);
 
     auto group_names = schedule.groupNames("PRODUC");
     BOOST_CHECK_EQUAL(group_names.size(), 1);
@@ -160,10 +159,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Ewoms::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
+    Ewoms::Schedule schedule(deck,  grid, fp, runspec);
     const auto& currentWell = schedule.getWell("B-37T2", 0);
     const Ewoms::Well::WellProductionProperties& wellProductionProperties = currentWell.getProductionProperties();
     BOOST_CHECK(wellProductionProperties.controlMode == Ewoms::Well::ProducerCMode::GRUP);
@@ -200,10 +198,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         auto deck = parser.parseString(input);
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
-        Eclipse3DProperties eclipseProperties ( deck , table, grid);
         FieldPropsManager fp( deck , grid, table);
         Runspec runspec (deck );
-        Ewoms::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
+        Ewoms::Schedule schedule(deck,  grid, fp, runspec);
 
         const auto& group1 = schedule.getGroup("PROD", 0);
         const auto& group2 = schedule.getGroup("MANI-E2", 0);
@@ -257,10 +254,9 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Ewoms::Schedule schedule(deck,  grid, fp, eclipseProperties, runspec);
+    Ewoms::Schedule schedule(deck,  grid, fp, runspec);
     SummaryState st(std::chrono::system_clock::now());
 
     const auto& group1 = schedule.getGroup("G1", 0);
@@ -310,12 +306,11 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
 
     /* The 'COMB' target mode is not supported */
-    BOOST_CHECK_THROW(Ewoms::Schedule schedule(deck, grid, fp, eclipseProperties, runspec), std::logic_error);
+    BOOST_CHECK_THROW(Ewoms::Schedule schedule(deck, grid, fp, runspec), std::logic_error);
 }
 
 BOOST_AUTO_TEST_CASE(TESTGuideRate) {
@@ -348,10 +343,9 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid, fp, runspec);
 
     GuideRate gr(schedule);
 }
@@ -382,10 +376,9 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck );
-    Schedule schedule(deck, grid, fp, eclipseProperties, runspec);
+    Schedule schedule(deck, grid, fp, runspec);
 
     double metric_to_si = 1.0 / (24.0 * 3600.0);  //cubic meters / day
 

@@ -29,7 +29,7 @@ inline void loadDeck( const char * deck_file) {
 
     auto deck = parser.parseFile(deck_file);
     Ewoms::EclipseState state( deck);
-    Ewoms::Schedule schedule( deck, state.getInputGrid(), state.fieldProps(), state.get3DProperties(), state.runspec());
+    Ewoms::Schedule schedule( deck, state);
     Ewoms::SummaryConfig summary( deck, schedule, state.getTableManager( ));
     {
         std::stringstream ss;

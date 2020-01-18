@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(Empty) {
     Ewoms::Eclipse3DProperties props;
     Ewoms::EclipseGrid grid(10,10,10);
     Ewoms::FieldPropsManager fp(Ewoms::Deck(), grid, Ewoms::TableManager());
-    Ewoms::TransMult transMult(grid ,{} , fp, props);
+    Ewoms::TransMult transMult(grid ,{} , fp);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Ewoms::FaceDir::XPlus) , std::invalid_argument );
     BOOST_CHECK_THROW( transMult.getMultiplier(1000 , Ewoms::FaceDir::XPlus) , std::invalid_argument );
@@ -70,10 +70,9 @@ MULTZ
     Ewoms::Deck deck = parser.parseString(deck_string);
     Ewoms::TableManager tables(deck);
     Ewoms::EclipseGrid grid(5,5,5);
-    Ewoms::Eclipse3DProperties props(deck, tables, grid);
     Ewoms::FieldPropsManager fp(deck, grid, tables);
-    Ewoms::TransMult transMult(grid, deck, fp, props);
+    Ewoms::TransMult transMult(grid, deck, fp);
 
-    transMult.applyMULT(props.getDoubleGridProperty("MULTZ").getData(), Ewoms::FaceDir::ZPlus);
+    transMult.applyMULT(fp.get_global<double>("MULTZ"), Ewoms::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Ewoms::FaceDir::ZPlus) , 4.0 );
 }

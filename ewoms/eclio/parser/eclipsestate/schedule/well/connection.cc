@@ -73,7 +73,8 @@ namespace Ewoms {
     Connection::Connection(Direction dir, double depth, State state,
                            int satTableId, int complnum, double CF,
                            double Kh, double rw, double r0, double skinFactor,
-                           const std::array<int,3>& IJK, std::size_t seqIndex,
+                           const std::array<int,3>& IJK,
+                           CTFKind kind, std::size_t seqIndex,
                            double segDistStart, double segDistEnd,
                            bool defaultSatTabId, std::size_t compSegSeqIndex,
                            int segment, double wellPi)
@@ -88,6 +89,7 @@ namespace Ewoms {
         , m_r0(r0)
         , m_skin_factor(skinFactor)
         , ijk(IJK)
+        , m_ctfkind(kind)
         , m_seqIndex(seqIndex)
         , m_segDistStart(segDistStart)
         , m_segDistEnd(segDistEnd)
@@ -100,7 +102,7 @@ namespace Ewoms {
     Connection::Connection()
           : Connection(Direction::X, 1.0, State::SHUT,
                        0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       {0,0,0}, 0, 0.0, 0.0, false, 0, 0, 0.0)
+                       {0,0,0}, CTFKind::Defaulted, 0, 0.0, 0.0, false, 0, 0, 0.0)
     {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
@@ -375,6 +377,10 @@ std::string Connection::CTFKindToString(const CTFKind ctf_kind)
         "Unhandled CTF Kind Value: " +
         std::to_string(static_cast<int>(ctf_kind))
     };
+}
+
+Connection::CTFKind Connection::kind() const {
+    return m_ctfkind;
 }
 
 }

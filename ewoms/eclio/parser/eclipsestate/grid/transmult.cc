@@ -20,8 +20,8 @@
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fault.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/faultface.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/faultcollection.hh>
@@ -32,7 +32,7 @@
 
 namespace Ewoms {
 
-   TransMult::TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp, const Eclipse3DProperties& props) :
+   TransMult::TransMult(const GridDims& dims, const Deck& deck, const FieldPropsManager& fp) :
         m_nx( dims.getNX()),
         m_ny( dims.getNY()),
         m_nz( dims.getNZ()),
@@ -42,7 +42,7 @@ namespace Ewoms {
                    { FaceDir::XMinus, "MULTX-" },
                    { FaceDir::YMinus, "MULTY-" },
                    { FaceDir::ZMinus, "MULTZ-" }}),
-        m_multregtScanner( dims, fp, props, deck.getKeywordList( "MULTREGT" ))
+        m_multregtScanner( dims, fp, deck.getKeywordList( "MULTREGT" ))
     {
         EDITSection edit_section(deck);
         if (edit_section.hasKeyword("MULTREGT")) {

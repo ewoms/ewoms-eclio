@@ -25,7 +25,6 @@
 namespace Ewoms {
 
     class Deck;
-    class Eclipse3DProperties;
     class FieldPropsManager;
 
     class ThresholdPressure {
@@ -36,8 +35,7 @@ namespace Ewoms {
 
         ThresholdPressure(bool restart,
                           const Deck& deck,
-                          const FieldPropsManager& fp,
-                          const Eclipse3DProperties& eclipseProperties);
+                          const FieldPropsManager& fp);
 
         ThresholdPressure(bool active, bool restart,
                           const ThresholdPressureTable& thpTable,

@@ -97,6 +97,7 @@ namespace Ewoms {
                    double r0,
                    double skinFactor,
                    const std::array<int,3>& IJK,
+                   CTFKind kind,
                    std::size_t seqIndex,
                    double segDistStart,
                    double segDistEnd,
@@ -122,6 +123,7 @@ namespace Ewoms {
         double r0() const;
         double skinFactor() const;
         double wellPi() const;
+        CTFKind kind() const;
 
         void setState(State state);
         void setComplnum(int compnum);

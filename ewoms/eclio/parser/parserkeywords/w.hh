@@ -319,13 +319,13 @@ namespace ParserKeywords {
            static const UDAValue defaultValue;
        };
 
-       class VFPTable {
+       class VFP_TABLE {
        public:
            static const std::string itemName;
            static const int defaultValue;
        };
 
-       class Lift {
+       class LIFT {
        public:
            static const std::string itemName;
            static const double defaultValue;

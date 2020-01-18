@@ -138,6 +138,7 @@ ewoms_add_test(regionCache SOURCES tests/test_regioncache.cc LIBRARIES "${Boost_
 ewoms_add_test(PaddedOutputString SOURCES tests/test_paddedoutputstring.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(Restart SOURCES tests/test_restart.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(RFT SOURCES tests/test_rft.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(RFTConfigTests SOURCES tests/rftconfigtests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(Solution SOURCES tests/test_solution.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(Summary SOURCES tests/test_summary.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(Tables SOURCES tests/test_tables.cc LIBRARIES "${Boost_LIBRARIES}")
@@ -183,7 +184,6 @@ foreach(TEST_NAME BoxTest
     TransMultIntegrationTests)
 
   string(TOLOWER "${TEST_NAME}.cc" "TEST_SOURCE_FILE")
-  message("${TEST_NAME} -> tests/integration/${TEST_SOURCE_FILE}")
   ewoms_add_test(${TEST_NAME}
     SOURCES tests/integration/${TEST_SOURCE_FILE}
     LIBRARIES "${Boost_LIBRARIES}"

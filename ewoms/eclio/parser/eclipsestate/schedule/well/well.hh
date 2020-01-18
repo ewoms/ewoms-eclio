@@ -187,8 +187,8 @@ public:
         UDAValue  BHPTarget;
         UDAValue  THPTarget;
 
-        double  bhp_hist_limit;
-        double  thp_hist_limit = 0;
+        double  bhp_hist_limit = 0.0;
+        double  thp_hist_limit = 0.0;
 
         double  temperature;
         double  BHPH;
@@ -292,8 +292,8 @@ public:
         UDAValue  THPTarget;
 
         // BHP and THP limit
-        double  bhp_hist_limit;
-        double  thp_hist_limit = 0;
+        double  bhp_hist_limit = 0.0;
+        double  thp_hist_limit = 0.0;
 
         // historical BHP and THP under historical mode
         double  BHPH        = 0.0;
@@ -480,7 +480,7 @@ public:
     bool updateRefDepth(double ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     bool updateConnections(const std::shared_ptr<WellConnections> connections);
-    bool updateStatus(Status status);
+    bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
     bool updateProducer(bool is_producer);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);

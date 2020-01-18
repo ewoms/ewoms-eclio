@@ -138,10 +138,9 @@ static Ewoms::Schedule createSchedule(const std::string& schedule) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    Eclipse3DProperties eclipseProperties ( deck , table, grid);
     FieldPropsManager fp( deck , grid, table);
     Runspec runspec (deck);
-    return Schedule(deck, grid , fp, eclipseProperties, runspec );
+    return Schedule(deck, grid , fp, runspec );
 }
 
 BOOST_AUTO_TEST_CASE(WlistFromDeck) {
@@ -161,7 +160,7 @@ BOOST_AUTO_TEST_CASE(WlistInvalid) {
   std::string wlist_invalid_well = WELSPECS() +
     "WLIST\n"
     " \'*LIST1\' \'NEW\' WELLX /\n"
-    "/\n"
+      "/\n"
     "DATES\n"
     "10 JLY 2007 /\n"
     "10 AUG 2007 /\n"

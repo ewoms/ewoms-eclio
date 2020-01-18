@@ -20,7 +20,6 @@
 #define EWOMS_PARSER_MULTREGTSCANNER_H
 
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
-#include <ewoms/eclio/parser/eclipsestate/eclipse3dproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/facedir.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/value.hh>
 
@@ -61,7 +60,6 @@ namespace Ewoms {
     public:
         MULTREGTScanner(const GridDims& grid,
                         const FieldPropsManager& fp_arg,
-                        const Eclipse3DProperties& e3DProps,
                         const std::vector< const DeckKeyword* >& keywords);
         double getRegionMultiplier(size_t globalCellIdx1, size_t globalCellIdx2, FaceDir::DirEnum faceDir) const;
 
@@ -70,7 +68,6 @@ namespace Ewoms {
         void assertKeywordSupported(const DeckKeyword& deckKeyword);
         std::size_t nx,ny,nz;
         const FieldPropsManager& fp;
-        const Eclipse3DProperties& m_e3DProps;
         std::vector< MULTREGTRecord > m_records;
         std::map<std::string , MULTREGTSearchMap> m_searchMap;
         std::map<std::string, std::vector<int>> regions;

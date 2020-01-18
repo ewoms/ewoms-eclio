@@ -20,6 +20,8 @@
 #include <ewoms/eclio/output/aggregatemswdata.hh>
 #include <ewoms/eclio/output/aggregateconnectiondata.hh>
 #include <ewoms/eclio/output/vectoritems/connection.hh>
+#include <ewoms/eclio/io/rst/header.hh>
+#include <ewoms/eclio/io/rst/connection.hh>
 
 #include <boost/test/unit_test.hpp>
 
@@ -772,6 +774,44 @@ BOOST_AUTO_TEST_CASE(InactiveCell) {
                 BOOST_CHECK_EQUAL(xconn1[offset1 + elm_index], xconn0[offset0 + elm_index]);
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(TestRestartIOConnection) {
+    std::vector<bool> lh(1000);
+    std::vector<double> dh(1000);
+    auto simCase = SimulationCase{first_sim()};
+    const auto rptStep = std::size_t{1};
+    const auto ih = MockIH {static_cast<int>(simCase.sched.getWells(rptStep).size())};
+    const Ewoms::data::WellRates wrc = wr();
+
+    Ewoms::RestartIO::Header header(ih.value, lh, dh);
+    auto conn = Ewoms::RestartIO::Helpers::AggregateConnectionData{ih.value};
+    conn.captureDeclaredConnData(simCase.sched,
+                                 simCase.grid,
+                                 simCase.es.getUnits(),
+                                 wrc,
+                                 rptStep
+                                 );
+
+    const auto icon = conn.getIConn();
+    const auto scon = conn.getSConn();
+    const auto xcon = conn.getXConn();
+
+    std::vector<Ewoms::RestartIO::Connection> connections;
+    for (int iw = 0; iw < header.num_wells; iw++) {
+        for (int ic = 0; ic < header.ncwmax; ic++) {
+            std::size_t icon_offset = header.niconz * (header.ncwmax * iw + ic);
+            std::size_t scon_offset = header.nsconz * (header.ncwmax * iw + ic);
+            std::size_t xcon_offset = header.nxconz * (header.ncwmax * iw + ic);
+
+            connections.emplace_back(icon.data() + icon_offset, scon.data() + scon_offset, xcon.data() + xcon_offset);
+        }
+    }
+    const auto& conn0 = connections[0];
+    BOOST_CHECK_EQUAL(conn0.insert_index, 1);
+    BOOST_CHECK_EQUAL(conn0.ijk[0], 0);
+    BOOST_CHECK_EQUAL(conn0.ijk[1], 4);
+    BOOST_CHECK_EQUAL(conn0.ijk[2], 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

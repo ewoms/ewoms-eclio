@@ -44,6 +44,11 @@ namespace Ewoms {
 
         explicit TimeStampUTC(const std::time_t tp);
         explicit TimeStampUTC(const YMD& ymd);
+        TimeStampUTC(const YMD& ymd,
+                     int hour,
+                     int minutes,
+                     int seconds,
+                     int usec);
 
         TimeStampUTC& operator=(const std::time_t tp);
         bool operator==(const TimeStampUTC& data) const;
@@ -53,6 +58,7 @@ namespace Ewoms {
         TimeStampUTC& seconds(const int s);
         TimeStampUTC& microseconds(const int us);
 
+        const YMD& ymd() const { return ymd_; }
         int year()         const { return this->ymd_.year;  }
         int month()        const { return this->ymd_.month; }
         int day()          const { return this->ymd_.day;   }

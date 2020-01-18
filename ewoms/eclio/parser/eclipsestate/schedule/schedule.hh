@@ -93,7 +93,6 @@ namespace Ewoms
     class DeckKeyword;
     class DeckRecord;
     class EclipseGrid;
-    class Eclipse3DProperties;
     class EclipseState;
     class FieldPropsManager;
     class Runspec;
@@ -117,7 +116,6 @@ namespace Ewoms
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  ErrorGuard& errors);
@@ -126,7 +124,6 @@ namespace Ewoms
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
                  T&& errors);
@@ -134,7 +131,6 @@ namespace Ewoms
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Eclipse3DProperties& eclipseProperties,
                  const Runspec &runspec);
 
         Schedule(const Deck& deck,
@@ -208,6 +204,9 @@ namespace Ewoms
         const Well& getWellatEnd(const std::string& well_name) const;
         std::vector<Well> getWells(size_t timeStep) const;
         std::vector<Well> getWellsatEnd() const;
+        void shut_well(const std::string& well_name, std::size_t report_step);
+        void stop_well(const std::string& well_name, std::size_t report_step);
+        void open_well(const std::string& well_name, std::size_t report_step);
 
         std::vector<const Group*> getChildGroups2(const std::string& group_name, size_t timeStep) const;
         std::vector<Well> getChildWells2(const std::string& group_name, size_t timeStep) const;
@@ -307,11 +306,10 @@ namespace Ewoms
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status);
+        bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status, bool update_connections);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
         void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
-                                    const FieldPropsManager& fp,
-                                    const Eclipse3DProperties& eclipseProperties);
+                                    const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, size_t timeStep);
@@ -324,7 +322,7 @@ namespace Ewoms
         void handleWCONHIST( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWCONPROD( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleWGRUPCON( const DeckKeyword& keyword, size_t currentStep);
-        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const Eclipse3DProperties& eclipseProperties, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleCOMPDAT( const DeckKeyword& keyword,  size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const ParseContext& parseContext, ErrorGuard& errors);
         void handleCOMPLUMP( const DeckKeyword& keyword,  size_t currentStep );
         void handleWELSEGS( const DeckKeyword& keyword, size_t currentStep);
         void handleCOMPSEGS( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -381,7 +379,6 @@ namespace Ewoms
                            const ParseContext& parseContext, ErrorGuard& errors,
                            const EclipseGrid& grid,
                            const FieldPropsManager& fp,
-                           const Eclipse3DProperties& eclipseProperties,
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
