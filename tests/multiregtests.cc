@@ -31,6 +31,8 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 static Ewoms::Deck createDeckInvalidArray() {
     const char* deckData =
@@ -217,11 +219,11 @@ BOOST_AUTO_TEST_CASE(Test_OPERATER) {
     Ewoms::Deck deck = createValidIntDeck();
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg(deck);
-    Ewoms::FieldPropsManager fp(deck, eg, tm);
+    Ewoms::FieldPropsManager fp(deck, Ewoms::Phases{true, true, true}, eg, tm);
 
     const auto& porv  = fp.porv(true);
-    const auto& permx = fp.get_global<double>("PERMX");
-    const auto& permy = fp.get_global<double>("PERMY");
+    const auto& permx = fp.get_global_double("PERMX");
+    const auto& permy = fp.get_global_double("PERMY");
 
     BOOST_CHECK_EQUAL( porv[0], 0.50 );
     BOOST_CHECK_EQUAL( porv[1], 1.00 );

@@ -34,6 +34,8 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/facedir.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 
 BOOST_AUTO_TEST_CASE(TestRegionName) {
@@ -98,7 +100,7 @@ BOOST_AUTO_TEST_CASE(InvalidInput) {
     Ewoms::EclipseGrid grid( deck );
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg( deck );
-    Ewoms::FieldPropsManager fp(deck, eg, tm);
+    Ewoms::FieldPropsManager fp(deck, Ewoms::Phases{true, true, true}, eg, tm);
 
     // Invalid direction
     std::vector<const Ewoms::DeckKeyword*> keywords0;
@@ -160,7 +162,7 @@ BOOST_AUTO_TEST_CASE(NotSupported) {
     Ewoms::EclipseGrid grid( deck );
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg( deck );
-    Ewoms::FieldPropsManager fp(deck, eg, tm);
+    Ewoms::FieldPropsManager fp(deck, Ewoms::Phases{true, true, true}, eg, tm);
 
     // Not support NOAQUNNC behaviour
     std::vector<const Ewoms::DeckKeyword*> keywords0;
@@ -219,7 +221,7 @@ BOOST_AUTO_TEST_CASE(DefaultedRegions) {
   Ewoms::EclipseGrid grid( deck );
   Ewoms::TableManager tm(deck);
   Ewoms::EclipseGrid eg( deck );
-  Ewoms::FieldPropsManager fp(deck, eg, tm);
+  Ewoms::FieldPropsManager fp(deck, Ewoms::Phases{true, true, true}, eg, tm);
 
   std::vector<const Ewoms::DeckKeyword*> keywords0;
   const auto& multregtKeyword0 = deck.getKeyword( "MULTREGT", 0 );
@@ -275,12 +277,12 @@ BOOST_AUTO_TEST_CASE(MULTREGT_COPY_MULTNUM) {
     Ewoms::Deck deck = createCopyMULTNUMDeck();
     Ewoms::TableManager tm(deck);
     Ewoms::EclipseGrid eg(deck);
-    Ewoms::FieldPropsManager fp(deck, eg, tm);
+    Ewoms::FieldPropsManager fp(deck, Ewoms::Phases{true, true, true}, eg, tm);
 
-    BOOST_CHECK_NO_THROW(fp.has<int>("FLUXNUM"));
-    BOOST_CHECK_NO_THROW(fp.has<int>("MULTNUM"));
-    const auto& fdata = fp.get_global<int>("FLUXNUM");
-    const auto& mdata = fp.get_global<int>("MULTNUM");
+    BOOST_CHECK_NO_THROW(fp.has_int("FLUXNUM"));
+    BOOST_CHECK_NO_THROW(fp.has_int("MULTNUM"));
+    const auto& fdata = fp.get_global_int("FLUXNUM");
+    const auto& mdata = fp.get_global_int("MULTNUM");
     std::vector<int> data = { 1, 2, 1, 2, 3, 4, 3, 4 };
 
     for (auto i = 0; i < 2 * 2 * 2; i++) {

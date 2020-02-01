@@ -473,6 +473,55 @@ BOOST_AUTO_TEST_CASE( SWATINIT ) {
 
 }
 
+BOOST_AUTO_TEST_CASE(TolCrit)
+{
+    {
+        const auto sfctrl = ::Ewoms::SatFuncControls{};
+        BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 1.0e-6, 1.0e-10);
+        BOOST_CHECK_MESSAGE(sfctrl == ::Ewoms::SatFuncControls{},
+                            "Default-constructed SatFuncControl must equal itself");
+    }
+
+    {
+        const auto sfctrl = ::Ewoms::SatFuncControls{ 5.0e-7 };
+        BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 5.0e-7, 1.0e-10);
+        BOOST_CHECK_MESSAGE(!(sfctrl == ::Ewoms::SatFuncControls{}),
+                            "Default-constructed SatFuncControl must NOT equal non-default");
+
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(
+TOLCRIT
+  5.0E-7 /
+)");
+        BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(),
+                          ::Ewoms::SatFuncControls{deck}.minimumRelpermMobilityThreshold(),
+                          1.0e-10);
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(
+RUNSPEC
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 1.0e-6, 1.0e-10);
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(
+TOLCRIT
+  5.0E-7 /
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 5.0e-7, 1.0e-10);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(Solvent) {
     const std::string input = R"(
     RUNSPEC

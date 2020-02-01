@@ -30,6 +30,7 @@
 #include <ewoms/eclio/opmlog/location.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionast.hh>
@@ -122,7 +123,7 @@ TSTEP
     auto deck3 = parser.parseString(WITH_GRID);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck1 );
-    FieldPropsManager fp( deck1 , grid1, table);
+    FieldPropsManager fp( deck1, Phases{true, true, true}, grid1, table);
     Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
@@ -210,7 +211,7 @@ TSTEP
     auto deck = parser.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid1, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
     Runspec runspec(deck);
 
     return Schedule(deck, grid1, fp, runspec);
@@ -662,7 +663,7 @@ TSTEP
     auto deck = parser.parseString(deck_string);
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid1, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
 
     Runspec runspec (deck);
     Schedule sched(deck, grid1, fp, runspec);

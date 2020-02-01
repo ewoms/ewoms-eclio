@@ -35,6 +35,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 
 namespace Ewoms {
@@ -137,7 +138,7 @@ Ewoms::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     Ewoms::TableManager tables;
     Ewoms::Parser parser;
     const auto deck = parser.parseString(compdat_keyword);
-    Ewoms::FieldPropsManager field_props(deck, grid, Ewoms::TableManager());
+    Ewoms::FieldPropsManager field_props(deck, Ewoms::Phases{true, true, true}, grid, Ewoms::TableManager());
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Ewoms::WellConnections connections(10,10);
     for (const auto& rec : keyword)

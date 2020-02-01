@@ -680,7 +680,7 @@ ENDSCALE::ENDSCALE( ) : ParserKeyword("ENDSCALE")
      }
      {
         ParserItem item("IRREVERS", ParserItem::itype::STRING);
-        item.setDefault( std::string("REVER") );
+        item.setDefault( std::string("REVERS") );
         record.addItem(item);
      }
      {
@@ -705,7 +705,7 @@ const std::string ENDSCALE::keywordName = "ENDSCALE";
 const std::string ENDSCALE::DIRECT::itemName = "DIRECT";
 const std::string ENDSCALE::DIRECT::defaultValue = "NODIR";
 const std::string ENDSCALE::IRREVERS::itemName = "IRREVERS";
-const std::string ENDSCALE::IRREVERS::defaultValue = "REVER";
+const std::string ENDSCALE::IRREVERS::defaultValue = "REVERS";
 const std::string ENDSCALE::NUM_TABLES::itemName = "NUM_TABLES";
 const int ENDSCALE::NUM_TABLES::defaultValue = 1;
 const std::string ENDSCALE::NUM_NODES::itemName = "NUM_NODES";

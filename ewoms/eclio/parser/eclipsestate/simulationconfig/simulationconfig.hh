@@ -19,7 +19,9 @@
 #ifndef EWOMS_SIMULATION_CONFIG_H
 #define EWOMS_SIMULATION_CONFIG_H
 
+#include <ewoms/eclio/parser/eclipsestate/simulationconfig/rockconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/thresholdpressure.hh>
+#include <ewoms/eclio/parser/eclipsestate/simulationconfig/bcconfig.hh>
 
 namespace Ewoms {
 
@@ -35,9 +37,13 @@ namespace Ewoms {
                          const Deck& deck,
                          const FieldPropsManager& fp);
         SimulationConfig(const ThresholdPressure& thresholdPressure,
+                         const BCConfig& bc,
+                         const RockConfig& rock_config,
                          bool useCPR, bool DISGAS, bool VAPOIL, bool isThermal);
 
+        const RockConfig& rock_config() const;
         const ThresholdPressure& getThresholdPressure() const;
+        const BCConfig& bcconfig() const;
         bool useThresholdPressure() const;
         bool useCPR() const;
         bool hasDISGAS() const;
@@ -48,6 +54,8 @@ namespace Ewoms {
 
     private:
         ThresholdPressure m_ThresholdPressure;
+        BCConfig m_bcconfig;
+        RockConfig m_rock_config;
         bool m_useCPR;
         bool m_DISGAS;
         bool m_VAPOIL;

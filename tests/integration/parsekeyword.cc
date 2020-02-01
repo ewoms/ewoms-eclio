@@ -21,6 +21,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgoftable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/slgoftable.hh>
@@ -1359,7 +1361,7 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     auto deck =  parser.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule sched(deck, grid, fp, runspec );
 
@@ -1404,7 +1406,7 @@ BOOST_AUTO_TEST_CASE( WCONINJE ) {
     auto deck = parser.parseFile(wconprodFile);
     EclipseGrid grid(30,30,30);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule sched( deck, grid, fp, runspec);
     SummaryState st(std::chrono::system_clock::now());

@@ -25,6 +25,7 @@
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/thresholdpressure.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 #include <ewoms/eclio/parser/parser.hh>
@@ -202,7 +203,7 @@ struct Setup
             deck(createDeck(ParseContext(), input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            fp(deck, grid, tablemanager),
+            fp(deck, Ewoms::Phases{true, true, true}, grid, tablemanager),
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, fp)
     {
@@ -212,7 +213,7 @@ struct Setup
             deck(createDeck(parseContextArg, input)),
             tablemanager(deck),
             grid(10, 3, 4),
-            fp(deck, grid, tablemanager),
+            fp(deck, Ewoms::Phases{true, true, true}, grid, tablemanager),
             initConfig(deck),
             threshPres(initConfig.restartRequested(), deck, fp)
     {
@@ -223,7 +224,7 @@ struct Setup
 BOOST_AUTO_TEST_CASE(ThresholdPressureDeckHasEqlnum) {
     Setup s(inputStrWithEqlNum);
 
-    BOOST_CHECK(s.fp.has<int>("EQLNUM"));
+    BOOST_CHECK(s.fp.has_int("EQLNUM"));
 }
 
 BOOST_AUTO_TEST_CASE(ThresholdPressureTest) {

@@ -15,10 +15,13 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <utility>
+
 #include <ewoms/eclio/io/rst/header.hh>
 #include <ewoms/eclio/output/vectoritems/intehead.hh>
 #include <ewoms/eclio/output/vectoritems/logihead.hh>
 #include <ewoms/eclio/output/vectoritems/doubhead.hh>
+#include <ewoms/eclio/utility/timeservice.hh>
 
 namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;
 
@@ -108,6 +111,11 @@ RstHeader::RstHeader(const std::vector<int>& intehead, const std::vector<bool>& 
     udq_undefined(doubhead[VI::doubhead::UdqPar_3]),
     udq_eps(doubhead[VI::doubhead::UdqPar_4])
 {
+}
+
+std::pair<std::time_t, std::size_t> RstHeader::restart_info() const {
+    return std::make_pair(asTimeT(TimeStampUTC({this->year, this->month, this->mday})),
+                          std::size_t(this->report_step));
 }
 
 }

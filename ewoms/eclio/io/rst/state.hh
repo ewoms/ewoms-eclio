@@ -22,6 +22,7 @@
 #include <string>
 
 #include <ewoms/eclio/io/erst.hh>
+#include <ewoms/eclio/io/rst/header.hh>
 #include <ewoms/eclio/io/rst/group.hh>
 #include <ewoms/eclio/io/rst/well.hh>
 
@@ -64,10 +65,9 @@ struct RstState {
 
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
-
+    RstHeader header;
 private:
-    void add_groups(const RstHeader& header,
-                    const std::vector<std::string>& zgrp,
+    void add_groups(const std::vector<std::string>& zgrp,
                     const std::vector<int>& igrp,
                     const std::vector<float>& sgrp,
                     const std::vector<double>& xgrp);

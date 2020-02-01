@@ -18,13 +18,14 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 #include "fieldprops.hh"
 
 namespace Ewoms {
 
-FieldPropsManager::FieldPropsManager(const Deck& deck, const EclipseGrid& grid_arg, const TableManager& tables) :
-    fp(std::make_shared<FieldProps>(deck, grid_arg, tables))
+FieldPropsManager::FieldPropsManager(const Deck& deck, const Phases& phases, const EclipseGrid& grid_arg, const TableManager& tables) :
+    fp(std::make_shared<FieldProps>(deck, phases, grid_arg, tables))
 {}
 
 void FieldPropsManager::reset_actnum(const std::vector<int>& actnum) {

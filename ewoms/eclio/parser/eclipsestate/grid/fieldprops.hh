@@ -26,6 +26,7 @@
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 namespace Ewoms {
 
@@ -202,7 +203,7 @@ public:
 
     };
 
-    FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& table_arg);
+    FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& table_arg);
     void reset_actnum(const std::vector<int>& actnum);
 
     const std::string& default_region() const;
@@ -337,6 +338,7 @@ private:
 
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
+    Phases m_phases;
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
     std::vector<double> cell_depth;
@@ -350,4 +352,3 @@ private:
 
 }
 #endif
-

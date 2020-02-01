@@ -23,6 +23,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
@@ -130,7 +131,7 @@ BOOST_AUTO_TEST_CASE(TestNoTracer) {
     auto deck = createDeckWithOutTracer();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(!deck.hasKeyword("WTRACER"));
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     auto deck = createDeckWithDynamicWTRACER();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
@@ -161,9 +162,8 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     auto deck = createDeckWithTracerInProducer();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
 
     BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), std::invalid_argument);
 }
-

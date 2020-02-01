@@ -178,6 +178,23 @@ private:
     int krHystMod { 0 };
 };
 
+class SatFuncControls {
+public:
+    SatFuncControls();
+    explicit SatFuncControls(const Deck& deck);
+    explicit SatFuncControls(const double tolcritArg);
+
+    double minimumRelpermMobilityThreshold() const
+    {
+        return this->tolcrit;
+    }
+
+    bool operator==(const SatFuncControls& rhs) const;
+
+private:
+    double tolcrit;
+};
+
 class Runspec {
 public:
     Runspec() = default;
@@ -189,7 +206,8 @@ public:
             const WellSegmentDims& wsegDims,
             const UDQParams& udqparams,
             const EclHysterConfig& hystPar,
-            const Actdims& actDims);
+            const Actdims& actDims,
+            const SatFuncControls& sfuncctrl);
 
     const UDQParams& udqParams() const noexcept;
     const Phases& phases() const noexcept;
@@ -200,6 +218,7 @@ public:
     int eclPhaseMask( ) const noexcept;
     const EclHysterConfig& hysterPar() const noexcept;
     const Actdims& actdims() const noexcept;
+    const SatFuncControls& saturationFunctionControls() const noexcept;
 
     bool operator==(const Runspec& data) const;
 
@@ -212,9 +231,9 @@ private:
     UDQParams udq_params;
     EclHysterConfig hystpar;
     Actdims m_actdims;
+    SatFuncControls m_sfuncctrl;
 };
 
 }
 
 #endif // EWOMS_RUNSPEC_H
-

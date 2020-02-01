@@ -31,6 +31,7 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/satfuncpropertyinitializers.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 #include "fieldprops.hh"
 #include "operate.hh"
@@ -392,13 +393,14 @@ std::vector<double> extract_cell_depth(const EclipseGrid& grid) {
 
 }
 
-FieldProps::FieldProps(const Deck& deck, const EclipseGrid& grid, const TableManager& tables_arg) :
+FieldProps::FieldProps(const Deck& deck, const Phases& phases, const EclipseGrid& grid, const TableManager& tables_arg) :
     active_size(grid.getNumActive()),
     global_size(grid.getCartesianSize()),
     unit_system(deck.getActiveUnitSystem()),
     nx(grid.getNX()),
     ny(grid.getNY()),
     nz(grid.getNZ()),
+    m_phases(phases),
     m_actnum(grid.getACTNUM()),
     cell_volume(extract_cell_volume(grid)),
     cell_depth(extract_cell_depth(grid)),
@@ -1011,10 +1013,10 @@ void FieldProps::init_satfunc(const std::string& keyword, FieldData<double>& sat
     const auto& endnum = this->get<int>("ENDNUM");
     if (keyword[0] == 'I') {
         const auto& imbnum = this->get<int>("IMBNUM");
-        satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, imbnum, endnum));
+        satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->cell_depth, imbnum, endnum));
     } else {
         const auto& satnum = this->get<int>("SATNUM");
-        satfunc.default_update(satfunc::init(keyword, this->tables, this->cell_depth, satnum, endnum));
+        satfunc.default_update(satfunc::init(keyword, this->tables, this->m_phases, this->cell_depth, satnum, endnum));
     }
 }
 

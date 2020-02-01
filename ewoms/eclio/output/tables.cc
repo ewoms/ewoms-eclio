@@ -201,6 +201,62 @@ namespace { namespace SatFunc {
             return createPropfuncTable(numTab, numPrim, numRows, numDep, fillVal,
                                        std::forward<BuildDependent>(buildDeps));
         }
+
+        /// Normalise and output relative permeability values to destination range
+        ///
+        /// \tparam InIt Input iterator type.
+        ///
+        /// \tparam OutIt Output/destination iterator type.
+        ///
+        /// \param begin Start of input range of relative permeability values
+        ///
+        /// \param end End of input range of relative permeability values.
+        ///    Must be reachable from \p begin.
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param dest Beginning of output range for transformed relative
+        ///    permeability values.  Must be able to accommodate at least
+        ///    \code distance(begin, end) \endcode output values.
+        template <typename InIt, typename OutIt>
+        void outputRelperm(InIt         begin,
+                           InIt         end,
+                           const double tolcrit,
+                           OutIt        dest)
+        {
+            std::transform(begin, end, dest,
+                [tolcrit](const double kr) -> double
+            {
+                return (kr < tolcrit) ? 0.0 : kr;
+            });
+        }
+
+        /// Normalise and output relative permeability values to destination range
+        ///
+        /// \tparam RelPermColumn Container type for relative permeability
+        ///    values.  Typically an \code Ewoms::TableColumn \endcode.
+        ///
+        /// \tparam OutIt Output/destination iterator type.
+        ///
+        /// \param krCol Range of relative permeability values.
+        ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
+        /// \param dest Beginning of output range for transformed relative
+        ///    permeability values.  Must be able to accommodate at least
+        ///    \code distance(begin, end) \endcode output values.
+        template <typename RelPermColumn, typename OutIt>
+        void outputRelperm(const RelPermColumn& krCol,
+                           const double         tolcrit,
+                           OutIt&&              dest)
+        {
+            outputRelperm(std::begin(krCol), std::end(krCol),
+                          tolcrit, std::forward<OutIt>(dest));
+        }
     } // detail
 
     /// Functions to create linearised, padded, and normalised SGFN output
@@ -215,6 +271,10 @@ namespace { namespace SatFunc {
         ///    declared saturation nodes in the simulation run's TABDIMS
         ///    keyword (Item 3).
         ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
         /// \param[in] units Active unit system.  Needed to convert SI
         ///    convention capillary pressure values (Pascal) to declared
         ///    conventions of the run specification.
@@ -227,6 +287,7 @@ namespace { namespace SatFunc {
         ///    sgfn with added derivatives.
         std::vector<double>
         fromSGFN(const std::size_t          numRows,
+                 const double               tolcrit,
                  const Ewoms::UnitSystem&     units,
                  const Ewoms::TableContainer& sgfn)
         {
@@ -236,9 +297,9 @@ namespace { namespace SatFunc {
             const auto numDep = std::size_t{2}; // Krg, Pcgo
 
             return detail::createSatfuncTable(numTab, numRows, numDep,
-                [&units, &sgfn](const std::size_t           tableID,
-                                const std::size_t           primID,
-                                Ewoms::LinearisedOutputTable& linTable)
+                [tolcrit, &units, &sgfn](const std::size_t           tableID,
+                                         const std::size_t           primID,
+                                         Ewoms::LinearisedOutputTable& linTable)
                 -> std::size_t
             {
                 const auto& t = sgfn.getTable<SGFN>(tableID);
@@ -255,11 +316,8 @@ namespace { namespace SatFunc {
                 }
 
                 // Krg(Sg)
-                {
-                    const auto& kr = t.getKrgColumn();
-                    std::copy(std::begin(kr), std::end(kr),
-                              linTable.column(tableID, primID, 1));
-                }
+                detail::outputRelperm(t.getKrgColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
 
                 // Pcgo(Sg)
                 {
@@ -290,6 +348,10 @@ namespace { namespace SatFunc {
         ///    declared saturation nodes in the simulation run's TABDIMS
         ///    keyword (Item 3).
         ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
         /// \param[in] units Active unit system.  Needed to convert SI
         ///    convention capillary pressure values (Pascal) to declared
         ///    conventions of the run specification.
@@ -302,6 +364,7 @@ namespace { namespace SatFunc {
         ///    1, 2, and 4--with added derivatives--of the input SGOF tables.
         std::vector<double>
         fromSGOF(const std::size_t          numRows,
+                 const double               tolcrit,
                  const Ewoms::UnitSystem&     units,
                  const Ewoms::TableContainer& sgof)
         {
@@ -311,9 +374,9 @@ namespace { namespace SatFunc {
             const auto numDep = std::size_t{2}; // Krg, Pcgo
 
             return detail::createSatfuncTable(numTab, numRows, numDep,
-                [&units, &sgof](const std::size_t           tableID,
-                                const std::size_t           primID,
-                                Ewoms::LinearisedOutputTable& linTable)
+                [tolcrit, &units, &sgof](const std::size_t           tableID,
+                                         const std::size_t           primID,
+                                         Ewoms::LinearisedOutputTable& linTable)
                 -> std::size_t
             {
                 const auto& t = sgof.getTable<SGOF>(tableID);
@@ -330,11 +393,8 @@ namespace { namespace SatFunc {
                 }
 
                 // Krg(Sg)
-                {
-                    const auto& kr = t.getKrgColumn();
-                    std::copy(std::begin(kr), std::end(kr),
-                              linTable.column(tableID, primID, 1));
-                }
+                detail::outputRelperm(t.getKrgColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
 
                 // Pcgo(Sg)
                 {
@@ -372,6 +432,10 @@ namespace { namespace SatFunc {
             ///    number of declared saturation nodes in the simulation
             ///    run's TABDIMS keyword (Item 3).
             ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
             /// \param[in] sof2 Collection of SOF2 tables for all saturation
             ///   regions.
             ///
@@ -380,6 +444,7 @@ namespace { namespace SatFunc {
             ///   of the input SOF2 table--with added derivatives.
             std::vector<double>
             fromSOF2(const std::size_t          numRows,
+                     const double               tolcrit,
                      const Ewoms::TableContainer& sof2)
             {
                 using SOF2 = ::Ewoms::Sof2Table;
@@ -388,9 +453,9 @@ namespace { namespace SatFunc {
                 const auto numDep = std::size_t{1}; // Kro
 
                 return detail::createSatfuncTable(numTab, numRows, numDep,
-                    [&sof2](const std::size_t           tableID,
-                            const std::size_t           primID,
-                            Ewoms::LinearisedOutputTable& linTable)
+                    [tolcrit, &sof2](const std::size_t           tableID,
+                                     const std::size_t           primID,
+                                     Ewoms::LinearisedOutputTable& linTable)
                     -> std::size_t
                 {
                     const auto& t = sof2.getTable<SOF2>(tableID);
@@ -407,11 +472,8 @@ namespace { namespace SatFunc {
                     }
 
                     // Kro(So)
-                    {
-                        const auto& kr = t.getKroColumn();
-                        std::copy(std::begin(kr), std::end(kr),
-                                  linTable.column(tableID, primID, 1));
-                    }
+                    detail::outputRelperm(t.getKroColumn(), tolcrit,
+                                          linTable.column(tableID, primID, 1));
 
                     // Inform createSatfuncTable() of number of active rows
                     // in this table.  Needed to compute slopes of piecewise
@@ -429,6 +491,10 @@ namespace { namespace SatFunc {
             ///    number of declared saturation nodes in the simulation
             ///    run's TABDIMS keyword (Item 3).
             ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
             /// \param[in] sgof Collection of SGOF tables for all saturation
             ///    regions.
             ///
@@ -439,6 +505,7 @@ namespace { namespace SatFunc {
             ///    input SGOF table--with added derivatives.
             std::vector<double>
             fromSGOF(const std::size_t          numRows,
+                     const double               tolcrit,
                      const Ewoms::TableContainer& sgof)
             {
                 using SGOF = ::Ewoms::SgofTable;
@@ -447,9 +514,9 @@ namespace { namespace SatFunc {
                 const auto numDep = std::size_t{1}; // Kro
 
                 return detail::createSatfuncTable(numTab, numRows, numDep,
-                    [&sgof](const std::size_t           tableID,
-                            const std::size_t           primID,
-                            Ewoms::LinearisedOutputTable& linTable)
+                    [tolcrit, &sgof](const std::size_t           tableID,
+                                     const std::size_t           primID,
+                                     Ewoms::LinearisedOutputTable& linTable)
                     -> std::size_t
                 {
                     const auto& t = sgof.getTable<SGOF>(tableID);
@@ -467,10 +534,10 @@ namespace { namespace SatFunc {
                         // Two-phase system => So = 1-Sg
                         std::transform(std::begin(Sg), std::end(Sg),
                                        std::back_inserter(So),
-                                       [](const double sg)
-                                       {
-                                           return 1.0 - sg;
-                                       });
+                            [](const double sg) -> double
+                        {
+                            return 1.0 - sg;
+                        });
 
                         std::copy(So.rbegin(), So.rend(),
                                   linTable.column(tableID, primID, 0));
@@ -484,8 +551,8 @@ namespace { namespace SatFunc {
                             std::begin(kr), std::end(kr)
                         };
 
-                        std::copy(krog.rbegin(), krog.rend(),
-                                  linTable.column(tableID, primID, 1));
+                        detail::outputRelperm(krog.rbegin(), krog.rend(), tolcrit,
+                                              linTable.column(tableID, primID, 1));
                     }
 
                     // Inform createSatfuncTable() of number of active rows
@@ -504,6 +571,10 @@ namespace { namespace SatFunc {
             ///    number of declared saturation nodes in the simulation
             ///    run's TABDIMS keyword (Item 3).
             ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
             /// \param[in] swof Collection of SWOF tables for all saturation
             ///    regions.
             ///
@@ -514,6 +585,7 @@ namespace { namespace SatFunc {
             ///    input SWOF table--with added derivatives.
             std::vector<double>
             fromSWOF(const std::size_t          numRows,
+                     const double               tolcrit,
                      const Ewoms::TableContainer& swof)
             {
                 using SWOF = ::Ewoms::SwofTable;
@@ -522,9 +594,9 @@ namespace { namespace SatFunc {
                 const auto numDep = std::size_t{1}; // Kro
 
                 return detail::createSatfuncTable(numTab, numRows, numDep,
-                    [&swof](const std::size_t           tableID,
-                            const std::size_t           primID,
-                            Ewoms::LinearisedOutputTable& linTable)
+                    [tolcrit, &swof](const std::size_t           tableID,
+                                     const std::size_t           primID,
+                                     Ewoms::LinearisedOutputTable& linTable)
                     -> std::size_t
                 {
                     const auto& t = swof.getTable<SWOF>(tableID);
@@ -559,8 +631,8 @@ namespace { namespace SatFunc {
                             std::begin(kr), std::end(kr)
                         };
 
-                        std::copy(krow.rbegin(), krow.rend(),
-                                  linTable.column(tableID, primID, 1));
+                        detail::outputRelperm(krow.rbegin(), krow.rend(), tolcrit,
+                                              linTable.column(tableID, primID, 1));
                     }
 
                     // Inform createSatfuncTable() of number of active rows
@@ -694,8 +766,8 @@ namespace { namespace SatFunc {
 
                 for (auto i = n; i > 0; --i) {
                     ret.push_back( TableElement {
-                            function, i - 1
-                        });
+                        function, i - 1
+                    });
                 }
 
                 return ret;
@@ -799,6 +871,10 @@ namespace { namespace SatFunc {
             ///    of declared saturation nodes in the simulation run's
             ///    TABDIMS keyword (Item 3).
             ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
             /// \param[in] sgof Collection of SGOF tables for all saturation
             ///    regions.
             ///
@@ -813,6 +889,7 @@ namespace { namespace SatFunc {
             ///    saturation nodes.  Derivatives added in columns 4 and 5.
             std::vector<double>
             fromSGOFandSWOF(const std::size_t          numRows,
+                            const double               tolcrit,
                             const Ewoms::TableContainer& sgof,
                             const Ewoms::TableContainer& swof)
             {
@@ -823,9 +900,10 @@ namespace { namespace SatFunc {
                 const auto numDep = std::size_t{2}; // Krow, Krog
 
                 return detail::createSatfuncTable(numTab, numRows, numDep,
-                     [&sgof, &swof](const std::size_t           tableID,
-                                    const std::size_t           primID,
-                                    Ewoms::LinearisedOutputTable& linTable)
+                     [tolcrit, &sgof, &swof]
+                        (const std::size_t           tableID,
+                         const std::size_t           primID,
+                         Ewoms::LinearisedOutputTable& linTable)
                     -> std::size_t
                 {
                     const auto sof3 =
@@ -844,18 +922,12 @@ namespace { namespace SatFunc {
                     }
 
                     // Krow(So)
-                    {
-                        const auto& krow = sof3[1];
-                        std::copy(std::begin(krow), std::end(krow),
-                                  linTable.column(tableID, primID, 1));
-                    }
+                    detail::outputRelperm(sof3[1], tolcrit,
+                                          linTable.column(tableID, primID, 1));
 
                     // Krog(So)
-                    {
-                        const auto& krog = sof3[2];
-                        std::copy(std::begin(krog), std::end(krog),
-                                  linTable.column(tableID, primID, 2));
-                    }
+                    detail::outputRelperm(sof3[2], tolcrit,
+                                          linTable.column(tableID, primID, 2));
 
                     // Inform createSatfuncTable() of number of active rows
                     // in this table.  Needed to compute slopes of piecewise
@@ -873,6 +945,10 @@ namespace { namespace SatFunc {
             ///    number of declared saturation nodes in the simulation
             ///    run's TABDIMS keyword (Item 3).
             ///
+            /// \param tolcrit Minimum relative permeability threshold value
+            ///    for phase to be considered mobile.  Values less than this
+            ///    threshold are output as zero.
+            ///
             /// \param[in] sof3 Collection of SOF3 tables for all saturation
             ///    regions.
             ///
@@ -881,6 +957,7 @@ namespace { namespace SatFunc {
             ///    the input SOF3 tables, \p sof3, with added derivatives.
             std::vector<double>
             fromSOF3(const std::size_t          numRows,
+                     const double               tolcrit,
                      const Ewoms::TableContainer& sof3)
             {
                 using SOF3 = ::Ewoms::Sof3Table;
@@ -889,9 +966,9 @@ namespace { namespace SatFunc {
                 const auto numDep = std::size_t{2}; // Krow, Krog
 
                 return detail::createSatfuncTable(numTab, numRows, numDep,
-                    [&sof3](const std::size_t           tableID,
-                            const std::size_t           primID,
-                            Ewoms::LinearisedOutputTable& linTable)
+                    [tolcrit, &sof3](const std::size_t           tableID,
+                                     const std::size_t           primID,
+                                     Ewoms::LinearisedOutputTable& linTable)
                     -> std::size_t
                 {
                     const auto& t = sof3.getTable<SOF3>(tableID);
@@ -908,18 +985,12 @@ namespace { namespace SatFunc {
                     }
 
                     // Krow(So)
-                    {
-                        const auto& kr = t.getKrowColumn();
-                        std::copy(std::begin(kr), std::end(kr),
-                                  linTable.column(tableID, primID, 1));
-                    }
+                    detail::outputRelperm(t.getKrowColumn(), tolcrit,
+                                          linTable.column(tableID, primID, 1));
 
                     // Krog(So)
-                    {
-                        const auto& kr = t.getKrogColumn();
-                        std::copy(std::begin(kr), std::end(kr),
-                                  linTable.column(tableID, primID, 2));
-                    }
+                    detail::outputRelperm(t.getKrogColumn(), tolcrit,
+                                          linTable.column(tableID, primID, 2));
 
                     // Inform createSatfuncTable() of number of active rows
                     // in this table.  Needed to compute slopes of piecewise
@@ -942,6 +1013,10 @@ namespace { namespace SatFunc {
         ///    declared saturation nodes in the simulation run's TABDIMS
         ///    keyword (Item 3).
         ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
         /// \param[in] units Active unit system.  Needed to convert SI
         ///    convention capillary pressure values (Pascal) to declared
         ///    conventions of the run specification.
@@ -954,6 +1029,7 @@ namespace { namespace SatFunc {
         ///    swfn with added derivatives.
         std::vector<double>
         fromSWFN(const std::size_t          numRows,
+                 const double               tolcrit,
                  const Ewoms::UnitSystem&     units,
                  const Ewoms::TableContainer& swfn)
         {
@@ -963,9 +1039,10 @@ namespace { namespace SatFunc {
             const auto numDep = std::size_t{2}; // Krw, Pcow
 
             return detail::createSatfuncTable(numTab, numRows, numDep,
-                [&swfn, &units](const std::size_t           tableID,
-                                const std::size_t           primID,
-                                Ewoms::LinearisedOutputTable& linTable)
+                [tolcrit, &swfn, &units]
+                    (const std::size_t           tableID,
+                     const std::size_t           primID,
+                     Ewoms::LinearisedOutputTable& linTable)
                 -> std::size_t
             {
                 const auto& t = swfn.getTable<SWFN>(tableID);
@@ -982,11 +1059,8 @@ namespace { namespace SatFunc {
                 }
 
                 // Krw(Sw)
-                {
-                    const auto& kr = t.getKrwColumn();
-                    std::copy(std::begin(kr), std::end(kr),
-                              linTable.column(tableID, primID, 1));
-                }
+                detail::outputRelperm(t.getKrwColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
 
                 // Pcow(Sw)
                 {
@@ -1017,6 +1091,10 @@ namespace { namespace SatFunc {
         ///    declared saturation nodes in the simulation run's TABDIMS
         ///    keyword (Item 3).
         ///
+        /// \param tolcrit Minimum relative permeability threshold value for
+        ///    phase to be considered mobile.  Values less than this threshold
+        ///    are output as zero.
+        ///
         /// \param[in] units Active unit system.  Needed to convert SI
         ///    convention capillary pressure values (Pascal) to declared
         ///    conventions of the run specification.
@@ -1029,6 +1107,7 @@ namespace { namespace SatFunc {
         ///    1, 2, and 4--with added derivatives--of the input SWOF tables.
         std::vector<double>
         fromSWOF(const std::size_t          numRows,
+                 const double               tolcrit,
                  const Ewoms::UnitSystem&     units,
                  const Ewoms::TableContainer& swof)
         {
@@ -1038,9 +1117,10 @@ namespace { namespace SatFunc {
             const auto numDep = std::size_t{2}; // Krw, Pcow
 
             return detail::createSatfuncTable(numTab, numRows, numDep,
-                [&swof, &units](const std::size_t           tableID,
-                                const std::size_t           primID,
-                                Ewoms::LinearisedOutputTable& linTable)
+                [tolcrit, &swof, &units]
+                    (const std::size_t           tableID,
+                     const std::size_t           primID,
+                     Ewoms::LinearisedOutputTable& linTable)
                 -> std::size_t
             {
                 const auto& t = swof.getTable<SWOF>(tableID);
@@ -1057,11 +1137,8 @@ namespace { namespace SatFunc {
                 }
 
                 // Krw(Sw)
-                {
-                    const auto& kr = t.getKrwColumn();
-                    std::copy(std::begin(kr), std::end(kr),
-                              linTable.column(tableID, primID, 1));
-                }
+                detail::outputRelperm(t.getKrwColumn(), tolcrit,
+                                      linTable.column(tableID, primID, 1));
 
                 // Pcow(Sw)
                 {
@@ -2063,12 +2140,16 @@ namespace Ewoms {
         const auto& tabMgr = es.getTableManager();
         const auto& tabd   = es.runspec().tabdims();
         const auto  nssfun = tabd.getNumSatNodes();
+        const auto  tolcrit = es.runspec()
+            .saturationFunctionControls()
+            .minimumRelpermMobilityThreshold();
 
         if (gas) {
             const auto& tables = tabMgr.getSgofTables();
 
             const auto sgfn =
-                SatFunc::Gas::fromSGOF(nssfun, this->units, tables);
+                SatFunc::Gas::fromSGOF(nssfun, tolcrit,
+                                       this->units, tables);
 
             this->addData(Ix::SgfnTableStart, sgfn);
             this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
@@ -2080,7 +2161,7 @@ namespace Ewoms {
                 const auto& tables = tabMgr.getSgofTables();
 
                 const auto sofn =
-                    SatFunc::Oil::TwoPhase::fromSGOF(nssfun, tables);
+                    SatFunc::Oil::TwoPhase::fromSGOF(nssfun, tolcrit, tables);
 
                 this->addData(Ix::SofnTableStart, sofn);
                 this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
@@ -2090,7 +2171,7 @@ namespace Ewoms {
                 const auto& tables = tabMgr.getSwofTables();
 
                 const auto sofn =
-                    SatFunc::Oil::TwoPhase::fromSWOF(nssfun, tables);
+                    SatFunc::Oil::TwoPhase::fromSWOF(nssfun, tolcrit, tables);
 
                 this->addData(Ix::SofnTableStart, sofn);
                 this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
@@ -2105,7 +2186,7 @@ namespace Ewoms {
                 const auto numRows = 2 * nssfun;
 
                 const auto sofn = SatFunc::Oil::ThreePhase::
-                    fromSGOFandSWOF(numRows, sgof, swof);
+                    fromSGOFandSWOF(numRows, tolcrit, sgof, swof);
 
                 this->addData(Ix::SofnTableStart, sofn);
                 this->m_tabdims[Ix::SofnNumSatNodes] = numRows;
@@ -2117,7 +2198,7 @@ namespace Ewoms {
             const auto& tables = tabMgr.getSwofTables();
 
             const auto swfn =
-                SatFunc::Water::fromSWOF(nssfun, this->units, tables);
+                SatFunc::Water::fromSWOF(nssfun, tolcrit, this->units, tables);
 
             this->addData(Ix::SwfnTableStart, swfn);
             this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;
@@ -2133,12 +2214,16 @@ namespace Ewoms {
         const auto& tabMgr = es.getTableManager();
         const auto& tabd   = es.runspec().tabdims();
         const auto  nssfun = tabd.getNumSatNodes();
+        const auto  tolcrit = es.runspec()
+            .saturationFunctionControls()
+            .minimumRelpermMobilityThreshold();
 
         if (gas) {
             const auto& tables = tabMgr.getSgfnTables();
 
             const auto sgfn =
-                SatFunc::Gas::fromSGFN(nssfun, this->units, tables);
+                SatFunc::Gas::fromSGFN(nssfun, tolcrit,
+                                       this->units, tables);
 
             this->addData(Ix::SgfnTableStart, sgfn);
             this->m_tabdims[Ix::SgfnNumSatNodes] = nssfun;
@@ -2150,7 +2235,7 @@ namespace Ewoms {
                 const auto& tables = tabMgr.getSof2Tables();
 
                 const auto sofn =
-                    SatFunc::Oil::TwoPhase::fromSOF2(nssfun, tables);
+                    SatFunc::Oil::TwoPhase::fromSOF2(nssfun, tolcrit, tables);
 
                 this->addData(Ix::SofnTableStart, sofn);
                 this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
@@ -2160,7 +2245,7 @@ namespace Ewoms {
                 const auto& tables = tabMgr.getSof3Tables();
 
                 const auto sofn =
-                    SatFunc::Oil::ThreePhase::fromSOF3(nssfun, tables);
+                    SatFunc::Oil::ThreePhase::fromSOF3(nssfun, tolcrit, tables);
 
                 this->addData(Ix::SofnTableStart, sofn);
                 this->m_tabdims[Ix::SofnNumSatNodes] = nssfun;
@@ -2172,7 +2257,7 @@ namespace Ewoms {
             const auto& tables = tabMgr.getSwfnTables();
 
             const auto swfn =
-                SatFunc::Water::fromSWFN(nssfun, this->units, tables);
+                SatFunc::Water::fromSWFN(nssfun, tolcrit, this->units, tables);
 
             this->addData(Ix::SwfnTableStart, swfn);
             this->m_tabdims[Ix::SwfnNumSatNodes] = nssfun;

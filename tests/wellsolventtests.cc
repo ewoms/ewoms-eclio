@@ -23,6 +23,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
@@ -175,7 +176,7 @@ BOOST_AUTO_TEST_CASE(TestNoSolvent) {
     auto deck = createDeckWithOutSolvent();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(!deck.hasKeyword("WSOLVENT"));
@@ -185,18 +186,17 @@ BOOST_AUTO_TEST_CASE(TestGasInjector) {
     auto deck = createDeckWithGasInjector();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
-
 }
 
 BOOST_AUTO_TEST_CASE(TestDynamicWSOLVENT) {
     auto deck = createDeckWithDynamicWSOLVENT();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(deck.hasKeyword("WSOLVENT"));
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(TestOilInjector) {
     auto deck = createDeckWithOilInjector();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
     BOOST_CHECK_THROW (Schedule(deck , grid , fp, runspec), std::invalid_argument);
 }
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(TestWaterInjector) {
     auto deck = createDeckWithWaterInjector();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Runspec runspec(deck);
     BOOST_CHECK_THROW (Schedule(deck, grid , fp, runspec), std::invalid_argument);
 }

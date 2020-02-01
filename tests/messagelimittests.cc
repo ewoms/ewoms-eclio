@@ -26,6 +26,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/messagelimits.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -76,7 +78,7 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
     Schedule schedule(deck, grid, fp, runspec);
     const MessageLimits limits = schedule.getMessageLimits();
@@ -91,4 +93,3 @@ BOOST_AUTO_TEST_CASE(MESSAGES) {
     BOOST_CHECK_EQUAL( limits.getCommentPrintLimit( 2 ) , 2  );
     BOOST_CHECK_EQUAL( limits.getBugPrintLimit( 2 ) , 77 );
 }
-

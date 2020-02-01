@@ -31,10 +31,11 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/griddims.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 BOOST_AUTO_TEST_CASE(Empty) {
     Ewoms::EclipseGrid grid(10,10,10);
-    Ewoms::FieldPropsManager fp(Ewoms::Deck(), grid, Ewoms::TableManager());
+    Ewoms::FieldPropsManager fp(Ewoms::Deck(), Ewoms::Phases{true, true, true}, grid, Ewoms::TableManager());
     Ewoms::TransMult transMult(grid ,{} , fp);
 
     BOOST_CHECK_THROW( transMult.getMultiplier(12,10,10 , Ewoms::FaceDir::XPlus) , std::invalid_argument );
@@ -67,9 +68,9 @@ MULTZ
     Ewoms::Deck deck = parser.parseString(deck_string);
     Ewoms::TableManager tables(deck);
     Ewoms::EclipseGrid grid(5,5,5);
-    Ewoms::FieldPropsManager fp(deck, grid, tables);
+    Ewoms::FieldPropsManager fp(deck, Ewoms::Phases{true, true, true}, grid, tables);
     Ewoms::TransMult transMult(grid, deck, fp);
 
-    transMult.applyMULT(fp.get_global<double>("MULTZ"), Ewoms::FaceDir::ZPlus);
+    transMult.applyMULT(fp.get_global_double("MULTZ"), Ewoms::FaceDir::ZPlus);
     BOOST_CHECK_EQUAL( transMult.getMultiplier(0,0,0 , Ewoms::FaceDir::ZPlus) , 4.0 );
 }

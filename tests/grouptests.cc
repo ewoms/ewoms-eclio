@@ -30,6 +30,7 @@
 #include <ewoms/eclio/parser/eclipsestate/util/value.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/guideratemodel.hh>
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGEFAC) {
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     Runspec runspec (deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Ewoms::Schedule schedule(deck,  grid, fp, runspec);
 
     auto group_names = schedule.groupNames("PRODUC");
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithWGRUPCONandWCONPROD) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
     Ewoms::Schedule schedule(deck,  grid, fp, runspec);
     const auto& currentWell = schedule.getWell("B-37T2", 0);
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGRUPNET) {
         auto deck = parser.parseString(input);
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
-        FieldPropsManager fp( deck , grid, table);
+        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck );
         Ewoms::Schedule schedule(deck,  grid, fp, runspec);
 
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(createDeckWithGCONPROD) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
     Ewoms::Schedule schedule(deck,  grid, fp, runspec);
     SummaryState st(std::chrono::system_clock::now());
@@ -306,7 +307,7 @@ BOOST_AUTO_TEST_CASE(TESTGuideRateLINCOM) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
 
     /* The 'COMB' target mode is not supported */
@@ -343,7 +344,7 @@ BOOST_AUTO_TEST_CASE(TESTGuideRate) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
     Schedule schedule(deck, grid, fp, runspec);
 
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(TESTGCONSALE) {
     auto deck = parser.parseString(input);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck );
     Schedule schedule(deck, grid, fp, runspec);
 

@@ -32,6 +32,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestTRACK) {
     auto deck = parser.parseString(input);
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Ewoms::Runspec runspec (deck);
     Ewoms::Schedule schedule(deck, grid , fp, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
@@ -120,7 +121,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestDefaultTRACK) {
     auto deck = parser.parseString(input);
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Ewoms::Runspec runspec (deck);
     Ewoms::Schedule schedule(deck, grid , fp, runspec);
     const auto& op_1 = schedule.getWell("OP_1", 2);
@@ -162,7 +163,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
     Ewoms::EclipseGrid grid(10,10,10);
     Ewoms::ErrorGuard errors;
     TableManager table ( deck );
-    FieldPropsManager fp( deck , grid, table);
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Ewoms::Runspec runspec (deck);
     Ewoms::Schedule schedule(deck, grid , fp, runspec, Ewoms::ParseContext(), errors);
     const auto& op_1 = schedule.getWell("OP_1", 2);
@@ -806,7 +807,7 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
     auto deck = parser.parseString(input);
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
-    FieldPropsManager fp(deck, grid, table);
+    FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Ewoms::Runspec runspec (deck);
     Ewoms::Schedule schedule(deck, grid , fp, runspec);
     {
@@ -817,5 +818,4 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
         const auto& op_1 = schedule.getWell("OP_1", 2);
         BOOST_CHECK(op_1.getStatus() == Well::Status::SHUT);
     }
-
 }

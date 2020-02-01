@@ -23,6 +23,7 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/tuning.hh>
 #include <ewoms/eclio/parser/units/units.hh>
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(TuningTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  FieldPropsManager fp(deck, grid, table);
+  FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule( deck, grid , fp, runspec);
   auto tuning = schedule.getTuning();
@@ -313,7 +314,7 @@ BOOST_AUTO_TEST_CASE(TuningInitTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  FieldPropsManager fp(deck, grid, table);
+  FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule(deck , grid , fp, runspec);
   auto tuning = schedule.getTuning();
@@ -341,7 +342,7 @@ BOOST_AUTO_TEST_CASE(TuningResetTest) {
   auto deck = createDeck(deckStr);
   EclipseGrid grid(10,10,10);
   TableManager table ( deck );
-  FieldPropsManager fp(deck, grid, table);
+  FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
   Runspec runspec (deck);
   Schedule schedule(deck, grid , fp, runspec);
   auto tuning = schedule.getTuning();

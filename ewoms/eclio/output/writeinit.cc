@@ -18,8 +18,6 @@
 
 #include <ewoms/eclio/output/writeinit.hh>
 
-#include <ewoms/eclio/opmlog/opmlog.hh>
-
 #include <ewoms/eclio/io/outputstream.hh>
 
 #include <ewoms/eclio/output/data/solution.hh>
@@ -322,13 +320,13 @@ namespace {
         // invoke the autocreation property, and ensure that the keywords
         // exist in the properties container.
         const auto& fp = es.fieldProps();
-        fp.get<int>("PVTNUM");
-        fp.get<int>("SATNUM");
-        fp.get<int>("EQLNUM");
-        fp.get<int>("FIPNUM");
+        fp.get_int("PVTNUM");
+        fp.get_int("SATNUM");
+        fp.get_int("EQLNUM");
+        fp.get_int("FIPNUM");
 
         for (const auto& keyword : fp.keys<int>())
-            initFile.write(keyword, fp.get<int>(keyword));
+            initFile.write(keyword, fp.get_int(keyword));
 
     }
 
@@ -360,17 +358,17 @@ namespace {
         initFile.write("DZ"   , dz);
     }
 
-    template <typename T, class WriteVector>
-    void writeCellPropertiesWithDefaultFlag(const Properties& propList,
-                                            const ::Ewoms::FieldPropsManager& fp,
-                                            WriteVector&&  write)
+    template <class WriteVector>
+    void writeCellDoublePropertiesWithDefaultFlag(const Properties& propList,
+                                                  const ::Ewoms::FieldPropsManager& fp,
+                                                  WriteVector&&  write)
     {
         for (const auto& prop : propList) {
-            if (! fp.has<T>(prop.name))
+            if (! fp.has_double(prop.name))
                 continue;
 
-            auto data = fp.get<T>(prop.name);
-            auto defaulted = fp.defaulted<T>(prop.name);
+            auto data = fp.get_double(prop.name);
+            auto defaulted = fp.defaulted<double>(prop.name);
             write(prop, std::move(defaulted), std::move(data));
         }
     }
@@ -382,9 +380,9 @@ namespace {
     {
         for (const auto& prop : propList) {
 
-            if (!fp.has<double>(prop.name))
+            if (!fp.has_double(prop.name))
                 continue;
-            auto data = fp.get<double>(prop.name);
+            auto data = fp.get_double(prop.name);
             write(prop, std::move(data));
         }
     }
@@ -396,7 +394,7 @@ namespace {
                                    ::Ewoms::EclIO::OutputStream::Init&    initFile)
     {
         if (needDflt) {
-            writeCellPropertiesWithDefaultFlag<double>(propList, fp,
+            writeCellDoublePropertiesWithDefaultFlag(propList, fp,
                 [&units, &initFile](const CellProperty&   prop,
                                     std::vector<bool>&&   dflt,
                                     std::vector<double>&& value)
@@ -444,7 +442,7 @@ namespace {
         // therefore invoke the auto create functionality to ensure
         // that "NTG" is included in the properties container.
         const auto& fp = es.fieldProps();
-        es.fieldProps().get<double>("NTG");
+        es.fieldProps().get_double("NTG");
         writeDoubleCellProperties(doubleKeywords, fp,
                                   units, false, initFile);
     }
@@ -496,7 +494,7 @@ namespace {
                                    ::Ewoms::EclIO::OutputStream::Init& initFile)
     {
         for (const auto& prop : propList)
-            fp.get<double>(prop.name);
+            fp.get_double(prop.name);
 
         // Don't write sentinel value if input defaulted.
         writeDoubleCellProperties(propList, fp,
@@ -507,28 +505,12 @@ namespace {
                              const ::Ewoms::UnitSystem&          units,
                              ::Ewoms::EclIO::OutputStream::Init& initFile)
     {
-        const auto& ph = es.runspec().phases();
-
         const auto epsVectors = ScalingVectors{}
             .withHysteresis(es.runspec().hysterPar().active())
-            .collect       (ph);
-
-        const auto nactph = ph.active(::Ewoms::Phase::WATER)
-            + ph.active(Ewoms::Phase::OIL)
-            + ph.active(Ewoms::Phase::GAS);
+            .collect       (es.runspec().phases());
 
         const auto& fp = es.fieldProps();
-        if (! es.cfg().init().filleps() || (nactph < 3)) {
-            if (nactph < 3) {
-                const auto msg = "EFlow does currently not support "
-                    "FILLEPS for fewer than 3 active phases. "
-                    "Ignoring FILLEPS for "
-                    + std::to_string(nactph)
-                    + " active phases.";
-
-                Ewoms::OpmLog::warning(msg);
-            }
-
+        if (! es.cfg().init().filleps()) {
             // No FILLEPS in input deck or number of active phases
             // unsupported by EFlow's saturation function finalizers.
             //

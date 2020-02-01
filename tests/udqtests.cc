@@ -18,6 +18,7 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/parser.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/deck/udavalue.hh>
@@ -139,7 +140,7 @@ Schedule make_schedule(const std::string& input) {
     } else {
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
-        FieldPropsManager fp( deck , grid, table);
+        FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck);
         return Schedule(deck, grid , fp, runspec);
     }
