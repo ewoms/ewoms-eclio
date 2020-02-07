@@ -19,6 +19,9 @@
 #define RST_CONNECTION
 
 #include <array>
+
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
+
 namespace Ewoms {
 namespace RestartIO {
 
@@ -29,11 +32,11 @@ struct RstConnection {
 
     int insert_index;
     std::array<int,3> ijk;
-    int status;
+    Connection::State state;
     int drain_sat_table;
     int imb_sat_table;
     int completion;
-    int dir;
+    Connection::Direction dir;
     int segment;
 
     float tran;

@@ -34,8 +34,6 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/regdims.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 
-#include <ewoms/eclio/parser/units/unitsystem.hh>
-
 #include <algorithm>
 #include <cstddef>
 #include <exception>
@@ -203,33 +201,6 @@ namespace {
         }};
     }
 
-    Ewoms::RestartIO::InteHEAD::UnitSystem
-    getUnitConvention(const ::Ewoms::UnitSystem& us)
-    {
-        using US = ::Ewoms::RestartIO::InteHEAD::UnitSystem;
-
-        switch (us.getType()) {
-        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC:
-            return US::Metric;
-
-        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_FIELD:
-            return US::Field;
-
-        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_LAB:
-            return US::Lab;
-
-        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_PVT_M:
-            return US::PVT_M;
-
-        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_INPUT:
-            throw std::invalid_argument {
-                "Cannot Run Simulation With Non-Standard Units"
-            };
-        }
-
-        return US::Metric;
-    }
-
     Ewoms::RestartIO::InteHEAD::Phases
     getActivePhases(const ::Ewoms::Runspec& rspec)
     {
@@ -245,15 +216,14 @@ namespace {
     }
 
     Ewoms::RestartIO::InteHEAD::TuningPar
-    getTuningPars(const ::Ewoms::Tuning& tuning,
-                  const std::size_t    lookup_step)
+    getTuningPars(const ::Ewoms::Tuning& tuning)
     {
-        const auto& newtmx = tuning.getNEWTMX(lookup_step);
-        const auto& newtmn = tuning.getNEWTMN(lookup_step);
-        const auto& litmax = tuning.getLITMAX(lookup_step);
-        const auto& litmin = tuning.getLITMIN(lookup_step);
-        const auto& mxwsit = tuning.getMXWSIT(lookup_step);
-        const auto& mxwpit = tuning.getMXWPIT(lookup_step);
+        const auto& newtmx = tuning.NEWTMX;
+        const auto& newtmn = tuning.NEWTMN;
+        const auto& litmax = tuning.LITMAX;
+        const auto& litmin = tuning.LITMIN;
+        const auto& mxwsit = tuning.MXWSIT;
+        const auto& mxwpit = tuning.MXWPIT;
 
         return {
             newtmx,
@@ -408,7 +378,7 @@ createInteHead(const EclipseState& es,
     const auto ih = InteHEAD{}
         .dimensions         (grid.getNXYZ())
         .numActive          (static_cast<int>(grid.getNumActive()))
-        .unitConventions    (getUnitConvention(es.getDeckUnitSystem()))
+        .unitConventions    (es.getDeckUnitSystem())
         .wellTableDimensions(getWellTableDims(nwgmax, ngmax, rspec,
                                               sched, lookup_step))
         .calendarDate       (getSimulationTimePoint(sched.posixStartTime(), simTime))
@@ -424,7 +394,7 @@ createInteHead(const EclipseState& es,
              // n{isa}caqz: number of data elements per aquifer connection in {ISA}CAQ
         .params_NAAQZ       (1, 18, 24, 10, 7, 2, 4)
         .stepParam          (num_solver_steps, lookup_step)
-        .tuningParam        (getTuningPars(sched.getTuning(), lookup_step))
+        .tuningParam        (getTuningPars(sched.getTuning(lookup_step)))
         .wellSegDimensions  (getWellSegDims(rspec, sched, lookup_step))
         .regionDimensions   (getRegDims(tdim, rdim))
         .ngroups            ({ ngmax })

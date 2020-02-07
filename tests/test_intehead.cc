@@ -28,6 +28,7 @@
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
+#include <ewoms/eclio/parser/units/unitsystem.hh>
 
 #include <ewoms/eclio/io/rst/header.hh>
 
@@ -113,13 +114,11 @@ BOOST_AUTO_TEST_CASE(NumActive)
 
 BOOST_AUTO_TEST_CASE(UnitConventions)
 {
-    using USys = Ewoms::RestartIO::InteHEAD::UnitSystem;
-
     auto ih = Ewoms::RestartIO::InteHEAD{};
 
     // Metric
     {
-        ih.unitConventions(USys::Metric);
+        ih.unitConventions(Ewoms::UnitSystem::newMETRIC());
 
         const auto& v = ih.data();
 
@@ -128,7 +127,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
     // Field
     {
-        ih.unitConventions(USys::Field);
+        ih.unitConventions(Ewoms::UnitSystem::newFIELD());
 
         const auto& v = ih.data();
 
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
     // Lab
     {
-        ih.unitConventions(USys::Lab);
+        ih.unitConventions(Ewoms::UnitSystem::newLAB());
 
         const auto& v = ih.data();
 
@@ -146,7 +145,7 @@ BOOST_AUTO_TEST_CASE(UnitConventions)
 
     // PVT-M
     {
-        ih.unitConventions(USys::PVT_M);
+        ih.unitConventions(Ewoms::UnitSystem::newPVT_M());
 
         const auto& v = ih.data();
 
@@ -490,7 +489,6 @@ TSTEP
 }
 
 BOOST_AUTO_TEST_CASE(TestHeader) {
-    using USys = Ewoms::RestartIO::InteHEAD::UnitSystem;
     using Ph = Ewoms::RestartIO::InteHEAD::Phases;
 
     const auto nx = 10;
@@ -554,7 +552,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     auto ih = Ewoms::RestartIO::InteHEAD{}
          .dimensions(nx, ny, nz)
          .numActive(nactive)
-         .unitConventions(USys::Metric)
+         .unitConventions(Ewoms::UnitSystem::newMETRIC())
          .wellTableDimensions({ numWells, maxPerf, maxWellsInGroup, maxGroupInField, maxWellsInField})
          .calendarDate({year, month, mday, hour, minute, seconds, mseconds})
          .activePhases(Ph{1,1,1})

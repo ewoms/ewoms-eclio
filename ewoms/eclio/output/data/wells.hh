@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
+
 namespace Ewoms {
 
     namespace data {
@@ -166,6 +168,31 @@ namespace Ewoms {
         void read(MessageBufferType& buffer);
     };
 
+    struct CurrentControl {
+        bool isProducer{true};
+
+        ::Ewoms::Well::ProducerCMode prod {
+            ::Ewoms::Well::ProducerCMode::CMODE_UNDEFINED
+        };
+
+        ::Ewoms::Well::InjectorCMode inj {
+            ::Ewoms::Well::InjectorCMode::CMODE_UNDEFINED
+        };
+
+        bool operator==(const CurrentControl& rhs) const
+        {
+            return (this->isProducer == rhs.isProducer)
+                && ((this->isProducer && (this->prod == rhs.prod)) ||
+                    (!this->isProducer && (this->inj == rhs.inj)));
+        }
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const;
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer);
+    };
+
     struct Well {
         Rates rates;
         double bhp;
@@ -174,6 +201,8 @@ namespace Ewoms {
         int control;
         std::vector< Connection > connections;
         std::unordered_map<std::size_t, Segment> segments;
+        CurrentControl current_control;
+
         inline bool flowing() const noexcept;
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const;
@@ -188,7 +217,8 @@ namespace Ewoms {
                  temperature == well2.temperature &&
                  control == well2.control &&
                  connections == well2.connections &&
-                 segments == well2.segments;
+                 segments == well2.segments &&
+                 current_control == well2.current_control;
         }
     };
 
@@ -396,6 +426,18 @@ namespace Ewoms {
     }
 
     template <class MessageBufferType>
+    void CurrentControl::write(MessageBufferType& buffer) const
+    {
+        buffer.write(this->isProducer);
+        if (this->isProducer) {
+            buffer.write(this->prod);
+        }
+        else {
+            buffer.write(this->inj);
+        }
+    }
+
+    template <class MessageBufferType>
     void Well::write(MessageBufferType& buffer) const {
         this->rates.write(buffer);
         buffer.write(this->bhp);
@@ -416,6 +458,8 @@ namespace Ewoms {
                 seg.second.write(buffer);
             }
         }
+
+        this->current_control.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -460,6 +504,18 @@ namespace Ewoms {
     }
 
     template <class MessageBufferType>
+    void CurrentControl::read(MessageBufferType& buffer)
+    {
+        buffer.read(this->isProducer);
+        if (this->isProducer) {
+            buffer.read(this->prod);
+        }
+        else {
+            buffer.read(this->inj);
+        }
+    }
+
+    template <class MessageBufferType>
     void Well::read(MessageBufferType& buffer) {
         this->rates.read(buffer);
         buffer.read(this->bhp);
@@ -493,6 +549,8 @@ namespace Ewoms {
             const auto segNumber = seg.segNumber;
             this->segments.emplace(segNumber, std::move(seg));
         }
+
+        this->current_control.read(buffer);
     }
 
 }} // Ewoms::data

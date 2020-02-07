@@ -33,6 +33,7 @@ class RstHeader;
 
 struct RstWell {
     RstWell(const RstHeader& header,
+            const std::string& group_arg,
             const std::string* zwel,
             const int * iwel,
             const float * swel,
@@ -42,6 +43,7 @@ struct RstWell {
             const double * xcon);
 
     RstWell(const RstHeader& header,
+            const std::string& group_arg,
             const std::string* zwel,
             const int * iwel,
             const float * swel,
@@ -53,6 +55,7 @@ struct RstWell {
             const std::vector<double>& rseg);
 
     std::string name;
+    std::string group;
     std::array<int, 2> ij;
     std::pair<int,int> k1k2;
     int wtype;

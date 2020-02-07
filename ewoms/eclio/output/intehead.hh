@@ -24,15 +24,15 @@
 #include <memory>
 #include <vector>
 
-namespace Ewoms { namespace RestartIO {
+namespace Ewoms {
+
+class UnitSystem;
+
+namespace RestartIO {
 
     class InteHEAD
     {
     public:
-        enum class UnitSystem {
-            Metric, Field, Lab, PVT_M
-        };
-
         struct WellTableDim {
             int numWells;
             int maxPerf;

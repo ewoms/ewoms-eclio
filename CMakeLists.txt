@@ -93,6 +93,7 @@ ewoms_add_test(ResinsightTest SOURCES tests/resinsighttest.cc LIBRARIES "${Boost
 ewoms_add_test(RestartConfigTests SOURCES tests/restartconfigtests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(RockTableTests SOURCES tests/rocktabletests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(RunspecTests SOURCES tests/runspectests.cc LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(ScheduleRestartTests SOURCES tests/schedulerestarttests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(SaltTableTests SOURCES tests/salttabletests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(ScheduleTests SOURCES tests/scheduletests.cc LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(SectionTests SOURCES tests/sectiontests.cc LIBRARIES "${Boost_LIBRARIES}")

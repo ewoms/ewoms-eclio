@@ -1,6 +1,7 @@
 #include <ewoms/eclio/output/intehead.hh>
 
 #include <ewoms/eclio/output/vectoritems/intehead.hh>
+#include <ewoms/eclio/parser/units/unitsystem.hh>
 
 #include <algorithm>
 #include <chrono>
@@ -473,20 +474,7 @@ Ewoms::RestartIO::InteHEAD::numActive(const int nactive)
 Ewoms::RestartIO::InteHEAD&
 Ewoms::RestartIO::InteHEAD::unitConventions(const UnitSystem& usys)
 {
-    const auto unit = [&usys]()
-    {
-        switch (usys) {
-        case UnitSystem::Metric: return 1;
-        case UnitSystem::Field:  return 2;
-        case UnitSystem::Lab:    return 3;
-        case UnitSystem::PVT_M:  return 4;
-        }
-
-        return 1;
-    }();
-
-    this->data_[UNIT] = unit;
-
+    this->data_[UNIT] = usys.ecl_id();
     return *this;
 }
 

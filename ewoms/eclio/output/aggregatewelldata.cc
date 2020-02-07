@@ -79,14 +79,11 @@ namespace {
 
     template <typename WellOp>
     void wellLoop(const std::vector<Ewoms::Well>& wells,
-                  WellOp&&                       wellOp)
+                  WellOp&&                      wellOp)
     {
-        for (auto nWell = wells.size(), wellID = 0*nWell;
-             wellID < nWell; ++wellID)
-        {
-            const auto& well = wells[wellID];
-
-            wellOp(well, wellID);
+        auto wellID = 0*wells.size();
+        for (const auto& well : wells) {
+            wellOp(well, wellID++);
         }
     }
 
@@ -138,7 +135,7 @@ namespace {
 
         int wellType(const Ewoms::Well& well, const Ewoms::SummaryState& st)
         {
-            using WTypeVal = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellType;
+            using WTypeVal = VI::IWell::Value::WellType;
 
             if (well.isProducer()) {
                 return WTypeVal::Producer;
@@ -166,7 +163,7 @@ namespace {
 
         int ctrlMode(const Ewoms::Well& well, const Ewoms::SummaryState& st)
         {
-            using WMCtrlVal = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+            using WMCtrlVal = VI::IWell::Value::WellCtrlMode;
 
             if (well.isInjector()) {
                 const auto& controls = well.injectionControls(st);
@@ -239,6 +236,71 @@ namespace {
             return WMCtrlVal::WMCtlUnk;
         }
 
+        bool wellControlDefined(const Ewoms::data::Well& xw)
+        {
+            using PMode = ::Ewoms::Well::ProducerCMode;
+            using IMode = ::Ewoms::Well::InjectorCMode;
+
+            const auto& curr = xw.current_control;
+
+            return (curr.isProducer && (curr.prod != PMode::CMODE_UNDEFINED))
+                || (!curr.isProducer && (curr.inj != IMode::CMODE_UNDEFINED));
+        }
+
+        int ctrlMode(const Ewoms::Well& well, const Ewoms::data::Well& xw)
+        {
+            using PMode = ::Ewoms::Well::ProducerCMode;
+            using IMode = ::Ewoms::Well::InjectorCMode;
+            using Val   = VI::IWell::Value::WellCtrlMode;
+
+            const auto& curr = xw.current_control;
+
+            if (curr.isProducer) {
+                switch (curr.prod) {
+                case PMode::ORAT: return Val::OilRate;
+                case PMode::WRAT: return Val::WatRate;
+                case PMode::GRAT: return Val::GasRate;
+                case PMode::LRAT: return Val::LiqRate;
+                case PMode::RESV: return Val::ResVRate;
+                case PMode::THP:  return Val::THP;
+                case PMode::BHP:  return Val::BHP;
+                case PMode::CRAT: return Val::CombRate;
+                case PMode::GRUP: return Val::Group;
+
+                default:
+                    if (well.getStatus() == ::Ewoms::Well::Status::SHUT) {
+                        return Val::Shut;
+                    }
+                }
+            }
+            else { // injector
+                using IType = ::Ewoms::Well::InjectorType;
+
+                switch (curr.inj) {
+                case IMode::RATE: {
+                    switch (well.injectorType()) {
+                    case IType::OIL:   return Val::OilRate;
+                    case IType::WATER: return Val::WatRate;
+                    case IType::GAS:   return Val::GasRate;
+                    case IType::MULTI: return Val::WMCtlUnk;
+                    }}
+                    break;
+
+                case IMode::RESV: return Val::ResVRate;
+                case IMode::THP:  return Val::THP;
+                case IMode::BHP:  return Val::BHP;
+                case IMode::GRUP: return Val::Group;
+
+                default:
+                    if (well.getStatus() == ::Ewoms::Well::Status::SHUT) {
+                        return Val::Shut;
+                    }
+                }
+            }
+
+            return Val::WMCtlUnk;
+        }
+
         int compOrder(const Ewoms::Well& well)
         {
             using WCO   = ::Ewoms::Connection::Order;
@@ -254,14 +316,37 @@ namespace {
             return 0;
         }
 
+        template <typename IWellArray>
+        void setCurrentControl(const Ewoms::Well& well,
+                               const int        curr,
+                               IWellArray&      iWell)
+        {
+            using Ix = VI::IWell::index;
+
+            iWell[Ix::ActWCtrl] = curr;
+
+            if (well.predictionMode()) {
+                // Well in prediction mode (WCONPROD, WCONINJE).  Assign
+                // requested control mode for prediction.
+                iWell[Ix::PredReqWCtrl] = curr;
+                iWell[Ix::HistReqWCtrl] = 0;
+            }
+            else {
+                // Well controlled by observed rates/BHP (WCONHIST,
+                // WCONINJH).  Assign requested control mode for history.
+                iWell[Ix::PredReqWCtrl] = 0; // Possibly =1 instead.
+                iWell[Ix::HistReqWCtrl] = curr;
+            }
+        }
+
         template <class IWellArray>
-        void staticContrib(const Ewoms::Well&               well,
+        void staticContrib(const Ewoms::Well&                well,
                            const Ewoms::SummaryState&        st,
                            const std::size_t               msWellID,
                            const std::map <const std::string, size_t>&  GroupMapNameInd,
                            IWellArray&                     iWell)
         {
-            using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::index;
+            using Ix = VI::IWell::index;
 
             iWell[Ix::IHead] = well.getHeadI() + 1;
             iWell[Ix::JHead] = well.getHeadJ() + 1;
@@ -305,28 +390,14 @@ namespace {
             // the target control mode requested in the simulation deck.
             // This item is supposed to be the well's actual, active target
             // control mode in the simulator.
-            iWell[Ix::ActWCtrl] = ctrlMode(well, st);
-
-            if (well.predictionMode()) {
-                // Well in prediction mode (WCONPROD, WCONINJE).  Assign
-                // requested control mode for prediction.
-                iWell[Ix::PredReqWCtrl] = iWell[Ix::ActWCtrl];
-                iWell[Ix::HistReqWCtrl] = 0;
-            }
-            else {
-                // Well controlled by observed rates/BHP (WCONHIST,
-                // WCONINJH).  Assign requested control mode for history.
-                iWell[Ix::PredReqWCtrl] = 0; // Possibly =1 instead.
-                iWell[Ix::HistReqWCtrl] = iWell[Ix::ActWCtrl];
-            }
+            setCurrentControl(well, ctrlMode(well, st), iWell);
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
             iWell[Ix::NWseg] = 0;  // Number of well segments
             if (well.isMultiSegment()) {
                 iWell[Ix::MsWID] = static_cast<int>(msWellID);
-                iWell[Ix::NWseg] =
-                    well.getSegments().size();
+                iWell[Ix::NWseg] = well.getSegments().size();
             }
 
             iWell[Ix::CompOrd] = compOrder(well);
@@ -335,17 +406,22 @@ namespace {
         template <class IWellArray>
         void dynamicContribShut(IWellArray& iWell)
         {
-            using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::index;
+            using Ix = VI::IWell::index;
 
             iWell[Ix::item9 ] = -1000;
             iWell[Ix::item11] = -1000;
         }
 
         template <class IWellArray>
-        void dynamicContribOpen(const Ewoms::data::Well& xw,
+        void dynamicContribOpen(const Ewoms::Well&       well,
+                                const Ewoms::data::Well& xw,
                                 IWellArray&            iWell)
         {
-            using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::index;
+            using Ix = VI::IWell::index;
+
+            if (wellControlDefined(xw)) {
+                setCurrentControl(well, ctrlMode(well, xw), iWell);
+            }
 
             const auto any_flowing_conn =
                 std::any_of(std::begin(xw.connections),
@@ -411,11 +487,11 @@ namespace {
                 zero , zero , infty, infty, zero , dflt ,    //  12.. 17  ( 2)
                 infty, infty, infty, infty, infty, zero ,    //  18.. 23  ( 3)
                 one  , zero , zero , zero , zero , zero ,    //  24.. 29  ( 4)
-                zero , one  , zero , infty,  zero , zero ,    //  30.. 35  ( 5)
+                zero , one  , zero , infty, zero , zero ,    //  30.. 35  ( 5)
                 zero , zero , zero , zero , zero , zero ,    //  36.. 41  ( 6)
                 zero , zero , zero , zero , zero , zero ,    //  42.. 47  ( 7)
                 zero , zero , zero , zero , zero , zero ,    //  48.. 53  ( 8)
-                infty,  zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
+                infty, zero , zero , zero , zero , zero ,    //  54.. 59  ( 9)
                 zero , zero , zero , zero , zero , zero ,    //  60.. 65  (10)
                 zero , zero , zero , zero , zero , zero ,    //  66.. 71  (11)
                 zero , zero , zero , zero , zero , zero ,    //  72.. 77  (12)
@@ -885,7 +961,7 @@ captureDynamicWellData(const Schedule&             sched,
             IWell::dynamicContribShut(iWell);
         }
         else {
-            IWell::dynamicContribOpen(i->second, iWell);
+            IWell::dynamicContribOpen(well, i->second, iWell);
         }
     });
 

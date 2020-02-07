@@ -31,6 +31,7 @@ namespace Ewoms {
 namespace RestartIO {
 
 RstWell::RstWell(const RstHeader& header,
+                 const std::string& group_arg,
                  const std::string* zwel,
                  const int * iwel,
                  const float * swel,
@@ -39,6 +40,7 @@ RstWell::RstWell(const RstHeader& header,
                  const float * scon,
                  const double * xcon) :
     name(trim_copy(zwel[0])),
+    group(group_arg),
     ij({iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}),
     k1k2(std::make_pair(iwel[VI::IWell::FirstK] - 1, iwel[VI::IWell::LastK] - 1)),
     wtype(iwel[VI::IWell::WType]),
@@ -92,6 +94,7 @@ RstWell::RstWell(const RstHeader& header,
 }
 
 RstWell::RstWell(const RstHeader& header,
+                 const std::string& group_arg,
                  const std::string* zwel,
                  const int * iwel,
                  const float * swel,
@@ -101,7 +104,7 @@ RstWell::RstWell(const RstHeader& header,
                  const double * xcon,
                  const std::vector<int>& iseg,
                  const std::vector<double>& rseg) :
-    RstWell(header, zwel, iwel, swel, xwel, icon, scon, xcon)
+    RstWell(header, group_arg, zwel, iwel, swel, xwel, icon, scon, xcon)
 {
 
     if (this->msw_index) {
