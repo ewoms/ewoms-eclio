@@ -165,7 +165,7 @@ public:
         double thp_limit;
 
         InjectorType injector_type;
-        InjectorCMode cmode;
+        InjectorCMode cmode = InjectorCMode::CMODE_UNDEFINED;
         double surface_rate;
         double reservoir_rate;
         double temperature;
@@ -256,7 +256,7 @@ public:
         {
         }
 
-        ProducerCMode cmode;
+        ProducerCMode cmode = ProducerCMode::NONE;
         double oil_rate;
         double water_rate;
         double gas_rate;

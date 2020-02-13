@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     const std::shared_ptr<Ewoms::SpiralICD> sicd_ptr = segment.spiralICD();
     BOOST_CHECK_GT(sicd_ptr->maxAbsoluteRate(), 1.e99);
-    BOOST_CHECK(sicd_ptr->status()==Ewoms::SpiralICD::Status::SHUT);
+    BOOST_CHECK(sicd_ptr->status()==Ewoms::ICDStatus::SHUT);
     // 0.002 bars*day*day/Volume^2
     BOOST_CHECK_EQUAL(sicd_ptr->strength(), 0.002*1.e5*86400.*86400.);
     BOOST_CHECK_EQUAL(sicd_ptr->length(), -0.7);
@@ -412,7 +412,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL(valv1->pipeDiameter(), 0.2);
     BOOST_CHECK_EQUAL(valv1->pipeRoughness(), 0.00015);
     BOOST_CHECK_EQUAL(valv1->pipeCrossArea(), 0.031415926535897934);
-    BOOST_CHECK(valv1->status()==Ewoms::Valve::Status::OPEN);
+    BOOST_CHECK(valv1->status()==Ewoms::ICDStatus::OPEN);
 
     const int segment_number2 = segvalv_vector[1].first;
     BOOST_CHECK_EQUAL(9, segment_number2);
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL(valv2->pipeDiameter(), 1.2);
     BOOST_CHECK_EQUAL(valv2->pipeRoughness(), 0.1);
     BOOST_CHECK_EQUAL(valv2->pipeCrossArea(), 8.);
-    BOOST_CHECK(valv2->status()==Ewoms::Valve::Status::SHUT);
+    BOOST_CHECK(valv2->status()==Ewoms::ICDStatus::SHUT);
 
     // valve changes the segment data
     BOOST_CHECK_EQUAL(segment2.internalDiameter(), valv2->pipeDiameter());

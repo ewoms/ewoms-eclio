@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
+
 namespace Ewoms {
 
     class DeckRecord;
@@ -31,10 +33,6 @@ namespace Ewoms {
 
     class Valve {
     public:
-        enum class Status {
-            OPEN,
-            SHUT
-        };
 
         Valve();
         explicit Valve(const DeckRecord& record);
@@ -45,7 +43,7 @@ namespace Ewoms {
               double pipeDiam,
               double pipeRough,
               double pipeCrossA,
-              Status stat);
+              ICDStatus stat);
 
         // the function will return a map
         // [
@@ -65,7 +63,7 @@ namespace Ewoms {
         double pipeCrossArea() const;
 
         // Status: OPEN or SHUT
-        Status status() const;
+        ICDStatus status() const;
 
         void setConMaxCrossArea(const double area);
 
@@ -85,7 +83,7 @@ namespace Ewoms {
         double m_pipe_diameter;
         double m_pipe_roughness;
         double m_pipe_cross_area;
-        Status m_status;
+        ICDStatus m_status;
     };
 
 }

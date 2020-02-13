@@ -16,17 +16,22 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <ewoms/eclio/io/rst/state.hh>
-#include <ewoms/eclio/io/erst.hh>
+#ifndef EWOMS_ICD_H
+#define EWOMS_ICD_H
 
-int main(int argc, char ** argv) {
-    for (int iarg = 1; iarg < argc; iarg++) {
-        Ewoms::EclIO::ERst rst_file(argv[iarg]);
-        for (int report_step : rst_file.listOfReportStepNumbers()) {
-            if (report_step > 0) {
-                const auto& state = Ewoms::RestartIO::RstState::load(rst_file, report_step);
-                static_cast<void>(state); // Suppress unused variable warning.
-            }
-        }
-    }
+namespace Ewoms {
+
+enum class ICDStatus {
+    OPEN,
+    SHUT
+};
+
+template<typename T>
+T from_int(int int_status);
+
+template<typename T>
+int to_int(T status);
+
 }
+
+#endif

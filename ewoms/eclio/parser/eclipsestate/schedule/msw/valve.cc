@@ -25,7 +25,7 @@
 namespace Ewoms {
 
     Valve::Valve()
-        : Valve(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Status::SHUT)
+        : Valve(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, ICDStatus::SHUT)
     {
     }
 
@@ -36,7 +36,7 @@ namespace Ewoms {
                  double pipeDiam,
                  double pipeRough,
                  double pipeCrossA,
-                 Status stat)
+                 ICDStatus stat)
         : m_con_flow_coeff(conEFlowCoeff)
         , m_con_cross_area(conCrossA)
         , m_con_max_cross_area(conMaxCrossA)
@@ -81,9 +81,9 @@ namespace Ewoms {
         }
 
         if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
-            m_status = Status::OPEN;
+            m_status = ICDStatus::OPEN;
         } else {
-            m_status = Status::SHUT;
+            m_status = ICDStatus::SHUT;
             // TODO: should we check illegal input here
         }
 
@@ -111,7 +111,7 @@ namespace Ewoms {
         return res;
     }
 
-    Valve::Status Valve::status() const {
+    ICDStatus Valve::status() const {
         return m_status;
     }
 

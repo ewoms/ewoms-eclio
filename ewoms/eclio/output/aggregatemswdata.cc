@@ -414,34 +414,12 @@ namespace {
                                             const std::size_t   baseIndex,
                                             ISegArray&          iSeg)
         {
-             namespace ISegValue = ::Ewoms::RestartIO::Helpers::
-                VectorItems::ISeg::Value;
-
             using Ix = ::Ewoms::RestartIO::Helpers::
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
-
-            iSeg[baseIndex + Ix::SegmentType]    = ISegValue::SegmentType::SICD;
             iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodFlowScaling();
-
-            iSeg[baseIndex + Ix::ICDOpenShutFlag] =
-                (sicd->status() == Ewoms::SpiralICD::Status::OPEN)
-                ? ISegValue::SICDStatus::Open
-                : ISegValue::SICDStatus::Shut;
-        }
-
-        template <class ISegArray>
-        void assignValveCharacteristics(const std::size_t baseIndex,
-                                        ISegArray&        iSeg)
-        {
-            namespace ISegValue = ::Ewoms::RestartIO::Helpers::
-                VectorItems::ISeg::Value;
-
-            using Ix = ::Ewoms::RestartIO::Helpers::
-                VectorItems::ISeg::index;
-
-            iSeg[baseIndex + Ix::SegmentType] = ISegValue::SegmentType::Valve;
+            iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd->ecl_status();
         }
 
         template <class ISegArray>
@@ -452,10 +430,6 @@ namespace {
             if (isSpiralICD(segment)) {
                 assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
             }
-
-            if (isValve(segment)) {
-                assignValveCharacteristics(baseIndex, iSeg);
-            }
         }
 
         template <class ISegArray>
@@ -463,9 +437,6 @@ namespace {
                            const std::vector<int>& inteHead,
                            ISegArray&              iSeg)
         {
-            using IsTyp = ::Ewoms::RestartIO::Helpers::
-                VectorItems::ISeg::Value::SegmentType;
-
             using Ix = ::Ewoms::RestartIO::Helpers::
                 VectorItems::ISeg::index;
 
@@ -497,11 +468,9 @@ namespace {
                     iSeg[iS + 7] = sumConnectionsSegment(completionSet, welSegSet, ind);
                     iSeg[iS + 8] = seg_reorder[ind];
 
+                    iSeg[iS + Ix::SegmentType] = segment.ecl_type_id();
                     if (! isRegular(segment)) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
-                    }
-                    if (segment.segmentType() == Ewoms::Segment::SegmentType::REGULAR) {
-                       iSeg[iS + Ix::SegmentType] =  IsTyp::REGULAR;
                     }
                 }
             }

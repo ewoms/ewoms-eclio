@@ -133,7 +133,6 @@ namespace Ewoms {
         // storage index in the vector
         std::map<int, int> segment_number_to_index;
     };
-    std::ostream& operator<<( std::ostream&, const WellSegments& );
 }
 
 #endif

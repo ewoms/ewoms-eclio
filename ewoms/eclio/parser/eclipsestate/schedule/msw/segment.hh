@@ -35,19 +35,27 @@ namespace Ewoms {
         enum class SegmentType {
             REGULAR,
             SICD,
+            AICD, // Not really supported - just included to complete the enum
             VALVE,
         };
 
         Segment();
 
         Segment(int segment_number_in, int branch_in, int outlet_segment_in, double length_in, double depth_in,
-                double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in);
+                double internal_diameter_in, double roughness_in, double cross_area_in, double volume_in, bool data_ready_in, SegmentType segment_type_in);
 
-        Segment(int segmentNumber, int branchNumber, int outlegSegment,
+        Segment(int segmentNumber,
+                int branchNumber,
+                int outlegSegment,
                 const std::vector<int>& inletSegments,
-                double totalLength, double depth, double internalDiameter,
-                double roughness, double crossArea, double volume,
-                bool dataReady, SegmentType segmentType,
+                double totalLength,
+                double depth,
+                double internalDiameter,
+                double roughness,
+                double crossArea,
+                double volume,
+                bool dataReady,
+                SegmentType segmentType,
                 std::shared_ptr<SpiralICD> spiralICD,
                 std::shared_ptr<Valve> valv);
 
@@ -63,6 +71,7 @@ namespace Ewoms {
         bool dataReady() const;
 
         SegmentType segmentType() const;
+        int ecl_type_id() const;
 
         void setVolume(const double volume_in);
         void setDepthAndLength(const double depth_in, const double length_in);
@@ -71,6 +80,7 @@ namespace Ewoms {
         void addInletSegment(const int segment_number);
 
         static double invalidValue();
+        static SegmentType type_from_int(int ecl_id);
 
         bool operator==( const Segment& ) const;
         bool operator!=( const Segment& ) const;
@@ -132,7 +142,7 @@ namespace Ewoms {
 
         // indicate the type of the segment
         // regular, spiral ICD, or Valve.
-        SegmentType m_segment_type = SegmentType::REGULAR;
+        SegmentType m_segment_type;
 
         // information related to SpiralICD. It is nullptr for segments are not
         // spiral ICD type
@@ -142,7 +152,6 @@ namespace Ewoms {
         // of type of Valve
         std::shared_ptr<Valve> m_valve;
 
-        static constexpr double invalid_value = -1.e100;
         // We are not handling the length of segment projected onto the X-axis and Y-axis.
         // They are not used in the simulations and we are not supporting the plotting.
         // There are other three properties for segment related to thermal conduction,

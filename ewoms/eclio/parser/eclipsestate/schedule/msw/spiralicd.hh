@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
+
 namespace Ewoms {
 
     class DeckRecord;
@@ -30,11 +32,6 @@ namespace Ewoms {
 
     class SpiralICD {
     public:
-
-        enum class Status {
-            OPEN,
-            SHUT
-        };
 
         SpiralICD();
         explicit SpiralICD(const DeckRecord& record);
@@ -47,7 +44,7 @@ namespace Ewoms {
                   double maxViscosityRatio,
                   int methodFlowScaling,
                   double maxAbsoluteRate,
-                  Status status,
+                  ICDStatus status,
                   double scalingFactor);
 
         // the function will return a map
@@ -58,7 +55,7 @@ namespace Ewoms {
         fromWSEGSICD(const DeckKeyword& wsegsicd);
 
         double maxAbsoluteRate() const;
-        Status status() const;
+        ICDStatus status() const;
         double strength() const;
         double length() const;
         double densityCalibration() const;
@@ -70,7 +67,7 @@ namespace Ewoms {
 
         void updateScalingFactor(const double segment_length, const double completion_length);
         double scalingFactor() const;
-
+        int ecl_status() const;
         bool operator==(const SpiralICD& data) const;
 
     private:
@@ -83,7 +80,7 @@ namespace Ewoms {
         double m_max_viscosity_ratio;
         int m_method_flow_scaling;
         double m_max_absolute_rate;
-        Status m_status;
+        ICDStatus m_status;
         // scaling factor is the only one can not be gotten from deck directly, needs to be
         // updated afterwards
         double m_scaling_factor;

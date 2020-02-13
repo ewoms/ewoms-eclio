@@ -36,19 +36,6 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
             ICDOpenShutFlag = 19,
         };
 
-        namespace Value {
-            enum SegmentType : int {
-                REGULAR = -1,
-                AICD  = -8,
-                SICD  = -7,
-                Valve = -5,
-            };
-
-            enum SICDStatus : int {
-                Open = 0, // Yes, Open = 0 is correct
-                Shut = 1,
-            };
-        } // Value
     } // ISeg
 
     namespace RSeg {

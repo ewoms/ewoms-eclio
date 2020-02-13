@@ -24,7 +24,7 @@
 #include <vector>
 
 namespace Ewoms {
-    class Tuning;
+    struct Tuning;
     class Schedule;
     class UDQParams;
 }

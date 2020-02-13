@@ -16,6 +16,7 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
@@ -26,7 +27,7 @@
 namespace Ewoms {
 
     SpiralICD::SpiralICD()
-          : SpiralICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, Status::SHUT, 1.0)
+        : SpiralICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, ICDStatus::SHUT, 1.0)
     {
     }
 
@@ -39,7 +40,7 @@ namespace Ewoms {
                          double maxViscosityRatio,
                          int flowScaling,
                          double maxAbsoluteRate,
-                         Status status,
+                         ICDStatus status,
                          double scalingFactor)
             : m_strength(strength),
               m_length(length),
@@ -69,9 +70,9 @@ namespace Ewoms {
                                   : std::numeric_limits<double>::max()), m_scaling_factor(std::numeric_limits<double>::lowest())
     {
         if (record.getItem("STATUS").getTrimmedString(0) == "OPEN") {
-            m_status = Status::OPEN;
+            m_status = ICDStatus::OPEN;
         } else {
-            m_status = Status::SHUT;
+            m_status = ICDStatus::SHUT;
         }
     }
 
@@ -107,7 +108,7 @@ namespace Ewoms {
         return m_max_absolute_rate;
     }
 
-    SpiralICD::Status SpiralICD::status() const {
+    ICDStatus SpiralICD::status() const {
         return m_status;
     }
 
@@ -195,4 +196,9 @@ namespace Ewoms {
                this->status() == data.status() &&
                this->scalingFactor() == data.scalingFactor();
     }
+
+int SpiralICD::ecl_status() const {
+    return to_int(this->m_status);
+}
+
 }
