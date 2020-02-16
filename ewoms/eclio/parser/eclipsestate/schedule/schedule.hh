@@ -45,6 +45,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
 
 #include <ewoms/eclio/utility/activegridcells.hh>
+#include <ewoms/eclio/io/rst/state.hh>
 
 /*
   The DynamicState<std::shared_ptr<T>> pattern: The quantities in the Schedule
@@ -118,7 +119,8 @@ namespace Ewoms
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
-                 ErrorGuard& errors);
+                 ErrorGuard& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         template<typename T>
         Schedule(const Deck& deck,
@@ -126,26 +128,31 @@ namespace Ewoms
                  const FieldPropsManager& fp,
                  const Runspec &runspec,
                  const ParseContext& parseContext,
-                 T&& errors);
+                 T&& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseGrid& grid,
                  const FieldPropsManager& fp,
-                 const Runspec &runspec);
+                 const Runspec &runspec,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext,
-                 ErrorGuard& errors);
+                 ErrorGuard& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         template <typename T>
         Schedule(const Deck& deck,
                  const EclipseState& es,
                  const ParseContext& parseContext,
-                 T&& errors);
+                 T&& errors,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const Deck& deck,
-                 const EclipseState& es);
+                 const EclipseState& es,
+                 const RestartIO::RstState* rst = nullptr);
 
         Schedule(const TimeMap& timeMap,
                  const WellMap& wellsStatic,
@@ -302,6 +309,7 @@ namespace Ewoms
         DynamicState<int> m_nupcol;
 
         std::map<std::string,Events> wellgroup_events;
+        void load_rst(const RestartIO::RstState& rst, const UnitSystem& unit_system);
         void addWell(const std::string& wellName,
                      const std::string& group,
                      int headI,

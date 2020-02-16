@@ -16,12 +16,14 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+
 #include <cctype>
 #include <fstream>
 #include <iterator>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/opmlog/logutil.hh>
@@ -291,25 +293,25 @@ inline bool isTerminatedRecordString(const string_view& line) {
 }
 
 struct file {
-    file( boost::filesystem::path p, const std::string& in ) :
+    file( Ewoms::filesystem::path p, const std::string& in ) :
         input( in ), path( p )
     {}
 
     string_view input;
     size_t lineNR = 0;
-    boost::filesystem::path path;
+    Ewoms::filesystem::path path;
 };
 
 class InputStack : public std::stack< file, std::vector< file > > {
     public:
-        void push( std::string&& input, boost::filesystem::path p = "<memory string>" );
+        void push( std::string&& input, Ewoms::filesystem::path p = "<memory string>" );
 
     private:
         std::list< std::string > string_storage;
         using base = std::stack< file, std::vector< file > >;
 };
 
-void InputStack::push( std::string&& input, boost::filesystem::path p ) {
+void InputStack::push( std::string&& input, Ewoms::filesystem::path p ) {
     this->string_storage.push_back( std::move( input ) );
     this->emplace( p, this->string_storage.back() );
 }
@@ -317,17 +319,17 @@ void InputStack::push( std::string&& input, boost::filesystem::path p ) {
 class ParserState {
     public:
         ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard& );
-        ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard&, boost::filesystem::path );
+        ParserState( const std::vector<std::pair<std::string,std::string>>&, const ParseContext&, ErrorGuard&, Ewoms::filesystem::path );
 
         void loadString( const std::string& );
-        void loadFile( const boost::filesystem::path& );
-        void openRootFile( const boost::filesystem::path& );
+        void loadFile( const Ewoms::filesystem::path& );
+        void openRootFile( const Ewoms::filesystem::path& );
 
         void handleRandomText(const string_view& ) const;
-        boost::filesystem::path getIncludeFilePath( std::string ) const;
+        Ewoms::filesystem::path getIncludeFilePath( std::string ) const;
         void addPathAlias( const std::string& alias, const std::string& path );
 
-        const boost::filesystem::path& current_path() const;
+        const Ewoms::filesystem::path& current_path() const;
         size_t line() const;
 
         bool done() const;
@@ -340,7 +342,7 @@ class ParserState {
         InputStack input_stack;
 
         std::map< std::string, std::string > pathMap;
-        boost::filesystem::path rootPath;
+        Ewoms::filesystem::path rootPath;
 
     public:
         ParserKeywordSizeEnum lastSizeType = SLASH_TERMINATED;
@@ -352,7 +354,7 @@ class ParserState {
         bool unknown_keyword = false;
 };
 
-const boost::filesystem::path& ParserState::current_path() const {
+const Ewoms::filesystem::path& ParserState::current_path() const {
     return this->input_stack.top().path;
 }
 
@@ -402,9 +404,9 @@ ParserState::ParserState(const std::vector<std::pair<std::string, std::string>>&
 ParserState::ParserState( const std::vector<std::pair<std::string, std::string>>& code_keywords_arg,
                           const ParseContext& context,
                           ErrorGuard& errors_arg,
-                          boost::filesystem::path p ) :
+                          Ewoms::filesystem::path p ) :
     code_keywords(code_keywords_arg),
-    rootPath( boost::filesystem::canonical( p ).parent_path() ),
+    rootPath( Ewoms::filesystem::canonical( p ).parent_path() ),
     parseContext( context ),
     errors( errors_arg )
 {
@@ -415,12 +417,12 @@ void ParserState::loadString(const std::string& input) {
     this->input_stack.push( str::clean( this->code_keywords, input + "\n" ) );
 }
 
-void ParserState::loadFile(const boost::filesystem::path& inputFile) {
+void ParserState::loadFile(const Ewoms::filesystem::path& inputFile) {
 
-    boost::filesystem::path inputFileCanonical;
+    Ewoms::filesystem::path inputFileCanonical;
     try {
-        inputFileCanonical = boost::filesystem::canonical(inputFile);
-    } catch (const boost::filesystem::filesystem_error& fs_error) {
+        inputFileCanonical = Ewoms::filesystem::canonical(inputFile);
+    } catch (const Ewoms::filesystem::filesystem_error& fs_error) {
         std::string msg = "Could not open file: " + inputFile.string();
         parseContext.handleError( ParseContext::PARSE_MISSING_INCLUDE , msg, errors);
         return;
@@ -498,14 +500,14 @@ void ParserState::handleRandomText(const string_view& keywordString ) const {
     parseContext.handleError( errorKey , msg.str(), errors );
 }
 
-void ParserState::openRootFile( const boost::filesystem::path& inputFile) {
+void ParserState::openRootFile( const Ewoms::filesystem::path& inputFile) {
     this->loadFile( inputFile );
     this->deck.setDataFile( inputFile.string() );
-    const boost::filesystem::path& inputFileCanonical = boost::filesystem::canonical(inputFile);
+    const Ewoms::filesystem::path& inputFileCanonical = Ewoms::filesystem::canonical(inputFile);
     rootPath = inputFileCanonical.parent_path();
 }
 
-boost::filesystem::path ParserState::getIncludeFilePath( std::string path ) const {
+Ewoms::filesystem::path ParserState::getIncludeFilePath( std::string path ) const {
     static const std::string pathKeywordPrefix("$");
     static const std::string validPathNameCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_");
 
@@ -526,7 +528,7 @@ boost::filesystem::path ParserState::getIncludeFilePath( std::string path ) cons
         OpmLog::warning("Replaced one or more backslash with a slash in an INCLUDE path.");
     }
 
-    boost::filesystem::path includeFilePath(path);
+    Ewoms::filesystem::path includeFilePath(path);
 
     if (includeFilePath.is_relative())
         return this->rootPath / includeFilePath;
@@ -827,7 +829,7 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
         if (rawKeyword->getKeywordName() == Ewoms::RawConsts::include) {
             auto& firstRecord = rawKeyword->getFirstRecord( );
             std::string includeFileAsString = readValueToken<std::string>(firstRecord.getItem(0));
-            boost::filesystem::path includeFile = parserState.getIncludeFilePath( includeFileAsString );
+            Ewoms::filesystem::path includeFile = parserState.getIncludeFilePath( includeFileAsString );
 
             parserState.loadFile( includeFile );
             continue;
@@ -1090,7 +1092,7 @@ std::vector<std::string> Parser::getAllDeckNames () const {
             throw std::invalid_argument("Input JSON object is not an array");
     }
 
-    bool Parser::loadKeywordFromFile(const boost::filesystem::path& configFile) {
+    bool Parser::loadKeywordFromFile(const Ewoms::filesystem::path& configFile) {
 
         try {
             Json::JsonObject jsonKeyword(configFile);
@@ -1102,13 +1104,13 @@ std::vector<std::string> Parser::getAllDeckNames () const {
         }
     }
 
-    void Parser::loadKeywordsFromDirectory(const boost::filesystem::path& directory, bool recursive) {
-        if (!boost::filesystem::exists(directory))
+    void Parser::loadKeywordsFromDirectory(const Ewoms::filesystem::path& directory, bool recursive) {
+        if (!Ewoms::filesystem::exists(directory))
             throw std::invalid_argument("Directory: " + directory.string() + " does not exist.");
         else {
-            boost::filesystem::directory_iterator end;
-            for (boost::filesystem::directory_iterator iter(directory); iter != end; iter++) {
-                if (boost::filesystem::is_directory(*iter)) {
+            Ewoms::filesystem::directory_iterator end;
+            for (Ewoms::filesystem::directory_iterator iter(directory); iter != end; iter++) {
+                if (Ewoms::filesystem::is_directory(*iter)) {
                     if (recursive)
                         loadKeywordsFromDirectory(*iter, recursive);
                 } else {

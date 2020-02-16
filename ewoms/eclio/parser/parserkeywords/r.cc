@@ -1,3 +1,4 @@
+#include "config.h"
 #include <ewoms/eclio/parser/deck/udavalue.hh>
 #include <ewoms/eclio/parser/parseritem.hh>
 #include <ewoms/eclio/parser/parserrecord.hh>

@@ -15,13 +15,14 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #define BOOST_TEST_MODULE BoxTest
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
@@ -37,7 +38,7 @@ inline std::string prefix() {
 
 inline Deck makeDeck(const std::string& fileName) {
     Parser parser;
-    boost::filesystem::path boxFile(fileName);
+    Ewoms::filesystem::path boxFile(fileName);
     return parser.parseFile(boxFile.string());
 }
 

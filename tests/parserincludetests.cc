@@ -15,11 +15,12 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #define BOOST_TEST_MODULE ParserTests
-#include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -30,7 +31,7 @@ inline std::string prefix() {
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
-    boost::filesystem::path inputFilePath(prefix() + "includeInvalid.data");
+    Ewoms::filesystem::path inputFilePath(prefix() + "includeInvalid.data");
 
     Ewoms::Parser parser;
     Ewoms::ParseContext parseContext;
@@ -44,7 +45,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
 }
 
 BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
-  boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink4/path/case.data");
+  Ewoms::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink4/path/case.data");
   Ewoms::Parser parser;
   std::cout << "Input file: " << inputFilePath.string() << std::endl;
   auto deck = parser.parseFile(inputFilePath.string());
@@ -54,7 +55,7 @@ BOOST_AUTO_TEST_CASE(DATA_FILE_IS_SYMLINK) {
 }
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
-    boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink1/case_symlink.data");
+    Ewoms::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink1/case_symlink.data");
     Ewoms::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
 
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_is_a_symlink) {
 }
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlink) {
-    boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink2/caseWithIncludedSymlink.data");
+    Ewoms::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink2/caseWithIncludedSymlink.data");
     Ewoms::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
 
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_that_is_a_symlin
 }
 
 BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_includes_a_symlink) {
-    boost::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink3/case.data");
+    Ewoms::filesystem::path inputFilePath(prefix() + "includeSymlinkTestdata/symlink3/case.data");
     Ewoms::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
 
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_CASE(Verify_find_includes_Data_file_has_include_file_that_again_
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
-    boost::filesystem::path inputFilePath(prefix() + "includeValid.data");
+    Ewoms::filesystem::path inputFilePath(prefix() + "includeValid.data");
 
     Ewoms::Parser parser;
     auto deck = parser.parseFile(inputFilePath.string());
@@ -91,9 +92,9 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeValid) {
 }
 
 BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
-    boost::filesystem::path inputFile1Path(prefix() + "includeWrongCase1.data");
-    boost::filesystem::path inputFile2Path(prefix() + "includeWrongCase2.data");
-    boost::filesystem::path inputFile3Path(prefix() + "includeWrongCase3.data");
+    Ewoms::filesystem::path inputFile1Path(prefix() + "includeWrongCase1.data");
+    Ewoms::filesystem::path inputFile2Path(prefix() + "includeWrongCase2.data");
+    Ewoms::filesystem::path inputFile3Path(prefix() + "includeWrongCase3.data");
 
     Ewoms::Parser parser;
 

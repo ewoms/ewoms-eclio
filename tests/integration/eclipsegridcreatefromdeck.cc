@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #define BOOST_TEST_MODULE ScheduleIntegrationTests
 #include <math.h>
@@ -22,7 +23,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem/path.hpp>
+
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
@@ -39,7 +41,7 @@ inline std::string prefix() {
 
 BOOST_AUTO_TEST_CASE(CreateCPGrid) {
     Parser parser;
-    boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT.DATA");
+    Ewoms::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT.DATA");
     auto deck =  parser.parseFile(scheduleFile.string());
     EclipseState es(deck);
     const auto& grid = es.getInputGrid();
@@ -52,7 +54,7 @@ BOOST_AUTO_TEST_CASE(CreateCPGrid) {
 
 BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
     Parser parser;
-    boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
+    Ewoms::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
     auto deck =  parser.parseFile(scheduleFile.string());
     EclipseState es(deck);
     const auto& grid = es.getInputGrid();
@@ -65,7 +67,7 @@ BOOST_AUTO_TEST_CASE(CreateCPActnumGrid) {
 
 BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
     Parser parser;
-    boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT.DATA");
+    Ewoms::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT.DATA");
     auto deck =  parser.parseFile(scheduleFile.string());
     EclipseState es(deck);
     const auto& grid = es.getInputGrid();
@@ -78,7 +80,7 @@ BOOST_AUTO_TEST_CASE(ExportFromCPGridAllActive) {
 
 BOOST_AUTO_TEST_CASE(ExportFromCPGridACTNUM) {
     Parser parser;
-    boost::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
+    Ewoms::filesystem::path scheduleFile(prefix() + "GRID/CORNERPOINT_ACTNUM.DATA");
     auto deck =  parser.parseFile(scheduleFile.string());
     EclipseState es(deck);
     auto& grid = es.getInputGrid();

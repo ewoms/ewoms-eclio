@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #define BOOST_TEST_MODULE PvtxTableTests
 
@@ -39,7 +40,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpinjtable.hh>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <stdexcept>
 #include <iostream>
@@ -52,7 +53,7 @@ inline std::string prefix() {
 
 BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
     Parser parser;
-    boost::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    Ewoms::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.getKeyword<ParserKeywords::PVTO>()) , 1);
 
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables1 ) {
 
 BOOST_AUTO_TEST_CASE( PvtxNumTables2 ) {
     Parser parser;
-    boost::filesystem::path deckFile(prefix() + "TABLES/PVTO2.DATA");
+    Ewoms::filesystem::path deckFile(prefix() + "TABLES/PVTO2.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     BOOST_CHECK_EQUAL( PvtxTable::numTables( deck.getKeyword<ParserKeywords::PVTO>()) , 3);
 
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE( PvtxNumTables3 ) {
 
 BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
     Parser parser;
-    boost::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    Ewoms::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     Ewoms::TableManager tables(deck);
     const auto& pvtoTables = tables.getPvtoTables( );
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE( PVTOSaturatedTable ) {
 
 BOOST_AUTO_TEST_CASE( PVTGSaturatedTable ) {
     Parser parser;
-    boost::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
+    Ewoms::filesystem::path deckFile(prefix() + "TABLES/PVTX1.DATA");
     auto deck =  parser.parseFile(deckFile.string());
     Ewoms::TableManager tables(deck);
     const auto& pvtgTables = tables.getPvtgTables( );

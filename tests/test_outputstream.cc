@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #define BOOST_TEST_MODULE OutputStream
 
@@ -40,7 +41,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 namespace Ewoms { namespace EclIO {
 
@@ -81,7 +82,7 @@ BOOST_AUTO_TEST_SUITE(FileName)
 
 BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
 {
-    const auto odir = std::string{"/x/y/z///"};
+    const auto odir = std::string{"/x/y/z/"};
     const auto ext  = std::string{"F0123"};
 
     {
@@ -128,21 +129,20 @@ BOOST_AUTO_TEST_CASE(ResultSetDescriptor)
 BOOST_AUTO_TEST_SUITE_END() // FileName
 
 // ==========================================================================
-
 class RSet
 {
 public:
     explicit RSet(std::string base)
-        : odir_(boost::filesystem::temp_directory_path() /
-                boost::filesystem::unique_path("rset-%%%%"))
+        : odir_(Ewoms::filesystem::temp_directory_path() /
+                Ewoms::unique_path("rset-%%%%"))
         , base_(std::move(base))
     {
-        boost::filesystem::create_directories(this->odir_);
+        Ewoms::filesystem::create_directories(this->odir_);
     }
 
     ~RSet()
     {
-        boost::filesystem::remove_all(this->odir_);
+        Ewoms::filesystem::remove_all(this->odir_);
     }
 
     operator ::Ewoms::EclIO::OutputStream::ResultSet() const
@@ -151,7 +151,7 @@ public:
     }
 
 private:
-    boost::filesystem::path odir_;
+    Ewoms::filesystem::path odir_;
     std::string             base_;
 };
 

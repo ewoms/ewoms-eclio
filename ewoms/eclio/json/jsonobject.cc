@@ -15,14 +15,14 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/json/jsonobject.hh>
 #include <ewoms/eclio/json/cjson.h>
@@ -44,7 +44,7 @@ namespace Json {
         initialize( inline_json );
     }
 
-    JsonObject::JsonObject(const boost::filesystem::path& jsonFile ) {
+    JsonObject::JsonObject(const Ewoms::filesystem::path& jsonFile ) {
         std::ifstream stream(jsonFile.string().c_str());
         if (stream) {
             std::string content_from_file( (std::istreambuf_iterator<char>(stream)),

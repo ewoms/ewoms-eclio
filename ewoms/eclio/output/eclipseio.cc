@@ -49,8 +49,7 @@
 #include <unordered_map>
 #include <utility>    // move
 
-#include <boost/filesystem.hpp>
-#include <boost/system/error_code.hpp>
+#include <ewoms/common/filesystem.hh>
 
 namespace {
 
@@ -61,9 +60,9 @@ inline std::string uppercase( std::string x ) {
     return x;
 }
 
-void ensure_directory_exists( const boost::filesystem::path& odir )
+void ensure_directory_exists( const Ewoms::filesystem::path& odir )
 {
-    namespace fs = boost::filesystem;
+    namespace fs = Ewoms::filesystem;
 
     if (fs::exists( odir ) && !fs::is_directory( odir ))
         throw std::runtime_error {
@@ -71,11 +70,11 @@ void ensure_directory_exists( const boost::filesystem::path& odir )
             + "' already exists but is not a directory"
         };
 
-    boost::system::error_code ec{};
+    std::error_code ec{};
     if (! fs::exists( odir ))
         fs::create_directories( odir, ec );
 
-    if (ec != boost::system::errc::success) {
+    if (ec) {
         std::ostringstream msg;
 
         msg << "Failed to create output directory '"
@@ -138,7 +137,7 @@ void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) {
         + (formatted ? std::string{"F"} : std::string{})
         + "EGRID";
 
-    const auto egridFile = (boost::filesystem::path{ this->outputDir }
+    const auto egridFile = (Ewoms::filesystem::path{ this->outputDir }
         / (this->baseName + ext)).generic_string();
 
     this->grid.save( egridFile, formatted, nnc, this->es.getDeckUnitSystem());

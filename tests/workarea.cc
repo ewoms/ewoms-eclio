@@ -21,29 +21,30 @@
 
 #include <string>
 
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 namespace {
+
     class WorkArea
     {
     public:
         explicit WorkArea(const std::string& subdir = "")
-            : root_(boost::filesystem::temp_directory_path() /
-                    boost::filesystem::unique_path("wrk-%%%%"))
+            : root_(Ewoms::filesystem::temp_directory_path() /
+                    Ewoms::unique_path("wrk-%%%%"))
             , area_(root_)
-            , orig_(boost::filesystem::current_path())
+            , orig_(Ewoms::filesystem::current_path())
         {
             if (! subdir.empty())
                 this->area_ /= subdir;
 
-            boost::filesystem::create_directories(this->area_);
-            boost::filesystem::current_path(this->area_);
+            Ewoms::filesystem::create_directories(this->area_);
+            Ewoms::filesystem::current_path(this->area_);
         }
 
         void copyIn(const std::string& filename) const
         {
-            boost::filesystem::copy_file(this->orig_ / filename,
-                                         this->area_ / filename);
+            Ewoms::filesystem::copy_file(this->orig_ / filename,
+                                       this->area_ / filename);
         }
 
         std::string currentWorkingDirectory() const
@@ -53,18 +54,18 @@ namespace {
 
         void makeSubDir(const std::string& dirname)
         {
-            boost::filesystem::create_directories(this->area_ / dirname);
+            Ewoms::filesystem::create_directories(this->area_ / dirname);
         }
 
         ~WorkArea()
         {
-            boost::filesystem::current_path(this->orig_);
-            boost::filesystem::remove_all(this->root_);
+            Ewoms::filesystem::current_path(this->orig_);
+            Ewoms::filesystem::remove_all(this->root_);
         }
 
     private:
-        boost::filesystem::path root_;
-        boost::filesystem::path area_;
-        boost::filesystem::path orig_;
+        Ewoms::filesystem::path root_;
+        Ewoms::filesystem::path area_;
+        Ewoms::filesystem::path orig_;
     };
 } // Anonymous

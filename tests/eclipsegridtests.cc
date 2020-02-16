@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #include <cstdio>
 #include <ctime>
@@ -25,7 +26,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #define BOOST_TEST_MODULE EclipseGridTests
 #include <boost/test/unit_test.hpp>
@@ -1775,14 +1776,14 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     time_t timer;
     time(&timer);
 
-    std::string cwd = boost::filesystem::current_path().c_str();
+    std::string cwd = Ewoms::filesystem::current_path().c_str();
     std::string testDir = cwd + "/tmp_dir_" + std::to_string(timer);
 
-    if ( boost::filesystem::exists( testDir )) {
-        boost::filesystem::remove_all(testDir);
+    if ( Ewoms::filesystem::exists( testDir )) {
+        Ewoms::filesystem::remove_all(testDir);
     }
 
-    boost::filesystem::create_directory(testDir);
+    Ewoms::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.EGRID";
     grid1.save(fileName, formatted, nnc, units);
@@ -1887,7 +1888,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
         BOOST_CHECK( ref3_mapaxes[n] == test_mapaxes3[n]);
     }
 
-    boost::filesystem::remove_all(testDir);
+    Ewoms::filesystem::remove_all(testDir);
 }
 
 BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
@@ -1968,14 +1969,14 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     time_t timer;
     time(&timer);
 
-    std::string cwd = boost::filesystem::current_path().c_str();
+    std::string cwd = Ewoms::filesystem::current_path().c_str();
     std::string testDir = cwd + "/tmp_dir_" + std::to_string(timer);
 
-    if ( boost::filesystem::exists( testDir )) {
-        boost::filesystem::remove_all(testDir);
+    if ( Ewoms::filesystem::exists( testDir )) {
+        Ewoms::filesystem::remove_all(testDir);
     }
 
-    boost::filesystem::create_directory(testDir);
+    Ewoms::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.FEGRID";
     grid1.save(fileName, formatted, nnc, units1);
@@ -2079,7 +2080,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
         BOOST_CHECK( ref_mapaxes2[n] == test_mapaxes2[n]);
     }
 
-    boost::filesystem::remove_all(testDir);
+    Ewoms::filesystem::remove_all(testDir);
 }
 
 BOOST_AUTO_TEST_CASE(CalcCellDims) {

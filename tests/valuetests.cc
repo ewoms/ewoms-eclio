@@ -18,7 +18,6 @@
 
 #include <stdexcept>
 #include <iostream>
-#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE VALUETESTS
 #include <boost/test/unit_test.hpp>

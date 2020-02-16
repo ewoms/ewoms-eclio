@@ -15,11 +15,11 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #define BOOST_TEST_MODULE SimulationConfigTests
 
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>

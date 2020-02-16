@@ -152,20 +152,8 @@ namespace Ewoms {
         return m_segDistEnd;
     }
 
-    void Connection::setCompSegSeqIndex(std::size_t index) {
-        m_compSeg_seqIndex = index;
-    }
-
     void Connection::setDefaultSatTabId(bool id) {
         m_defaultSatTabId = id;
-    }
-
-    void Connection::setSegDistStart(const double& distStart) {
-        m_segDistStart = distStart;
-    }
-
-    void Connection::setSegDistEnd(const double& distEnd) {
-        m_segDistEnd = distEnd;
     }
 
     double Connection::depth() const {
@@ -212,10 +200,18 @@ namespace Ewoms {
         this->open_state = state;
     }
 
-    void Connection::updateSegment(int segment_number_arg, double center_depth_arg, std::size_t seqIndex) {
+    void Connection::updateSegment(int segment_number_arg,
+                                   double center_depth_arg,
+                                   std::size_t seqIndex,
+                                   std::size_t compseg_insert_index,
+                                   double start,
+                                   double end) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
         this->m_seqIndex = seqIndex;
+        this->m_compSeg_seqIndex = compseg_insert_index;
+        this->m_segDistStart = start;
+        this->m_segDistEnd = end;
     }
 
     int Connection::segment() const {

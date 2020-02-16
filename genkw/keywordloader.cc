@@ -15,13 +15,13 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/json/jsonobject.hh>
 #include <genkw/keywordloader.hh>
@@ -36,13 +36,13 @@ namespace Ewoms {
             if (verbose)
                 std::cout << "Loading keyword from file: " << keyword_file << std::endl;
 
-            boost::filesystem::path path( keyword_file );
+            Ewoms::filesystem::path path( keyword_file );
             std::unique_ptr<ParserKeyword> parserKeyword;
 
             try {
                 Json::JsonObject jsonConfig = Json::JsonObject( path );
                 parserKeyword.reset( new ParserKeyword(jsonConfig) );
-                boost::filesystem::path abs_path = boost::filesystem::absolute( path );
+                auto abs_path = Ewoms::filesystem::absolute( path );
             } catch (const std::exception& exc) {
                 std::cerr << std::endl;
                 std::cerr << "Failed to create parserkeyword from: " << path.string() << std::endl;

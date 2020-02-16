@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <fstream>
 #include <iostream>
@@ -22,18 +23,18 @@
 #include <stdexcept>
 #include <cctype>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-
+#include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/json/jsonobject.hh>
 #include <genkw/keywordgenerator.hh>
 #include <genkw/keywordloader.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
 
+#include <boost/algorithm/string/case_conv.hpp>
+
 namespace {
 
 const std::string sourceHeader =
+    "#include \"config.h\"\n"
     "#include <ewoms/eclio/parser/deck/udavalue.hh>\n"
     "#include <ewoms/eclio/parser/parseritem.hh>\n"
     "#include <ewoms/eclio/parser/parserrecord.hh>\n"
@@ -58,9 +59,9 @@ namespace Ewoms {
     }
 
     void KeywordGenerator::ensurePath( const std::string& file_name) {
-        boost::filesystem::path file(file_name);
-        if (!boost::filesystem::is_directory( file.parent_path()))
-            boost::filesystem::create_directories( file.parent_path());
+        Ewoms::filesystem::path file(file_name);
+        if (!Ewoms::filesystem::is_directory( file.parent_path()))
+            Ewoms::filesystem::create_directories( file.parent_path());
     }
 
     void KeywordGenerator::updateFile(const std::stringstream& newContent , const std::string& filename) {
@@ -77,6 +78,7 @@ namespace Ewoms {
 
     void KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
         std::stringstream newSource;
+        newSource << "#include \"config.h\"" << std::endl;
         newSource << "#include <ewoms/eclio/parser/parser.hh>" << std::endl;
         for(const auto& kw_pair : loader) {
             char first_char = std::tolower(kw_pair.first);
@@ -158,7 +160,7 @@ namespace Ewoms {
         stream << R"(
 
 #define BOOST_TEST_MODULE GeneratedKeywordTest
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 #include <boost/test/unit_test.hpp>
 #include <memory>
 #include <ewoms/eclio/json/jsonobject.hh>
@@ -170,7 +172,7 @@ auto unitSystem =  Ewoms::UnitSystem::newMETRIC();
 
 namespace Ewoms {
 void test_keyword(const ParserKeyword& inline_keyword, const std::string& json_file) {
-    boost::filesystem::path jsonPath( json_file );
+    Ewoms::filesystem::path jsonPath( json_file );
     Json::JsonObject jsonConfig( jsonPath );
     ParserKeyword json_keyword(jsonConfig);
     BOOST_CHECK_EQUAL( json_keyword, inline_keyword);

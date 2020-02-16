@@ -15,11 +15,13 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #define BOOST_TEST_MODULE IOConfigTests
 
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
@@ -254,7 +256,7 @@ BOOST_AUTO_TEST_CASE(OutputPaths) {
     BOOST_CHECK_EQUAL( output_dir2,  config2.getOutputDir() );
     BOOST_CHECK_EQUAL( "TESTSTRING", config2.getBaseName() );
 
-    namespace fs = boost::filesystem;
+    namespace fs = Ewoms::filesystem;
 
     Deck deck3;
     deck3.setDataFile( "/path/to/testString.DATA" );

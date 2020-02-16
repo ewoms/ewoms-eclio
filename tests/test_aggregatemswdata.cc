@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #define BOOST_TEST_MODULE Aggregate_MSW_Data
 #include <ewoms/eclio/output/aggregatemswdata.hh>

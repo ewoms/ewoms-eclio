@@ -22,11 +22,9 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <boost/algorithm/string.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <ewoms/eclio/opmlog/logutil.hh>
 
+#include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
@@ -94,7 +92,7 @@ namespace {
     */
 
     std::string trim_wgname(const DeckKeyword& keyword, const std::string& wgname_arg, const ParseContext& parseContext, ErrorGuard errors) {
-        std::string wgname = boost::algorithm::trim_copy(wgname_arg);
+        std::string wgname = trim_copy(wgname_arg);
         if (wgname != wgname_arg)  {
             const auto& location = keyword.location();
             std::string msg = "Illegal space: \"" + wgname_arg + "\" found when defining WELL/GROUP in keyword: " + keyword.name() + " at " + location.filename + ":" + std::to_string(location.lineno);
@@ -110,7 +108,8 @@ namespace {
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
-                        ErrorGuard& errors) :
+                        ErrorGuard& errors,
+                        const RestartIO::RstState * rst) :
         m_timeMap( deck ),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
@@ -130,6 +129,9 @@ namespace {
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue)
     {
+        if (rst)
+            this->load_rst(*rst, deck.getActiveUnitSystem());
+
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
 
         /*
@@ -156,38 +158,42 @@ namespace {
                         const FieldPropsManager& fp,
                         const Runspec &runspec,
                         const ParseContext& parseContext,
-                        T&& errors) :
-        Schedule(deck, grid, fp, runspec, parseContext, errors)
+                        T&& errors,
+                        const RestartIO::RstState * rst) :
+        Schedule(deck, grid, fp, runspec, parseContext, errors, rst)
     {}
 
     Schedule::Schedule( const Deck& deck,
                         const EclipseGrid& grid,
                         const FieldPropsManager& fp,
-                        const Runspec &runspec) :
-        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard())
+                        const Runspec &runspec,
+                        const RestartIO::RstState * rst) :
+        Schedule(deck, grid, fp, runspec, ParseContext(), ErrorGuard(), rst)
     {}
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, ErrorGuard& errors, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
                  es.runspec(),
                  parse_context,
-                 errors)
+                 errors,
+                 rst)
     {}
 
     template <typename T>
-    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors) :
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const ParseContext& parse_context, T&& errors, const RestartIO::RstState * rst) :
         Schedule(deck,
                  es.getInputGrid(),
                  es.fieldProps(),
                  es.runspec(),
                  parse_context,
-                 errors)
+                 errors,
+                 rst)
     {}
 
-    Schedule::Schedule(const Deck& deck, const EclipseState& es) :
-        Schedule(deck, es, ParseContext(), ErrorGuard())
+    Schedule::Schedule(const Deck& deck, const EclipseState& es, const RestartIO::RstState * rst) :
+        Schedule(deck, es, ParseContext(), ErrorGuard(), rst)
     {}
 
     Schedule::Schedule(const TimeMap& timeMap,
@@ -2880,5 +2886,9 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
                this->getNupCol() == data.getNupCol() &&
                this->getWellGroupEvents() == data.getWellGroupEvents();
      }
+
+void Schedule::load_rst(const RestartIO::RstState&, const UnitSystem&)
+{
+}
 
 }

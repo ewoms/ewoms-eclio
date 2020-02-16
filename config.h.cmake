@@ -48,6 +48,12 @@
 #define HAVE_ECL_INPUT 1
 #define HAVE_ECL_OUTPUT 1
 
+/* Define whether std::filesystem is available */
+#cmakedefine HAVE_STD_FILESYSTEM 1
+
+/* Define whether std::experimental::filesystem is available */
+#cmakedefine HAVE_STD_EXPERIMENTAL_FILESYSTEM 1
+
 /* begin bottom */
 
 /* end bottom */

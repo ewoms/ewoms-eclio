@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #define BOOST_TEST_MODULE ScheduleIntegrationTests
 #include <math.h>
@@ -351,7 +352,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
 
     {
         auto& group = sched.getGroup("INJ", 3);
-        const auto& injection = group.injectionControls(st);
+        const auto& injection = group.injectionControls(Phase::WATER, st);
         BOOST_CHECK_EQUAL( Phase::WATER , injection.phase);
         BOOST_CHECK( Group::InjectionCMode::VREP == injection.cmode);
         BOOST_CHECK_CLOSE( 10/Metric::Time , injection.surface_max_rate, 0.001);
@@ -364,7 +365,7 @@ BOOST_AUTO_TEST_CASE( WellTestGroups ) {
     }
     {
         auto& group = sched.getGroup("INJ", 6);
-        const auto& injection = group.injectionControls(st);
+        const auto& injection = group.injectionControls(Phase::OIL, st);
         BOOST_CHECK_EQUAL( Phase::OIL , injection.phase);
         BOOST_CHECK( Group::InjectionCMode::RATE == injection.cmode);
         BOOST_CHECK_CLOSE( 1000/Metric::Time , injection.surface_max_rate, 0.0001);

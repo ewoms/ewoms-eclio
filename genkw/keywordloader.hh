@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/filesystem/path.hpp>
 #include <ewoms/eclio/parser/parserkeyword.hh>
 
 namespace Ewoms {

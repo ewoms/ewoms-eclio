@@ -11,8 +11,15 @@ set(ENABLE_ECL_OUTPUT ON)
 set(HAVE_ECL_INPUT ON)
 set(HAVE_ECL_OUTPUT ON)
 
+# we need support for either std::filesystem or std::experimental::filesystem
+find_package(StdFilesystem REQUIRED)
+if(STD_FILESYSTEM_LIBRARIES)
+  dune_register_package_flags(
+    LIBRARIES "${STD_FILESYSTEM_LIBRARIES}")
+endif()
+
 # handle boost
-find_package(Boost COMPONENTS regex system filesystem REQUIRED)
+find_package(Boost COMPONENTS date_time REQUIRED)
 dune_register_package_flags(
   LIBRARIES "${Boost_LIBRARIES}"
   INCLUDE_DIRS "${Boost_INCLUDE_DIRS}")

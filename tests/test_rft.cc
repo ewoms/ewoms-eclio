@@ -54,7 +54,7 @@
 #include <vector>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 using namespace Ewoms;
 
@@ -75,16 +75,16 @@ namespace {
     {
     public:
         explicit RSet(std::string base)
-            : odir_(boost::filesystem::temp_directory_path() /
-                    boost::filesystem::unique_path("rset-%%%%"))
+            : odir_(Ewoms::filesystem::temp_directory_path() /
+                    Ewoms::unique_path("rset-%%%%"))
             , base_(std::move(base))
         {
-            boost::filesystem::create_directories(this->odir_);
+            Ewoms::filesystem::create_directories(this->odir_);
         }
 
         ~RSet()
         {
-            boost::filesystem::remove_all(this->odir_);
+            Ewoms::filesystem::remove_all(this->odir_);
         }
 
         std::string outputDir() const
@@ -98,7 +98,7 @@ namespace {
         }
 
     private:
-        boost::filesystem::path odir_;
+        Ewoms::filesystem::path odir_;
         std::string             base_;
     };
 

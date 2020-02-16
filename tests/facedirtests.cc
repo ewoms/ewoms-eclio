@@ -19,7 +19,6 @@
 #include <stdexcept>
 #include <iostream>
 #include <memory>
-#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE FaceDirTests
 #include <boost/test/unit_test.hpp>

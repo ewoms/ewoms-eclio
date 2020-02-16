@@ -206,11 +206,9 @@ void staticContrib(const Ewoms::Schedule&     sched,
     // 0 - ellers
 
     if (group.isInjectionGroup()) {
-        const auto& inj_cntl = group.injectionControls(sumState);
-        const auto& inj_mode = inj_cntl.cmode;
-        const auto& phs = inj_cntl.phase;
-        //Gas injection control
-        if (phs == Ewoms::Phase::WATER) {
+        if (group.hasInjectionControl(Ewoms::Phase::WATER)) {
+            const auto& inj_cntl = group.injectionControls(Ewoms::Phase::WATER, sumState);
+            const auto& inj_mode = inj_cntl.cmode;
             const auto it = cmodeToNum.find(inj_mode);
             if (it != cmodeToNum.end()) {
                 iGrp[nwgmax + 16] = it->second;
@@ -218,8 +216,10 @@ void staticContrib(const Ewoms::Schedule&     sched,
                 iGrp[nwgmax + 19] = iGrp[nwgmax + 16];
             }
         }
-        //Water injection control
-        else if (phs == Ewoms::Phase::GAS) {
+
+        if (group.hasInjectionControl(Ewoms::Phase::GAS)) {
+            const auto& inj_cntl = group.injectionControls(Ewoms::Phase::GAS, sumState);
+            const auto& inj_mode = inj_cntl.cmode;
             const auto it = cmodeToNum.find(inj_mode);
             if (it != cmodeToNum.end()) {
                 iGrp[nwgmax + 21] = it->second;
@@ -372,9 +372,8 @@ void staticContrib(const Ewoms::Group&        group,
     }
 
     if (group.isInjectionGroup()) {
-        const auto& inj_cntl = group.injectionControls(sumState);
-        const auto& phs = inj_cntl.phase;
-        if (phs == Ewoms::Phase::GAS) {
+        if (group.hasInjectionControl(Ewoms::Phase::GAS)) {
+            const auto& inj_cntl = group.injectionControls(Ewoms::Phase::GAS, sumState);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::gasSurfRateLimit] = sgprop(M::gas_surface_rate, inj_cntl.surface_max_rate);
             }
@@ -388,7 +387,9 @@ void staticContrib(const Ewoms::Group&        group,
                 sGrp[Isi::gasVoidageLimit] = inj_cntl.target_void_fraction;
             }
         }
-        if (phs == Ewoms::Phase::WATER) {
+
+        if (group.hasInjectionControl(Ewoms::Phase::WATER)) {
+            const auto& inj_cntl = group.injectionControls(Ewoms::Phase::WATER, sumState);
             if (inj_cntl.surface_max_rate > 0.) {
                 sGrp[Isi::waterSurfRateLimit] = sgprop(M::liquid_surface_rate, inj_cntl.surface_max_rate);
             }

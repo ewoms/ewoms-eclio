@@ -15,14 +15,14 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <sstream>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
@@ -58,11 +58,11 @@ namespace Ewoms {
         }
 
         inline std::string basename( const std::string& path ) {
-            return boost::filesystem::path( path ).stem().string();
+            return Ewoms::filesystem::path( path ).stem().string();
         }
 
         inline std::string outputdir( const std::string& path ) {
-            auto dir = boost::filesystem::path( path ).parent_path().string();
+            auto dir = Ewoms::filesystem::path( path ).parent_path().string();
 
             if( dir.empty() ) return default_dir;
 
@@ -252,7 +252,7 @@ namespace Ewoms {
     }
 
     std::string IOConfig::fullBasePath( ) const {
-        namespace fs = boost::filesystem;
+        namespace fs = Ewoms::filesystem;
 
         fs::path dir( m_output_dir );
         fs::path base( m_base_name );

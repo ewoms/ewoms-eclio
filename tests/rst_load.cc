@@ -16,6 +16,8 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+
 #include <ewoms/eclio/io/rst/state.hh>
 #include <ewoms/eclio/io/erst.hh>
 
@@ -24,6 +26,7 @@ int main(int argc, char ** argv) {
         Ewoms::EclIO::ERst rst_file(argv[iarg]);
         for (int report_step : rst_file.listOfReportStepNumbers()) {
             if (report_step > 0) {
+                std::cout << "Loading restart step: " << report_step << std::endl;
                 const auto& state = Ewoms::RestartIO::RstState::load(rst_file, report_step);
                 static_cast<void>(state); // Suppress unused variable warning.
             }

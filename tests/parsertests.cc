@@ -15,12 +15,14 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/json/jsonobject.hh>
 
+#include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
@@ -169,25 +171,25 @@ BOOST_AUTO_TEST_CASE(loadKeywordsJSON_manyKeywords_returnstrue) {
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_fileDoesNotExist_returnsFalse) {
     Parser parser;
-    boost::filesystem::path configFile("File/does/not/exist");
+    Ewoms::filesystem::path configFile("File/does/not/exist");
     BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidJson_returnsFalse) {
     Parser parser;
-    boost::filesystem::path configFile(prefix() + "json/example_invalid_json");
+    Ewoms::filesystem::path configFile(prefix() + "json/example_invalid_json");
     BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_invalidConfig_returnsFalse) {
     Parser parser;
-    boost::filesystem::path configFile(prefix() + "json/example_missing_name.json");
+    Ewoms::filesystem::path configFile(prefix() + "json/example_missing_name.json");
     BOOST_CHECK_EQUAL( false , parser.loadKeywordFromFile( configFile ));
 }
 
 BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
     Parser parser( false );
-    boost::filesystem::path configFile(prefix() + "json/BPR");
+    Ewoms::filesystem::path configFile(prefix() + "json/BPR");
     BOOST_CHECK_EQUAL( true , parser.loadKeywordFromFile( configFile ));
     BOOST_CHECK_EQUAL( 1U , parser.size() );
     BOOST_CHECK_EQUAL( true , parser.isRecognizedKeyword("BPR") );
@@ -195,14 +197,14 @@ BOOST_AUTO_TEST_CASE(loadKeywordFromFile_validKeyword_returnsTrueHasKeyword) {
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_directoryDoesNotexist_throws) {
         Parser parser;
-        boost::filesystem::path configPath("path/does/not/exist");
+        Ewoms::filesystem::path configPath("path/does/not/exist");
         BOOST_CHECK_THROW(parser.loadKeywordsFromDirectory( configPath), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
         Parser parser( false );
         BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        boost::filesystem::path configPath(prefix() + "config/directory1");
+        Ewoms::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
@@ -211,7 +213,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_allNames) {
 
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
         Parser parser( false );
-        boost::filesystem::path configPath(prefix() + "config/directory1");
+        Ewoms::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, false));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that
@@ -223,7 +225,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_notRecursive_strictNames) {
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
         Parser parser( false );
         BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        boost::filesystem::path configPath(prefix() + "config/directory1");
+        Ewoms::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath, true));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         BOOST_CHECK_EQUAL(true , parser.isRecognizedKeyword("BPR"));
@@ -233,7 +235,7 @@ BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_Recursive_allNames) {
 BOOST_AUTO_TEST_CASE(loadConfigFromDirectory_default) {
         Parser parser( false );
         BOOST_CHECK_EQUAL(false , parser.isRecognizedKeyword("BPR"));
-        boost::filesystem::path configPath(prefix() + "config/directory1");
+        Ewoms::filesystem::path configPath(prefix() + "config/directory1");
         BOOST_CHECK_NO_THROW(parser.loadKeywordsFromDirectory( configPath ));
         BOOST_CHECK(parser.isRecognizedKeyword("WWCT"));
         // the file name for the following keyword is "Bpr", but that

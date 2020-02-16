@@ -1,3 +1,4 @@
+#include "config.h"
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/b.hh>

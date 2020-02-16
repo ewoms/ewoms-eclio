@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <ewoms/eclio/io/outputstream.hh>
 
@@ -37,7 +38,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 namespace {
     namespace FileExtension
@@ -395,7 +396,7 @@ openUnified(const std::string& fname,
         // to be an actual unified restart file.
         throw std::invalid_argument {
             "Purported existing unified restart file '"
-            + boost::filesystem::path{fname}.filename().string()
+            + Ewoms::filesystem::path{fname}.filename().string()
             + "' does not appear to be a unified restart file"
         };
     }
@@ -443,7 +444,7 @@ openExisting(const std::string&   fname,
     // resize_file() followed by seekp() is the intended and expected
     // order of operations.
 
-    boost::filesystem::resize_file(fname, writePos);
+    Ewoms::filesystem::resize_file(fname, writePos);
 
     if (! this->stream_->ofileH.seekp(0, std::ios_base::end)) {
         throw std::invalid_argument {
@@ -799,7 +800,7 @@ std::string
 Ewoms::EclIO::OutputStream::outputFileName(const ResultSet&   rsetDescriptor,
                                          const std::string& ext)
 {
-    namespace fs = boost::filesystem;
+    namespace fs = Ewoms::filesystem;
 
     // Allow baseName = "CASE", "CASE.", "CASE.N", or "CASE.N.".
     auto fname = fs::path {

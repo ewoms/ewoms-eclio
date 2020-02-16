@@ -1,3 +1,5 @@
+#include "config.h"
+
 #define BOOST_TEST_MODULE UDQ_Data
 
 #include <boost/test/unit_test.hpp>

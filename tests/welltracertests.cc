@@ -15,10 +15,10 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #define BOOST_TEST_MODULE WellTracerTests
 
-#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>

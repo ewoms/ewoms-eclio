@@ -19,6 +19,7 @@
 #ifndef EWOMS_TABLE_MANAGER_H
 #define EWOMS_TABLE_MANAGER_H
 
+#include <cassert>
 #include <set>
 
 #include <ewoms/eclio/opmlog/opmlog.hh>

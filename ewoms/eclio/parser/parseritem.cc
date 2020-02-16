@@ -15,13 +15,12 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #include <ostream>
 #include <sstream>
 #include <iomanip>
 #include <cmath>
-
-#include <boost/lexical_cast.hpp>
 
 #include <ewoms/eclio/json/jsonobject.hh>
 

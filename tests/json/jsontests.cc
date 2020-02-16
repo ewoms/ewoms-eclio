@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
+
 #include <stdexcept>
 #include <math.h>
 #include <iostream>
@@ -23,7 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <boost/filesystem/path.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/json/jsonobject.hh>
 
@@ -213,19 +215,19 @@ BOOST_AUTO_TEST_CASE(parseJSONObject_testType) {
 }
 
 BOOST_AUTO_TEST_CASE(Parse_fileDoesNotExist_Throws) {
-    boost::filesystem::path jsonFile("file/does/not/exist");
+    Ewoms::filesystem::path jsonFile("file/does/not/exist");
     BOOST_CHECK_THROW( Json::JsonObject parser(jsonFile) , std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Parse_fileExists_OK) {
     const auto arg = framework::master_test_suite().argv[1];
-    boost::filesystem::path jsonFile(arg);
+    Ewoms::filesystem::path jsonFile(arg);
     BOOST_CHECK_NO_THROW( Json::JsonObject parser(jsonFile) );
 }
 
 BOOST_AUTO_TEST_CASE(to_string_ok) {
     const auto arg = framework::master_test_suite().argv[1];
-    boost::filesystem::path jsonFile(arg);
+    Ewoms::filesystem::path jsonFile(arg);
     Json::JsonObject parser(jsonFile);
     std::string json_string =
         "{\n"

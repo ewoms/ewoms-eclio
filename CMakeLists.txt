@@ -16,7 +16,7 @@ include(EwomsMacros)
 ewoms_project()
 
 # find the packages needed to compile the module
-find_package(Boost COMPONENTS regex system filesystem unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 
 # we want all features detected by the build system to be enabled,
 # thank you!

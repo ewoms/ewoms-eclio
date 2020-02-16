@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 #include <list>
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
@@ -85,9 +85,9 @@ namespace Ewoms {
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
-        bool loadKeywordFromFile(const boost::filesystem::path& configFile);
+        bool loadKeywordFromFile(const Ewoms::filesystem::path& configFile);
 
-        void loadKeywordsFromDirectory(const boost::filesystem::path& directory , bool recursive = true);
+        void loadKeywordsFromDirectory(const Ewoms::filesystem::path& directory , bool recursive = true);
         void applyUnitsToDeck(Deck& deck) const;
 
         /*!

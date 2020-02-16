@@ -20,7 +20,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/filesystem.hpp>
+#include <ewoms/common/filesystem.hh>
 
 namespace Ewoms { namespace EclIO {
 
@@ -53,13 +53,13 @@ private:
     std::vector<int> seqIndex;
     std::vector<float> seqTime;
 
-    std::vector<std::string> checkForMultipleResultFiles(const boost::filesystem::path& rootN, bool formatted) const;
+    std::vector<std::string> checkForMultipleResultFiles(const Ewoms::filesystem::path& rootN, bool formatted) const;
 
     void getRstString(const std::vector<std::string>& restartArray,
-                      boost::filesystem::path& pathRst,
-                      boost::filesystem::path& rootN) const;
+                      Ewoms::filesystem::path& pathRst,
+                      Ewoms::filesystem::path& rootN) const;
 
-    void updatePathAndRootName(boost::filesystem::path& dir, boost::filesystem::path& rootN) const;
+    void updatePathAndRootName(Ewoms::filesystem::path& dir, Ewoms::filesystem::path& rootN) const;
 
     std::string makeKeyString(const std::string& keyword, const std::string& wgname, int num) const;
 };

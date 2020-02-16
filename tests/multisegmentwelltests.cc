@@ -15,12 +15,11 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #include <iostream>
 #include <memory>
 #include <stdexcept>
-
-#include <boost/filesystem.hpp>
 
 #define BOOST_TEST_MODULE WellConnectionsTests
 #include <boost/test/unit_test.hpp>
@@ -89,10 +88,8 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const Ewoms::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Ewoms::WellSegments segment_set;
     const Ewoms::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-
-    segment_set.loadWELSEGS(welsegs);
+    Ewoms::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(7U, segment_set.size());
 
@@ -236,9 +233,8 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     const Ewoms::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Ewoms::WellSegments segment_set;
     const Ewoms::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-    segment_set.loadWELSEGS(welsegs);
+    Ewoms::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -294,9 +290,8 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     const Ewoms::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Ewoms::WellSegments segment_set;
     const Ewoms::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-    segment_set.loadWELSEGS(welsegs);
+    Ewoms::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(6U, segment_set.size());
 
@@ -359,10 +354,8 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     const Ewoms::DeckKeyword compsegs = deck.getKeyword("COMPSEGS");
     BOOST_CHECK_EQUAL( 8U, compsegs.size() );
 
-    Ewoms::WellSegments segment_set;
     const Ewoms::DeckKeyword welsegs = deck.getKeyword("WELSEGS");
-
-    segment_set.loadWELSEGS(welsegs);
+    Ewoms::WellSegments segment_set(welsegs);
 
     BOOST_CHECK_EQUAL(8U, segment_set.size());
 

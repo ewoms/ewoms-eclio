@@ -16,6 +16,7 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cassert>
 #include <ctime>
 #include <stddef.h>
 

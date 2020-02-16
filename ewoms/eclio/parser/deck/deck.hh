@@ -25,8 +25,6 @@
 #include <vector>
 #include <string>
 
-#include <boost/filesystem.hpp>
-
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
