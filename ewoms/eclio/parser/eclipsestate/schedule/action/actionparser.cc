@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cstdlib>
+#include <stdexcept>
 
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
 

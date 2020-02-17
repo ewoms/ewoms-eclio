@@ -17,6 +17,8 @@
 */
 #include <ewoms/eclio/parser/eclipsestate/schedule/oilvaporizationproperties.hh>
 
+#include <stdexcept>
+
 namespace Ewoms {
 
     OilVaporizationProperties::OilVaporizationProperties()

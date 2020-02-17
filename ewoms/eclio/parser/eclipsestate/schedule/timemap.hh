@@ -21,6 +21,7 @@
 
 #include <ewoms/eclio/utility/timeservice.hh>
 
+#include <string>
 #include <vector>
 #include <ctime>
 #include <map>

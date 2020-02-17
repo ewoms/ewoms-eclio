@@ -21,6 +21,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 
 #include <cassert>
+#include <stdexcept>
 
 namespace Ewoms {
 namespace {

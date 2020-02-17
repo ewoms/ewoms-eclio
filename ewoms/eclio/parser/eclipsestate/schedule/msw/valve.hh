@@ -22,6 +22,7 @@
 #include <map>
 #include <utility>
 #include <vector>
+#include <string>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
 

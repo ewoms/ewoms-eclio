@@ -17,6 +17,7 @@
 */
 
 #include <fnmatch.h>
+#include <stdexcept>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
