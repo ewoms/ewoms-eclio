@@ -25,6 +25,8 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/checkdeck.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
+#include <ewoms/eclio/parser/parsecontext.hh>
 
 BOOST_AUTO_TEST_CASE( KeywordInCorrectSection ) {
     Ewoms::Parser parser;

@@ -37,6 +37,8 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 
 #include <ewoms/eclio/parser/parser.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
+#include <ewoms/eclio/parser/parsecontext.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 

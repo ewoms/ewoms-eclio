@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE(MSW_RST) {
                                  );
     const auto& iseg = amswd.getISeg();
     const auto& rseg = amswd.getRSeg();
-    auto segment = Ewoms::RestartIO::RstSegment(iseg.data(), rseg.data());
+    auto segment = Ewoms::RestartIO::RstSegment(simCase.es.getUnits(), iseg.data(), rseg.data());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -21,12 +21,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/json/jsonobject.hh>
+#include <iostream>
 
 #include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
@@ -34,6 +36,8 @@
 
 #include "ewoms/eclio/parser/rawdeck/rawkeyword.hh"
 #include "ewoms/eclio/parser/rawdeck/rawrecord.hh"
+
+#include <iostream>
 
 using namespace Ewoms;
 

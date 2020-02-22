@@ -23,12 +23,15 @@
 #include <string>
 
 namespace Ewoms {
+class UnitSystem;
+
 namespace RestartIO {
 
 struct RstHeader;
 
 struct RstGroup {
-    RstGroup(const std::string* zwel,
+    RstGroup(const UnitSystem& unit_system,
+             const std::string* zwel,
              const int * igrp,
              const float * sgrp,
              const double * xgrp);

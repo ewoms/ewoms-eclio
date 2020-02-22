@@ -24,10 +24,12 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
 
 namespace Ewoms {
+class UnitSystem;
+
 namespace RestartIO {
 
 struct RstSegment {
-    RstSegment(const int* iseg, const double * rseg);
+    RstSegment(const ::Ewoms::UnitSystem& unit_system, const int* iseg, const double * rseg);
 
     int segment;
     int outlet_segment;

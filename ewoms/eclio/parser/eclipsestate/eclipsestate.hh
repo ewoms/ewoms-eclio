@@ -22,8 +22,8 @@
 #include <memory>
 #include <vector>
 
-#include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/eclipsestate/aquiferconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipseconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/edit/editnnc.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
@@ -51,7 +51,6 @@ namespace Ewoms {
     class EclipseGrid;
     class InitConfig;
     class IOConfig;
-    class ParseContext;
     class RestartConfig;
     class DeckSection;
     class SimulationConfig;
@@ -67,9 +66,6 @@ namespace Ewoms {
             AllProperties = IntProperties | DoubleProperties
         };
 
-        template<typename T>
-        EclipseState(const Deck& deck , const ParseContext& parseContext, T&& errors);
-        EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors);
         EclipseState(const Deck& deck);
 
         const IOConfig& getIOConfig() const;
@@ -77,9 +73,6 @@ namespace Ewoms {
 
         const InitConfig& getInitConfig() const;
         const SimulationConfig& getSimulationConfig() const;
-        const RestartConfig& getRestartConfig() const;
-        RestartConfig& getRestartConfig();
-
         const EclipseGrid& getInputGrid() const;
 
         const FaultCollection& getFaults() const;
@@ -111,7 +104,7 @@ namespace Ewoms {
         void applyModifierDeck(const Deck& deck);
 
         const Runspec& runspec() const;
-
+        const AquiferConfig& aquifer() const;
     private:
         void initIOConfigPostSchedule(const Deck& deck);
         void initTransMult();
@@ -135,7 +128,7 @@ namespace Ewoms {
 
         FaultCollection m_faults;
         std::string m_title;
-
+        AquiferConfig aquifer_config;
     };
 }
 

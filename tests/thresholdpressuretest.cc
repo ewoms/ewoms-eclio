@@ -30,6 +30,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
 
 using namespace Ewoms;
 

@@ -16,7 +16,6 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <stdexcept>
-#include <boost/algorithm/string.hpp>
 
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/utility/string.hh>
@@ -30,7 +29,7 @@ namespace Ewoms {
 namespace {
 
      std::string keyword_name(const std::string& input_name) {
-         std::string name = boost::algorithm::trim_right_copy(input_name);
+         std::string name = rtrim_copy(input_name);
          if (!ParserKeyword::validDeckName(name))
             throw std::invalid_argument("Not a valid keyword:" + name);
 

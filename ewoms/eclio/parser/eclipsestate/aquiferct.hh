@@ -46,6 +46,23 @@ namespace Ewoms {
         struct AQUCT_data{
 
             AQUCT_data(const DeckRecord& record, const TableManager& tables);
+            AQUCT_data() = default;
+            AQUCT_data(int aqID,
+                       int infID,
+                       int pvtID,
+                       double phi_aq_,
+                       double d0_,
+                       double C_t_,
+                       double r_o_,
+                       double k_a_,
+                       double c1_,
+                       double h_,
+                       double theta_,
+                       double c2_,
+                       const std::pair<bool, double>& p0_,
+                       const std::vector<double>& td_,
+                       const std::vector<double>& pi_,
+                       const std::vector<int>& cell_id_);
 
             int aquiferID;
             int inftableID, pvttableID;
@@ -66,7 +83,7 @@ namespace Ewoms {
 
             bool operator==(const AQUCT_data& other) const;
         };
-
+        AquiferCT() = default;
         AquiferCT(const TableManager& tables, const Deck& deck);
         AquiferCT(const std::vector<AquiferCT::AQUCT_data>& data);
 

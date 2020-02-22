@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <fstream>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -28,6 +29,8 @@
 #include <ewoms/eclio/parser/units/units.hh>
 
 #include <tests/workarea.cc>
+
+#include <fstream>
 
 using namespace Ewoms;
 

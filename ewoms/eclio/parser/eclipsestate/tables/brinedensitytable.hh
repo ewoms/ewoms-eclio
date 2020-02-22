@@ -33,6 +33,18 @@ namespace Ewoms {
 
         bool operator==(const BrineDensityTable& data) const;
 
+        std::vector<double>::const_iterator begin() const {
+            return m_tableValues.begin();
+        }
+
+        std::vector<double>::const_iterator end() const {
+            return m_tableValues.end();
+        }
+
+        std::size_t size() const {
+            return this->m_tableValues.size();
+        }
+
     private:
         std::vector<double> m_tableValues;
     };

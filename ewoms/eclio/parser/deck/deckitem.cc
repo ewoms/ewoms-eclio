@@ -19,8 +19,7 @@
 #include <ewoms/eclio/parser/deck/deckoutput.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
-
-#include <boost/algorithm/string.hpp>
+#include <ewoms/eclio/parser/utility/string.hh>
 
 #include <algorithm>
 #include <string>
@@ -254,9 +253,7 @@ void DeckItem::push_backDummyDefault() {
 }
 
 std::string DeckItem::getTrimmedString( size_t index ) const {
-    return boost::algorithm::trim_copy(
-               this->value_ref< std::string >().at( index )
-           );
+    return trim_copy(this->value_ref< std::string >().at(index));
 }
 
 double DeckItem::getSIDouble( size_t index ) const {

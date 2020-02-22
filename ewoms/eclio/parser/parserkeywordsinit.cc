@@ -614,6 +614,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PERFORMANCE_PROBE >();
    p.addKeyword< ParserKeywords::PERMAVE >();
    p.addKeyword< ParserKeywords::PERMR >();
+   p.addKeyword< ParserKeywords::PERMRED >();
    p.addKeyword< ParserKeywords::PERMTHT >();
    p.addKeyword< ParserKeywords::PERMX >();
    p.addKeyword< ParserKeywords::PERMXY >();
@@ -661,6 +662,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PORO >();
    p.addKeyword< ParserKeywords::PORV >();
    p.addKeyword< ParserKeywords::PPCWMAX >();
+   p.addKeyword< ParserKeywords::PRECSALT >();
    p.addKeyword< ParserKeywords::PREF >();
    p.addKeyword< ParserKeywords::PREFS >();
    p.addKeyword< ParserKeywords::PRESSURE >();
@@ -761,7 +763,9 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::RVVD >();
    p.addKeyword< ParserKeywords::SALT >();
    p.addKeyword< ParserKeywords::SALTNODE >();
+   p.addKeyword< ParserKeywords::SALTPVD >();
    p.addKeyword< ParserKeywords::SALTREST >();
+   p.addKeyword< ParserKeywords::SALTSOL >();
    p.addKeyword< ParserKeywords::SALTVD >();
    p.addKeyword< ParserKeywords::SATNUM >();
    p.addKeyword< ParserKeywords::SATOPTS >();
@@ -949,6 +953,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::USENOFLO >();
    p.addKeyword< ParserKeywords::VAPOIL >();
    p.addKeyword< ParserKeywords::VAPPARS >();
+   p.addKeyword< ParserKeywords::VAPWAT >();
    p.addKeyword< ParserKeywords::VDFLOW >();
    p.addKeyword< ParserKeywords::VDFLOWR >();
    p.addKeyword< ParserKeywords::VE >();

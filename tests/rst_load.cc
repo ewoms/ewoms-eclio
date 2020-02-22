@@ -15,11 +15,13 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
 
 #include <iostream>
 
 #include <ewoms/eclio/io/rst/state.hh>
 #include <ewoms/eclio/io/erst.hh>
+#include <ewoms/eclio/parser/units/unitsystem.hh>
 
 int main(int argc, char ** argv) {
     for (int iarg = 1; iarg < argc; iarg++) {
@@ -29,6 +31,14 @@ int main(int argc, char ** argv) {
                 std::cout << "Loading restart step: " << report_step << std::endl;
                 const auto& state = Ewoms::RestartIO::RstState::load(rst_file, report_step);
                 static_cast<void>(state); // Suppress unused variable warning.
+
+                for (const auto& rst_well : state.wells) {
+                    std::cout << "Loading well " << rst_well.name << std::endl;
+                    for (const auto& rst_segment : rst_well.segments) {
+                        std::cout << "  Segment: " << rst_segment.segment << std::endl;
+                        Ewoms::Segment segment(rst_segment);
+                    }
+                }
             }
         }
     }

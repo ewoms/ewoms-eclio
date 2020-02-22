@@ -43,6 +43,8 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/parser.hh>
+#include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
@@ -1044,6 +1046,8 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     const auto& well_1 = schedule.getWell("OP_1", 1);
     const auto wpp_1 = well_1.getProductionProperties();
     BOOST_CHECK_EQUAL(wpp_1.WaterRate.get<double>(), 0);
+    BOOST_CHECK (wpp_1.hasProductionControl( Ewoms::Well::ProducerCMode::ORAT) );
+    BOOST_CHECK (!wpp_1.hasProductionControl( Ewoms::Well::ProducerCMode::RESV) );
 
     const auto& well_2 = schedule.getWell("OP_1", 2);
     const auto wpp_2 = well_2.getProductionProperties();
@@ -1057,6 +1061,10 @@ BOOST_AUTO_TEST_CASE(createDeckWithWeltArg) {
     BOOST_CHECK_EQUAL(prod_controls.bhp_limit, 1900 * siFactorP);
     BOOST_CHECK_EQUAL(prod_controls.thp_limit, 2000 * siFactorP);
     BOOST_CHECK_EQUAL(prod_controls.vfp_table_number, 2100);
+
+    BOOST_CHECK (wpp_2.hasProductionControl( Ewoms::Well::ProducerCMode::ORAT) );
+    BOOST_CHECK (wpp_2.hasProductionControl( Ewoms::Well::ProducerCMode::RESV) );
+
 }
 
 BOOST_AUTO_TEST_CASE(createDeckWithWeltArgException) {
@@ -3035,8 +3043,7 @@ VFPINJ \n                                       \
     //The data itself
     {
         typedef Ewoms::VFPInjTable::array_type::size_type size_type;
-        const Ewoms::VFPInjTable::array_type& data = vfpinjTable.getTable();
-        const size_type* size = data.shape();
+        const auto size = vfpinjTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2);
         BOOST_CHECK_EQUAL(size[1], 3);
@@ -3045,10 +3052,10 @@ VFPINJ \n                                       \
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type t=0; t<size[0]; ++t) {
-            for (size_type f=0; f<size[1]; ++f) {
+        for (size_type t = 0; t < size[0]; ++t) {
+            for (size_type f = 0; f < size[1]; ++f) {
                 index += 1.0;
-                BOOST_CHECK_EQUAL(data[t][f], index*conversion_factor);
+                BOOST_CHECK_EQUAL(vfpinjTable(t,f), index*conversion_factor);
             }
         }
     }

@@ -54,6 +54,30 @@ const std::string SALTNODE::keywordName = "SALTNODE";
 const std::string SALTNODE::SALT_CONCENTRATION::itemName = "SALT_CONCENTRATION";
 
 
+SALTPVD::SALTPVD( ) : ParserKeyword("SALTPVD")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("EQLDIMS","NTEQUL",0);
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("SALTPVD");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Length");
+        item.push_backDimension("Density");
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string SALTPVD::keywordName = "SALTPVD";
+const std::string SALTPVD::DATA::itemName = "DATA";
+
+
 SALTREST::SALTREST( ) : ParserKeyword("SALTREST")
 {
   setFixedSize( (size_t) 1);
@@ -73,6 +97,27 @@ SALTREST::SALTREST( ) : ParserKeyword("SALTREST")
 }
 const std::string SALTREST::keywordName = "SALTREST";
 const std::string SALTREST::SALT_CONCENTRATION::itemName = "SALT_CONCENTRATION";
+
+
+SALTSOL::SALTSOL( ) : ParserKeyword("SALTSOL")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("SALTSOL");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("data", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Density");
+        record.addDataItem(item);
+     }
+     addDataRecord( record );
+  }
+}
+const std::string SALTSOL::keywordName = "SALTSOL";
+const std::string SALTSOL::data::itemName = "data";
 
 
 SALTVD::SALTVD( ) : ParserKeyword("SALTVD")

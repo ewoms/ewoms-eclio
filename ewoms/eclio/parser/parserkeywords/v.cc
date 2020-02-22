@@ -46,6 +46,16 @@ const std::string VAPPARS::OIL_VAP_PROPENSITY::itemName = "OIL_VAP_PROPENSITY";
 const std::string VAPPARS::OIL_DENSITY_PROPENSITY::itemName = "OIL_DENSITY_PROPENSITY";
 
 
+VAPWAT::VAPWAT( ) : ParserKeyword("VAPWAT")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("RUNSPEC");
+  clearDeckNames();
+  addDeckName("VAPWAT");
+}
+const std::string VAPWAT::keywordName = "VAPWAT";
+
+
 VDFLOW::VDFLOW( ) : ParserKeyword("VDFLOW")
 {
   setFixedSize( (size_t) 1);

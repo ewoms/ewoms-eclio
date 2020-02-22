@@ -425,6 +425,24 @@ namespace ParserKeywords {
 
 
 
+   class PERMRED : public ParserKeyword {
+   public:
+       PERMRED();
+       static const std::string keywordName;
+
+       class POROSITY {
+       public:
+           static const std::string itemName;
+       };
+
+       class PERMREDMULT {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class PERMTHT : public ParserKeyword {
    public:
        PERMTHT();
@@ -1307,6 +1325,14 @@ namespace ParserKeywords {
            static const std::string itemName;
            static const std::string defaultValue;
        };
+   };
+
+
+
+   class PRECSALT : public ParserKeyword {
+   public:
+       PRECSALT();
+       static const std::string keywordName;
    };
 
 

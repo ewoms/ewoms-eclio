@@ -30,12 +30,38 @@ namespace ParserKeywords {
 
 
 
+   class SALTPVD : public ParserKeyword {
+   public:
+       SALTPVD();
+       static const std::string keywordName;
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class SALTREST : public ParserKeyword {
    public:
        SALTREST();
        static const std::string keywordName;
 
        class SALT_CONCENTRATION {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class SALTSOL : public ParserKeyword {
+   public:
+       SALTSOL();
+       static const std::string keywordName;
+
+       class data {
        public:
            static const std::string itemName;
        };

@@ -25,6 +25,8 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
+#include <ewoms/eclio/parser/eclipsestate/ioconfig/restartconfig.hh>
 
 using namespace Ewoms;
 
@@ -183,7 +185,7 @@ BOOST_AUTO_TEST_CASE(DefaultProperties) {
 
     auto deck = Parser().parseString( data);
     IOConfig ioConfig( deck );
-    RestartConfig rstConfig( deck);
+    RestartConfig rstConfig( TimeMap(deck), deck);
 
     /*If no GRIDFILE nor NOGGF keywords are specified, default output an EGRID file*/
     BOOST_CHECK( ioConfig.getWriteEGRIDFile() );

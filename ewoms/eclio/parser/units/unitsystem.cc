@@ -18,8 +18,8 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <boost/algorithm/string.hpp>
 
+#include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
 #include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
@@ -1166,8 +1166,7 @@ namespace {
     }
 
     Dimension UnitSystem::parseFactor(const std::string& dimension) const {
-        std::vector<std::string> dimensionList;
-        boost::split(dimensionList , dimension , boost::is_any_of("*"));
+        std::vector<std::string> dimensionList = split_string(dimension, '*');
 
         double SIfactor = 1.0;
         for( const auto& x : dimensionList ) {
@@ -1193,8 +1192,7 @@ namespace {
         const bool haveDivisor = divCount == 1;
         if( !haveDivisor ) return this->parseFactor( dimension );
 
-        std::vector<std::string> parts;
-        boost::split(parts , dimension , boost::is_any_of("/"));
+        std::vector<std::string> parts = split_string(dimension, '/');
         Dimension dividend = this->parseFactor( parts[0] );
         Dimension divisor = this->parseFactor( parts[1] );
 

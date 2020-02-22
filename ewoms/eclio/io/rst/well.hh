@@ -27,12 +27,15 @@
 #include <ewoms/eclio/io/rst/segment.hh>
 
 namespace Ewoms {
+class UnitSystem;
+
 namespace RestartIO {
 
 struct RstHeader;
 
 struct RstWell {
-    RstWell(const RstHeader& header,
+    RstWell(const ::Ewoms::UnitSystem& unit_system,
+            const RstHeader& header,
             const std::string& group_arg,
             const std::string* zwel,
             const int * iwel,
@@ -42,7 +45,8 @@ struct RstWell {
             const float * scon,
             const double * xcon);
 
-    RstWell(const RstHeader& header,
+    RstWell(const ::Ewoms::UnitSystem& unit_system,
+            const RstHeader& header,
             const std::string& group_arg,
             const std::string* zwel,
             const int * iwel,
@@ -62,7 +66,7 @@ struct RstWell {
     int active_control;
     int vfp_table;
     int pred_requested_control;
-    int xflow;
+    bool allow_xflow;
     int hist_requested_control;
     int msw_index;
     int completion_ordering;
@@ -77,6 +81,7 @@ struct RstWell {
     float hist_lrat_target;
     float hist_grat_target;
     float hist_bhp_target;
+    float datum_depth;
 
     double oil_rate;
     double water_rate;
@@ -102,6 +107,7 @@ struct RstWell {
     double water_void_rate;
     double gas_void_rate;
 
+    const RstSegment segment(int segment_number) const;
     std::vector<RstConnection> connections;
     std::vector<RstSegment> segments;
 };

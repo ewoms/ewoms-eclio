@@ -25,6 +25,10 @@
 namespace Ewoms {
     class SpiralICD;
     class Valve;
+
+    namespace RestartIO {
+        struct RstSegment;
+    }
 }
 
 namespace Ewoms {
@@ -61,6 +65,8 @@ namespace Ewoms {
                 SegmentType segmentType,
                 std::shared_ptr<SpiralICD> spiralICD,
                 std::shared_ptr<Valve> valv);
+
+        Segment(const RestartIO::RstSegment& rst_segment);
 
         int segmentNumber() const;
         int branchNumber() const;

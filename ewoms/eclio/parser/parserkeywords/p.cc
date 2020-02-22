@@ -666,6 +666,32 @@ const std::string PERMR::keywordName = "PERMR";
 const std::string PERMR::data::itemName = "data";
 
 
+PERMRED::PERMRED( ) : ParserKeyword("PERMRED")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PERMRED");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("POROSITY", ParserItem::itype::DOUBLE);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("PERMREDMULT", ParserItem::itype::DOUBLE);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PERMRED::keywordName = "PERMRED";
+const std::string PERMRED::POROSITY::itemName = "POROSITY";
+const std::string PERMRED::PERMREDMULT::itemName = "PERMREDMULT";
+
+
 PERMTHT::PERMTHT( ) : ParserKeyword("PERMTHT")
 {
   setFixedSize( (size_t) 1);
@@ -2004,6 +2030,16 @@ const std::string PPCWMAX::MAXIMUM_CAPILLARY_PRESSURE::itemName = "MAXIMUM_CAPIL
 const double PPCWMAX::MAXIMUM_CAPILLARY_PRESSURE::defaultValue = 100000000000000000000.000000;
 const std::string PPCWMAX::MODIFY_CONNATE_SATURATION::itemName = "MODIFY_CONNATE_SATURATION";
 const std::string PPCWMAX::MODIFY_CONNATE_SATURATION::defaultValue = "NO";
+
+
+PRECSALT::PRECSALT( ) : ParserKeyword("PRECSALT")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("RUNSPEC");
+  clearDeckNames();
+  addDeckName("PRECSALT");
+}
+const std::string PRECSALT::keywordName = "PRECSALT";
 
 
 PREF::PREF( ) : ParserKeyword("PREF")

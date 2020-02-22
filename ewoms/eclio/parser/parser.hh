@@ -102,7 +102,7 @@ namespace Ewoms {
             addParserKeyword( T() );
         }
 
-        static EclipseState parse(const Deck& deck,            const ParseContext& context, ErrorGuard& errors);
+        static EclipseState parse(const Deck& deck,            const ParseContext& context);
         static EclipseState parse(const std::string &filename, const ParseContext& context, ErrorGuard& errors);
         static EclipseState parseData(const std::string &data, const ParseContext& context, ErrorGuard& errors);
 
@@ -117,8 +117,7 @@ namespace Ewoms {
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the
         /// fully constructed InputGrid
         static EclipseGrid parseGrid(const Deck& deck,
-                                     const ParseContext& context,
-                                     ErrorGuard& errors);
+                                     const ParseContext& context);
 
         /// Parses the provided deck string.  If context contains ParseContext::PARSE_PARTIAL_DECK,
         /// we construct only a lean grid, otherwise, we construct a full EclipseState and return the

@@ -21,6 +21,7 @@
 #include <stdexcept>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>

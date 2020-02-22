@@ -351,7 +351,7 @@ struct CaseObjects
 
 CaseObjects::CaseObjects(const Ewoms::Deck& deck, const Ewoms::ParseContext& ctxt)
     : guard{}
-    , es   (deck,     ctxt, guard)
+    , es   (deck)
     , sched(deck, es, ctxt, guard)
 {
 }

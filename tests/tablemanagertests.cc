@@ -723,8 +723,7 @@ VFPPROD \n\
     //The data itself
     {
         typedef Ewoms::VFPProdTable::array_type::size_type size_type;
-        const Ewoms::VFPProdTable::array_type& data = vfpprodTable.getTable();
-        const size_type* size = data.shape();
+        const auto size = vfpprodTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2);
         BOOST_CHECK_EQUAL(size[1], 2);
@@ -736,13 +735,13 @@ VFPPROD \n\
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type a=0; a<size[3]; ++a) {
-            for (size_type g=0; g<size[2]; ++g) {
-                for (size_type w=0; w<size[1]; ++w) {
-                    for (size_type t=0; t<size[0]; ++t) {
-                        for (size_type f=0; f<size[4]; ++f) {
+        for (size_type a = 0; a < size[3]; ++a) {
+            for (size_type g = 0;  g < size[2]; ++g) {
+                for (size_type w = 0; w < size[1]; ++w) {
+                    for (size_type t = 0; t < size[0]; ++t) {
+                        for (size_type f = 0; f < size[4]; ++f) {
                             index += 1.0;
-                            BOOST_CHECK_EQUAL(data[t][w][g][a][f], index*conversion_factor);
+                            BOOST_CHECK_EQUAL(const_cast<const VFPProdTable&>(vfpprodTable)(t,w,g,a,f), index*conversion_factor);
                         }
                     }
                 }
@@ -839,15 +838,13 @@ VFPPROD \n\
 
     //The data itself
     {
-        typedef Ewoms::VFPProdTable::array_type::size_type size_type;
-        const Ewoms::VFPProdTable::array_type& data = vfpprodTable.getTable();
-        const size_type* size = data.shape();
+        const auto size = vfpprodTable.shape();
 
         //Table given as BHP => barsa. Convert to pascal
         double conversion_factor = 100000.0;
 
         BOOST_CHECK_EQUAL(size[0]*size[1]*size[2]*size[3]*size[4], 1);
-        BOOST_CHECK_EQUAL(data[0][0][0][0][0], 1.5*conversion_factor);
+        BOOST_CHECK_EQUAL(const_cast<const VFPProdTable&>(vfpprodTable)(0,0,0,0,0), 1.5*conversion_factor);
     }
 }
 
@@ -1111,8 +1108,7 @@ VFPINJ \n\
     //The data itself
     {
         typedef Ewoms::VFPInjTable::array_type::size_type size_type;
-        const Ewoms::VFPInjTable::array_type& data = vfpinjTable.getTable();
-        const size_type* size = data.shape();
+        const auto size = vfpinjTable.shape();
 
         BOOST_CHECK_EQUAL(size[0], 2);
         BOOST_CHECK_EQUAL(size[1], 3);
@@ -1121,10 +1117,10 @@ VFPINJ \n\
         double conversion_factor = 100000.0;
 
         double index = 0.5;
-        for (size_type t=0; t<size[0]; ++t) {
-            for (size_type f=0; f<size[1]; ++f) {
+        for (size_type t = 0; t < size[0]; ++t) {
+            for (size_type f = 0; f < size[1]; ++f) {
                 index += 1.0;
-                BOOST_CHECK_EQUAL(data[t][f], index*conversion_factor);
+                BOOST_CHECK_EQUAL(const_cast<const VFPInjTable&>(vfpinjTable)(t,f), index*conversion_factor);
             }
         }
     }

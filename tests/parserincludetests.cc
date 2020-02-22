@@ -20,11 +20,15 @@
 #define BOOST_TEST_MODULE ParserTests
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
 #include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
+
+#include <iostream>
 
 inline std::string prefix() {
     return boost::unit_test::framework::master_test_suite().argv[1];

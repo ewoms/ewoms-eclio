@@ -16,6 +16,7 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
 #include <sstream>
 
 #include <ewoms/eclio/parser/parser.hh>

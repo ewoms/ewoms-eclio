@@ -17,12 +17,11 @@
  */
 
 #include <algorithm>
+#include <climits>
 #include <iostream>
 #include <iterator>
 #include <iomanip>
 #include <sstream>
-
-#include <boost/lexical_cast.hpp>
 
 #include <ewoms/eclio/parser/utility/functional.hh>
 
@@ -507,17 +506,16 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
     }
 
     template<typename T>
-    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, T&& errors ) :
-        RestartConfig(deck, parseContext, errors)
+    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck, const ParseContext& parseContext, T&& errors ) :
+        RestartConfig(time_map, deck, parseContext, errors)
     {}
 
-    RestartConfig::RestartConfig( const Deck& deck) :
-        RestartConfig(deck, ParseContext(), ErrorGuard())
+    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck) :
+        RestartConfig(time_map, deck, ParseContext(), ErrorGuard())
     {}
 
-    RestartConfig::RestartConfig( const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
-        io_config( deck ),
-        m_timemap( deck ),
+    RestartConfig::RestartConfig( const TimeMap& time_map, const Deck& deck, const ParseContext& parseContext, ErrorGuard& errors ) :
+        m_timemap( time_map ),
         m_first_restart_step( -1 ),
         restart_schedule( m_timemap, {0,0,1}),
         restart_keywords( m_timemap, {} ),
@@ -528,14 +526,12 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         initFirstOutput( );
     }
 
-    RestartConfig::RestartConfig(const IOConfig& io_config_arg,
-                                 const TimeMap& timeMap,
+    RestartConfig::RestartConfig(const TimeMap& timeMap,
                                  int firstRestartStep,
                                  bool writeInitial,
                                  const DynamicState<RestartSchedule>& restart_sched,
                                  const DynamicState<std::map<std::string,int>>& restart_keyw,
                                  const std::vector<bool>& save_keyw) :
-        io_config(io_config_arg),
         m_timemap(timeMap),
         m_first_restart_step(firstRestartStep),
         m_write_initial_RST_file(writeInitial),
@@ -569,14 +565,6 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
 
     const std::map< std::string, int >& RestartConfig::getRestartKeywords( size_t timestep ) const {
         return restart_keywords.at( timestep );
-    }
-
-    IOConfig& RestartConfig::ioConfig() {
-        return this->io_config;
-    }
-
-    const IOConfig& RestartConfig::ioConfig() const {
-        return this->io_config;
     }
 
     int RestartConfig::getKeyword( const std::string& keyword, size_t timeStep) const {
@@ -667,7 +655,7 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
             found_mnemonic_RESTART = mnemonic.find("RESTART=");
             if (found_mnemonic_RESTART != std::string::npos) {
                 std::string restart_no = mnemonic.substr(found_mnemonic_RESTART+8, mnemonic.size());
-                restart = boost::lexical_cast<size_t>(restart_no);
+                restart = std::strtoul(restart_no.c_str(), nullptr, 10);
                 handle_RPTSOL_RESTART = true;
             }
         }
@@ -679,12 +667,9 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
         if (found_mnemonic_RESTART == std::string::npos) {
             if (item.data_size() >= 7)  {
                 const std::string& integer_control = item.get< std::string >(6);
-                try {
-                    restart = boost::lexical_cast<size_t>(integer_control);
+                restart = std::strtoul(integer_control.c_str(), nullptr, 10);
+                if (restart != ULONG_MAX)
                     handle_RPTSOL_RESTART = true;
-                } catch (boost::bad_lexical_cast &) {
-                    //do nothing
-                }
             }
         }
 
@@ -753,7 +738,6 @@ void RestartConfig::handleScheduleSection(const SCHEDULESection& schedule, const
                this->writeInitialRst() == data.writeInitialRst() &&
                this->restartSchedule() == data.restartSchedule() &&
                this->restartKeywords() == data.restartKeywords() &&
-               this->saveKeywords() == data.saveKeywords() &&
-               this->ioConfig() == data.ioConfig();
+               this->saveKeywords() == data.saveKeywords();
     }
 }

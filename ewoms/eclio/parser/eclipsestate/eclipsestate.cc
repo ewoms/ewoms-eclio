@@ -18,8 +18,6 @@
 
 #include <set>
 
-#include <boost/algorithm/string/join.hpp>
-
 #include <ewoms/eclio/opmlog/logutil.hh>
 
 #include <ewoms/eclio/parser/deck/decksection.hh>
@@ -38,31 +36,16 @@
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/simulationconfig/simulationconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
-#include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/parserkeywords/m.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
 namespace Ewoms {
 
-/*
-This Function is used in Python to check if the
-ENABBLE_3DPROPS_TESTING macro has been set.
-*/
-#ifdef ENABLE_3DPROPS_TESTING
-bool enable3DPropsTesting() {
-    return true;
-}
-#else
-bool enable3DPropsTesting() {
-    return false;
-}
-#endif
-
-    EclipseState::EclipseState(const Deck& deck , const ParseContext& parseContext, ErrorGuard& errors) :
+    EclipseState::EclipseState(const Deck& deck) :
         m_tables(            deck ),
         m_runspec(           deck ),
-        m_eclipseConfig(     deck, parseContext, errors ),
+        m_eclipseConfig(     deck ),
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),
@@ -75,27 +58,21 @@ bool enable3DPropsTesting() {
         if( this->runspec().phases().size() < 3 )
             OpmLog::info("Only " + std::to_string( this->runspec().phases().size() )
                                                                 + " fluid phases are enabled" );
+        this->aquifer_config = AquiferConfig(this->m_tables, this->m_inputGrid, deck);
 
         if (deck.hasKeyword( "TITLE" )) {
             const auto& titleKeyword = deck.getKeyword( "TITLE" );
             const auto& item = titleKeyword.getRecord( 0 ).getItem( 0 );
             std::vector<std::string> itemValue = item.getData<std::string>();
-            m_title = boost::algorithm::join( itemValue, " " );
+            for (const auto& entry : itemValue)
+                m_title += entry + ' ';
+            m_title.pop_back();
         }
 
         initTransMult();
         initFaults(deck);
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
     }
-
-    template<typename T>
-    EclipseState::EclipseState(const Deck& deck, const ParseContext& parseContext, T&& errors) :
-        EclipseState(deck, parseContext, errors)
-    {}
-
-    EclipseState::EclipseState(const Deck& deck) :
-        EclipseState(deck, ParseContext(), ErrorGuard())
-    {}
 
     const UnitSystem& EclipseState::getDeckUnitSystem() const {
         return m_deckUnitSystem;
@@ -109,16 +86,8 @@ bool enable3DPropsTesting() {
         return m_inputGrid;
     }
 
-    const RestartConfig& EclipseState::getRestartConfig() const {
-        return m_eclipseConfig.getRestartConfig();
-    }
-
     const SimulationConfig& EclipseState::getSimulationConfig() const {
         return m_simulationConfig;
-    }
-
-    RestartConfig& EclipseState::getRestartConfig() {
-        return const_cast< RestartConfig& >( m_eclipseConfig.getRestartConfig() );
     }
 
     const FieldPropsManager& EclipseState::fieldProps() const {
@@ -182,6 +151,10 @@ bool enable3DPropsTesting() {
     }
     std::string EclipseState::getTitle() const {
         return m_title;
+    }
+
+    const AquiferConfig& EclipseState::aquifer() const {
+        return this->aquifer_config;
     }
 
     void EclipseState::initTransMult() {

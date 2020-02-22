@@ -1,8 +1,10 @@
 #include "config.h"
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parser.hh>

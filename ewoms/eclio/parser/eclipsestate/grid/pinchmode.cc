@@ -16,8 +16,10 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <boost/algorithm/string.hpp>
 #include <ewoms/eclio/parser/eclipsestate/grid/pinchmode.hh>
+#include <ewoms/eclio/parser/utility/string.hh>
+
+#include <stdexcept>
 
 namespace Ewoms {
 
@@ -43,8 +45,7 @@ namespace Ewoms {
         }
 
         ModeEnum PinchModeFromString(const std::string& stringValue) {
-            std::string s(stringValue);
-            boost::algorithm::trim(s);
+            std::string s = trim_copy(stringValue);
 
             ModeEnum mode;
             if      (s == "ALL")    { mode = ModeEnum::ALL;    }

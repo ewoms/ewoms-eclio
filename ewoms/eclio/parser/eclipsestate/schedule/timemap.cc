@@ -30,6 +30,7 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
+#include <ewoms/eclio/parser/utility/string.hh>
 
 constexpr const std::time_t invalid_time = -1;
 
@@ -156,6 +157,7 @@ namespace {
                     TimeStampUTC ts(restart_time);
                     throw std::invalid_argument("Could not find restart date " + std::to_string(ts.year()) + "-" + std::to_string(ts.month()) + "-" + std::to_string(ts.day()));
                 }
+                this->m_skiprest = true;
             }
         }
     }
@@ -238,8 +240,11 @@ namespace {
             }
         }
 
+        // Accept lower- and mixed-case month names.
+        std::string monthname = uppercase(monthItem.get<std::string>(0));
+
         std::time_t date = mkdatetime(yearItem.get<int>(0),
-                                      eclipseMonthIndices().at(monthItem.get<std::string>(0)),
+                                      eclipseMonthIndices().at(monthname),
                                       dayItem.get<int>(0),
                                       hour,
                                       min,
@@ -414,6 +419,10 @@ namespace {
 
     std::size_t TimeMap::restart_offset() const {
         return this->m_restart_offset;
+    }
+
+    bool TimeMap::skiprest() const {
+        return this->m_skiprest;
     }
 }
 

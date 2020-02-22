@@ -21,8 +21,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <ewoms/common/filesystem.hh>
+#include <iostream>
 #include <ostream>
 #include <fstream>
+#include <iostream>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 

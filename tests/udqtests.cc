@@ -16,6 +16,8 @@
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/eclio/parser/errorguard.hh>
+#include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/parser.hh>
@@ -708,12 +710,6 @@ BOOST_AUTO_TEST_CASE(CMP_FUNCTIONS) {
         BOOST_CHECK_EQUAL( result[4].value(), 1);
 
     }
-}
-
-BOOST_AUTO_TEST_CASE(BAD_CAST) {
-    UDQFunctionTable udqft;
-    auto x = udqft.get("==");
-    BOOST_CHECK_EQUAL(dynamic_cast<const UDQUnaryElementalFunction*>(&x), nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(ELEMENTAL_UNARY_FUNCTIONS) {

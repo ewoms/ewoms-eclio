@@ -22,11 +22,13 @@
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/opmlog/logutil.hh>
 
+#include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
+#include <ewoms/eclio/parser/utility/string.hh>
 
 namespace Ewoms {
 bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, size_t enabledChecks) {
@@ -52,10 +54,9 @@ bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& pars
         deckValid = deckValid && DeckSection::checkSectionTopology(deck, parser, ensureKeywordSection);
     }
 
-    const std::string& deckUnitSystem = boost::to_upper_copy(deck.getActiveUnitSystem().getName());
+    const std::string& deckUnitSystem = uppercase(deck.getActiveUnitSystem().getName());
     for (const auto& keyword : deck.getKeywordList("FILEUNIT")) {
-        const std::string& fileUnitSystem =
-            boost::to_upper_copy(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
+        const std::string& fileUnitSystem = uppercase(keyword->getRecord(0).getItem("FILE_UNIT_SYSTEM").getTrimmedString(0));
         if (fileUnitSystem != deckUnitSystem) {
             const auto& location = keyword->location();
             std::string msg =

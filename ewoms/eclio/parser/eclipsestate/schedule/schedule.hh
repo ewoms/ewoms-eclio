@@ -21,9 +21,8 @@
 #include <map>
 #include <memory>
 
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/eclipsestate/ioconfig/restartconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicstate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicvector.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/events.hh>
@@ -176,6 +175,7 @@ namespace Ewoms
                  const DynamicState<std::shared_ptr<Action::Actions>>& actions,
                  const RFTConfig& rftconfig,
                  const DynamicState<int>& nupCol,
+                 const RestartConfig& rst_config,
                  const std::map<std::string,Events>& wellGroupEvents);
 
         /*
@@ -259,6 +259,8 @@ namespace Ewoms
         */
         void filterConnections(const ActiveGridCells& grid);
         size_t size() const;
+        const RestartConfig& restart() const;
+        RestartConfig& restart();
 
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
@@ -307,9 +309,11 @@ namespace Ewoms
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
+        RestartConfig restart_config;
 
         std::map<std::string,Events> wellgroup_events;
         void load_rst(const RestartIO::RstState& rst, const UnitSystem& unit_system);
+        void addWell(Well well, size_t report_step);
         void addWell(const std::string& wellName,
                      const std::string& group,
                      int headI,

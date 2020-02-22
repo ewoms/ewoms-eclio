@@ -30,6 +30,14 @@ namespace ParserKeywords {
 
 
 
+   class VAPWAT : public ParserKeyword {
+   public:
+       VAPWAT();
+       static const std::string keywordName;
+   };
+
+
+
    class VDFLOW : public ParserKeyword {
    public:
        VDFLOW();

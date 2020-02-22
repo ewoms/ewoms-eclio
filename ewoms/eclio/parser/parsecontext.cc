@@ -19,13 +19,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <boost/algorithm/string.hpp>
-
 #include <fnmatch.h>
 
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/inputerroraction.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/utility/string.hh>
 
 namespace Ewoms {
 
@@ -282,8 +281,7 @@ namespace Ewoms {
     */
 
     void ParseContext::update(const std::string& keyString , InputError::Action action) {
-        std::vector<std::string> keys;
-        boost::split( keys , keyString , boost::is_any_of(":|"));
+        std::vector<std::string> keys = split_string(keyString, ":|");
         for (const auto& input_key : keys) {
             std::vector<std::string> matching_keys;
             size_t wildcard_pos = input_key.find("*");

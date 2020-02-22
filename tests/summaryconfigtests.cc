@@ -26,6 +26,7 @@
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parser.hh>
 
 #include <algorithm>
@@ -146,7 +147,7 @@ static std::vector< std::string > sorted_key_names( const SummaryConfig& summary
 static SummaryConfig createSummary( std::string input , const ParseContext& parseContext = ParseContext()) {
     ErrorGuard errors;
     auto deck = createDeck( input );
-    EclipseState state( deck, parseContext, errors );
+    EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors);
     return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
 }
@@ -177,7 +178,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     const auto input = "WWCT\n/\n";
     auto deck = createDeck_no_wells( input );
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
-    EclipseState state( deck, parseContext, errors );
+    EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors );
     BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
 }

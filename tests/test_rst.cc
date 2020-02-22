@@ -229,6 +229,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
     const auto& xgrp = groupData.getXGroup();
     const auto& zgrp8 = groupData.getZGroup();
 
+    Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
     std::vector<std::string> zgrp;
     for (const auto& s8: zgrp8)
         zgrp.push_back(s8.c_str());
@@ -240,7 +241,8 @@ BOOST_AUTO_TEST_CASE(group_test) {
         std::size_t sgrp_offset = ig * header.nsgrpz;
         std::size_t xgrp_offset = ig * header.nxgrpz;
 
-        Ewoms::RestartIO::RstGroup group(zgrp.data() + zgrp_offset,
+        Ewoms::RestartIO::RstGroup group(unit_system,
+                                       zgrp.data() + zgrp_offset,
                                        igrp.data() + igrp_offset,
                                        sgrp.data() + sgrp_offset,
                                        xgrp.data() + xgrp_offset);
@@ -251,7 +253,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
     const auto simCase = SimulationCase{first_sim()};
     const auto& units = simCase.es.getUnits();
     // Report Step 2: 2011-01-20 --> 2013-06-15
-    const auto rptStep = std::size_t{2};
+    const auto rptStep = std::size_t{4};
     const auto sim_step = rptStep - 1;
     Ewoms::SummaryState sumState(std::chrono::system_clock::now());
 
@@ -301,8 +303,12 @@ BOOST_AUTO_TEST_CASE(State_test) {
     for (const auto& s8: zgrp8)
         zgrp.push_back(s8.c_str());
 
-    Ewoms::RestartIO::RstState state(ih, lh, dh,
+    Ewoms::RestartIO::RstState state(units,
+                                   ih, lh, dh,
                                    zgrp, igrp, sgrp, xgrp,
                                    zwel, iwel, swel, xwel,
                                    icon, scon, xcon);
+
+    const auto& well = state.get_well("OP_3");
+    BOOST_CHECK_THROW(well.segment(10), std::invalid_argument);
 }
