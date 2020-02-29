@@ -50,6 +50,7 @@ namespace Ewoms {
 
     class EclipseGrid : public GridDims {
     public:
+        EclipseGrid() = default;
         explicit EclipseGrid(const std::string& filename);
 
         /*

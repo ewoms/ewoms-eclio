@@ -20,19 +20,19 @@
 
 #include <ewoms/eclio/opmlog/logutil.hh>
 
+#include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/e.hh>
+#include <ewoms/eclio/parser/parserkeywords/g.hh>
 #include <ewoms/eclio/parser/parserkeywords/m.hh>
-#include <ewoms/eclio/parser/parserkeywords/v.hh>
+#include <ewoms/eclio/parser/parserkeywords/o.hh>
+#include <ewoms/eclio/parser/parserkeywords/p.hh>
+#include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
+#include <ewoms/eclio/parser/parserkeywords/v.hh>
+#include <ewoms/eclio/parser/parserkeywords/w.hh>
+
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
-#include <ewoms/eclio/parser/parserkeywords/e.hh>
-#include <ewoms/eclio/parser/parserkeywords/m.hh>
-#include <ewoms/eclio/parser/parserkeywords/p.hh>
-#include <ewoms/eclio/parser/parserkeywords/t.hh>
-#include <ewoms/eclio/parser/parserkeywords/v.hh>
-#include <ewoms/eclio/parser/parserkeywords/a.hh>
-#include <ewoms/eclio/parser/parserkeywords/s.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/enkrvdtable.hh>
@@ -72,6 +72,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/slgoftable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sof2table.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sof3table.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/solventdensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sorwmistable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/specheattable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/specrocktable.hh>
@@ -105,6 +106,7 @@ namespace Ewoms {
                                const WatdentTable& watdentTable,
                                const std::vector<PvtwsaltTable>& pvtwsaltTables,
                                const std::vector<BrineDensityTable>& bdensityTables,
+                               const std::vector<SolventDensityTable>& sdensityTables,
                                const std::map<int, PlymwinjTable>& plymwinjTables,
                                const std::map<int, SkprwatTable>& skprwatTables,
                                const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -116,6 +118,10 @@ namespace Ewoms {
                                bool useEnptvd,
                                bool useEqlnum,
                                std::shared_ptr<JFunc> jfunc_param,
+                               const DenT& oilDenT_,
+                               const DenT& gasDenT_,
+                               const DenT& watDenT_,
+                               std::size_t gas_comp_index,
                                double rtemp)
         :
         m_simpleTables(simpleTables),
@@ -131,6 +137,7 @@ namespace Ewoms {
         m_watdentTable(watdentTable),
         m_pvtwsaltTables(pvtwsaltTables),
         m_bdensityTables(bdensityTables),
+        m_sdensityTables(sdensityTables),
         m_plymwinjTables(plymwinjTables),
         m_skprwatTables(skprwatTables),
         m_skprpolyTables(skprpolyTables),
@@ -142,6 +149,10 @@ namespace Ewoms {
         hasEnptvd(useEnptvd),
         hasEqlnum(useEqlnum),
         jfunc(std::move(jfunc_param)),
+        oilDenT(oilDenT_),
+        gasDenT(gasDenT_),
+        watDenT(watDenT_),
+        m_gas_comp_index(gas_comp_index),
         m_rtemp(rtemp)
     {
     }
@@ -201,6 +212,21 @@ namespace Ewoms {
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
 
+        if ( deck.hasKeyword( "SDENSITY") )
+            initSolventTables(deck, m_sdensityTables );
+
+        if (deck.hasKeyword<ParserKeywords::GASDENT>())
+            this->gasDenT = DenT( deck.getKeyword<ParserKeywords::GASDENT>());
+
+        if (deck.hasKeyword<ParserKeywords::OILDENT>())
+            this->oilDenT = DenT( deck.getKeyword<ParserKeywords::OILDENT>());
+
+        if (deck.hasKeyword<ParserKeywords::WATDENT>())
+            this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>());
+
+        using GC = ParserKeywords::GCOMPIDX;
+        if (deck.hasKeyword<GC>())
+            this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
     }
 
     TableManager& TableManager::operator=(const TableManager& data) {
@@ -216,6 +242,7 @@ namespace Ewoms {
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
         m_bdensityTables = data.m_bdensityTables;
+        m_sdensityTables = data.m_sdensityTables;
         m_plymwinjTables = data.m_plymwinjTables;
         m_skprwatTables = data.m_skprwatTables;
         m_skprpolyTables = data.m_skprpolyTables;
@@ -229,6 +256,10 @@ namespace Ewoms {
         if (data.jfunc)
           jfunc = std::make_shared<JFunc>(*data.jfunc);
         m_rtemp = data.m_rtemp;
+        gasDenT = data.gasDenT;
+        oilDenT = data.oilDenT;
+        watDenT = data.watDenT;
+        m_gas_comp_index = data.m_gas_comp_index;
 
         return *this;
     }
@@ -291,6 +322,18 @@ namespace Ewoms {
             pair = m_simpleTables.find( tableName );
         }
         return pair->second;
+    }
+
+    const DenT& TableManager::WatDenT() const {
+        return this->watDenT;
+    }
+
+    const DenT& TableManager::GasDenT() const {
+        return this->gasDenT;
+    }
+
+    const DenT& TableManager::OilDenT() const {
+        return this->oilDenT;
     }
 
     const TableContainer& TableManager::operator[](const std::string& tableName) const {
@@ -902,6 +945,10 @@ namespace Ewoms {
         return this->m_bdensityTables;
     }
 
+    const std::vector<SolventDensityTable>& TableManager::getSolventDensityTables() const {
+        return this->m_sdensityTables;
+    }
+
     const PvcdoTable& TableManager::getPvcdoTable() const {
         return this->m_pvcdoTable;
     }
@@ -995,6 +1042,10 @@ namespace Ewoms {
         return this->m_rtemp;
     }
 
+    std::size_t TableManager::gas_comp_index() const {
+        return this->m_gas_comp_index;
+    }
+
     bool TableManager::operator==(const TableManager& data) const {
         bool jfuncOk = false;
         if (jfunc && data.jfunc)
@@ -1014,6 +1065,7 @@ namespace Ewoms {
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
                m_bdensityTables == data.m_bdensityTables &&
+               m_sdensityTables == data.m_sdensityTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
@@ -1024,9 +1076,24 @@ namespace Ewoms {
                hasImptvd == data.hasImptvd &&
                hasEnptvd == data.hasEnptvd &&
                hasEqlnum == data.hasEqlnum &&
+               gasDenT == data.gasDenT &&
+               oilDenT == data.oilDenT &&
+               watDenT == data.watDenT &&
                jfuncOk &&
-               m_rtemp == data.m_rtemp;
+               m_rtemp == data.m_rtemp &&
+               m_gas_comp_index == data.m_gas_comp_index;
     }
 
+    void TableManager::initSolventTables(const Deck& deck,  std::vector<SolventDensityTable>& solventtables) {
+        size_t numTables = m_tabdims.getNumPVTTables();
+        solventtables.resize(numTables);
+
+        const auto& keyword = deck.getKeyword("SDENSITY");
+        size_t numEntries = keyword.size();
+        assert(numEntries == numTables);
+        for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
+            solventtables[lineIdx].init(keyword.getRecord(lineIdx));
+        }
+    }
 }
 

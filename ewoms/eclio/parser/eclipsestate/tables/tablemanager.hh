@@ -29,13 +29,14 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/tables/dent.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtgtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtotable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rock2dtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rock2dtrtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtwsalttable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
-
+#include <ewoms/eclio/parser/eclipsestate/tables/solventdensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/flattable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sorwmistable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgcwmistable.hh>
@@ -43,7 +44,6 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/pmisctable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/msfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/jfunc.hh>
-
 #include <ewoms/eclio/parser/eclipsestate/tables/tabdims.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablecontainer.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/aqudims.hh>
@@ -72,6 +72,7 @@ namespace Ewoms {
                      const WatdentTable& watdentTable,
                      const std::vector<PvtwsaltTable>& pvtwsaltTables,
                      const std::vector<BrineDensityTable>& bdensityTables,
+                     const std::vector<SolventDensityTable>& sdensityTables,
                      const std::map<int, PlymwinjTable>& plymwinjTables,
                      const std::map<int, SkprwatTable>& skprwatTables,
                      const std::map<int, SkprpolyTable>& skprpolyTables,
@@ -83,6 +84,10 @@ namespace Ewoms {
                      bool useEnptvd,
                      bool useEqlnum,
                      std::shared_ptr<JFunc> jfunc_param,
+                     const DenT& oilDenT,
+                     const DenT& gasDenT,
+                     const DenT& watDenT,
+                     std::size_t gas_comp_index,
                      double rtemp);
 
         TableManager& operator=(const TableManager& data);
@@ -155,9 +160,14 @@ namespace Ewoms {
         const TableContainer& getRockwnodTables() const;
         const TableContainer& getOverburdTables() const;
 
+        const DenT& WatDenT() const;
+        const DenT& GasDenT() const;
+        const DenT& OilDenT() const;
+        std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
+        const std::vector<SolventDensityTable>& getSolventDensityTables() const;
 
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
@@ -270,6 +280,8 @@ namespace Ewoms {
                 brinetables[lineIdx].init(keyword.getRecord(lineIdx));
             }
         }
+
+        void initSolventTables(const Deck& deck, std::vector<SolventDensityTable>& solventtables);
 
         /**
          * JFUNC
@@ -403,6 +415,7 @@ namespace Ewoms {
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
         std::vector<BrineDensityTable> m_bdensityTables;
+        std::vector<SolventDensityTable> m_sdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;
         std::map<int, SkprwatTable> m_skprwatTables;
         std::map<int, SkprpolyTable> m_skprpolyTables;
@@ -417,8 +430,13 @@ namespace Ewoms {
         bool hasEqlnum = false;// if deck has keyword EQLNUM
         std::shared_ptr<JFunc> jfunc;
 
+        DenT oilDenT;
+        DenT gasDenT;
+        DenT watDenT;
+        std::size_t m_gas_comp_index;
         double m_rtemp;
     };
 }
 
 #endif
+

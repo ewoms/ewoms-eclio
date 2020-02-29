@@ -27,7 +27,6 @@ namespace Ewoms {
         enum ModeEnum {
             Inactive  = 1,
             EclSTD = 2,
-            OpmFIL = 3
         };
     }
 }

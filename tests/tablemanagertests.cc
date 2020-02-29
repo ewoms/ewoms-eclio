@@ -42,6 +42,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/foammobtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pbvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pdvdtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/dent.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpinjtable.hh>
@@ -1703,4 +1704,37 @@ REGDIMS
         BOOST_CHECK_EQUAL(rd.getNRFREG(), std::size_t{33});
         BOOST_CHECK_EQUAL(rd.getNTFREG(), std::size_t{44});
     }
+}
+
+BOOST_AUTO_TEST_CASE(DENT) {
+    const auto deck_string = R"(
+RUNSPEC
+
+TABDIMS
+   1  3 /
+
+PROPS
+
+GASDENT
+   1  2  3 /
+   4  5  6 /
+   7  8  9 /
+
+OILDENT
+   1  2  3 /
+   4  5  6 /
+   7  8  9 /
+
+)";
+
+    Ewoms::Parser parser;
+    const auto& deck = parser.parseString(deck_string);
+    Ewoms::TableManager tables(deck);
+    Ewoms::DenT gd(deck.getKeyword("GASDENT"));
+    Ewoms::DenT od(deck.getKeyword("OILDENT"));
+    const auto& wd = tables.WatDenT();
+
+    BOOST_CHECK_EQUAL(gd.size(), 3);
+    BOOST_CHECK( gd == od );
+    BOOST_CHECK( wd.size() == 0);
 }

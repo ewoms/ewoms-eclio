@@ -102,6 +102,13 @@ namespace {
         return wgname;
     }
 
+std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst)
+{
+    if (!rst)
+        return std::make_pair(std::time_t{0}, std::size_t{0});
+    else
+        return rst->header.restart_info();
+}
 }
 
     Schedule::Schedule( const Deck& deck,
@@ -111,7 +118,7 @@ namespace {
                         const ParseContext& parseContext,
                         ErrorGuard& errors,
                         const RestartIO::RstState * rst) :
-        m_timeMap( deck ),
+        m_timeMap( deck , restart_info( rst )),
         m_oilvaporizationproperties( this->m_timeMap, OilVaporizationProperties(runspec.tabdims().getNumPVTTables()) ),
         m_events( this->m_timeMap ),
         m_modifierDeck( this->m_timeMap, Deck{} ),
@@ -260,7 +267,7 @@ namespace {
         return this->m_timeMap.getEndTime();
     }
 
-    void Schedule::handleKeyword(size_t& currentStep,
+    void Schedule::handleKeyword(size_t currentStep,
                                  const SCHEDULESection& section,
                                  size_t keywordIdx,
                                  const DeckKeyword& keyword,
@@ -294,17 +301,7 @@ namespace {
                                                          {"MULTTHT"  , false},
                                                          {"MULTTHT-" , false}};
 
-        if (keyword.name() == "DATES") {
-            checkIfAllConnectionsIsShut(currentStep);
-            currentStep += keyword.size();
-        }
-
-        else if (keyword.name() == "TSTEP") {
-            checkIfAllConnectionsIsShut(currentStep);
-            currentStep += keyword.getRecord(0).getItem(0).data_size(); // This is a bit weird API.
-        }
-
-        else if (keyword.name() == "UDQ")
+        if (keyword.name() == "UDQ")
             handleUDQ(keyword, currentStep);
 
         else if (keyword.name() == "WLIST")
@@ -500,8 +497,24 @@ namespace {
                     }
                 }
                 this->addACTIONX(action, currentStep);
-            } else
-                this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+            }
+
+            else if (keyword.name() == "DATES") {
+                checkIfAllConnectionsIsShut(currentStep);
+                currentStep += keyword.size();
+            }
+
+            else if (keyword.name() == "TSTEP") {
+                checkIfAllConnectionsIsShut(currentStep);
+                currentStep += keyword.getRecord(0).getItem(0).data_size();
+            }
+
+            else {
+                if (currentStep >= this->m_timeMap.restart_offset())
+                    this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+                else
+                    OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
+            }
 
             keywordIdx++;
             if (keywordIdx == section.size())
@@ -789,7 +802,7 @@ namespace {
 
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
                 updateWellStatus( well_name , currentStep , status, false );
@@ -851,7 +864,7 @@ namespace {
             const Well::Status status = Well::StatusFromString(record.getItem("STATUS").getTrimmedString(0));
             auto well_names = this->wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
 
@@ -951,7 +964,7 @@ namespace {
 
             auto well_names = wellNames(wellNamePattern, currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names ) {
                 Well::Status status = Well::StatusFromString( record.getItem("STATUS").getTrimmedString(0));
@@ -1015,7 +1028,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 updateWellStatus( well_name, currentStep, status, false );
@@ -1059,7 +1072,7 @@ namespace {
             const auto well_names = wellNames(wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
@@ -1078,7 +1091,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for( const auto& well_name : well_names) {
                 {
@@ -1099,7 +1112,7 @@ namespace {
             const auto well_names = wellNames(wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 const auto& dynamic_state = this->wells_static.at(well_name);
@@ -1120,7 +1133,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 {
@@ -1142,7 +1155,7 @@ namespace {
             const auto well_names = wellNames(wellNamePattern, currentStep);
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 {
@@ -1163,7 +1176,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern , currentStep);
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1184,7 +1197,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1257,7 +1270,7 @@ namespace {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames( wellNamePattern , currentStep);
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             double test_interval = record.getItem("INTERVAL").getSIDouble(0);
             const std::string& reasons = record.getItem("REASON").get<std::string>(0);
@@ -1282,7 +1295,7 @@ namespace {
             double fraction = record.getItem("SOLVENT_FRACTION").get< UDAValue >(0).getSI();
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1308,7 +1321,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if (well_names.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 double tracerConcentration = record.getItem("CONCENTRATION").get< UDAValue >(0).getSI();
@@ -1330,7 +1343,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
             double temp = record.getItem("TEMP").getSIDouble(0);
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1364,7 +1377,7 @@ namespace {
             double temp = record.getItem("TEMPERATURE").getSIDouble(0);
 
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& well_name : well_names) {
                 // TODO: Is this the right approach? Setting the well temperature only
@@ -1424,7 +1437,7 @@ namespace {
             const auto& status_str = record.getItem( "STATUS" ).getTrimmedString( 0 );
             const auto well_names = this->wellNames(wellNamePattern, currentStep, matching_wells);
             if (well_names.empty())
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             /* if all records are defaulted or just the status is set, only
              * well status is updated
@@ -1503,7 +1516,7 @@ namespace {
             const auto well_names = wellNames( wellNamePattern, currentStep );
 
             if( well_names.empty() )
-                invalidNamePattern( wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern( wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for(const auto& well_name : well_names) {
                 {
@@ -1536,7 +1549,7 @@ namespace {
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
                 Group::InjectionCMode controlMode = Group::InjectionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
@@ -1553,6 +1566,7 @@ namespace {
                 if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
                     voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
 
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
                 //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
@@ -1579,7 +1593,9 @@ namespace {
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    if (group_ptr->updateInjection(injection)) {
+                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
+                    if (group_ptr->updateInjection(injection) ||  must_update_avail) {
+                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
                         this->updateGroup(std::move(group_ptr), currentStep);
                         m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
                         this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
@@ -1595,7 +1611,7 @@ namespace {
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
                 Group::ProductionCMode controlMode = Group::ProductionCModeFromString( record.getItem("CONTROL_MODE").getTrimmedString(0) );
@@ -1624,6 +1640,7 @@ namespace {
                     }
                 }
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
                     Group::GroupProductionProperties production;
@@ -1660,7 +1677,9 @@ namespace {
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
-                    if (group_ptr->updateProduction(production)) {
+                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
+                    if (group_ptr->updateProduction(production) || must_update_avail) {
+                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
                         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
                         new_config->update_group(*group_ptr);
                         this->guide_rate_config.update( currentStep, std::move(new_config) );
@@ -1680,7 +1699,7 @@ namespace {
             const auto group_names = this->groupNames(groupNamePattern);
 
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(groupNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& group_name : group_names){
                 bool transfer = DeckItem::to_bool(record.getItem("TRANSFER_EXT_NET").getTrimmedString(0));
@@ -1874,7 +1893,7 @@ namespace {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, currentStep);
             if (wellnames.empty())
-                invalidNamePattern(wellNamePattern, parseContext, errors, keyword);
+                invalidNamePattern(wellNamePattern, currentStep, parseContext, errors, keyword);
 
             for (const auto& name : wellnames) {
                 {
@@ -2075,8 +2094,8 @@ void Schedule::handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, c
         return this->rft_config;
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern,  const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg = "Error when handling " + keyword.name() +". No names match " +
+void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+    std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " +
                           namePattern;
         parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
     }

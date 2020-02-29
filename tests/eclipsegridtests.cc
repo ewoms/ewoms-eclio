@@ -257,28 +257,6 @@ static Ewoms::Deck createMinpvCPDeck() {
     return parser.parseString( deckData) ;
 }
 
-static Ewoms::Deck createMinpvFilCPDeck() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 10 10 /\n"
-        "GRID\n"
-        "COORD\n"
-        "  726*1 / \n"
-        "ZCORN \n"
-        "  8000*1 / \n"
-        "ACTNUM \n"
-        "  1000*1 / \n"
-        "MINPVFIL \n"
-        "  20 / \n"
-        "EDIT\n"
-        "\n";
-
-    Ewoms::Parser parser;
-    return parser.parseString( deckData) ;
-}
-
 static Ewoms::Deck createCARTDeck() {
     const char* deckData =
         "RUNSPEC\n"
@@ -864,19 +842,15 @@ BOOST_AUTO_TEST_CASE(ConstructorMINPV) {
     auto deck1 = createCPDeck();
     auto deck2 = createMinpvDefaultCPDeck();
     auto deck3 = createMinpvCPDeck();
-    auto deck4 = createMinpvFilCPDeck();
 
     Ewoms::EclipseGrid grid1(deck1);
     BOOST_CHECK_THROW(Ewoms::EclipseGrid grid2(deck2), std::invalid_argument);
     Ewoms::EclipseGrid grid3(deck3);
-    Ewoms::EclipseGrid grid4(deck4);
 
     BOOST_CHECK(!grid1.equal( grid3 ));
     BOOST_CHECK_EQUAL(grid1.getMinpvMode(), Ewoms::MinpvMode::ModeEnum::Inactive);
     BOOST_CHECK_EQUAL(grid3.getMinpvMode(), Ewoms::MinpvMode::ModeEnum::EclSTD);
     BOOST_CHECK_EQUAL(grid3.getMinpvVector()[0], 10.0);
-    BOOST_CHECK_EQUAL(grid4.getMinpvMode(), Ewoms::MinpvMode::ModeEnum::OpmFIL);
-    BOOST_CHECK_EQUAL(grid4.getMinpvVector()[0], 20.0);
 }
 
 static Ewoms::Deck createActnumDeck() {
