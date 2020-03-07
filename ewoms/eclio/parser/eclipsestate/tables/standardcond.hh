@@ -14,22 +14,28 @@
 
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifndef INJECTION_H
-#define INJECTION_H
-
-#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
+ */
+#ifndef EWOMS_PARSER_STANDARDCOND_H
+#define EWOMS_PARSER_STANDARDCOND_H
 
 namespace Ewoms {
-namespace injection {
 
-double rateToSI(double rawRate, InjectorType wellType, const Ewoms::UnitSystem &unitSystem);
-double rateToSI(double rawRate, Phase wellPhase, const Ewoms::UnitSystem& unitSystem);
+    struct StandardCond {
+        StandardCond();
+        StandardCond(double temp, double press)
+            : temperature(temp)
+            , pressure(press)
+        {}
 
-}
+        bool operator==(const StandardCond& data) const {
+            return temperature == data.temperature &&
+                   pressure == data.pressure;
+        }
+
+        double temperature;
+        double pressure;
+
+    };
 }
 
 #endif

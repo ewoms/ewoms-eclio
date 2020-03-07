@@ -101,7 +101,12 @@ namespace Ewoms {
                                const PvtwTable& pvtwTable,
                                const PvcdoTable& pvcdoTable,
                                const DensityTable& densityTable,
+                               const PlyvmhTable& plyvmhTable,
                                const RockTable& rockTable,
+                               const PlmixparTable& plmixparTable,
+                               const ShrateTable& shrateTable,
+                               const Stone1exTable& stone1exTable,
+                               const TlmixparTable& tlmixparTable,
                                const ViscrefTable& viscrefTable,
                                const WatdentTable& watdentTable,
                                const std::vector<PvtwsaltTable>& pvtwsaltTables,
@@ -117,10 +122,12 @@ namespace Ewoms {
                                bool useImptvd,
                                bool useEnptvd,
                                bool useEqlnum,
+                               bool useShrate,
                                std::shared_ptr<JFunc> jfunc_param,
                                const DenT& oilDenT_,
                                const DenT& gasDenT_,
                                const DenT& watDenT_,
+                               const StandardCond& stcond_,
                                std::size_t gas_comp_index,
                                double rtemp)
         :
@@ -132,7 +139,12 @@ namespace Ewoms {
         m_pvtwTable(pvtwTable),
         m_pvcdoTable(pvcdoTable),
         m_densityTable(densityTable),
+        m_plyvmhTable(plyvmhTable),
         m_rockTable(rockTable),
+        m_plmixparTable(plmixparTable),
+        m_shrateTable(shrateTable),
+        m_stone1exTable(stone1exTable),
+        m_tlmixparTable(tlmixparTable),
         m_viscrefTable(viscrefTable),
         m_watdentTable(watdentTable),
         m_pvtwsaltTables(pvtwsaltTables),
@@ -148,10 +160,12 @@ namespace Ewoms {
         hasImptvd(useImptvd),
         hasEnptvd(useEnptvd),
         hasEqlnum(useEqlnum),
+        hasShrate(useShrate),
         jfunc(std::move(jfunc_param)),
         oilDenT(oilDenT_),
         gasDenT(gasDenT_),
         watDenT(watDenT_),
+        stcond(stcond_),
         m_gas_comp_index(gas_comp_index),
         m_rtemp(rtemp)
     {
@@ -224,6 +238,34 @@ namespace Ewoms {
         if (deck.hasKeyword<ParserKeywords::WATDENT>())
             this->watDenT = DenT( deck.getKeyword<ParserKeywords::WATDENT>());
 
+        if (deck.hasKeyword<ParserKeywords::STCOND>()) {
+            auto stcondKeyword = deck.getKeyword("STCOND");
+            this->stcond.temperature = stcondKeyword.getRecord(0).getItem("TEMPERATURE").getSIDouble(0);
+            this->stcond.pressure = stcondKeyword.getRecord(0).getItem("PRESSURE").getSIDouble(0);
+        }
+
+        if (deck.hasKeyword<ParserKeywords::PLMIXPAR>()) {
+            this->m_plmixparTable = PlmixparTable(deck.getKeyword("PLMIXPAR"));
+        }
+
+        if (deck.hasKeyword<ParserKeywords::SHRATE>()) {
+            this->m_shrateTable = ShrateTable(deck.getKeyword("SHRATE"));
+            hasShrate = true;
+        }
+
+        if (deck.hasKeyword<ParserKeywords::STONE1EX>()) {
+            this->m_stone1exTable = Stone1exTable(deck.getKeyword("STONE1EX"));
+            hasShrate = true;
+        }
+
+        if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
+            this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
+        }
+
+        if (deck.hasKeyword<ParserKeywords::PLYVMH>()) {
+            this->m_plyvmhTable = PlyvmhTable(deck.getKeyword("PLYVMH"));
+        }
+
         using GC = ParserKeywords::GCOMPIDX;
         if (deck.hasKeyword<GC>())
             this->m_gas_comp_index = deck.getKeyword<GC>().getRecord(0).getItem<GC::GAS_COMPONENT_INDEX>().get<int>(0);
@@ -237,7 +279,12 @@ namespace Ewoms {
         m_rock2dtrTables = data.m_rock2dtrTables;
         m_pvtwTable = data.m_pvtwTable;
         m_pvcdoTable = data.m_pvcdoTable;
+        m_plyvmhTable = data.m_plyvmhTable;
         m_densityTable = data.m_densityTable;
+        m_plmixparTable = data.m_plmixparTable;
+        m_shrateTable = data.m_shrateTable;
+        m_stone1exTable = data.m_stone1exTable;
+        m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
@@ -253,12 +300,14 @@ namespace Ewoms {
         hasImptvd = data.hasImptvd;
         hasEnptvd = data.hasEnptvd;
         hasEqlnum = data.hasEqlnum;
+        hasShrate = data.hasShrate;
         if (data.jfunc)
           jfunc = std::make_shared<JFunc>(*data.jfunc);
         m_rtemp = data.m_rtemp;
         gasDenT = data.gasDenT;
         oilDenT = data.oilDenT;
         watDenT = data.watDenT;
+        stcond = data.stcond;
         m_gas_comp_index = data.m_gas_comp_index;
 
         return *this;
@@ -334,6 +383,10 @@ namespace Ewoms {
 
     const DenT& TableManager::OilDenT() const {
         return this->oilDenT;
+    }
+
+    const StandardCond& TableManager::stCond() const {
+        return this->stcond;
     }
 
     const TableContainer& TableManager::operator[](const std::string& tableName) const {
@@ -988,10 +1041,30 @@ namespace Ewoms {
         return getTables("TLPMIXPA");
     }
 
+    const PlmixparTable& TableManager::getPlmixparTable() const {
+        return m_plmixparTable;
+    }
+
+    const ShrateTable& TableManager::getShrateTable() const {
+        return m_shrateTable;
+    }
+
+    const Stone1exTable& TableManager::getStone1exTable() const {
+        return m_stone1exTable;
+    }
+
+    const TlmixparTable& TableManager::getTlmixparTable() const {
+        return m_tlmixparTable;
+    }
+
     const JFunc& TableManager::getJFunc() const {
         if (!jfunc)
             throw std::invalid_argument("Cannot get JFUNC table when JFUNC not in deck");
         return *jfunc;
+    }
+
+    const PlyvmhTable& TableManager::getPlyvmhTable() const {
+        return m_plyvmhTable;
     }
 
     const std::map<int, PlymwinjTable>& TableManager::getPlymwinjTables() const {
@@ -1020,6 +1093,10 @@ namespace Ewoms {
 
     bool TableManager::useEqlnum() const {
         return hasEqlnum;
+    }
+
+    bool TableManager::useShrate() const {
+        return hasShrate;
     }
 
     bool TableManager::useJFunc() const {
@@ -1061,6 +1138,11 @@ namespace Ewoms {
                m_pvtwTable == data.m_pvtwTable &&
                m_pvcdoTable == data.m_pvcdoTable &&
                m_densityTable == data.m_densityTable &&
+               m_plmixparTable == data.m_plmixparTable &&
+               m_plyvmhTable == data.m_plyvmhTable &&
+               m_shrateTable == data.m_shrateTable &&
+               m_stone1exTable == data.m_stone1exTable &&
+               m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
@@ -1076,9 +1158,11 @@ namespace Ewoms {
                hasImptvd == data.hasImptvd &&
                hasEnptvd == data.hasEnptvd &&
                hasEqlnum == data.hasEqlnum &&
+               hasShrate == data.hasShrate &&
                gasDenT == data.gasDenT &&
                oilDenT == data.oilDenT &&
                watDenT == data.watDenT &&
+               stcond == data.stcond &&
                jfuncOk &&
                m_rtemp == data.m_rtemp &&
                m_gas_comp_index == data.m_gas_comp_index;

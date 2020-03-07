@@ -25,6 +25,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/productioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/injectioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellfoamproperties.hh>
@@ -57,15 +58,6 @@ public:
     };
     static std::string Status2String(Status enumValue);
     static Status StatusFromString(const std::string& stringValue);
-
-    enum class InjectorType {
-        WATER = 1,
-        GAS = 2,
-        OIL = 3,
-        MULTI = 4
-    };
-    static const std::string InjectorType2String( InjectorType enumValue );
-    static InjectorType InjectorTypeFromString( const std::string& stringValue );
 
     /*
       The elements in this enum are used as bitmasks to keep track
@@ -196,7 +188,7 @@ public:
         int     VFPTableNumber;
         bool    predictionMode;
         int     injectionControls;
-        Well::InjectorType injectorType;
+        InjectorType injectorType;
         InjectorCMode controlMode;
 
         bool operator==(const WellInjectionProperties& other) const;
@@ -217,7 +209,7 @@ public:
                                 int vfpTableNum,
                                 bool predMode,
                                 int injControls,
-                                Well::InjectorType injType,
+                                InjectorType injType,
                                 InjectorCMode ctrlMode);
 
         void handleWELTARG(WELTARGCMode cmode, double newValue, double SIFactorP);

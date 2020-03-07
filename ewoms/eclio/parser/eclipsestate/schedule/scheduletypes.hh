@@ -16,20 +16,22 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef INJECTION_H
-#define INJECTION_H
+#ifndef EWOMS_SCHEDULE_TYPES_H
+#define EWOMS_SCHEDULE_TYPES_H
 
-#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
+#include <string>
 
 namespace Ewoms {
-namespace injection {
 
-double rateToSI(double rawRate, InjectorType wellType, const Ewoms::UnitSystem &unitSystem);
-double rateToSI(double rawRate, Phase wellPhase, const Ewoms::UnitSystem& unitSystem);
+enum class InjectorType {
+    WATER = 1,
+    GAS = 2,
+    OIL = 3,
+    MULTI = 4
+};
+const std::string InjectorType2String( InjectorType enumValue );
+InjectorType InjectorTypeFromString( const std::string& stringValue );
 
-}
 }
 
 #endif

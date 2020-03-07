@@ -58,7 +58,7 @@ namespace Ewoms {
             container.gteTable(10 ) ==> exception
         */
     public:
-        using TableMap = std::map<size_t, std::shared_ptr<const SimpleTable>>;
+        using TableMap = std::map<size_t, std::shared_ptr<SimpleTable>>;
 
         TableContainer();
         explicit TableContainer( size_t maxTables );
@@ -71,7 +71,7 @@ namespace Ewoms {
 
         size_t max() const;
         const TableMap& tables() const;
-        void addTable(size_t tableNumber , std::shared_ptr<const SimpleTable> table);
+        void addTable(size_t tableNumber , std::shared_ptr<SimpleTable> table);
 
         /*
           Observe that the hasTable() method does not invoke the "If

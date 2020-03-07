@@ -56,7 +56,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
 
             item30       = 29, // Unknown
             item31       = 30, // Unknown
-            item41       = 40, // = 0 for connection factor not defined, = 1 for connection factor defined
+            CFInDeck     = 40, // = 0 for connection factor not defined, = 1 for connection factor defined
         };
     } // SConn
 

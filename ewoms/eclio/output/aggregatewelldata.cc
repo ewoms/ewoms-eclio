@@ -142,7 +142,7 @@ namespace {
                 return WTypeVal::Producer;
             }
 
-            using IType = ::Ewoms::Well::InjectorType;
+            using IType = ::Ewoms::InjectorType;
 
             const auto itype = well.injectionControls(st).injector_type;
 
@@ -150,7 +150,11 @@ namespace {
             case IType::OIL:   return WTypeVal::OilInj;
             case IType::WATER: return WTypeVal::WatInj;
             case IType::GAS:   return WTypeVal::GasInj;
-            default:           return WTypeVal::WTUnk;
+            case IType::MULTI:
+                throw std::invalid_argument("Do not know how to serialize injectortype MULTI - fatal error for well " + well.name());
+                break;
+            default:
+                throw std::invalid_argument("SHould not be here - unhandled enum value in wellType");
             }
         }
 
@@ -173,7 +177,7 @@ namespace {
                 const auto wtype = controls.injector_type;
 
                 using CMode = ::Ewoms::Well::InjectorCMode;
-                using WType = ::Ewoms::Well::InjectorType;
+                using WType = ::Ewoms::InjectorType;
 
                 switch (wmctl) {
                 case CMode::RATE: {
@@ -275,7 +279,7 @@ namespace {
                 }
             }
             else { // injector
-                using IType = ::Ewoms::Well::InjectorType;
+                using IType = ::Ewoms::InjectorType;
 
                 switch (curr.inj) {
                 case IMode::RATE: {
@@ -593,7 +597,7 @@ namespace {
                 const auto& ic = well.injectionControls(smry);
 
                 using IP = ::Ewoms::Well::InjectorCMode;
-                using IT = ::Ewoms::Well::InjectorType;
+                using IT = ::Ewoms::InjectorType;
 
                 if (ic.hasControl(IP::RATE)) {
                     if (ic.injector_type == IT::OIL) {
@@ -793,7 +797,7 @@ namespace {
                 assignProducer(well.name(), smry, xWell);
             }
             else if (well.isInjector()) {
-                using IType = ::Ewoms::Well::InjectorType;
+                using IType = ::Ewoms::InjectorType;
                 const auto itype = well.injectionControls(smry).injector_type;
 
                 switch (itype) {

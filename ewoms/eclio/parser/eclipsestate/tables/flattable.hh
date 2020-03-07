@@ -93,6 +93,84 @@ struct PvcdoTable : public FlatTable< PVCDORecord > {
     using FlatTable< PVCDORecord >::FlatTable;
 };
 
+struct PlmixparRecord {
+    static constexpr std::size_t size = 1;
+
+    double todd_langstaff;
+
+    bool operator==(const PlmixparRecord& data) const {
+        return todd_langstaff == data.todd_langstaff;
+    }
+};
+
+struct PlmixparTable : public FlatTable< PlmixparRecord> {
+    using FlatTable< PlmixparRecord >::FlatTable;
+};
+
+struct PlyvmhRecord {
+    static constexpr std::size_t size = 4;
+
+    double k_mh;
+    double a_mh;
+    double gamma;
+    double kappa;
+
+    bool operator==(const PlyvmhRecord& data) const {
+        return k_mh == data.k_mh &&
+               a_mh == data.a_mh &&
+               gamma == data.gamma &&
+               kappa == data.kappa;
+    }
+};
+
+struct PlyvmhTable : public FlatTable<PlyvmhRecord> {
+    using FlatTable< PlyvmhRecord >::FlatTable;
+};
+
+struct ShrateRecord {
+    static constexpr std::size_t size = 1;
+
+    double rate;
+
+    bool operator==(const ShrateRecord& data) const {
+        return rate == data.rate;
+    }
+};
+
+struct ShrateTable : public FlatTable<ShrateRecord> {
+    using FlatTable< ShrateRecord >::FlatTable;
+};
+
+struct Stone1exRecord {
+    static constexpr std::size_t size = 1;
+
+    double eta;
+
+    bool operator==(const Stone1exRecord& data) const {
+        return eta == data.eta;
+    }
+};
+
+struct Stone1exTable : public FlatTable<Stone1exRecord> {
+    using FlatTable< Stone1exRecord >::FlatTable;
+};
+
+struct TlmixparRecord {
+    static constexpr std::size_t size = 2;
+
+    double viscosity;
+    double density;
+
+    bool operator==(const TlmixparRecord& data) const {
+        return viscosity == data.viscosity &&
+               density == data.density;
+    }
+};
+
+struct TlmixparTable : public FlatTable< TlmixparRecord> {
+    using FlatTable< TlmixparRecord >::FlatTable;
+};
+
 struct VISCREFRecord {
     static constexpr std::size_t size = 2;
 

@@ -19,6 +19,8 @@
 #ifndef EWOMS_FOAMCONFIG_H
 #define EWOMS_FOAMCONFIG_H
 
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
+
 #include <cstddef>
 #include <vector>
 
@@ -62,12 +64,22 @@ private:
 class FoamConfig
 {
 public:
+    enum class MobilityModel {
+      TAB,
+      FUNC
+    };
+
     FoamConfig() = default;
     explicit FoamConfig(const Deck&);
-    FoamConfig(const std::vector<FoamData>& data);
+    FoamConfig(const std::vector<FoamData>& data,
+               Phase transport_phase,
+               MobilityModel mobility_model);
 
     const FoamData& getRecord(std::size_t index) const;
     const std::vector<FoamData>& records() const;
+
+    Ewoms::Phase getTransportPhase() const;
+    MobilityModel getMobilityModel() const;
 
     std::size_t size() const;
     bool empty() const;
@@ -80,6 +92,8 @@ public:
 
 private:
     std::vector<FoamData> data_;
+    Phase transport_phase_ = Phase::GAS;
+    MobilityModel mobility_model_ = MobilityModel::TAB;
 };
 
 } // end namespace Ewoms

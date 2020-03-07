@@ -37,6 +37,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtwsalttable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/solventdensitytable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/standardcond.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/flattable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sorwmistable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgcwmistable.hh>
@@ -67,7 +68,12 @@ namespace Ewoms {
                      const PvtwTable& pvtwTable,
                      const PvcdoTable& pvcdoTable,
                      const DensityTable& densityTable,
+                     const PlyvmhTable& plyvmhTable,
                      const RockTable& rockTable,
+                     const PlmixparTable& plmixparTable,
+                     const ShrateTable& shrateTable,
+                     const Stone1exTable& stone1exTable,
+                     const TlmixparTable& tlmixparTable,
                      const ViscrefTable& viscrefTable,
                      const WatdentTable& watdentTable,
                      const std::vector<PvtwsaltTable>& pvtwsaltTables,
@@ -83,10 +89,12 @@ namespace Ewoms {
                      bool useImptvd,
                      bool useEnptvd,
                      bool useEqlnum,
+                     bool useShrate,
                      std::shared_ptr<JFunc> jfunc_param,
                      const DenT& oilDenT,
                      const DenT& gasDenT,
                      const DenT& watDenT,
+                     const StandardCond& stcond,
                      std::size_t gas_comp_index,
                      double rtemp);
 
@@ -163,6 +171,7 @@ namespace Ewoms {
         const DenT& WatDenT() const;
         const DenT& GasDenT() const;
         const DenT& OilDenT() const;
+        const StandardCond& stCond() const;
         std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
@@ -171,8 +180,13 @@ namespace Ewoms {
 
         const PvcdoTable& getPvcdoTable() const;
         const DensityTable& getDensityTable() const;
+        const PlyvmhTable& getPlyvmhTable() const;
         const RockTable& getRockTable() const;
         const ViscrefTable& getViscrefTable() const;
+        const PlmixparTable& getPlmixparTable() const;
+        const ShrateTable& getShrateTable() const;
+        const Stone1exTable& getStone1exTable() const;
+        const TlmixparTable& getTlmixparTable() const;
         const WatdentTable& getWatdentTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
@@ -187,6 +201,9 @@ namespace Ewoms {
 
         /// deck has keyword "EQLNUM" --- Equilibriation region numbers
         bool useEqlnum() const;
+
+        /// deck has keyword "SHRATE"
+        bool useShrate() const;
 
         /// deck has keyword "JFUNC" --- Use Leverett's J Function for capillary pressure
         bool useJFunc() const;
@@ -410,7 +427,12 @@ namespace Ewoms {
         PvtwTable m_pvtwTable;
         PvcdoTable m_pvcdoTable;
         DensityTable m_densityTable;
+        PlyvmhTable m_plyvmhTable;
         RockTable m_rockTable;
+        PlmixparTable m_plmixparTable;
+        ShrateTable m_shrateTable;
+        Stone1exTable m_stone1exTable;
+        TlmixparTable m_tlmixparTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
@@ -428,11 +450,13 @@ namespace Ewoms {
         bool hasImptvd = false;// if deck has keyword IMPTVD
         bool hasEnptvd = false;// if deck has keyword ENPTVD
         bool hasEqlnum = false;// if deck has keyword EQLNUM
+        bool hasShrate = false;// if deck has keyword SHRATE
         std::shared_ptr<JFunc> jfunc;
 
         DenT oilDenT;
         DenT gasDenT;
         DenT watDenT;
+        StandardCond stcond;
         std::size_t m_gas_comp_index;
         double m_rtemp;
     };

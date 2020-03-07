@@ -34,6 +34,7 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
@@ -276,15 +277,15 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::THP ));
 }
 
-BOOST_AUTO_TEST_CASE(InjectorType) {
+BOOST_AUTO_TEST_CASE(ScheduleTypesInjectorType) {
     Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     auto injectionProps = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injectionProps->injectorType = Ewoms::Well::InjectorType::WATER;
+    injectionProps->injectorType = Ewoms::InjectorType::WATER;
     well.updateInjection(injectionProps);
     // TODO: Should we test for something other than wate here, as long as
     //       the default value for InjectorType is WellInjector::WATER?
-    BOOST_CHECK( Ewoms::Well::InjectorType::WATER == well.getInjectionProperties().injectorType);
+    BOOST_CHECK( Ewoms::InjectorType::WATER == well.getInjectionProperties().injectorType);
 
 }
 
@@ -820,3 +821,4 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
         BOOST_CHECK(op_1.getStatus() == Well::Status::SHUT);
     }
 }
+

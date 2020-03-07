@@ -26,9 +26,13 @@ namespace Ewoms {
 
     class RocktabTable : public  SimpleTable {
     public:
+        RocktabTable() = default;
         RocktabTable(const DeckItem& item,
                      bool isDirectional,
                      bool hasStressOption);
+        RocktabTable(const TableSchema& schema,
+                     const OrderedMap<std::string, TableColumn>& columns,
+                     bool jfunc, bool isDirectional);
 
         const TableColumn& getPressureColumn() const;
         const TableColumn& getPoreVolumeMultiplierColumn() const;
@@ -37,8 +41,12 @@ namespace Ewoms {
         const TableColumn& getTransmissibilityMultiplierYColumn() const;
         const TableColumn& getTransmissibilityMultiplierZColumn() const;
 
+        bool isDirectional() const;
+
+        bool operator==(const RocktabTable& data) const;
+
     private:
-        bool m_isDirectional;
+        bool m_isDirectional = false;
     };
 }
 
