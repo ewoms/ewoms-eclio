@@ -25,10 +25,11 @@
 #include <ewoms/eclio/io/rst/header.hh>
 #include <ewoms/eclio/io/rst/group.hh>
 #include <ewoms/eclio/io/rst/well.hh>
+#include <ewoms/eclio/parser/units/unitsystem.hh>
+
+#include <ewoms/eclio/parser/eclipsestate/schedule/tuning.hh>
 
 namespace Ewoms {
-
-class UnitSystem;
 
 namespace RestartIO {
 struct RstState {
@@ -69,12 +70,18 @@ struct RstState {
     static RstState load(EclIO::ERst& rst_file, int report_step);
 
     const RstWell& get_well(const std::string& wname) const;
+
+    const ::Ewoms::UnitSystem unit_system;
+    RstHeader header;
     std::vector<RstWell> wells;
     std::vector<RstGroup> groups;
-    RstHeader header;
+    Tuning tuning;
+
 private:
-    void add_groups(const ::Ewoms::UnitSystem& unit_system,
-                    const std::vector<std::string>& zgrp,
+    void load_tuning(const std::vector<int>& intehead,
+                     const std::vector<double>& doubhead);
+
+    void add_groups(const std::vector<std::string>& zgrp,
                     const std::vector<int>& igrp,
                     const std::vector<float>& sgrp,
                     const std::vector<double>& xgrp);

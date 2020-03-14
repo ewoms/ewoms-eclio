@@ -51,11 +51,11 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/plymwinjtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/skprwattable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/skprpolytable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/eqldims.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/regdims.hh>
 
 namespace Ewoms {
 
-    class Eqldims;
-    class Regdims;
     class TableManager {
     public:
         explicit TableManager( const Deck& deck );
@@ -443,8 +443,8 @@ namespace Ewoms {
         std::map<int, SkprpolyTable> m_skprpolyTables;
 
         Tabdims m_tabdims;
-        std::shared_ptr<Regdims> m_regdims;
-        std::shared_ptr<Eqldims> m_eqldims;
+        Regdims m_regdims;
+        Eqldims m_eqldims;
         Aqudims m_aqudims;
 
         bool hasImptvd = false;// if deck has keyword IMPTVD

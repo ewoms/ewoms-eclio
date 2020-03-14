@@ -65,12 +65,12 @@ namespace {
     struct ParamCTorArgs
     {
         std::string kw;
-        Ewoms::SummaryNode::Type type;
+        Ewoms::SummaryConfigNode::Type type;
     };
 
     std::vector<ParamCTorArgs> requiredRestartVectors()
     {
-        using Type = ::Ewoms::SummaryNode::Type;
+        using Type = ::Ewoms::SummaryConfigNode::Type;
 
         return {
             // Production
@@ -106,12 +106,12 @@ namespace {
         };
     }
 
-    std::vector<Ewoms::SummaryNode>
+    std::vector<Ewoms::SummaryConfigNode>
     requiredRestartVectors(const ::Ewoms::Schedule& sched)
     {
-        auto entities = std::vector<Ewoms::SummaryNode>{};
+        auto entities = std::vector<Ewoms::SummaryConfigNode>{};
 
-        using SN = ::Ewoms::SummaryNode;
+        using SN = ::Ewoms::SummaryConfigNode;
 
         const auto& vectors = requiredRestartVectors();
 
@@ -154,10 +154,10 @@ namespace {
         return entities;
     }
 
-    std::vector<Ewoms::SummaryNode>
+    std::vector<Ewoms::SummaryConfigNode>
     requiredSegmentVectors(const ::Ewoms::Schedule& sched)
     {
-        using SN = Ewoms::SummaryNode;
+        using SN = Ewoms::SummaryConfigNode;
         auto ret = std::vector<SN>{};
 
         auto sofr = SN{ "SOFR", SN::Category::Segment, ::Ewoms::Location() }
@@ -1103,15 +1103,15 @@ static const std::unordered_map< std::string, Ewoms::UnitSystem::measure> block_
 };
 
 inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
-                                           const Ewoms::SummaryNode& node,
+                                           const Ewoms::SummaryConfigNode& node,
                                            const int sim_step,
                                            const Ewoms::out::RegionCache& regionCache ) {
 
     const auto cat = node.category();
 
-    if ((cat == Ewoms::SummaryNode::Category::Well) ||
-        (cat == Ewoms::SummaryNode::Category::Connection) ||
-        (cat == Ewoms::SummaryNode::Category::Segment))
+    if ((cat == Ewoms::SummaryConfigNode::Category::Well) ||
+        (cat == Ewoms::SummaryConfigNode::Category::Connection) ||
+        (cat == Ewoms::SummaryConfigNode::Category::Segment))
     {
         const auto& name = node.namedEntity();
 
@@ -1122,7 +1122,7 @@ inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
             return {};
     }
 
-    if( cat == Ewoms::SummaryNode::Category::Group ) {
+    if( cat == Ewoms::SummaryConfigNode::Category::Group ) {
         const auto& name = node.namedEntity();
 
         if( !schedule.hasGroup( name ) ) return {};
@@ -1130,10 +1130,10 @@ inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
         return schedule.getChildWells2( name, sim_step);
     }
 
-    if( cat == Ewoms::SummaryNode::Category::Field )
+    if( cat == Ewoms::SummaryConfigNode::Category::Field )
         return schedule.getWells(sim_step);
 
-    if( cat == Ewoms::SummaryNode::Category::Region ) {
+    if( cat == Ewoms::SummaryConfigNode::Category::Region ) {
         std::vector<Ewoms::Well> wells;
 
         const auto region = node.number();
@@ -1157,21 +1157,21 @@ inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
     return {};
 }
 
-bool need_wells(Ewoms::SummaryNode::Category cat, const std::string& keyword) {
+bool need_wells(Ewoms::SummaryConfigNode::Category cat, const std::string& keyword) {
     static const std::set<std::string> region_keywords{"ROIR", "RGIR", "RWIR", "ROPR", "RGPR", "RWPR", "ROIT", "RWIT", "RGIT", "ROPT", "RGPT", "RWPT"};
-    if (cat == Ewoms::SummaryNode::Category::Well)
+    if (cat == Ewoms::SummaryConfigNode::Category::Well)
         return true;
 
-    if (cat == Ewoms::SummaryNode::Category::Group)
+    if (cat == Ewoms::SummaryConfigNode::Category::Group)
         return true;
 
-    if (cat == Ewoms::SummaryNode::Category::Field)
+    if (cat == Ewoms::SummaryConfigNode::Category::Field)
         return true;
 
-    if (cat == Ewoms::SummaryNode::Category::Connection)
+    if (cat == Ewoms::SummaryConfigNode::Category::Connection)
         return true;
 
-    if (cat == Ewoms::SummaryNode::Category::Segment)
+    if (cat == Ewoms::SummaryConfigNode::Category::Segment)
         return true;
 
     /*
@@ -1180,7 +1180,7 @@ bool need_wells(Ewoms::SummaryNode::Category cat, const std::string& keyword) {
       region and consequently the list of defined wells is required, other
       region keywords like 'ROIP' do not require well information.
     */
-    if (cat == Ewoms::SummaryNode::Category::Region) {
+    if (cat == Ewoms::SummaryConfigNode::Category::Region) {
         if (region_keywords.count(keyword) > 0)
             return true;
     }
@@ -1246,12 +1246,12 @@ void eval_udq(const Ewoms::Schedule& schedule, std::size_t sim_step, Ewoms::Summ
     }
 }
 
-void updateValue(const Ewoms::SummaryNode& node, const double value, Ewoms::SummaryState& st)
+void updateValue(const Ewoms::SummaryConfigNode& node, const double value, Ewoms::SummaryState& st)
 {
-    if (node.category() == Ewoms::SummaryNode::Category::Well)
+    if (node.category() == Ewoms::SummaryConfigNode::Category::Well)
         st.update_well_var(node.namedEntity(), node.keyword(), value);
 
-    else if (node.category() == Ewoms::SummaryNode::Category::Group)
+    else if (node.category() == Ewoms::SummaryConfigNode::Category::Group)
         st.update_group_var(node.namedEntity(), node.keyword(), value);
 
     else
@@ -1281,13 +1281,13 @@ struct EfficiencyFactor
 
     FacColl factors{};
 
-    void setFactors(const Ewoms::SummaryNode&        node,
+    void setFactors(const Ewoms::SummaryConfigNode&        node,
                     const Ewoms::Schedule&           schedule,
                     const std::vector<Ewoms::Well>& schedule_wells,
                     const int                      sim_step);
 };
 
-void EfficiencyFactor::setFactors(const Ewoms::SummaryNode&        node,
+void EfficiencyFactor::setFactors(const Ewoms::SummaryConfigNode&        node,
                                   const Ewoms::Schedule&           schedule,
                                   const std::vector<Ewoms::Well>& schedule_wells,
                                   const int                      sim_step)
@@ -1297,14 +1297,14 @@ void EfficiencyFactor::setFactors(const Ewoms::SummaryNode&        node,
     if (schedule_wells.empty()) { return; }
 
     const auto cat = node.category();
-    if(    cat != Ewoms::SummaryNode::Category::Group
-        && cat != Ewoms::SummaryNode::Category::Field
-        && cat != Ewoms::SummaryNode::Category::Region
-           && (node.type() != Ewoms::SummaryNode::Type::Total))
+    if(    cat != Ewoms::SummaryConfigNode::Category::Group
+        && cat != Ewoms::SummaryConfigNode::Category::Field
+        && cat != Ewoms::SummaryConfigNode::Category::Region
+           && (node.type() != Ewoms::SummaryConfigNode::Type::Total))
         return;
 
-    const bool is_group = (cat == Ewoms::SummaryNode::Category::Group);
-    const bool is_rate = (node.type() != Ewoms::SummaryNode::Type::Total);
+    const bool is_group = (cat == Ewoms::SummaryConfigNode::Category::Group);
+    const bool is_rate = (node.type() != Ewoms::SummaryConfigNode::Type::Total);
 
     for( const auto& well : schedule_wells ) {
         if (!well.hasBeenDefined(sim_step))
@@ -1361,7 +1361,7 @@ namespace Evaluator {
     class FunctionRelation : public Base
     {
     public:
-        explicit FunctionRelation(Ewoms::SummaryNode node, ofun fcn)
+        explicit FunctionRelation(Ewoms::SummaryConfigNode node, ofun fcn)
             : node_(std::move(node))
             , fcn_ (std::move(fcn))
         {}
@@ -1402,14 +1402,14 @@ namespace Evaluator {
         }
 
     private:
-        Ewoms::SummaryNode node_;
+        Ewoms::SummaryConfigNode node_;
         ofun             fcn_;
     };
 
     class BlockValue : public Base
     {
     public:
-        explicit BlockValue(Ewoms::SummaryNode               node,
+        explicit BlockValue(Ewoms::SummaryConfigNode               node,
                             const Ewoms::UnitSystem::measure m)
             : node_(std::move(node))
             , m_   (m)
@@ -1431,7 +1431,7 @@ namespace Evaluator {
         }
 
     private:
-        Ewoms::SummaryNode node_;
+        Ewoms::SummaryConfigNode node_;
         Ewoms::UnitSystem::measure m_;
 
         Ewoms::out::Summary::BlockValues::key_type lookupKey() const
@@ -1443,7 +1443,7 @@ namespace Evaluator {
     class RegionValue : public Base
     {
     public:
-        explicit RegionValue(Ewoms::SummaryNode               node,
+        explicit RegionValue(Ewoms::SummaryConfigNode               node,
                              const Ewoms::UnitSystem::measure m)
             : node_(std::move(node))
             , m_   (m)
@@ -1473,7 +1473,7 @@ namespace Evaluator {
         }
 
     private:
-        Ewoms::SummaryNode node_;
+        Ewoms::SummaryConfigNode node_;
         Ewoms::UnitSystem::measure m_;
 
         std::vector<double>::size_type index() const
@@ -1485,7 +1485,7 @@ namespace Evaluator {
     class GlobalProcessValue : public Base
     {
     public:
-        explicit GlobalProcessValue(Ewoms::SummaryNode               node,
+        explicit GlobalProcessValue(Ewoms::SummaryConfigNode               node,
                                     const Ewoms::UnitSystem::measure m)
             : node_(std::move(node))
             , m_   (m)
@@ -1508,7 +1508,7 @@ namespace Evaluator {
         }
 
     private:
-        Ewoms::SummaryNode node_;
+        Ewoms::SummaryConfigNode node_;
         Ewoms::UnitSystem::measure m_;
     };
 
@@ -1598,7 +1598,7 @@ namespace Evaluator {
         Factory& operator=(const Factory&) = delete;
         Factory& operator=(Factory&&) = delete;
 
-        Descriptor create(const Ewoms::SummaryNode&);
+        Descriptor create(const Ewoms::SummaryConfigNode&);
 
     private:
         const Ewoms::EclipseState& es_;
@@ -1606,7 +1606,7 @@ namespace Evaluator {
         const Ewoms::SummaryState& st_;
         const Ewoms::UDQConfig&    udq_;
 
-        const Ewoms::SummaryNode* node_;
+        const Ewoms::SummaryConfigNode* node_;
 
         Ewoms::UnitSystem::measure paramUnit_;
         ofun paramFunction_;
@@ -1629,7 +1629,7 @@ namespace Evaluator {
         std::string userDefinedUnit() const;
     };
 
-    Factory::Descriptor Factory::create(const Ewoms::SummaryNode& node)
+    Factory::Descriptor Factory::create(const Ewoms::SummaryConfigNode& node)
     {
         this->node_ = &node;
 
@@ -1805,10 +1805,10 @@ namespace Evaluator {
     }
 } // namespace Evaluator
 
-void reportUnsupportedKeywords(std::vector<Ewoms::SummaryNode> keywords)
+void reportUnsupportedKeywords(std::vector<Ewoms::SummaryConfigNode> keywords)
 {
     // Sort by location first, then keyword.
-    auto loc_kw_ordering = [](const Ewoms::SummaryNode& n1, const Ewoms::SummaryNode& n2) {
+    auto loc_kw_ordering = [](const Ewoms::SummaryConfigNode& n1, const Ewoms::SummaryConfigNode& n2) {
         if (n1.location() == n2.location()) {
             return n1.keyword() < n2.keyword();
         }
@@ -1821,7 +1821,7 @@ void reportUnsupportedKeywords(std::vector<Ewoms::SummaryNode> keywords)
 
     // Reorder to remove duplicate { keyword, location } pairs, since
     // that will give duplicate and therefore useless warnings.
-    auto same_kw_and_loc = [](const Ewoms::SummaryNode& n1, const Ewoms::SummaryNode& n2) {
+    auto same_kw_and_loc = [](const Ewoms::SummaryConfigNode& n1, const Ewoms::SummaryConfigNode& n2) {
         return (n1.keyword() == n2.keyword()) && (n1.location() == n2.location());
     };
     auto uend = std::unique(keywords.begin(), keywords.end(), same_kw_and_loc);
@@ -2229,7 +2229,7 @@ configureSummaryInput(const EclipseState&  es,
         es, grid, st, sched.getUDQConfig(sched.size() - 1)
     };
 
-    auto unsuppkw = std::vector<SummaryNode>{};
+    auto unsuppkw = std::vector<SummaryConfigNode>{};
     for (const auto& node : sumcfg) {
         auto prmDescr = fact.create(node);
 
@@ -2260,7 +2260,7 @@ Ewoms::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
                                    const Schedule&      sched)
 {
-    auto makeEvaluator = [&sumcfg, this](const SummaryNode& node) -> void
+    auto makeEvaluator = [&sumcfg, this](const SummaryConfigNode& node) -> void
     {
         if (sumcfg.hasSummaryKey(node.uniqueNodeKey()))
             // Handler already exists.  Don't add second evaluation.

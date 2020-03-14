@@ -31,7 +31,17 @@ namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;
 namespace Ewoms {
 namespace RestartIO {
 
+constexpr int def_ecl_phase = 1;
+
 using M  = ::Ewoms::UnitSystem::measure;
+
+double swel_value(float raw_value) {
+    const auto infty = 1.0e+20f;
+    if (std::abs(raw_value) == infty)
+        return 0;
+    else
+        return raw_value;
+}
 
 RstWell::RstWell(const ::Ewoms::UnitSystem& unit_system,
                  const RstHeader& header,
@@ -47,7 +57,7 @@ RstWell::RstWell(const ::Ewoms::UnitSystem& unit_system,
     group(group_arg),
     ij(                                                              {iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}),
     k1k2(                                                            std::make_pair(iwel[VI::IWell::FirstK] - 1, iwel[VI::IWell::LastK] - 1)),
-    wtype(                                                           iwel[VI::IWell::WType]),
+    wtype(                                                           iwel[VI::IWell::WType], def_ecl_phase),
     active_control(                                                  iwel[VI::IWell::ActWCtrl]),
     vfp_table(                                                       iwel[VI::IWell::VFPTab]),
     pred_requested_control(                                          iwel[VI::IWell::PredReqWCtrl]),
@@ -55,17 +65,19 @@ RstWell::RstWell(const ::Ewoms::UnitSystem& unit_system,
     hist_requested_control(                                          iwel[VI::IWell::HistReqWCtrl]),
     msw_index(                                                       iwel[VI::IWell::MsWID]),
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
-    orat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::OilRateTarget])),
-    wrat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::WatRateTarget])),
-    grat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::GasRateTarget])),
-    lrat_target(         unit_system.to_si(M::identity,              swel[VI::SWell::LiqRateTarget])),
-    resv_target(         unit_system.to_si(M::identity,              swel[VI::SWell::ResVRateTarget])),
+    orat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::OilRateTarget]))),
+    wrat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::WatRateTarget]))),
+    grat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::GasRateTarget]))),
+    lrat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::LiqRateTarget]))),
+    resv_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::ResVRateTarget]))),
     thp_target(          unit_system.to_si(M::identity,              swel[VI::SWell::THPTarget])),
     bhp_target_float(    unit_system.to_si(M::identity,              swel[VI::SWell::BHPTarget])),
     hist_lrat_target(    unit_system.to_si(M::liquid_surface_rate,   swel[VI::SWell::HistLiqRateTarget])),
     hist_grat_target(    unit_system.to_si(M::gas_surface_rate,      swel[VI::SWell::HistGasRateTarget])),
     hist_bhp_target(     unit_system.to_si(M::pressure,              swel[VI::SWell::HistBHPTarget])),
     datum_depth(         unit_system.to_si(M::length,                swel[VI::SWell::DatumDepth])),
+    drainage_radius(     unit_system.to_si(M::length,                swel_value(swel[VI::SWell::DrainageRadius]))),
+    efficiency_factor(   unit_system.to_si(M::identity,              swel[VI::SWell::EfficiencyFactor1])),
     oil_rate(            unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::OilPrRate])),
     water_rate(          unit_system.to_si(M::liquid_surface_rate,   xwel[VI::XWell::WatPrRate])),
     gas_rate(            unit_system.to_si(M::gas_surface_rate,      xwel[VI::XWell::GasPrRate])),

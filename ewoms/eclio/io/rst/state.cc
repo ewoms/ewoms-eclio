@@ -25,15 +25,14 @@
 #include <ewoms/eclio/output/vectoritems/connection.hh>
 #include <ewoms/eclio/output/vectoritems/well.hh>
 #include <ewoms/eclio/output/vectoritems/intehead.hh>
-
-#include <ewoms/eclio/parser/units/unitsystem.hh>
+#include <ewoms/eclio/output/vectoritems/doubhead.hh>
 
 namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;
 
 namespace Ewoms {
 namespace RestartIO {
 
-RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
+RstState::RstState(const ::Ewoms::UnitSystem& unit_system_,
                    const std::vector<int>& intehead,
                    const std::vector<bool>& logihead,
                    const std::vector<double>& doubhead,
@@ -48,9 +47,11 @@ RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
                    const std::vector<int>& icon,
                    const std::vector<float>& scon,
                    const std::vector<double>& xcon):
+    unit_system(unit_system_),
     header(intehead, logihead, doubhead)
 {
-    this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
+    this->add_groups(zgrp, igrp, sgrp, xgrp);
+    this->load_tuning(intehead, doubhead);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -63,7 +64,7 @@ RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
         int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
         const std::string group = this->groups[group_index].name;
 
-        this->wells.emplace_back(unit_system,
+        this->wells.emplace_back(this->unit_system,
                                  this->header,
                                  group,
                                  zwel.data() + zwel_offset,
@@ -79,7 +80,7 @@ RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
     }
 }
 
-RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
+RstState::RstState(const ::Ewoms::UnitSystem& unit_system_,
                    const std::vector<int>& intehead,
                    const std::vector<bool>& logihead,
                    const std::vector<double>& doubhead,
@@ -96,9 +97,11 @@ RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
                    const std::vector<double>& xcon,
                    const std::vector<int>& iseg,
                    const std::vector<double>& rseg) :
+    unit_system(unit_system_),
     header(intehead, logihead, doubhead)
 {
-    this->add_groups(unit_system, zgrp, igrp, sgrp, xgrp);
+    this->add_groups(zgrp, igrp, sgrp, xgrp);
+    this->load_tuning(intehead, doubhead);
 
     for (int iw = 0; iw < this->header.num_wells; iw++) {
         std::size_t zwel_offset = iw * this->header.nzwelz;
@@ -111,7 +114,7 @@ RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
         int group_index = iwel[ iwel_offset + VI::IWell::Group ] - 1;
         const std::string group = this->groups[group_index].name;
 
-        this->wells.emplace_back(unit_system,
+        this->wells.emplace_back(this->unit_system,
                                  this->header,
                                  group,
                                  zwel.data() + zwel_offset,
@@ -126,8 +129,45 @@ RstState::RstState(const ::Ewoms::UnitSystem& unit_system,
     }
 }
 
-void RstState::add_groups(const ::Ewoms::UnitSystem& unit_system,
-                          const std::vector<std::string>& zgrp,
+void RstState::load_tuning(const std::vector<int>& intehead,
+                           const std::vector<double>& doubhead)
+{
+    using M  = ::Ewoms::UnitSystem::measure;
+
+    this->tuning.NEWTMX  = intehead[ VI::intehead::NEWTMX ];
+    this->tuning.NEWTMN  = intehead[ VI::intehead::NEWTMN ];
+    this->tuning.LITMAX  = intehead[ VI::intehead::LITMAX ];
+    this->tuning.LITMIN  = intehead[ VI::intehead::LITMIN ];
+    this->tuning.MXWSIT  = intehead[ VI::intehead::MXWSIT ];
+    this->tuning.MXWPIT  = intehead[ VI::intehead::MXWPIT ];
+
+    tuning.TSINIT = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsInit]);
+    tuning.TSMAXZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMaxz]);
+    tuning.TSMINZ = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMinz]);
+    tuning.TSMCHP = this->unit_system.to_si(M::time, doubhead[VI::doubhead::TsMchp]);
+    tuning.TSFMAX = doubhead[VI::doubhead::TsFMax];
+    tuning.TSFMIN = doubhead[VI::doubhead::TsFMin];
+    tuning.TSFCNV = doubhead[VI::doubhead::TsFcnv];
+    tuning.THRUPT = doubhead[VI::doubhead::ThrUPT];
+    tuning.TFDIFF = doubhead[VI::doubhead::TfDiff];
+    tuning.TRGTTE = doubhead[VI::doubhead::TrgTTE];
+    tuning.TRGCNV = doubhead[VI::doubhead::TrgCNV];
+    tuning.TRGMBE = doubhead[VI::doubhead::TrgMBE];
+    tuning.TRGLCV = doubhead[VI::doubhead::TrgLCV];
+    tuning.XXXTTE = doubhead[VI::doubhead::XxxTTE];
+    tuning.XXXCNV = doubhead[VI::doubhead::XxxCNV];
+    tuning.XXXMBE = doubhead[VI::doubhead::XxxMBE];
+    tuning.XXXLCV = doubhead[VI::doubhead::XxxLCV];
+    tuning.XXXWFL = doubhead[VI::doubhead::XxxWFL];
+    tuning.TRGFIP = doubhead[VI::doubhead::TrgFIP];
+    tuning.TRGSFT = doubhead[VI::doubhead::TrgSFT];
+    tuning.TRGDPR = doubhead[VI::doubhead::TrgDPR];
+    tuning.XXXDPR = doubhead[VI::doubhead::XxxDPR];
+    tuning.DDPLIM = doubhead[VI::doubhead::DdpLim];
+    tuning.DDSLIM = doubhead[VI::doubhead::DdsLim];
+}
+
+void RstState::add_groups(const std::vector<std::string>& zgrp,
                           const std::vector<int>& igrp,
                           const std::vector<float>& sgrp,
                           const std::vector<double>& xgrp)
@@ -138,7 +178,7 @@ void RstState::add_groups(const ::Ewoms::UnitSystem& unit_system,
         std::size_t sgrp_offset = ig * this->header.nsgrpz;
         std::size_t xgrp_offset = ig * this->header.nxgrpz;
 
-        this->groups.emplace_back(unit_system,
+        this->groups.emplace_back(this->unit_system,
                                   zgrp.data() + zgrp_offset,
                                   igrp.data() + igrp_offset,
                                   sgrp.data() + sgrp_offset,

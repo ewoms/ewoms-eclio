@@ -35,7 +35,7 @@ namespace Ewoms {
       value semantics.
     */
 
-    class SummaryNode {
+    class SummaryConfigNode {
     public:
         enum class Category {
             Well, Group, Field,
@@ -49,13 +49,13 @@ namespace Ewoms {
             Undefined,
         };
 
-        SummaryNode() = default;
-        explicit SummaryNode(std::string keyword, const Category cat, Location loc_arg);
+        SummaryConfigNode() = default;
+        explicit SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg);
 
-        SummaryNode& parameterType(const Type type);
-        SummaryNode& namedEntity(std::string name);
-        SummaryNode& number(const int num);
-        SummaryNode& isUserDefined(const bool userDefined);
+        SummaryConfigNode& parameterType(const Type type);
+        SummaryConfigNode& namedEntity(std::string name);
+        SummaryConfigNode& number(const int num);
+        SummaryConfigNode& isUserDefined(const bool userDefined);
 
         const std::string& keyword() const { return this->keyword_; }
         Category category() const { return this->category_; }
@@ -66,6 +66,19 @@ namespace Ewoms {
 
         std::string uniqueNodeKey() const;
         const Location& location( ) const { return this->loc; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(keyword_);
+            serializer(category_);
+            serializer(loc);
+            serializer(type_);
+            serializer(name_);
+            serializer(number_);
+            serializer(userDefined_);
+        }
+
     private:
         std::string keyword_;
         Category    category_;
@@ -76,43 +89,41 @@ namespace Ewoms {
         bool        userDefined_{false};
     };
 
-    SummaryNode::Category parseKeywordCategory(const std::string& keyword);
+    SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword);
 
-    bool operator==(const SummaryNode& lhs, const SummaryNode& rhs);
-    bool operator<(const SummaryNode& lhs, const SummaryNode& rhs);
+    bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
+    bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs);
 
-    inline bool operator!=(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator!=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (lhs == rhs);
     }
 
-    inline bool operator<=(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator<=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (rhs < lhs);
     }
 
-    inline bool operator>(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator>(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return rhs < lhs;
     }
 
-    inline bool operator>=(const SummaryNode& lhs, const SummaryNode& rhs)
+    inline bool operator>=(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
     {
         return ! (lhs < rhs);
     }
 
     class Deck;
-    class TableManager;
-    class EclipseState;
-    class ParserKeyword;
-    class Schedule;
     class ErrorGuard;
-    class ParseContext;
     class GridDims;
+    class ParseContext;
+    class Schedule;
+    class TableManager;
 
     class SummaryConfig {
         public:
-            typedef SummaryNode keyword_type;
+            typedef SummaryConfigNode keyword_type;
             typedef std::vector< keyword_type > keyword_list;
             typedef keyword_list::const_iterator const_iterator;
 
@@ -164,11 +175,19 @@ namespace Ewoms {
             bool require3DField( const std::string& keyword) const;
             bool requireFIPNUM( ) const;
 
-            const keyword_list& getKwds() const;
-            const std::set<std::string>& getShortKwds() const;
-            const std::set<std::string>& getSmryKwds() const;
-
             bool operator==(const SummaryConfig& data) const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+               serializer.vector(keywords);
+               serializer(short_keywords);
+               serializer(summary_keywords);
+            }
+
+            bool createRunSummary() const {
+                return runSummaryConfig.create;
+            }
 
         private:
             SummaryConfig( const Deck& deck,
@@ -186,6 +205,14 @@ namespace Ewoms {
             keyword_list keywords;
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
+
+            struct {
+                bool create { false };
+                bool narrow { false };
+                bool separate { true };
+            } runSummaryConfig;
+
+            void handleProcessingInstruction(const std::string& keyword);
     };
 
 } //namespace Ewoms

@@ -15,6 +15,8 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
+
 #include <ewoms/eclio/io/rst/header.hh>
 #include <ewoms/eclio/io/rst/connection.hh>
 #include <ewoms/eclio/output/vectoritems/connection.hh>
@@ -52,6 +54,21 @@ Connection::Direction from_int(int int_dir) {
     }
 }
 
+/*
+  That the CTFKind variable comes from a float looks extremely suspicious; but
+  it has been double checked ...
+*/
+Connection::CTFKind from_float(float float_kind) {
+    if (float_kind == 0)
+        return Connection::CTFKind::Defaulted;
+
+    return Connection::CTFKind::DeckValue;
+}
+}
+
+double RstConnection::inverse_peaceman(double cf, double kh, double rw, double skin) {
+    auto alpha = 3.14159265 * 2 * kh / cf - skin;
+    return rw * std::exp(alpha);
 }
 
 using M  = ::Ewoms::UnitSystem::measure;
@@ -62,10 +79,12 @@ RstConnection::RstConnection(const ::Ewoms::UnitSystem& unit_system, const int* 
     state(                                                   from_int<Connection::State>(icon[VI::IConn::ConnStat])),
     drain_sat_table(                                         icon[VI::IConn::Drainage]),
     imb_sat_table(                                           icon[VI::IConn::Imbibition]),
-    completion(                                              icon[VI::IConn::ComplNum] - 1),
+    completion(                                              icon[VI::IConn::ComplNum]),
     dir(                                                     from_int<Connection::Direction>(icon[VI::IConn::ConnDir])),
-    segment(                                                 icon[VI::IConn::Segment] - 1),
-    tran(          unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
+    segment(                                                 icon[VI::IConn::Segment]),
+    cf_kind(                                                 from_float(scon[VI::SConn::CFInDeck])),
+    skin_factor(                                             scon[VI::SConn::SkinFactor]),
+    cf(            unit_system.to_si(M::transmissibility,    scon[VI::SConn::ConnTrans])),
     depth(         unit_system.to_si(M::length,              scon[VI::SConn::Depth])),
     diameter(      unit_system.to_si(M::length,              scon[VI::SConn::Diameter])),
     kh(            unit_system.to_si(M::effective_Kh,        scon[VI::SConn::EffectiveKH])),
@@ -75,8 +94,19 @@ RstConnection::RstConnection(const ::Ewoms::UnitSystem& unit_system, const int* 
     water_rate(    unit_system.to_si(M::liquid_surface_rate, xcon[VI::XConn::WaterRate])),
     gas_rate(      unit_system.to_si(M::gas_surface_rate,    xcon[VI::XConn::GasRate])),
     pressure(      unit_system.to_si(M::pressure,            xcon[VI::XConn::Pressure])),
-    resv_rate(     unit_system.to_si(M::rate,                xcon[VI::XConn::ResVRate]))
-{}
+    resv_rate(     unit_system.to_si(M::rate,                xcon[VI::XConn::ResVRate])),
+    r0( RstConnection::inverse_peaceman(this->cf, this->kh, this->diameter/2, this->skin_factor) )
+    /*
+      r0: The r0 quantity is currently not written or read from the restart
+          file. If the r0 value is given explicitly in the deck it is possible
+          to give a value which is not consistent with the Peaceman formula -
+          that value will be lost when loading back from a restart file.
+
+      insert_index: The insert index property is used internally to keep track
+          of the order the connections have been specified in the deck. It seems
+          that in some cases (MSW ?) eclipse only outputs 0 here.
+    */
+{ }
 
 }
 }

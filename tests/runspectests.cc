@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(TolCrit)
     }
 
     {
-        const auto sfctrl = ::Ewoms::SatFuncControls{ 5.0e-7 };
+        const auto sfctrl = ::Ewoms::SatFuncControls{ 5.0e-7, ::Ewoms::SatFuncControls::ThreePhaseOilKrModel::Default };
         BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 5.0e-7, 1.0e-10);
         BOOST_CHECK_MESSAGE(!(sfctrl == ::Ewoms::SatFuncControls{}),
                             "Default-constructed SatFuncControl must NOT equal non-default");

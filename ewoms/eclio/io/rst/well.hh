@@ -25,6 +25,7 @@
 
 #include <ewoms/eclio/io/rst/connection.hh>
 #include <ewoms/eclio/io/rst/segment.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
 
 namespace Ewoms {
 class UnitSystem;
@@ -62,7 +63,7 @@ struct RstWell {
     std::string group;
     std::array<int, 2> ij;
     std::pair<int,int> k1k2;
-    int wtype;
+    WellType wtype;
     int active_control;
     int vfp_table;
     int pred_requested_control;
@@ -82,6 +83,8 @@ struct RstWell {
     float hist_grat_target;
     float hist_bhp_target;
     float datum_depth;
+    float drainage_radius;
+    float efficiency_factor;
 
     double oil_rate;
     double water_rate;

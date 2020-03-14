@@ -61,12 +61,6 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
         };
 
         namespace Value {
-            enum WellType : int {
-                Producer = 1,  // Well is producer
-                OilInj   = 2,  // Well is oil injector
-                WatInj   = 3,  // Well is water injector
-                GasInj   = 4,  // Well is gas injector
-            };
 
             enum WellCtrlMode : int {
                 WMCtlUnk = -10,  // Unknown well control mode (eWoms and OPM only)
@@ -119,6 +113,9 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
 
             DatumDepth     = 9, // Well's reference depth for BHP
 
+            DrainageRadius = 17, // Well's drainage radius - item 7 from WELSPECS
+            EfficiencyFactor1 = 24, // Item2 from WEFAC; this value is repeated at two locations.
+            EfficiencyFactor2 = 31, //
             HistLiqRateTarget = 33, // Well's historical/observed liquid
                                     // rate target/limit
 

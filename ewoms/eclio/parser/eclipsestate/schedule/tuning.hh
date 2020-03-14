@@ -19,6 +19,7 @@
 #ifndef EWOMS_TUNING_H
 #define EWOMS_TUNING_H
 
+#include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
 
 namespace Ewoms {

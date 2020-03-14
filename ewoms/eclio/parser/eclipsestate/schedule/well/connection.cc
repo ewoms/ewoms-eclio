@@ -24,11 +24,13 @@
 #include <stdexcept>
 #include <vector>
 
+#include <ewoms/eclio/io/rst/connection.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/value.hh>
@@ -67,7 +69,43 @@ namespace Ewoms {
           m_segDistStart(segDistStart),
           m_segDistEnd(segDistEnd),
           m_defaultSatTabId(defaultSatTabId)
-    {}
+    {
+    }
+
+namespace {
+constexpr bool defaultSatTabId = true;
+constexpr int compseg_seqIndex = 1;
+constexpr double def_wellPi = 1.0;
+}
+
+Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp) :
+        direction(rst_connection.dir),
+        center_depth(rst_connection.depth),
+        open_state(rst_connection.state),
+        sat_tableId(rst_connection.drain_sat_table),
+        m_complnum(rst_connection.completion),
+        m_CF(rst_connection.cf),
+        m_Kh(rst_connection.kh),
+        m_rw(rst_connection.diameter / 2),
+        m_r0(rst_connection.r0),
+        m_skin_factor(rst_connection.skin_factor),
+        ijk(rst_connection.ijk),
+        m_ctfkind(rst_connection.cf_kind),
+        m_seqIndex(insert_index),
+        m_segDistStart(rst_connection.segdist_start),
+        m_segDistEnd(rst_connection.segdist_end),
+        m_defaultSatTabId(defaultSatTabId),
+        m_compSeg_seqIndex(compseg_seqIndex),
+        segment_number(rst_connection.segment),
+        wPi(def_wellPi)
+    {
+        if (this->m_defaultSatTabId) {
+            const auto& satnum = fp.get_int("SATNUM");
+            auto active_index = grid.activeIndex(this->ijk[0], this->ijk[1], this->ijk[2]);
+            this->sat_tableId = satnum[active_index];
+        }
+
+    }
 
     Connection::Connection(Direction dir, double depth, State state,
                            int satTableId, int complnum, double CF,
@@ -202,13 +240,11 @@ namespace Ewoms {
 
     void Connection::updateSegment(int segment_number_arg,
                                    double center_depth_arg,
-                                   std::size_t seqIndex,
                                    std::size_t compseg_insert_index,
                                    double start,
                                    double end) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
-        this->m_seqIndex = seqIndex;
         this->m_compSeg_seqIndex = compseg_insert_index;
         this->m_segDistStart = start;
         this->m_segDistEnd = end;

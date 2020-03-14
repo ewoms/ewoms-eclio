@@ -47,6 +47,10 @@ class WellProductionProperties;
 class UDQActive;
 class UDQConfig;
 
+namespace RestartIO {
+struct RstWell;
+}
+
 class Well {
 public:
 
@@ -195,7 +199,7 @@ public:
         bool operator!=(const WellInjectionProperties& other) const;
 
         WellInjectionProperties();
-        WellInjectionProperties(const std::string& wname);
+        WellInjectionProperties(const UnitSystem& units, const std::string& wname);
         WellInjectionProperties(const std::string& wname,
                                 const UDAValue& surfaceInjRate,
                                 const UDAValue& reservoirInjRate,
@@ -300,7 +304,7 @@ public:
         bool operator!=(const WellProductionProperties& other) const;
 
         WellProductionProperties();
-        WellProductionProperties(const std::string& name_arg);
+        WellProductionProperties(const UnitSystem& units, const std::string& name_arg);
         WellProductionProperties(const std::string& wname,
                                  const UDAValue& oilRate,
                                  const UDAValue& waterRate,
@@ -346,6 +350,7 @@ public:
 
         int getNumProductionControls() const;
         void setBHPLimit(const double limit);
+        int productionControls() const { return this->m_productionControls; }
 
     private:
         int m_productionControls = 0;
@@ -366,7 +371,7 @@ public:
          int headI,
          int headJ,
          double ref_depth,
-         Phase phase,
+         const WellType& wtype_arg,
          ProducerCMode whistctl_cmode,
          Connection::Order ordering,
          const UnitSystem& unit_system,
@@ -375,6 +380,11 @@ public:
          bool allow_xflow,
          bool auto_shutin);
 
+    Well(const RestartIO::RstWell& rst_well,
+         int report_step,
+         const UnitSystem& unit_system,
+         double udq_undefined);
+
     Well(const std::string& wname,
          const std::string& gname,
          std::size_t init_step,
@@ -382,7 +392,7 @@ public:
          int headI,
          int headJ,
          double ref_depth,
-         const Phase& phase_arg,
+         const WellType& wtype_arg,
          Connection::Order ordering,
          const UnitSystem& unit_system,
          double udq_undefined,
@@ -390,7 +400,6 @@ public:
          double drainageRadius,
          bool allowCrossFlow,
          bool automaticShutIn,
-         bool isProducer,
          const WellGuideRate& guideRate,
          double efficiencyFactor,
          double solventFraction,
@@ -413,6 +422,7 @@ public:
 
     bool hasBeenDefined(size_t timeStep) const;
     std::size_t firstTimeStep() const;
+    const WellType& wellType() const;
     bool predictionMode() const;
     bool canOpen() const;
     bool isProducer() const;
@@ -428,6 +438,13 @@ public:
     double getDrainageRadius() const;
     double getEfficiencyFactor() const;
     Connection::Order getWellConnectionOrdering() const;
+    double getSolventFraction() const;
+    Status getStatus() const;
+    const std::string& groupName() const;
+    Phase getPreferredPhase() const;
+    const WellConnections& getConnections() const;
+    const WellSegments& getSegments() const;
+
     const WellProductionProperties& getProductionProperties() const;
     const WellInjectionProperties& getInjectionProperties() const;
     const WellEconProductionLimits& getEconLimits() const;
@@ -435,12 +452,6 @@ public:
     const WellPolymerProperties& getPolymerProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
-    const WellConnections& getConnections() const;
-    const WellSegments& getSegments() const;
-    double getSolventFraction() const;
-    Status getStatus() const;
-    const std::string& groupName() const;
-    Phase getPreferredPhase() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -474,10 +485,10 @@ public:
     bool updateHead(int I, int J);
     bool updateRefDepth(double ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
-    bool updateConnections(const std::shared_ptr<WellConnections> connections);
+    void updateSegments(std::shared_ptr<WellSegments> segments_arg);
+    bool updateConnections(std::shared_ptr<WellConnections> connections);
     bool updateStatus(Status status, bool update_connections);
     bool updateGroup(const std::string& group);
-    bool updateProducer(bool is_producer);
     bool updateWellGuideRate(bool available, double guide_rate, GuideRateTarget guide_phase, double scale_factor);
     bool updateWellGuideRate(double guide_rate);
     bool updateEfficiencyFactor(double efficiency_factor);
@@ -499,8 +510,6 @@ public:
     bool handleWPIMULT(const DeckRecord& record);
 
     void filterConnections(const ActiveGridCells& grid);
-    void switchToInjector();
-    void switchToProducer();
     ProductionControls productionControls(const SummaryState& st) const;
     InjectionControls injectionControls(const SummaryState& st) const;
     int vfp_table_number() const;
@@ -514,6 +523,9 @@ public:
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
 private:
+    void switchToInjector();
+    void switchToProducer();
+
     std::string wname;
     std::string group_name;
     std::size_t init_step;
@@ -521,7 +533,6 @@ private:
     int headI;
     int headJ;
     double ref_depth;
-    Phase phase;
     Connection::Order ordering;
     UnitSystem unit_system;
     double udq_undefined;
@@ -530,7 +541,7 @@ private:
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;
-    bool producer;
+    WellType wtype;
     WellGuideRate guide_rate;
     double efficiency_factor;
     double solvent_fraction;

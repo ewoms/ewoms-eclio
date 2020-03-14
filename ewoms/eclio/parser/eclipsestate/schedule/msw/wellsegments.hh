@@ -58,9 +58,9 @@ namespace Ewoms {
         static MultiPhaseModel MultiPhaseModelFromString(const std::string& stringValue);
 
         WellSegments() = default;
-        WellSegments(const DeckKeyword& keyword);
         WellSegments(CompPressureDrop compDrop,
                      const std::vector<Segment>& segments);
+        explicit WellSegments(const DeckKeyword& keyword);
 
         std::size_t size() const;
         double depthTopSegment() const;

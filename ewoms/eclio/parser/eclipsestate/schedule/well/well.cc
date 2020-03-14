@@ -18,6 +18,7 @@
 
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
+#include <ewoms/eclio/io/rst/well.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
@@ -75,17 +76,186 @@ Well::Well() :
     headI(0),
     headJ(0),
     ref_depth(0.0),
-    phase(Phase::OIL),
     ordering(Connection::Order::DEPTH),
     udq_undefined(0.0),
     status(Status::STOP),
     drainage_radius(0.0),
     allow_cross_flow(false),
     automatic_shutin(false),
-    producer(false),
+    wtype(false, Phase::OIL),
     efficiency_factor(0.0),
     solvent_fraction(0.0)
 {
+}
+
+namespace {
+
+constexpr Phase def_phase = Phase::OIL;
+constexpr Well::Status def_status = Well::Status::OPEN;
+constexpr int def_ecl_phase = 1;
+constexpr int def_well_closed_control = 0;
+
+Connection::Order order_from_int(int int_value) {
+    switch(int_value) {
+    case 0:
+        return Connection::Order::TRACK;
+    case 1:
+        return Connection::Order::DEPTH;
+    case 2:
+        return Connection::Order::INPUT;
+    default:
+        throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+    }
+}
+
+constexpr Well::ProducerCMode def_whistctl_cmode = Well::ProducerCMode::CMODE_UNDEFINED;
+const static Well::WellGuideRate def_guide_rate = {true, -1, Well::GuideRateTarget::UNDEFINED, ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue};
+const static bool def_automatic_shutin = true;
+constexpr double def_solvent_fraction = 0;
+
+}
+
+Well::Well(const RestartIO::RstWell& rst_well,
+           int report_step,
+           const UnitSystem& unit_system_arg,
+           double udq_undefined_arg) :
+    wname(rst_well.name),
+    group_name(rst_well.group),
+    init_step(report_step),
+    headI(rst_well.ij[0]),
+    headJ(rst_well.ij[1]),
+    ref_depth(rst_well.datum_depth),
+    ordering(order_from_int(rst_well.completion_ordering)),
+    unit_system(unit_system_arg),
+    udq_undefined(udq_undefined_arg),
+    status(rst_well.active_control == def_well_closed_control ? Well::Status::SHUT : Well::Status::OPEN),
+    drainage_radius(rst_well.drainage_radius),
+    allow_cross_flow(rst_well.allow_xflow == 1),
+    automatic_shutin(def_automatic_shutin),
+    wtype(rst_well.wtype),
+    guide_rate(def_guide_rate),
+    efficiency_factor(rst_well.efficiency_factor),
+    solvent_fraction(def_solvent_fraction),
+    prediction_mode(rst_well.pred_requested_control != 0),
+    econ_limits(std::make_shared<WellEconProductionLimits>()),
+    foam_properties(std::make_shared<WellFoamProperties>()),
+    polymer_properties(std::make_shared<WellPolymerProperties>()),
+    brine_properties(std::make_shared<WellBrineProperties>()),
+    tracer_properties(std::make_shared<WellTracerProperties>()),
+    connections(std::make_shared<WellConnections>(headI, headJ)),
+    production(std::make_shared<WellProductionProperties>(unit_system_arg, wname)),
+    injection(std::make_shared<WellInjectionProperties>(unit_system_arg, wname))
+{
+    if (this->wtype.producer()) {
+        auto p = std::make_shared<WellProductionProperties>(this->unit_system, wname);
+        // Reverse of function ctrlMode() in AggregateWellData.cpp
+        p->whistctl_cmode = def_whistctl_cmode;
+        p->BHPTarget = rst_well.bhp_target_float;
+        p->OilRate = rst_well.orat_target ;
+        p->WaterRate = rst_well.wrat_target ;
+        p->GasRate = rst_well.grat_target ;
+        p->LiquidRate = rst_well.lrat_target ;
+        p->ResVRate = rst_well.resv_target ;
+
+        if (rst_well.orat_target != 0)
+            p->addProductionControl( Well::ProducerCMode::ORAT );
+
+        if (rst_well.wrat_target != 0)
+            p->addProductionControl( Well::ProducerCMode::WRAT );
+
+        if (rst_well.grat_target != 0)
+            p->addProductionControl( Well::ProducerCMode::GRAT );
+
+        if (rst_well.lrat_target != 0)
+            p->addProductionControl( Well::ProducerCMode::LRAT );
+
+        if (rst_well.resv_target != 0)
+            p->addProductionControl( Well::ProducerCMode::RESV );
+
+        switch (rst_well.active_control) {
+        case 1:
+            p->controlMode = Well::ProducerCMode::ORAT;
+            break;
+        case 2:
+            p->controlMode = Well::ProducerCMode::WRAT;
+            p->addProductionControl( Well::ProducerCMode::WRAT );
+            break;
+        case 3:
+            p->controlMode = Well::ProducerCMode::GRAT;
+            p->addProductionControl( Well::ProducerCMode::GRAT );
+            break;
+        case 4:
+            p->controlMode = Well::ProducerCMode::LRAT;
+            p->addProductionControl( Well::ProducerCMode::LRAT );
+            break;
+        case 5:
+            p->controlMode = Well::ProducerCMode::RESV;
+            p->addProductionControl( Well::ProducerCMode::RESV );
+            break;
+        case 6:
+            p->controlMode = Well::ProducerCMode::THP;
+            p->addProductionControl( Well::ProducerCMode::THP );
+            break;
+        case 7:
+            p->controlMode = Well::ProducerCMode::BHP;
+            p->addProductionControl( Well::ProducerCMode::BHP );
+            break;
+        default:
+            throw std::invalid_argument("Can convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
+        }
+
+        p->addProductionControl(Well::ProducerCMode::BHP);
+        if (this->isAvailableForGroupControl())
+            p->addProductionControl(Well::ProducerCMode::GRUP);
+        this->updateProduction(std::move(p));
+    } else {
+        auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
+        // Reverse of function ctrlMode() in AggregateWellData.cpp
+
+        switch (rst_well.active_control) {
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            i->controlMode = Well::InjectorCMode::RATE;
+            i->addInjectionControl(Well::InjectorCMode::RATE);
+            break;
+        case 5:
+            i->controlMode = Well::InjectorCMode::RESV;
+            i->addInjectionControl(Well::InjectorCMode::RESV);
+            break;
+        case 6:
+            i->controlMode = Well::InjectorCMode::THP;
+            i->addInjectionControl(Well::InjectorCMode::THP);
+            break;
+        case 7:
+            i->controlMode = Well::InjectorCMode::BHP;
+            break;
+        case -1:
+            i->controlMode = Well::InjectorCMode::GRUP;
+            break;
+        default:
+            throw std::invalid_argument("Could not convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
+        }
+
+        i->injectorType = rst_well.wtype.injector_type();
+        switch (i->injectorType) {
+        case InjectorType::WATER:
+            i->surfaceInjectionRate = rst_well.wrat_target;
+            break;
+        case InjectorType::GAS:
+            i->surfaceInjectionRate = rst_well.grat_target;
+            break;
+        default:
+            throw std::invalid_argument("What ...");
+        }
+        i->addInjectionControl(Well::InjectorCMode::BHP);
+        i->BHPTarget = rst_well.bhp_target_float;
+        if (this->isAvailableForGroupControl())
+            i->addInjectionControl(Well::InjectorCMode::GRUP);
+
+        this->updateInjection(std::move(i));
+    }
 }
 
 Well::Well(const std::string& wname_arg,
@@ -95,7 +265,7 @@ Well::Well(const std::string& wname_arg,
            int headI_arg,
            int headJ_arg,
            double ref_depth_arg,
-           Phase phase_arg,
+           const WellType& wtype_arg,
            ProducerCMode whistctl_cmode,
            Connection::Order ordering_arg,
            const UnitSystem& unit_system_arg,
@@ -110,7 +280,6 @@ Well::Well(const std::string& wname_arg,
     headI(headI_arg),
     headJ(headJ_arg),
     ref_depth(ref_depth_arg),
-    phase(phase_arg),
     ordering(ordering_arg),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
@@ -118,7 +287,7 @@ Well::Well(const std::string& wname_arg,
     drainage_radius(dr),
     allow_cross_flow(allow_xflow),
     automatic_shutin(auto_shutin),
-    producer(true),
+    wtype(wtype_arg),
     guide_rate({true, -1, Well::GuideRateTarget::UNDEFINED,ParserKeywords::WGRUPCON::SCALING_FACTOR::defaultValue}),
     efficiency_factor(1.0),
     solvent_fraction(0.0),
@@ -128,10 +297,10 @@ Well::Well(const std::string& wname_arg,
     brine_properties(std::make_shared<WellBrineProperties>()),
     tracer_properties(std::make_shared<WellTracerProperties>()),
     connections(std::make_shared<WellConnections>(headI, headJ)),
-    production(std::make_shared<WellProductionProperties>(wname)),
-    injection(std::make_shared<WellInjectionProperties>(wname))
+    production(std::make_shared<WellProductionProperties>(unit_system, wname)),
+    injection(std::make_shared<WellInjectionProperties>(unit_system, wname))
 {
-    auto p = std::make_shared<WellProductionProperties>(wname);
+    auto p = std::make_shared<WellProductionProperties>(this->unit_system, this->wname);
     p->whistctl_cmode = whistctl_cmode;
     this->updateProduction(p);
 }
@@ -143,7 +312,7 @@ Well::Well(const std::string& wname_arg,
           int headI_arg,
           int headJ_arg,
           double ref_depth_arg,
-          const Phase& phase_arg,
+          const WellType& wtype_arg,
           Connection::Order ordering_arg,
           const UnitSystem& units,
           double udq_undefined_arg,
@@ -151,7 +320,6 @@ Well::Well(const std::string& wname_arg,
           double drainageRadius,
           bool allowCrossFlow,
           bool automaticShutIn,
-          bool isProducer,
           const WellGuideRate& guideRate,
           double efficiencyFactor,
           double solventFraction,
@@ -172,7 +340,6 @@ Well::Well(const std::string& wname_arg,
     headI(headI_arg),
     headJ(headJ_arg),
     ref_depth(ref_depth_arg),
-    phase(phase_arg),
     ordering(ordering_arg),
     unit_system(units),
     udq_undefined(udq_undefined_arg),
@@ -180,7 +347,7 @@ Well::Well(const std::string& wname_arg,
     drainage_radius(drainageRadius),
     allow_cross_flow(allowCrossFlow),
     automatic_shutin(automaticShutIn),
-    producer(isProducer),
+    wtype(wtype_arg),
     guide_rate(guideRate),
     efficiency_factor(efficiencyFactor),
     solvent_fraction(solventFraction),
@@ -216,7 +383,7 @@ bool Well::updateWellGuideRate(double guide_rate_arg) {
 }
 
 bool Well::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_properties_arg) {
-    if (this->producer) {
+    if (this->wtype.producer()) {
         throw std::runtime_error("Not allowed to set foam injection properties for well " + name()
                                  + " since it is a production well");
     }
@@ -229,7 +396,7 @@ bool Well::updateFoamProperties(std::shared_ptr<WellFoamProperties> foam_propert
 }
 
 bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polymer_properties_arg) {
-    if (this->producer) {
+    if (this->wtype.producer()) {
         throw std::runtime_error("Not allowed to set polymer injection properties for well " + name() +
                                  " since it is a production well");
     }
@@ -242,7 +409,7 @@ bool Well::updatePolymerProperties(std::shared_ptr<WellPolymerProperties> polyme
 }
 
 bool Well::updateBrineProperties(std::shared_ptr<WellBrineProperties> brine_properties_arg) {
-    if (this->producer) {
+    if (this->wtype.producer()) {
         throw std::runtime_error("Not allowed to set brine injection properties for well " + name() +
                                  " since it is a production well");
     }
@@ -266,10 +433,10 @@ bool Well::updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limit
 void Well::switchToProducer() {
     auto p = std::make_shared<WellInjectionProperties>(this->getInjectionProperties());
 
-    p->BHPTarget.reset(0);
+    p->BHPTarget = 0;
     p->dropInjectionControl( Ewoms::Well::InjectorCMode::BHP );
     this->updateInjection( p );
-    this->updateProducer(true);
+    this->wtype.update(true);
 }
 
 void Well::switchToInjector() {
@@ -278,12 +445,12 @@ void Well::switchToInjector() {
     p->setBHPLimit(0);
     p->dropProductionControl( ProducerCMode::BHP );
     this->updateProduction( p );
-    this->updateProducer( false );
 }
 
 bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_arg) {
-    if (this->producer)
-        this->switchToInjector( );
+    this->wtype.update(injection_arg->injectorType);
+    if (this->wtype.producer())
+        this->switchToInjector();
 
     if (*this->injection != *injection_arg) {
         this->injection = injection_arg;
@@ -294,7 +461,7 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
 }
 
 bool Well::updateProduction(std::shared_ptr<WellProductionProperties> production_arg) {
-    if (!this->producer)
+    if (!this->wtype.producer())
         this->switchToProducer( );
 
     if (*this->production != *production_arg) {
@@ -337,14 +504,6 @@ bool Well::updateWellGuideRate(bool available, double guide_rate_arg, GuideRateT
     }
 
     return update;
-}
-
-bool Well::updateProducer(bool producer_arg) {
-    if (this->producer != producer_arg) {
-        this->producer = producer_arg;
-        return true;
-    }
-    return false;
 }
 
 bool Well::updateGroup(const std::string& group_arg) {
@@ -398,7 +557,7 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
             new_connections->add(c);
         }
 
-        update = this->updateConnections(new_connections);
+        update = this->updateConnections(std::move(new_connections));
     }
 
     if (this->status != well_state) {
@@ -445,7 +604,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
     return false;
 }
 
-bool Well::updateConnections(const std::shared_ptr<WellConnections> connections_arg) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
     if( this->ordering  == Connection::Order::TRACK)
         connections_arg->orderTRACK( this->headI, this->headJ );
 
@@ -473,7 +632,7 @@ bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
                            const ParseContext& parseContext, ErrorGuard& errors) {
     std::shared_ptr<WellConnections> new_connection_set( newConnectionsWithSegments(keyword, *this->connections, *this->segments , grid,
                                                                                     parseContext, errors) );
-    return this->updateConnections(new_connection_set);
+    return this->updateConnections(std::move(new_connection_set));
 }
 
 const std::string& Well::groupName() const {
@@ -487,15 +646,19 @@ bool Well::isMultiSegment() const {
 }
 
 bool Well::isProducer() const {
-    return this->producer;
+    return this->wtype.producer();
 }
 
 bool Well::isInjector() const {
-    return !this->producer;
+    return this->wtype.injector();
+}
+
+const WellType& Well::wellType() const {
+    return this->wtype;
 }
 
 InjectorType Well::injectorType() const {
-    if (this->producer)
+    if (this->wtype.producer())
         throw std::runtime_error("Can not access injectorType attribute of a producer");
 
     return this->injection->injectorType;
@@ -629,7 +792,7 @@ std::map<int, std::vector<Connection>> Well::getCompletions() const {
 }
 
 Phase Well::getPreferredPhase() const {
-    return this->phase;
+    return this->wtype.preferred_phase();
 }
 
 /*
@@ -671,7 +834,7 @@ bool Well::handleWELOPEN(const DeckRecord& record, Connection::State state_arg, 
             this->status = Status::SHUT;
     }
 
-    return this->updateConnections(new_connections);
+    return this->updateConnections(std::move(new_connections));
 }
 
 bool Well::handleCOMPLUMP(const DeckRecord& record) {
@@ -697,7 +860,7 @@ bool Well::handleCOMPLUMP(const DeckRecord& record) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(new_connections);
+    return this->updateConnections(std::move(new_connections));
 }
 
 bool Well::handleWPIMULT(const DeckRecord& record) {
@@ -722,15 +885,19 @@ bool Well::handleWPIMULT(const DeckRecord& record) {
         new_connections->add(c);
     }
 
-    return this->updateConnections(new_connections);
+    return this->updateConnections(std::move(new_connections));
+}
+
+void Well::updateSegments(std::shared_ptr<WellSegments> segments_arg) {
+    this->segments = std::move(segments_arg);
+    this->ref_depth = this->segments->depthTopSegment();
 }
 
 bool Well::handleWELSEGS(const DeckKeyword& keyword) {
     if( this->segments )
         throw std::logic_error("re-entering WELSEGS for a well is not supported yet!!.");
 
-    this->segments = std::make_shared<WellSegments>(keyword);
-    this->ref_depth = this->segments->depthTopSegment();
+    this->updateSegments( std::make_shared<WellSegments>(keyword) );
     return true;
 }
 
@@ -775,7 +942,7 @@ bool Well::canOpen() const {
       If the UDAValue is in string mode we return true unconditionally, without
       evaluating the internal UDA value.
     */
-    if (this->producer) {
+    if (this->wtype.producer()) {
         const auto& prod = *this->production;
         if (prod.OilRate.is<std::string>())
             return true;
@@ -896,21 +1063,21 @@ Well::InjectionControls Well::injectionControls(const SummaryState& st) const {
 */
 
 int Well::vfp_table_number() const {
-    if (this->producer)
+    if (this->wtype.producer())
         return this->production->VFPTableNumber;
     else
         return this->injection->VFPTableNumber;
 }
 
 double Well::alq_value() const {
-    if (this->producer)
+    if (this->wtype.producer())
         return this->production->ALQValue;
 
     throw std::runtime_error("Can not ask for ALQ value in an injector");
 }
 
 double Well::temperature() const {
-    if (!this->producer)
+    if (!this->wtype.producer())
         return this->injection->temperature;
 
     throw std::runtime_error("Can not ask for temperature in a producer");

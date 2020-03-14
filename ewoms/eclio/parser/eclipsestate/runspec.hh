@@ -180,19 +180,32 @@ private:
 
 class SatFuncControls {
 public:
+    enum class ThreePhaseOilKrModel {
+        Default,
+        Stone1,
+        Stone2
+    };
+
     SatFuncControls();
     explicit SatFuncControls(const Deck& deck);
-    explicit SatFuncControls(const double tolcritArg);
+    SatFuncControls(const double tolcritArg,
+                    ThreePhaseOilKrModel model);
 
     double minimumRelpermMobilityThreshold() const
     {
         return this->tolcrit;
     }
 
+    ThreePhaseOilKrModel krModel() const
+    {
+        return this->krmodel;
+    }
+
     bool operator==(const SatFuncControls& rhs) const;
 
 private:
     double tolcrit;
+    ThreePhaseOilKrModel krmodel = ThreePhaseOilKrModel::Default;
 };
 
 class Runspec {

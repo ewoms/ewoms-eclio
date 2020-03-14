@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <ewoms/eclio/parser/units/units.hh>
+#include <ewoms/eclio/io/rst/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
@@ -237,15 +238,14 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
 
         int satTableId = -1;
         bool defaultSatTable = true;
+        const auto& r0Item = record.getItem("PR");
         const auto& CFItem = record.getItem("CONNECTION_TRANSMISSIBILITY_FACTOR");
         const auto& diameterItem = record.getItem("DIAMETER");
         const auto& KhItem = record.getItem("Kh");
         const auto& satTableIdItem = record.getItem("SAT_TABLE");
-        const auto& r0Item = record.getItem("PR");
         const auto direction = Connection::DirectionFromString(record.getItem("DIR").getTrimmedString(0));
         double skin_factor = record.getItem("SKIN").getSIDouble(0);
         double rw;
-        double r0=0.0;
 
         if (satTableIdItem.hasValue(0) && satTableIdItem.get < int > (0) > 0)
         {
@@ -268,6 +268,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             size_t active_index = grid.activeIndex(I,J,k);
             double CF = -1;
             double Kh = -1;
+            double r0 = -1;
             auto ctf_kind = ::Ewoms::Connection::CTFKind::DeckValue;
 
             if (defaultSatTable)
@@ -276,6 +277,9 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             auto same_ijk = [&]( const Connection& c ) {
                 return c.sameCoordinate( I,J,k );
             };
+
+            if (r0Item.hasValue(0))
+                r0 = r0Item.getSIDouble(0);
 
             if (KhItem.hasValue(0) && KhItem.getSIDouble(0) > 0.0)
                 Kh = KhItem.getSIDouble(0);
@@ -299,9 +303,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                 const auto& K = permComponents(direction, cell_perm);
                 const auto& D = effectiveExtent(direction, ntg[active_index], cell_size);
 
-                if (r0Item.hasValue(0))
-                    r0 = r0Item.getSIDouble(0);
-                else
+                if (r0 < 0)
                     r0 = effectiveRadius(K,D);
 
                 if (CF < 0) {
@@ -321,6 +323,9 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                 throw std::invalid_argument("Missing PERM values to calculate connection factors");
 
         CF_done:
+            if (r0 < 0)
+                r0 = RestartIO::RstConnection::inverse_peaceman(CF, Kh, rw, skin_factor);
+
             auto prev = std::find_if( this->m_connections.begin(),
                                       this->m_connections.end(),
                                       same_ijk );
@@ -338,19 +343,14 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                     direction, ctf_kind,
                                     noConn, 0., 0., defaultSatTable);
             } else {
-                std::size_t noConn = prev->getSeqIndex();
-                // The complnum value carries over; the rest of the state is fully specified by
-                // the current COMPDAT keyword.
-                int complnum = prev->complnum();
                 std::size_t css_ind = prev->getCompSegSeqIndex();
                 int conSegNo = prev->segment();
-                std::size_t con_SIndex = prev->getSeqIndex();
-                double conCDepth = prev->depth();
                 double conSDStart = prev->getSegDistStart();
                 double conSDEnd = prev->getSegDistEnd();
+                double depth = grid.getCellDepth(I,J,k);
                 *prev = Connection(I,J,k,
-                                   complnum,
-                                   grid.getCellDepth(I,J,k),
+                                   prev->complnum(),
+                                   depth,
                                    state,
                                    CF,
                                    Kh,
@@ -359,10 +359,10 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                    skin_factor,
                                    satTableId,
                                    direction, ctf_kind,
-                                   noConn, conSDStart, conSDEnd, defaultSatTable);
+                                   prev->getSeqIndex(), conSDStart, conSDEnd, defaultSatTable);
+
                 prev->updateSegment(conSegNo,
-                                    conCDepth,
-                                    con_SIndex,
+                                    depth,
                                     css_ind,
                                     conSDStart,
                                     conSDEnd);

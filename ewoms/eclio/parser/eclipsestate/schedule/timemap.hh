@@ -26,6 +26,7 @@
 #include <ctime>
 #include <map>
 #include <utility>
+#include <iostream>
 
 #include <stddef.h>
 
@@ -98,6 +99,9 @@ namespace Ewoms {
         bool m_skiprest = false;
         std::size_t m_restart_offset = 0;
     };
+
+std::ostream& operator<<(std::ostream& stream, const TimeMap& tm);
+
 }
 
 #endif /* TIMEMAP_HH_ */

@@ -19,20 +19,14 @@
 
 #include <ewoms/eclio/io/esmry.hh>
 
-#include <exception>
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <iterator>
-#include <iomanip>
 #include <algorithm>
-#include <unistd.h>
+#include <exception>
+#include <iterator>
 #include <limits>
-#include <limits.h>
 #include <set>
 #include <stdexcept>
+#include <string>
 
-#include <iostream>
 #include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/io/eclfile.hh>
@@ -75,10 +69,10 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         throw std::invalid_argument("Inptut file should have extension .SMSPEC or .FSMSPEC");
     }
 
-    bool formatted = inputFileName.extension()==".SMSPEC" ? false : true;
+    const bool formatted = inputFileName.extension()==".SMSPEC" ? false : true;
     formattedVect.push_back(formatted);
 
-    Ewoms::filesystem::path path = Ewoms::filesystem::current_path();;
+    Ewoms::filesystem::path path = Ewoms::filesystem::current_path();
 
     updatePathAndRootName(path, rootName);
 
@@ -93,25 +87,28 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
     // Read data from the summary into local data members.
     {
-        EclFile smspec1(smspec_file.string());
+        EclFile smspec(smspec_file.string());
 
-        smspec1.loadData();   // loading all data
+        smspec.loadData();   // loading all data
 
-        std::vector<int> dimens = smspec1.get<int>("DIMENS");
+        const std::vector<int> dimens = smspec.get<int>("DIMENS");
 
         nI = dimens[1]; // This is correct -- dimens[0] is something else!
         nJ = dimens[2];
         nK = dimens[3];
 
-        std::vector<std::string> restartArray = smspec1.get<std::string>("RESTART");
-        std::vector<std::string> keywords = smspec1.get<std::string>("KEYWORDS");
-        std::vector<std::string> wgnames = smspec1.get<std::string>("WGNAMES");
-        std::vector<int> nums = smspec1.get<int>("NUMS");
+        const std::vector<std::string> restartArray = smspec.get<std::string>("RESTART");
+        const std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspec.get<int>("NUMS");
+
+        const std::vector<std::string> units = smspec.get<std::string>("UNITS");
 
         for (unsigned int i=0; i<keywords.size(); i++) {
-            std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
-            if (str1.length() > 0) {
-                keywList.insert(str1);
+            const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
+            if (keyString.length() > 0) {
+                keywList.insert(keyString);
+                kwunits[keyString] = units[i];
             }
         }
 
@@ -141,16 +138,19 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         EclFile smspec_rst(rstFile.string());
         smspec_rst.loadData();
 
-        std::vector<int> dimens = smspec_rst.get<int>("DIMENS");
-        std::vector<std::string> restartArray = smspec_rst.get<std::string>("RESTART");
-        std::vector<std::string> keywords = smspec_rst.get<std::string>("KEYWORDS");
-        std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
-        std::vector<int> nums = smspec_rst.get<int>("NUMS");
+        const std::vector<int> dimens = smspec_rst.get<int>("DIMENS");
+        const std::vector<std::string> restartArray = smspec_rst.get<std::string>("RESTART");
+        const std::vector<std::string> keywords = smspec_rst.get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspec_rst.get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspec_rst.get<int>("NUMS");
+
+        const std::vector<std::string> units = smspec_rst.get<std::string>("UNITS");
 
         for (size_t i = 0; i < keywords.size(); i++) {
-            std::string str1 = makeKeyString(keywords[i], wgnames[i], nums[i]);
-            if (str1.length() > 0) {
-                keywList.insert(str1);
+            const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
+            if (keyString.length() > 0) {
+                keywList.insert(keyString);
+                kwunits[keyString] = units[i];
             }
         }
 
@@ -161,7 +161,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         getRstString(restartArray, pathRstFile, rstRootN);
     }
 
-    int nFiles = static_cast<int>(smryArray.size());
+    const int nFiles = static_cast<int>(smryArray.size());
 
     // arrayInd should hold indices for each vector and runs
     // n=file number, i = position in param array in file n (one array pr time step), example arrayInd[n][i] = position in keyword list (std::set)
@@ -181,23 +181,23 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         EclFile smspec(std::get<0>(smry));
         smspec.loadData();
 
-        std::vector<int> dimens = smspec.get<int>("DIMENS");
+        const std::vector<int> dimens = smspec.get<int>("DIMENS");
 
         nI = dimens[1];
         nJ = dimens[2];
         nK = dimens[3];
 
-        std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
-        std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
-        std::vector<int> nums = smspec.get<int>("NUMS");
+        const std::vector<std::string> keywords = smspec.get<std::string>("KEYWORDS");
+        const std::vector<std::string> wgnames = smspec.get<std::string>("WGNAMES");
+        const std::vector<int> nums = smspec.get<int>("NUMS");
 
-        std::vector<int> tmpVect(keywords.size(), -1);
+        const std::vector<int> tmpVect(keywords.size(), -1);
         arrayInd[n]=tmpVect;
 
         std::set<std::string>::iterator it;
 
         for (size_t i=0; i < keywords.size(); i++) {
-            std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i]);
+            const std::string keyw = makeKeyString(keywords[i], wgnames[i], nums[i]);
             it = std::find(keywList.begin(), keywList.end(), keyw);
 
             if (it != keywList.end()){
@@ -242,9 +242,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
         formattedVect[n] ? unsmryFile += ".FUNSMRY" : unsmryFile += ".UNSMRY";
 
-        bool use_unified = Ewoms::filesystem::exists(unsmryFile.string());
+        const bool use_unified = Ewoms::filesystem::exists(unsmryFile.string());
 
-        std::vector<std::string> multFileList = checkForMultipleResultFiles(rootName, formattedVect[n]);
+        const std::vector<std::string> multFileList = checkForMultipleResultFiles(rootName, formattedVect[n]);
 
         std::vector<std::string> resultsFileList;
 
@@ -273,7 +273,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
         for (std::string fileName : resultsFileList){
             EclFile unsmry(fileName);
 
-            std::vector<EclFile::EclEntry> arrayList = unsmry.getList();
+            const std::vector<EclFile::EclEntry> arrayList = unsmry.getList();
 
             for (size_t nn = 0; nn < arrayList.size(); nn++){
                 std::tuple<std::string, std::string, int> t1 = std::make_tuple(std::get<0>(arrayList[nn]), fileName, static_cast<int>(nn));
@@ -313,9 +313,9 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
                 prevFile = std::get<1>(arraySourceList[i]);
             }
 
-            int m = std::get<2>(arraySourceList[i]);
+            const int m = std::get<2>(arraySourceList[i]);
 
-            std::vector<float> tmpData = pEclFile->get<float>(m);
+            const std::vector<float> tmpData = pEclFile->get<float>(m);
 
             time = tmpData[0];
 
@@ -367,7 +367,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 
     nVect = keywList.size();
 
-    for (auto keyw : keywList){
+    for (const auto& keyw : keywList){
         keyword.push_back(keyw);
     }
 }
@@ -375,13 +375,13 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData)
 std::vector<std::string> ESmry::checkForMultipleResultFiles(const Ewoms::filesystem::path& rootN, bool formatted) const {
 
     std::vector<std::string> fileList;
-    std::string pathRootN = rootN.parent_path().string();
+    const std::string pathRootN = rootN.parent_path().string();
 
-    std::string fileFilter = formatted ? rootN.stem().string()+".A" : rootN.stem().string()+".S";
+    const std::string fileFilter = formatted ? rootN.stem().string()+".A" : rootN.stem().string()+".S";
 
     for (Ewoms::filesystem::directory_iterator itr(pathRootN); itr != Ewoms::filesystem::directory_iterator(); ++itr)
     {
-        std::string file = itr->path().filename().string();
+        const std::string file = itr->path().filename().string();
 
         if ((file.find(fileFilter) != std::string::npos) && (file.find("SMSPEC") == std::string::npos)) {
             fileList.push_back(pathRootN + "/" + file);
@@ -397,7 +397,7 @@ void ESmry::getRstString(const std::vector<std::string>& restartArray, Ewoms::fi
 
     std::string rootNameStr="";
 
-    for (auto str : restartArray) {
+    for (const auto& str : restartArray) {
         rootNameStr = rootNameStr + str;
     }
 
@@ -424,10 +424,10 @@ bool ESmry::hasKey(const std::string &key) const
 
 void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k) const
 {
-    int tmpGlob = glob - 1;
+    const int tmpGlob = glob - 1;
 
     k = 1 + tmpGlob / (nI * nJ);
-    int rest = tmpGlob % (nI * nJ);
+    const int rest = tmpGlob % (nI * nJ);
 
     j = 1 + rest / nI;
     i = 1 + rest % nI;
@@ -436,7 +436,7 @@ void ESmry::ijk_from_global_index(int glob,int &i,int &j,int &k) const
 std::string ESmry::makeKeyString(const std::string& keywordArg, const std::string& wgname, int num) const
 {
     std::string keyStr;
-    std::vector<std::string> segmExcep= {"STEPTYPE", "SEPARATE", "SUMTHIN"};
+    const std::vector<std::string> segmExcep= {"STEPTYPE", "SEPARATE", "SUMTHIN"};
 
     if (keywordArg.substr(0, 1) == "A") {
         keyStr = keywordArg + ":" + std::to_string(num);
@@ -467,7 +467,7 @@ std::string ESmry::makeKeyString(const std::string& keywordArg, const std::strin
         }
 
         r2--;
-        int r1 = num - 32768 * (r2 + 10);
+        const int r1 = num - 32768 * (r2 + 10);
 
         keyStr = keywordArg + ":" + std::to_string(r1) + "-" + std::to_string(r2);
     } else if (keywordArg.substr(0, 1) == "R") {
@@ -495,7 +495,7 @@ const std::vector<float>& ESmry::get(const std::string& name) const
     auto it = std::find(keyword.begin(), keyword.end(), name);
 
     if (it == keyword.end()) {
-        std::string message="keyword " + name + " not found ";
+        const std::string message="keyword " + name + " not found ";
         EWOMS_THROW(std::invalid_argument, message);
     }
 
@@ -506,12 +506,12 @@ const std::vector<float>& ESmry::get(const std::string& name) const
 
 std::vector<float> ESmry::get_at_rstep(const std::string& name) const
 {
-    std::vector<float> full_vector= this->get(name);
+    const std::vector<float> full_vector= this->get(name);
 
     std::vector<float> rstep_vector;
     rstep_vector.reserve(seqIndex.size());
 
-    for (auto ind : seqIndex){
+    for (const auto& ind : seqIndex){
         rstep_vector.push_back(full_vector[ind]);
     }
 
@@ -530,6 +530,10 @@ int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
     }
 
     return seqIndex[reportStep - 1];
+}
+
+const std::string& ESmry::get_unit(const std::string& name) const {
+    return kwunits.at(name);
 }
 
 }} // namespace Ewoms::ecl

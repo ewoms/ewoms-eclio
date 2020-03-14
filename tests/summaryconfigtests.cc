@@ -739,14 +739,14 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     {
         auto sofr = std::find_if(summary.begin(), summary.end(),
-            [](const SummaryNode& node)
+            [](const SummaryConfigNode& node)
         {
             return node.keyword() == "SOFR";
         });
 
         BOOST_REQUIRE(sofr != summary.end());
 
-        BOOST_CHECK_MESSAGE(sofr->category() == SummaryNode::Category::Segment,
+        BOOST_CHECK_MESSAGE(sofr->category() == SummaryConfigNode::Category::Segment,
             R"("SOFR" keyword category must be "Segment")"
         );
         BOOST_CHECK_EQUAL(sofr->namedEntity(), "PROD01");
@@ -845,4 +845,36 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
     BOOST_CHECK(summary.hasSummaryKey("SWFR:PROD01:26"));
 
     BOOST_CHECK(!summary.hasSummaryKey("SWFR:INJE01:1"));
+}
+
+BOOST_AUTO_TEST_CASE(ProcessingInstructions) {
+    const std::string deck_string = R"(
+RPTONLY
+RUNSUM
+NARROW
+SEPARATE
+)";
+
+    const auto& summary_config = createSummary(deck_string);
+
+    BOOST_CHECK(!summary_config.hasKeyword("NARROW"));
+    BOOST_CHECK(!summary_config.hasKeyword("RPTONLY"));
+    BOOST_CHECK(!summary_config.hasKeyword("RUNSUM"));
+    BOOST_CHECK(!summary_config.hasKeyword("SEPARATE"));
+    BOOST_CHECK(!summary_config.hasKeyword("SUMMARY"));
+}
+
+BOOST_AUTO_TEST_CASE(EnableRSM) {
+    std::string deck_string1 = "";
+    std::string deck_string2 = R"(
+RUNSUM
+)";
+    const auto& summary_config1 = createSummary(deck_string1);
+    const auto& summary_config2 = createSummary(deck_string2);
+
+    BOOST_CHECK(!summary_config1.createRunSummary());
+    BOOST_CHECK(!summary_config1.hasKeyword("RUNSUM"));
+
+    BOOST_CHECK( summary_config2.createRunSummary());
+    BOOST_CHECK(!summary_config2.hasKeyword("RUNSUM"));
 }

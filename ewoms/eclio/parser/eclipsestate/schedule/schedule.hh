@@ -286,6 +286,13 @@ namespace Ewoms
 
         bool operator==(const Schedule& data) const;
 
+        /*
+          The cmp() function compares two schedule instances in a context aware
+          manner. Floating point numbers are compared with a tolerance. The
+          purpose of this comparison function is to implement regression tests
+          for the schedule instances created by loading a restart file.
+        */
+        static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
     private:
         TimeMap m_timeMap;
         WellMap wells_static;
@@ -312,7 +319,10 @@ namespace Ewoms
         RestartConfig restart_config;
 
         std::map<std::string,Events> wellgroup_events;
-        void load_rst(const RestartIO::RstState& rst, const UnitSystem& unit_system);
+        void load_rst(const RestartIO::RstState& rst,
+                      const EclipseGrid& grid,
+                      const FieldPropsManager& fp,
+                      const UnitSystem& unit_system);
         void addWell(Well well, size_t report_step);
         void addWell(const std::string& wellName,
                      const std::string& group,

@@ -39,6 +39,7 @@
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
@@ -1047,20 +1048,19 @@ namespace {
     injectorControlMode(const int curr, const int itype)
     {
         using IMode = ::Ewoms::Well::InjectorCMode;
-        using WType = VI::IWell::Value::WellType;
         using Ctrl  = VI::IWell::Value::WellCtrlMode;
 
         switch (curr) {
             case Ctrl::OilRate:
-                return (itype == WType::OilInj)
+                return Ewoms::WellType::oil_injector(itype)
                     ? IMode::RATE : IMode::CMODE_UNDEFINED;
 
             case Ctrl::WatRate:
-                return (itype == WType::WatInj)
+                return Ewoms::WellType::water_injector(itype)
                     ? IMode::RATE : IMode::CMODE_UNDEFINED;
 
             case Ctrl::GasRate:
-                return (itype == WType::GasInj)
+                return Ewoms::WellType::gas_injector(itype)
                     ? IMode::RATE : IMode::CMODE_UNDEFINED;
 
             case Ctrl::ResVRate: return IMode::RESV;
@@ -1082,7 +1082,7 @@ namespace {
 
         auto& curr = xw.current_control;
 
-        curr.isProducer = wtyp == VI::IWell::Value::WellType::Producer;
+        curr.isProducer = Ewoms::WellType::producer(wtyp);
         if (curr.isProducer) {
             curr.prod = producerControlMode(act);
         }

@@ -19,6 +19,7 @@
 #include <type_traits>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
+#include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -248,15 +249,24 @@ SatFuncControls::SatFuncControls(const Deck& deck)
         this->tolcrit = deck.getKeyword<Kw>(0).getRecord(0)
             .getItem<Kw::VALUE>().getSIDouble(0);
     }
+
+    if (deck.hasKeyword<ParserKeywords::STONE1>())
+        krmodel = ThreePhaseOilKrModel::Stone1;
+    else if (deck.hasKeyword<ParserKeywords::STONE>() ||
+             deck.hasKeyword<ParserKeywords::STONE2>())
+        krmodel = ThreePhaseOilKrModel::Stone2;
 }
 
-SatFuncControls::SatFuncControls(const double tolcritArg)
+SatFuncControls::SatFuncControls(const double tolcritArg,
+                                 ThreePhaseOilKrModel model)
     : tolcrit(tolcritArg)
+    , krmodel(model)
 {}
 
 bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 {
-    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold();
+    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold() &&
+           this->krModel() == rhs.krModel();
 }
 
 Runspec::Runspec( const Deck& deck ) :
@@ -288,15 +298,15 @@ Runspec::Runspec(const Phases& act_phases,
                  const EclHysterConfig& hystPar,
                  const Actdims& actDims,
                  const SatFuncControls& sfuncctrl) :
-  active_phases(act_phases),
-  m_tabdims(tabdims),
-  endscale(endScale),
-  welldims(wellDims),
-  wsegdims(wsegDims),
-  udq_params(udqparams),
-  hystpar(hystPar),
-  m_actdims(actDims),
-  m_sfuncctrl(sfuncctrl)
+    active_phases(act_phases),
+    m_tabdims(tabdims),
+    endscale(endScale),
+    welldims(wellDims),
+    wsegdims(wsegDims),
+    udq_params(udqparams),
+    hystpar(hystPar),
+    m_actdims(actDims),
+    m_sfuncctrl(sfuncctrl)
 {}
 
 const Phases& Runspec::phases() const noexcept {

@@ -31,6 +31,7 @@ class Header;
 
 struct RstConnection {
     RstConnection(const ::Ewoms::UnitSystem& unit_system, const int* icon, const float* scon, const double *xcon);
+    static double inverse_peaceman(double cf, double kh, double rw, double skin);
 
     int insert_index;
     std::array<int,3> ijk;
@@ -40,8 +41,10 @@ struct RstConnection {
     int completion;
     Connection::Direction dir;
     int segment;
+    Connection::CTFKind cf_kind;
 
-    float tran;
+    float skin_factor;
+    float cf;
     float depth;
     float diameter;
     float kh;
@@ -53,6 +56,7 @@ struct RstConnection {
     double gas_rate;
     double pressure;
     double resv_rate;
+    double r0;
 };
 
 }

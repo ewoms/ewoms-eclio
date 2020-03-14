@@ -31,8 +31,14 @@
 
 namespace Ewoms {
 
+namespace RestartIO {
+    struct RstConnection;
+}
+
     class DeckKeyword;
     class DeckRecord;
+    class EclipseGrid;
+    class FieldPropsManager;
 
     class Connection {
     public:
@@ -106,6 +112,8 @@ namespace Ewoms {
                    int segment,
                    double wellPi);
 
+        Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp);
+
         bool attachedToSegment() const;
         bool sameCoordinate(const int i, const int j, const int k) const;
         int getI() const;
@@ -130,7 +138,6 @@ namespace Ewoms {
         void scaleWellPi(double wellPi);
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
-                           std::size_t seqIndex,
                            std::size_t compseg_insert_index,
                            double start,
                            double end);
@@ -169,8 +176,8 @@ namespace Ewoms {
         std::size_t m_compSeg_seqIndex=0;
 
         // related segment number
-        // -1 means the completion is not related to segment
-        int segment_number = -1;
+        // 0 means the completion is not related to segment
+        int segment_number = 0;
         double wPi = 1.0;
 
         static std::string CTFKindToString(const CTFKind);

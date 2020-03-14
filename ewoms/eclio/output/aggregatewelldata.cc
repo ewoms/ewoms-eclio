@@ -134,30 +134,6 @@ namespace {
             return ind;
         }
 
-        int wellType(const Ewoms::Well& well, const Ewoms::SummaryState& st)
-        {
-            using WTypeVal = VI::IWell::Value::WellType;
-
-            if (well.isProducer()) {
-                return WTypeVal::Producer;
-            }
-
-            using IType = ::Ewoms::InjectorType;
-
-            const auto itype = well.injectionControls(st).injector_type;
-
-            switch (itype) {
-            case IType::OIL:   return WTypeVal::OilInj;
-            case IType::WATER: return WTypeVal::WatInj;
-            case IType::GAS:   return WTypeVal::GasInj;
-            case IType::MULTI:
-                throw std::invalid_argument("Do not know how to serialize injectortype MULTI - fatal error for well " + well.name());
-                break;
-            default:
-                throw std::invalid_argument("SHould not be here - unhandled enum value in wellType");
-            }
-        }
-
         int wellVFPTab(const Ewoms::Well& well, const Ewoms::SummaryState& st)
         {
             if (well.isInjector()) {
@@ -380,7 +356,7 @@ namespace {
             iWell[Ix::Group] =
                 groupIndex(trim(well.groupName()), GroupMapNameInd);
 
-            iWell[Ix::WType]  = wellType  (well, st);
+            iWell[Ix::WType]  = well.wellType().ecl_wtype();
             iWell[Ix::VFPTab] = wellVFPTab(well, st);
             iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
 
@@ -632,6 +608,15 @@ namespace {
             }
 
             sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
+            sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
+            sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
+            /*
+              Restart files from Eclipse indicate that the efficiency factor is
+              found in two items in the restart file; since only one of the
+              items is needed in the OPM restart, and we are not really certain
+              that the two values are equal by construction we have only
+              assigned one of the items explicitly here.
+            */
         }
     } // SWell
 

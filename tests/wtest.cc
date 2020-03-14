@@ -26,6 +26,7 @@
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellteststate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welltestconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE2) {
 
     const UnitSystem us{};
     std::vector<Well> wells;
-    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
     {
         wells[0].updateStatus(Well::Status::SHUT, false);
         auto shut_wells = st.updateWells(wc, wells, 5000);
@@ -106,8 +107,8 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE) {
 
     const UnitSystem us{};
     std::vector<Well> wells;
-    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
-    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
+    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200.,     WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
 
     WellTestConfig wc;
     {
@@ -175,9 +176,9 @@ BOOST_AUTO_TEST_CASE(WTEST_STATE_COMPLETIONS) {
 
     const UnitSystem us{};
     std::vector<Well> wells;
-    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
+    wells.emplace_back("WELL_NAME", "A", 0, 0, 1, 1, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
     wells[0].updateStatus(Well::Status::OPEN, false);
-    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., Phase::OIL, Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
+    wells.emplace_back("WELLX", "A", 0, 0, 2, 2, 200., WellType(Phase::OIL), Well::ProducerCMode::NONE, Connection::Order::TRACK, us, 0., 1.0, true, true);
     wells[1].updateStatus(Well::Status::OPEN, false);
 
     auto closed_completions = st.updateWells(wc, wells, 5000);

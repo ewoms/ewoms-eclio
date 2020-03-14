@@ -19,6 +19,7 @@
 #define EWOMS_IO_ESMRY_H
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <ewoms/common/filesystem.hh>
 
@@ -43,12 +44,15 @@ public:
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
 
+    const std::string& get_unit(const std::string& name) const;
+
 private:
     int nVect, nI, nJ, nK;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
     std::vector<std::vector<float>> param;
     std::vector<std::string> keyword;
+    std::unordered_map<std::string, std::string> kwunits;
 
     std::vector<int> seqIndex;
     std::vector<float> seqTime;

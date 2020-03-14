@@ -48,7 +48,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
             Diameter     =  2, // Connection diameter
 
             EffectiveKH  =  3, // Effective Kh product of connection
-
+            SkinFactor   =  4, // Skinfactor - item 'SKIN' from COMPDAT
             item12       = 11, // Connection transmissibility factor
 
             SegDistEnd   = 20, // Distance to end of connection in segment

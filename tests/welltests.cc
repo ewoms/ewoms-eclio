@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(WellCOMPDATtestINPUT) {
 }
 
 BOOST_AUTO_TEST_CASE(NewWellZeroCompletions) {
-    Ewoms::Well well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1", "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED,  Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
     BOOST_CHECK_EQUAL( 0U , well.getConnections( ).size() );
 }
 
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     // HACK: This test checks correctly setting of isProducer/isInjector. This property depends on which of
     //       WellProductionProperties/WellInjectionProperties is set last, independent of actual values.
     {
-        Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+        Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
         /* 1: Well is created as producer */
         BOOST_CHECK_EQUAL( false , well.isInjector());
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
         /* Set a surface injection rate => Well becomes an Injector */
         auto injectionProps1 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps1->surfaceInjectionRate.reset(100);
+        injectionProps1->surfaceInjectionRate = 100;
         well.updateInjection(injectionProps1);
         BOOST_CHECK_EQUAL( true  , well.isInjector());
         BOOST_CHECK_EQUAL( false , well.isProducer());
@@ -210,27 +210,27 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
     }
 
     {
-        Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+        Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
         /* Set a reservoir injection rate => Well becomes an Injector */
         auto injectionProps2 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps2->reservoirInjectionRate.reset(200);
+        injectionProps2->reservoirInjectionRate = 200;
         well.updateInjection(injectionProps2);
         BOOST_CHECK_EQUAL( false , well.isProducer());
         BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().reservoirInjectionRate.get<double>());
     }
 
     {
-        Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+        Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
         /* Set rates => Well becomes a producer; injection rate should be set to 0. */
         auto injectionProps3 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
         well.updateInjection(injectionProps3);
 
         auto properties = std::make_shared<Ewoms::Well::WellProductionProperties>( well.getProductionProperties() );
-        properties->OilRate.reset(100);
-        properties->GasRate.reset(200);
-        properties->WaterRate.reset(300);
+        properties->OilRate = 100;
+        properties->GasRate = 200;
+        properties->WaterRate = 300;
         well.updateProduction(properties);
 
         BOOST_CHECK_EQUAL( false , well.isInjector());
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 }
 
 BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
-    Ewoms::Well well("WELL1" , "G1", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1" , "G1", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK_EQUAL("G1" , well.groupName());
     well.updateGroup( "GROUP2");
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(GroupnameCorretlySet) {
 }
 
 BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
-    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::WellType(Ewoms::Phase::WATER), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK_EQUAL(23, well.getHeadI());
     BOOST_CHECK_EQUAL(42, well.getHeadJ());
@@ -261,24 +261,24 @@ BOOST_AUTO_TEST_CASE(addWELSPECS_setData_dataSet) {
 }
 
 BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
-    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::WellType(Ewoms::Phase::WATER), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     auto productionProps = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    productionProps->BHPTarget.reset(100);
+    productionProps->BHPTarget = 100;
     productionProps->addProductionControl(Ewoms::Well::ProducerCMode::BHP);
     well.updateProduction(productionProps);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPTarget.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::BHP ));
 
     auto injProps = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps->THPTarget.reset(200);
+    injProps->THPTarget = 200;
     well.updateInjection(injProps);
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPTarget.get<double>());
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::THP ));
 }
 
 BOOST_AUTO_TEST_CASE(ScheduleTypesInjectorType) {
-    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::WellType(Ewoms::Phase::WATER), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     auto injectionProps = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
     injectionProps->injectorType = Ewoms::InjectorType::WATER;
@@ -292,32 +292,32 @@ BOOST_AUTO_TEST_CASE(ScheduleTypesInjectorType) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
-    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::WellType(Ewoms::Phase::WATER), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::ORAT ));
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::RESV ));
 
     auto properties1 = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    properties1->OilRate.reset(100);
+    properties1->OilRate = 100;
     properties1->addProductionControl(Ewoms::Well::ProducerCMode::ORAT);
     well.updateProduction(properties1);
     BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::ORAT ));
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::RESV ));
 
     auto properties2 = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    properties2->ResVRate.reset( 100 );
+    properties2->ResVRate = 100;
     properties2->addProductionControl(Ewoms::Well::ProducerCMode::RESV);
     well.updateProduction(properties2);
     BOOST_CHECK( well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::RESV ));
 
     auto properties3 = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    properties3->OilRate.reset(100);
-    properties3->WaterRate.reset(100);
-    properties3->GasRate.reset(100);
-    properties3->LiquidRate.reset(100);
-    properties3->ResVRate.reset(100);
-    properties3->BHPTarget.reset(100);
-    properties3->THPTarget.reset(100);
+    properties3->OilRate = 100;
+    properties3->WaterRate = 100;
+    properties3->GasRate = 100;
+    properties3->LiquidRate = 100;
+    properties3->ResVRate = 100;
+    properties3->BHPTarget = 100;
+    properties3->THPTarget = 100;
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::ORAT);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::LRAT);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::BHP);
@@ -337,28 +337,28 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
 }
 
 BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
-    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::Phase::WATER, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::WellType(Ewoms::Phase::WATER), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps1 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps1->surfaceInjectionRate.reset(100);
+    injProps1->surfaceInjectionRate = 100;
     injProps1->addInjectionControl(Ewoms::Well::InjectorCMode::RATE);
     well.updateInjection(injProps1);
     BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps2 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps2->reservoirInjectionRate.reset(100);
+    injProps2->reservoirInjectionRate = 100;
     injProps2->addInjectionControl(Ewoms::Well::InjectorCMode::RESV);
     well.updateInjection(injProps2);
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps3 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps3->BHPTarget.reset(100);
+    injProps3->BHPTarget = 100;
     injProps3->addInjectionControl(Ewoms::Well::InjectorCMode::BHP);
-    injProps3->THPTarget.reset(100);
+    injProps3->THPTarget = 100;
     injProps3->addInjectionControl(Ewoms::Well::InjectorCMode::THP);
     well.updateInjection(injProps3);
 
@@ -378,7 +378,7 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
 /*********************************************************************/
 
 BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
-    Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK(Ewoms::Well::GuideRateTarget::UNDEFINED == well.getGuideRatePhase());
 
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(WellGuideRatePhase_GuideRatePhaseSet) {
 }
 
 BOOST_AUTO_TEST_CASE(WellEfficiencyFactorSet) {
-    Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well well("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     BOOST_CHECK_EQUAL(1.0, well.getEfficiencyFactor());
     BOOST_CHECK( well.updateEfficiencyFactor(0.9));
@@ -467,10 +467,10 @@ namespace {
 
         Ewoms::Well::WellProductionProperties properties(const std::string& input) {
             Ewoms::Parser parser;
-
+            Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
-            Ewoms::Well::WellProductionProperties hist("W");
+            Ewoms::Well::WellProductionProperties hist(unit_system, "W");
             hist.handleWCONHIST(record);
 
             return hist;
@@ -515,13 +515,14 @@ namespace {
             return input;
         }
 
+        Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
         Ewoms::Well::WellProductionProperties properties(const std::string& input)
         {
             Ewoms::Parser parser;
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
-            Ewoms::Well::WellProductionProperties pred("W");
+            Ewoms::Well::WellProductionProperties pred(unit_system, "W");
             pred.handleWCONPROD("WELL", record);
 
             return pred;
@@ -735,16 +736,18 @@ BOOST_AUTO_TEST_CASE(BHP_CMODE)
 }
 
 BOOST_AUTO_TEST_CASE(CMODE_DEFAULT) {
-    const Ewoms::Well::WellProductionProperties Pproperties("W");
-    const Ewoms::Well::WellInjectionProperties Iproperties("W");
+    auto unit_system = UnitSystem::newMETRIC();
+    const Ewoms::Well::WellProductionProperties Pproperties(unit_system, "W");
+    const Ewoms::Well::WellInjectionProperties Iproperties(unit_system, "W");
 
     BOOST_CHECK( Pproperties.controlMode == Ewoms::Well::ProducerCMode::CMODE_UNDEFINED );
     BOOST_CHECK( Iproperties.controlMode == Ewoms::Well::InjectorCMode::CMODE_UNDEFINED );
 }
 
 BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
-    Ewoms::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Ewoms::Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
-    Ewoms::Well::WellProductionProperties prod("OP1");
+    auto unit_system = UnitSystem::newMETRIC();
+    Ewoms::Well well("WELL", "GROUP", 0, 0, 0, 0, 1000, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Ewoms::Connection::Order::DEPTH, unit_system, 0, 1.0, false, false);
+    Ewoms::Well::WellProductionProperties prod(unit_system, "OP1");
     Ewoms::SummaryState st(std::chrono::system_clock::now());
     well.productionControls(st);
 
@@ -762,8 +765,8 @@ BOOST_AUTO_TEST_CASE(WELL_CONTROLS) {
 }
 
 BOOST_AUTO_TEST_CASE(ExtraAccessors) {
-    Ewoms::Well inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
-    Ewoms::Well prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::Phase::OIL, Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well inj("WELL1" , "GROUP", 0, 1, 0, 0, 0.0,  Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
+    Ewoms::Well prod("WELL1" , "GROUP", 0, 1, 0, 0, 0.0, Ewoms::WellType(Ewoms::Phase::OIL), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false);
 
     auto inj_props= std::make_shared<Ewoms::Well::WellInjectionProperties>(inj.getInjectionProperties());
     inj_props->VFPTableNumber = 100;
@@ -822,3 +825,47 @@ BOOST_AUTO_TEST_CASE(WELOPEN) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(WellTypeTest) {
+    BOOST_CHECK_THROW(Ewoms::WellType(0, 3), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::WellType(5, 3), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::WellType(3, 0), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::WellType(3, 5), std::invalid_argument);
+
+    Ewoms::WellType wt1(1,1);
+    BOOST_CHECK(wt1.producer());
+    BOOST_CHECK(!wt1.injector());
+    BOOST_CHECK_EQUAL(wt1.ecl_wtype(), 1);
+    BOOST_CHECK_EQUAL(wt1.ecl_phase(), 1);
+    BOOST_CHECK(wt1.preferred_phase() == Phase::OIL);
+    BOOST_CHECK_THROW(wt1.injector_type(), std::invalid_argument);
+
+    Ewoms::WellType wt4(4,3);
+    BOOST_CHECK(!wt4.producer());
+    BOOST_CHECK(wt4.injector());
+    BOOST_CHECK_EQUAL(wt4.ecl_wtype(), 4);
+    BOOST_CHECK_EQUAL(wt4.ecl_phase(), 3);
+    BOOST_CHECK(wt4.preferred_phase() == Phase::GAS);
+    BOOST_CHECK(wt4.injector_type() == InjectorType::GAS);
+
+    BOOST_CHECK(wt4.update(true));
+    BOOST_CHECK(!wt4.update(true));
+    BOOST_CHECK(wt4.producer());
+    BOOST_CHECK(!wt4.injector());
+    BOOST_CHECK_EQUAL(wt4.ecl_wtype(), 1);
+    BOOST_CHECK_EQUAL(wt4.ecl_phase(), 3);
+    BOOST_CHECK(wt4.preferred_phase() == Phase::GAS);
+
+    Ewoms::WellType wtp(false, Phase::WATER);
+    BOOST_CHECK(!wtp.producer());
+    BOOST_CHECK(wtp.injector());
+    BOOST_CHECK_EQUAL(wtp.ecl_wtype(), 3);
+    BOOST_CHECK_EQUAL(wtp.ecl_phase(), 2);
+    BOOST_CHECK(wtp.preferred_phase() == Phase::WATER);
+    BOOST_CHECK(wtp.injector_type() == InjectorType::WATER);
+
+    wtp.update( InjectorType::GAS );
+    BOOST_CHECK_EQUAL(wtp.ecl_wtype(), 4);
+    BOOST_CHECK_EQUAL(wtp.ecl_phase(), 2);
+    BOOST_CHECK(wtp.preferred_phase() == Phase::WATER);
+    BOOST_CHECK(wtp.injector_type() == InjectorType::GAS);
+}
