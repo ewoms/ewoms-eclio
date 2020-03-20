@@ -18,8 +18,8 @@ if(STD_FILESYSTEM_LIBRARIES)
     LIBRARIES "${STD_FILESYSTEM_LIBRARIES}")
 endif()
 
-# handle boost
-find_package(Boost COMPONENTS date_time REQUIRED)
+# handle boost: the base package which contains the template libraries
+# is currently still required for ewoms-eclio
+find_package(Boost REQUIRED)
 dune_register_package_flags(
-  LIBRARIES "${Boost_LIBRARIES}"
   INCLUDE_DIRS "${Boost_INCLUDE_DIRS}")
