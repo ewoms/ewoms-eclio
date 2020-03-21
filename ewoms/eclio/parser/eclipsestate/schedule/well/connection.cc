@@ -38,6 +38,7 @@
 namespace Ewoms {
 
     Connection::Connection(int i, int j , int k ,
+                           std::size_t global_index,
                            int compnum,
                            double depth,
                            State stateArg ,
@@ -65,6 +66,7 @@ namespace Ewoms {
           m_skin_factor(skin_factor),
           ijk({i,j,k}),
           m_ctfkind(ctf_kind),
+          m_global_index(global_index),
           m_seqIndex(seqIndex),
           m_segDistStart(segDistStart),
           m_segDistEnd(segDistEnd),
@@ -111,6 +113,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
                            int satTableId, int complnum, double CF,
                            double Kh, double rw, double r0, double skinFactor,
                            const std::array<int,3>& IJK,
+                           std::size_t global_index,
                            CTFKind kind, std::size_t seqIndex,
                            double segDistStart, double segDistEnd,
                            bool defaultSatTabId, std::size_t compSegSeqIndex,
@@ -126,6 +129,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         , m_r0(r0)
         , m_skin_factor(skinFactor)
         , ijk(IJK)
+        , m_global_index(global_index)
         , m_ctfkind(kind)
         , m_seqIndex(seqIndex)
         , m_segDistStart(segDistStart)
@@ -139,7 +143,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
     Connection::Connection()
           : Connection(Direction::X, 1.0, State::SHUT,
                        0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       {0,0,0}, CTFKind::Defaulted, 0, 0.0, 0.0, false, 0, 0, 0.0)
+                      {0,0,0},0, CTFKind::Defaulted, 0, 0.0, 0.0, false, 0, 0, 0.0)
     {}
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
@@ -160,6 +164,10 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
 
     int Connection::getK() const {
         return ijk[2];
+    }
+
+    std::size_t Connection::global_index() const {
+        return this->m_global_index;
     }
 
     bool Connection::attachedToSegment() const {
@@ -284,7 +292,8 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
 }
 
     bool Connection::operator==( const Connection& rhs ) const {
-        bool eq = this->ijk == rhs.ijk
+        return this->ijk == rhs.ijk
+            && this->m_global_index == rhs.m_global_index
             && this->m_complnum == rhs.m_complnum
             && this->m_CF == rhs.m_CF
             && this->m_rw == rhs.m_rw
@@ -298,10 +307,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
             && this->m_seqIndex == rhs.m_seqIndex;
-        if (!eq) {
-            //std::cout << this->str() << rhs.str() << std::endl;
-        }
-        return eq;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

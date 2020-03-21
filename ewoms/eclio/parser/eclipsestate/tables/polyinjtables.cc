@@ -251,11 +251,6 @@ namespace Ewoms{
         return m_ref_polymer_concentration;
     }
 
-    void SkprpolyTable::setReferenceConcentration(double refConcentration)
-    {
-        m_ref_polymer_concentration = refConcentration;
-    }
-
     const std::vector<std::vector<double>>&
     SkprpolyTable::getSkinPressures() const
     {

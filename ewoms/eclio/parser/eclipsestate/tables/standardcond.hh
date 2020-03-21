@@ -32,9 +32,15 @@ namespace Ewoms {
                    pressure == data.pressure;
         }
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(temperature);
+            serializer(pressure);
+        }
+
         double temperature;
         double pressure;
-
     };
 }
 

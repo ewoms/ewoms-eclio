@@ -212,8 +212,8 @@ namespace Ewoms {
     bool ThresholdPressure::operator==(const ThresholdPressure& data) const {
         return this->active() == data.active() &&
                this->restart() == data.restart() &&
-               this->thresholdPressureTable() == data.thresholdPressureTable() &&
-               this->pressureTable() == data.pressureTable();
+               this->m_thresholdPressureTable == data.m_thresholdPressureTable &&
+               this->m_pressureTable == data.m_pressureTable;
     }
 
 } //namespace Ewoms

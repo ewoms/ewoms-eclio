@@ -19,6 +19,7 @@
 #ifndef EWOMS_UDQ_PARAMS_H
 #define EWOMS_UDQ_PARAMS_H
 
+#include <chrono>
 #include <random>
 
 namespace Ewoms {
@@ -45,6 +46,24 @@ namespace Ewoms {
         std::mt19937& true_rng();
 
         bool operator==(const UDQParams& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(reseed_rng);
+            serializer(random_seed);
+            serializer(value_range);
+            serializer(undefined_value);
+            serializer(cmp_eps);
+
+            if (!serializer.isSerializing()) {
+                auto now = std::chrono::high_resolution_clock::now();
+                auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch());
+                this->m_true_rng.seed( ns.count() );
+                this->m_sim_rng.seed( this->random_seed );
+            }
+        }
+
     private:
         bool reseed_rng;
         int random_seed;

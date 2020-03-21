@@ -59,13 +59,11 @@ namespace Ewoms {
         void addRecord(DeckRecord&& record);
         const DeckRecord& getRecord(size_t index) const;
         DeckRecord& getRecord(size_t index);
-        const std::vector<DeckRecord>& records() const;
         const DeckRecord& getDataRecord() const;
         void setDataKeyword(bool isDataKeyword = true);
         void setDoubleRecordKeyword(bool isDoubleRecordKeyword = true);
         bool isDataKeyword() const;
         bool isDoubleRecordKeyword() const;
-        bool isSlashTerminated() const;
 
         const std::vector<int>& getIntData() const;
         const std::vector<double>& getRawDoubleData() const;
@@ -93,6 +91,18 @@ namespace Ewoms {
         bool operator!=(const DeckKeyword& other) const;
 
         friend std::ostream& operator<<(std::ostream& os, const DeckKeyword& keyword);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_keywordName);
+            m_location.serializeOp(serializer);
+            serializer.vector(m_recordList);
+            serializer(m_isDataKeyword);
+            serializer(m_slashTerminated);
+            serializer(m_isDoubleRecordKeyword);
+        }
+
     private:
         std::string m_keywordName;
         Location m_location;

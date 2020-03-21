@@ -137,12 +137,8 @@ size_t WellTestConfig::size() const {
     return wells.size();
 }
 
-const std::vector<WellTestConfig::WTESTWell>& WellTestConfig::getWells() const {
-    return wells;
-}
-
 bool WellTestConfig::operator==(const WellTestConfig& data) const {
-    return this->getWells() == data.getWells();
+    return this->wells == data.wells;
 }
 
 }

@@ -28,6 +28,12 @@ int Ewoms::EclIO::flipEndianInt(int num)
     return static_cast<int>(tmp);
 }
 
+long int Ewoms::EclIO::flipEndianLongInt(long int num)
+{
+    unsigned long int tmp = __builtin_bswap64(num);
+    return static_cast<long int>(tmp);
+}
+
 float Ewoms::EclIO::flipEndianFloat(float num)
 {
     float value = num;

@@ -58,6 +58,14 @@ namespace Ewoms {
 
         bool operator==(const GridDims& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_nx);
+            serializer(m_ny);
+            serializer(m_nz);
+        }
+
     protected:
         size_t m_nx;
         size_t m_ny;

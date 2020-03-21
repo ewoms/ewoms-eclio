@@ -369,8 +369,4 @@ namespace Ewoms {
         return (update_count > 0);
     }
 
-    int Well::WellProductionProperties::getNumProductionControls() const {
-        return m_productionControls;
-    }
-
 } // namespace Ewoms

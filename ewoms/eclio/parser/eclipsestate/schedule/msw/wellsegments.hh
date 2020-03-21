@@ -84,9 +84,18 @@ namespace Ewoms {
 
         // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
-        const std::vector<Segment>& segments() const;
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
+        const std::vector<Segment>::const_iterator begin() const;
+        const std::vector<Segment>::const_iterator end() const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_comp_pressure_drop);
+            serializer.vector(m_segments);
+            serializer(segment_number_to_index);
+        }
 
     private:
         void processABS();
@@ -94,6 +103,7 @@ namespace Ewoms {
         void process(LengthDepth length_depth, double depth_top, double length_top);
         void addSegment(const Segment& new_segment);
         void loadWELSEGS( const DeckKeyword& welsegsKeyword);
+        const Segment& topSegment() const;
 
         // components of the pressure drop to be included
         CompPressureDrop m_comp_pressure_drop;

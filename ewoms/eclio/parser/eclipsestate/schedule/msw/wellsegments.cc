@@ -51,20 +51,32 @@ namespace Ewoms {
         return m_segments.size();
     }
 
+    const Segment& WellSegments::topSegment() const {
+        return this->m_segments[0];
+    }
+
     double WellSegments::depthTopSegment() const {
-        return this->m_segments[0].depth();
+        return this->topSegment().depth();
     }
 
     double WellSegments::lengthTopSegment() const {
-        return this->m_segments[0].totalLength();
+        return this->topSegment().totalLength();
     }
 
     double WellSegments::volumeTopSegment() const {
-        return this->m_segments[0].volume();
+        return this->topSegment().volume();
     }
 
     WellSegments::CompPressureDrop WellSegments::compPressureDrop() const {
         return m_comp_pressure_drop;
+    }
+
+    const std::vector<Segment>::const_iterator WellSegments::begin() const {
+        return this->m_segments.begin();
+    }
+
+    const std::vector<Segment>::const_iterator WellSegments::end() const {
+        return this->m_segments.end();
     }
 
     const Segment& WellSegments::operator[](size_t idx) const {
@@ -541,10 +553,6 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
     } else {
         throw std::invalid_argument("Unknown enum string_value: " + string_value + " for MultiPhaseModel");
     }
-}
-
-const std::vector<Segment>& WellSegments::segments() const {
-    return m_segments;
 }
 
 }

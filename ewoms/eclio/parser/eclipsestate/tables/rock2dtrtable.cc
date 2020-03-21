@@ -63,8 +63,8 @@ namespace Ewoms {
 
         bool Rock2dtrTable::operator==(const Rock2dtrTable& data) const
         {
-              return this->transMultValues() == data.transMultValues() &&
-                     this->pressureValues() == data.pressureValues();
+              return this->m_transMultValues == data.m_transMultValues &&
+                     this->m_pressureValues == data.m_pressureValues;
         }
 
 }

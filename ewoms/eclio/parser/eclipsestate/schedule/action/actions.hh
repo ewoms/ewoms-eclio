@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/pyaction.hh>
 
 namespace Ewoms {
 namespace Action {
@@ -36,11 +37,12 @@ namespace Action {
 class Actions {
 public:
     Actions() = default;
-    Actions(const std::vector<ActionX>& action);
+    Actions(const std::vector<ActionX>& action, const std::vector<PyAction>& pyactions);
     size_t size() const;
     int max_input_lines() const;
     bool empty() const;
     void add(const ActionX& action);
+    void add(const PyAction& pyaction);
     bool ready(std::time_t sim_time) const;
     const ActionX& get(const std::string& name) const;
     const ActionX& get(std::size_t index) const;
@@ -49,12 +51,18 @@ public:
     std::vector<ActionX>::const_iterator begin() const;
     std::vector<ActionX>::const_iterator end() const;
 
-    const std::vector<ActionX>& getActions() const;
-
     bool operator==(const Actions& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(actions);
+        serializer.vector(pyactions);
+    }
 
 private:
     std::vector<ActionX> actions;
+    std::vector<PyAction> pyactions;
 };
 }
 }

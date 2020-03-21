@@ -76,6 +76,7 @@ namespace RestartIO {
 
         Connection();
         Connection(int i, int j , int k ,
+                   std::size_t global_index,
                    int complnum,
                    double depth,
                    State state,
@@ -103,6 +104,7 @@ namespace RestartIO {
                    double r0,
                    double skinFactor,
                    const std::array<int,3>& IJK,
+                   std::size_t global_index,
                    CTFKind kind,
                    std::size_t seqIndex,
                    double segDistStart,
@@ -119,6 +121,7 @@ namespace RestartIO {
         int getI() const;
         int getJ() const;
         int getK() const;
+        std::size_t global_index() const;
         State state() const;
         Direction dir() const;
         double depth() const;
@@ -155,6 +158,32 @@ namespace RestartIO {
 
         bool operator==( const Connection& ) const;
         bool operator!=( const Connection& ) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(direction);
+            serializer(center_depth);
+            serializer(open_state);
+            serializer(sat_tableId);
+            serializer(m_complnum);
+            serializer(m_CF);
+            serializer(m_Kh);
+            serializer(m_rw);
+            serializer(m_r0);
+            serializer(m_skin_factor);
+            serializer(ijk);
+            serializer(m_global_index);
+            serializer(m_ctfkind);
+            serializer(m_seqIndex);
+            serializer(m_segDistStart);
+            serializer(m_segDistEnd);
+            serializer(m_defaultSatTabId);
+            serializer(m_compSeg_seqIndex);
+            serializer(segment_number);
+            serializer(wPi);
+        }
+
     private:
         Direction direction;
         double center_depth;
@@ -169,6 +198,7 @@ namespace RestartIO {
 
         std::array<int,3> ijk;
         CTFKind m_ctfkind;
+        std::size_t m_global_index;
         std::size_t m_seqIndex;
         double m_segDistStart;
         double m_segDistEnd;

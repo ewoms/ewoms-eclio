@@ -57,6 +57,18 @@ namespace Ewoms {
 
         bool operator==(const InitConfig& config) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            equil.serializeOp(serializer);
+            foamconfig.serializeOp(serializer);
+            serializer(m_filleps);
+            serializer(m_gravity);
+            serializer(m_restartRequested);
+            serializer(m_restartStep);
+            serializer(m_restartRootName);
+        }
+
     private:
         Equil equil;
         FoamConfig foamconfig;

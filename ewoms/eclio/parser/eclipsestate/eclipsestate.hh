@@ -116,18 +116,18 @@ namespace Ewoms {
         void serializeOp(Serializer& serializer)
         {
             // FieldPropsManager is handled otherwise, do not add
-            serializer(m_tables);
-            serializer(m_runspec);
-            serializer(m_eclipseConfig);
-            serializer(m_deckUnitSystem);
-            serializer(m_inputNnc);
-            serializer(m_inputEditNnc);
-            serializer(m_gridDims);
-            serializer(m_simulationConfig);
-            serializer(m_transMult);
-            serializer(m_faults);
+            m_tables.serializeOp(serializer);
+            m_runspec.serializeOp(serializer);
+            m_eclipseConfig.serializeOp(serializer);
+            m_deckUnitSystem.serializeOp(serializer);
+            m_inputNnc.serializeOp(serializer);
+            m_inputEditNnc.serializeOp(serializer);
+            m_gridDims.serializeOp(serializer);
+            m_simulationConfig.serializeOp(serializer);
+            m_transMult.serializeOp(serializer);
+            m_faults.serializeOp(serializer);
             serializer(m_title);
-            serializer(aquifer_config);
+            aquifer_config.serializeOp(serializer);
         }
 
     private:

@@ -25,6 +25,7 @@
 #include <ewoms/eclio/opmlog/logutil.hh>
 #include <ewoms/eclio/utility/numeric/cmp.hh>
 
+#include <ewoms/eclio/parser/python/python.hh>
 #include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
@@ -36,6 +37,7 @@
 #include <ewoms/eclio/parser/parserkeywords/g.hh>
 #include <ewoms/eclio/parser/parserkeywords/l.hh>
 #include <ewoms/eclio/parser/parserkeywords/n.hh>
+#include <ewoms/eclio/parser/parserkeywords/p.hh>
 #include <ewoms/eclio/parser/parserkeywords/v.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 
@@ -158,7 +160,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         }
 
         if (DeckSection::hasSCHEDULE(deck))
-            iterateScheduleSection( parseContext, errors, SCHEDULESection( deck ), grid, fp);
+            iterateScheduleSection( deck.getInputPath(), parseContext, errors, SCHEDULESection( deck ), grid, fp);
     }
 
     template <typename T>
@@ -267,7 +269,8 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         return this->m_timeMap.getEndTime();
     }
 
-    void Schedule::handleKeyword(size_t currentStep,
+    void Schedule::handleKeyword(const std::string& input_path,
+                                 size_t currentStep,
                                  const SCHEDULESection& section,
                                  size_t keywordIdx,
                                  const DeckKeyword& keyword,
@@ -457,6 +460,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         else if (keyword.name() == "NUPCOL")
             handleNUPCOL(keyword, currentStep);
 
+        else if (keyword.name() == "PYACTION")
+            handlePYACTION(input_path, keyword, currentStep);
+
         else if (geoModifiers.find( keyword.name() ) != geoModifiers.end()) {
             bool supported = geoModifiers.at( keyword.name() );
             if (supported) {
@@ -469,7 +475,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         }
     }
 
-    void Schedule::iterateScheduleSection(const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
+void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
@@ -516,7 +522,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
             else {
                 if (currentStep >= this->m_timeMap.restart_offset())
-                    this->handleKeyword(currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
+                    this->handleKeyword(input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
                 else
                     OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
             }
@@ -607,6 +613,24 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                 this->updateWell(std::move(well2), currentStep);
             }
         }
+    }
+
+    void Schedule::handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
+        if (!Python::enabled()) {
+            const auto& loc = keyword.location();
+            OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
+            return;
+        }
+
+        using PY = ParserKeywords::PYACTION;
+        const auto& name = keyword.getRecord(0).getItem<PY::NAME>().get<std::string>(0);
+        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<PY::RUN_COUNT>().get<std::string>(0) );
+        const auto& code = Action::PyAction::load( input_path, keyword.getRecord(1).getItem<PY::FILENAME>().get<std::string>(0) );
+
+        Action::PyAction pyaction(name, run_count, code);
+        auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
+        new_actions->add(pyaction);
+        this->m_actions.update(currentStep, new_actions);
     }
 
     void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {
@@ -2784,78 +2808,6 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return this->m_nupcol.get(reportStep);
     }
 
-    const Schedule::WellMap& Schedule::getStaticWells() const {
-        return wells_static;
-    }
-
-    const Schedule::GroupMap& Schedule::getGroups() const {
-        return groups;
-    }
-
-    const DynamicState<OilVaporizationProperties>& Schedule::getOilVapProps() const {
-        return m_oilvaporizationproperties;
-    }
-
-    const DynamicVector<Deck>& Schedule::getModifierDeck() const {
-        return m_modifierDeck;
-    }
-
-    const Runspec& Schedule::getRunspec() const {
-        return m_runspec;
-    }
-
-    const Schedule::VFPProdMap& Schedule::getVFPProdTables() const {
-        return vfpprod_tables;
-    }
-
-    const Schedule::VFPInjMap& Schedule::getVFPInjTables() const {
-        return vfpinj_tables;
-    }
-
-    const DynamicState<std::shared_ptr<WellTestConfig>>& Schedule::getWellTestConfig() const  {
-        return wtest_config;
-    }
-
-    const DynamicState<std::shared_ptr<WListManager>>& Schedule::getWListManager() const {
-        return wlist_manager;
-    }
-
-    const DynamicState<std::shared_ptr<UDQConfig>>& Schedule::getUDQConfig() const {
-        return udq_config;
-    }
-
-    const DynamicState<std::shared_ptr<UDQActive>>& Schedule::getUDQActive() const {
-        return udq_active;
-    }
-
-    const DynamicState<std::shared_ptr<GuideRateConfig>>& Schedule::getGuideRateConfig() const {
-        return guide_rate_config;
-    }
-
-    const DynamicState<std::shared_ptr<GConSale>>& Schedule::getGConSale() const {
-        return gconsale;
-    }
-
-    const DynamicState<std::shared_ptr<GConSump>>& Schedule::getGConSump() const {
-        return gconsump;
-    }
-
-    const DynamicState<Well::ProducerCMode>& Schedule::getGlobalWhistCtlMode() const {
-        return global_whistctl_mode;
-    }
-
-    const DynamicState<std::shared_ptr<Action::Actions>>& Schedule::getActions() const {
-        return m_actions;
-    }
-
-    const DynamicState<int>& Schedule::getNupCol() const {
-        return m_nupcol;
-    }
-
-     const std::map<std::string,Events>& Schedule::getWellGroupEvents() const {
-        return wellgroup_events;
-     }
-
      bool Schedule::operator==(const Schedule& data) const {
         auto&& comparePtr = [](const auto& t1, const auto& t2) {
                                if ((t1 && !t2) || (!t1 && t2))
@@ -2888,31 +2840,47 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
             return true;
         };
 
-        return this->getTimeMap() == data.getTimeMap() &&
-               compareMap(this->getStaticWells(), data.getStaticWells()) &&
-               compareMap(this->getGroups(), data.getGroups()) &&
-               this->getOilVapProps() == data.getOilVapProps() &&
-               this->getEvents() == data.getEvents() &&
-               this->getModifierDeck() == data.getModifierDeck() &&
-               this->getTuning() == data.getTuning() &&
-               this->getMessageLimits() == data.getMessageLimits() &&
-               this->getRunspec() == data.getRunspec() &&
-               compareMap(this->getVFPProdTables(), data.getVFPProdTables()) &&
-               compareMap(this->getVFPInjTables(), data.getVFPInjTables()) &&
-               compareDynState(this->getWellTestConfig(), data.getWellTestConfig()) &&
-               compareDynState(this->getWListManager(), data.getWListManager()) &&
-               compareDynState(this->getUDQConfig(), data.getUDQConfig()) &&
-               compareDynState(this->getUDQActive(), data.getUDQActive()) &&
-               compareDynState(this->getGuideRateConfig(), data.getGuideRateConfig()) &&
-               compareDynState(this->getGConSale(), data.getGConSale()) &&
-               compareDynState(this->getGConSump(), data.getGConSump()) &&
-               this->getGlobalWhistCtlMode() == data.getGlobalWhistCtlMode() &&
-               compareDynState(this->getActions(), data.getActions()) &&
-               this->rftConfig () == data.rftConfig() &&
-               this->getNupCol() == data.getNupCol() &&
-               this->restart() == data.restart() &&
-               this->getWellGroupEvents() == data.getWellGroupEvents();
+        return this->m_timeMap == data.m_timeMap &&
+               compareMap(this->wells_static, data.wells_static) &&
+               compareMap(this->groups, data.groups) &&
+               this->m_oilvaporizationproperties == data.m_oilvaporizationproperties &&
+               this->m_events == data.m_events &&
+               this->m_modifierDeck == data.m_modifierDeck &&
+               this->m_tuning == data.m_tuning &&
+               this->m_messageLimits == data.m_messageLimits &&
+               this->m_runspec == data.m_runspec &&
+               compareMap(this->vfpprod_tables, data.vfpprod_tables) &&
+               compareMap(this->vfpinj_tables, data.vfpinj_tables) &&
+               compareDynState(this->wtest_config, data.wtest_config) &&
+               compareDynState(this->wlist_manager, data.wlist_manager) &&
+               compareDynState(this->udq_config, data.udq_config) &&
+               compareDynState(this->udq_active, data.udq_active) &&
+               compareDynState(this->guide_rate_config, data.guide_rate_config) &&
+               compareDynState(this->gconsale, data.gconsale) &&
+               compareDynState(this->gconsump, data.gconsump) &&
+               this->global_whistctl_mode == data.global_whistctl_mode &&
+               compareDynState(this->m_actions, data.m_actions) &&
+               rft_config  == data.rft_config &&
+               this->m_nupcol == data.m_nupcol &&
+               this->restart_config == data.restart_config &&
+               this->wellgroup_events == data.wellgroup_events;
      }
+namespace {
+// Duplicated from Well.cpp
+Connection::Order order_from_int(int int_value) {
+    switch(int_value) {
+    case 0:
+        return Connection::Order::TRACK;
+    case 1:
+        return Connection::Order::DEPTH;
+    case 2:
+        return Connection::Order::INPUT;
+    default:
+        throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+    }
+}
+
+}
 
 void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
 {
@@ -2951,7 +2919,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
         }
 
         {
-            std::shared_ptr<Ewoms::WellConnections> well_connections = std::make_shared<Ewoms::WellConnections>(rst_well.ij[0], rst_well.ij[1], 0, connections);
+            std::shared_ptr<Ewoms::WellConnections> well_connections = std::make_shared<Ewoms::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], connections);
             well.updateConnections( std::move(well_connections) );
         }
 
@@ -3063,6 +3031,7 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             const auto& connections2 = well2.getConnections();
             const auto& connections1 = well1.getConnections();
 
+            well_count += not_equal( connections1.ordering(), connections2.ordering(), well_msg(well1.name(), "Connection: ordering"));
             for (std::size_t icon = 0; icon < connections1.size(); icon++) {
                 const auto& conn1 = connections1[icon];
                 const auto& conn2 = connections2[icon];
@@ -3176,7 +3145,6 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             well_count += not_equal( well1.seqIndex(), well2.seqIndex(), well_msg(well1.name(), "Well: seqIndex"));
             well_count += not_equal( well1.getAutomaticShutIn(), well2.getAutomaticShutIn(), well_msg(well1.name(), "Well: getAutomaticShutIn"));
             well_count += not_equal( well1.getAllowCrossFlow(), well2.getAllowCrossFlow(), well_msg(well1.name(), "Well: getAllowCrossFlow"));
-            well_count += not_equal( well1.getWellConnectionOrdering(), well2.getWellConnectionOrdering(), well_msg(well1.name(), "Well: getWellConnectionOrdering"));
             well_count += not_equal( well1.getSolventFraction(), well2.getSolventFraction(), well_msg(well1.name(), "Well: getSolventFraction"));
             well_count += not_equal( well1.getStatus(), well2.getStatus(), well_msg(well1.name(), "Well: getStatus"));
             //well_count += not_equal( well1.getInjectionProperties(), well2.getInjectionProperties(), "Well: getInjectionProperties");

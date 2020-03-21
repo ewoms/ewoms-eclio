@@ -30,7 +30,6 @@ namespace Ewoms {
                   double SIoffset = 0.0);
 
         double getSIScaling() const;
-        double getSIScalingRaw() const;
         double getSIOffset() const;
 
         double convertRawToSi(double rawValue) const;
@@ -41,6 +40,13 @@ namespace Ewoms {
 
         bool operator==( const Dimension& ) const;
         bool operator!=( const Dimension& ) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_SIfactor);
+            serializer(m_SIoffset);
+        }
 
     private:
         double m_SIfactor;

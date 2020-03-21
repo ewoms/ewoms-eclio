@@ -30,14 +30,14 @@ namespace Ewoms {
     public:
 
         WellConnections();
-        WellConnections(int headI, int headJ);
-        WellConnections(int headI, int headJ,
-                        size_t numRemoved,
+        WellConnections(Connection::Order ordering, int headI, int headJ);
+        WellConnections(Connection::Order ordering, int headI, int headJ,
                         const std::vector<Connection>& connections);
 
         // cppcheck-suppress noExplicitConstructor
         WellConnections(const WellConnections& src, const EclipseGrid& grid);
         void addConnection(int i, int j , int k ,
+                           std::size_t global_index,
                            double depth,
                            Connection::State state ,
                            double CF,
@@ -58,7 +58,6 @@ namespace Ewoms {
 
         void add( Connection );
         size_t size() const;
-        size_t inputSize() const;
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
@@ -80,18 +79,25 @@ namespace Ewoms {
         /// \param[in] well_i  logical cartesian i-coordinate of well head
         /// \param[in] well_j  logical cartesian j-coordinate of well head
         /// \param[in] grid    EclipseGrid object, used for cell depths
-        void orderTRACK(size_t well_i, size_t well_j);
+        void order(size_t well_i, size_t well_j);
 
         bool operator==( const WellConnections& ) const;
         bool operator!=( const WellConnections& ) const;
 
-        int getHeadI() const;
-        int getHeadJ() const;
-        size_t getNumRemoved() const;
-        const std::vector<Connection>& getConnections() const;
+        Connection::Order ordering() const { return this->m_ordering; }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_ordering);
+            serializer(headI);
+            serializer(headJ);
+            serializer.vector(m_connections);
+        }
 
     private:
         void addConnection(int i, int j , int k ,
+                           std::size_t global_index,
                            int complnum,
                            double depth,
                            Connection::State state ,
@@ -118,8 +124,8 @@ namespace Ewoms {
 
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
 
+        Connection::Order m_ordering = Connection::Order::TRACK;
         int headI, headJ;
-        size_t num_removed = 0;
         std::vector< Connection > m_connections;
     };
 }

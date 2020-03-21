@@ -44,6 +44,16 @@ namespace Ewoms {
                        udq_undefined == data.udq_undefined &&
                        unit_system == data.unit_system;
             }
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                consumption_rate.serializeOp(serializer);
+                import_rate.serializeOp(serializer);
+                serializer(network_node);
+                serializer(udq_undefined);
+                unit_system.serializeOp(serializer);
+            }
         };
 
         struct GCONSUMPGroupProp {
@@ -61,9 +71,13 @@ namespace Ewoms {
         void add(const std::string& name, const UDAValue& consumption_rate, const UDAValue& import_rate, const std::string network_node, double udq_undefined_arg, const UnitSystem& unit_system);
         size_t size() const;
 
-        const std::map<std::string, GCONSUMPGroup>& getGroups() const;
-
         bool operator==(const GConSump& data) const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.map(groups);
+        }
 
     private:
         std::map<std::string, GCONSUMPGroup> groups;

@@ -114,27 +114,30 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
 } // anonymous namespace
 
     WellConnections::WellConnections() :
-      headI(0), headJ(0), num_removed(0)
+        headI(0),
+        headJ(0)
     {
     }
 
-    WellConnections::WellConnections(int headIArg, int headJArg) :
+    WellConnections::WellConnections(Connection::Order order,int headIArg, int headJArg) :
+        m_ordering(order),
         headI(headIArg),
         headJ(headJArg)
     {
     }
 
-    WellConnections::WellConnections(int headIArg, int headJArg,
-                                     size_t numRemoved,
+    WellConnections::WellConnections(Connection::Order order,
+                                     int headIArg, int headJArg,
                                      const std::vector<Connection>& connections) :
+        m_ordering(order),
         headI(headIArg),
         headJ(headJArg),
-        num_removed(numRemoved),
         m_connections(connections)
     {
     }
 
     WellConnections::WellConnections(const WellConnections& src, const EclipseGrid& grid) :
+        m_ordering(src.ordering()),
         headI(src.headI),
         headJ(src.headJ)
     {
@@ -145,6 +148,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
     }
 
     void WellConnections::addConnection(int i, int j , int k ,
+                                        std::size_t global_index,
                                         int complnum,
                                         double depth,
                                         Connection::State state,
@@ -163,13 +167,14 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
     {
         int conn_i = (i < 0) ? this->headI : i;
         int conn_j = (j < 0) ? this->headJ : j;
-        Connection conn(conn_i, conn_j, k, complnum, depth, state, CF, Kh, rw, r0,
+        Connection conn(conn_i, conn_j, k, global_index, complnum, depth, state, CF, Kh, rw, r0,
                         skin_factor, satTableId, direction, ctf_kind,
                         seqIndex, segDistStart, segDistEnd, defaultSatTabId);
         this->add(conn);
     }
 
     void WellConnections::addConnection(int i, int j , int k ,
+                                        std::size_t global_index,
                                         double depth,
                                         Connection::State state ,
                                         double CF,
@@ -189,6 +194,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         this->addConnection(i,
                             j,
                             k,
+                            global_index,
                             complnum,
                             depth,
                             state,
@@ -332,6 +338,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             if (prev == this->m_connections.end()) {
                 std::size_t noConn = this->m_connections.size();
                 this->addConnection(I,J,k,
+                                    grid.getGlobalIndex(I,J,k),
                                     grid.getCellDepth( I,J,k ),
                                     state,
                                     CF,
@@ -349,6 +356,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                 double conSDEnd = prev->getSegDistEnd();
                 double depth = grid.getCellDepth(I,J,k);
                 *prev = Connection(I,J,k,
+                                   grid.getGlobalIndex(I,J,k),
                                    prev->complnum(),
                                    depth,
                                    state,
@@ -368,10 +376,6 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                     conSDEnd);
             }
         }
-    }
-
-    size_t WellConnections::inputSize() const {
-        return m_connections.size() + this->num_removed;
     }
 
     size_t WellConnections::size() const {
@@ -421,11 +425,13 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                             shut );
     }
 
-    void WellConnections::orderTRACK(size_t well_i, size_t well_j)
+    void WellConnections::order(size_t well_i, size_t well_j)
     {
-        if (m_connections.empty()) {
+        if (m_connections.empty())
             return;
-        }
+
+        if (this->m_ordering != Connection::Order::TRACK)
+            return;
 
         // Find the first connection and swap it into the 0-position.
         const double surface_z = 0.0;
@@ -479,7 +485,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
 
     bool WellConnections::operator==( const WellConnections& rhs ) const {
         return this->size() == rhs.size() &&
-            this->num_removed == rhs.num_removed &&
+            this->m_ordering == rhs.m_ordering &&
             std::equal( this->begin(), this->end(), rhs.begin() );
     }
 
@@ -491,23 +497,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         auto new_end = std::remove_if(m_connections.begin(),
                                       m_connections.end(),
                                       [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
-        this->num_removed += std::distance(new_end, m_connections.end());
         m_connections.erase(new_end, m_connections.end());
     }
 
-    int WellConnections::getHeadI() const {
-        return headI;
-    }
-
-    int WellConnections::getHeadJ() const {
-        return headJ;
-    }
-
-    size_t WellConnections::getNumRemoved() const {
-        return num_removed;
-    }
-
-    const std::vector<Connection>& WellConnections::getConnections() const {
-        return m_connections;
-    }
 }

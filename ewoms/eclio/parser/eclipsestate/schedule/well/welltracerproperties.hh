@@ -37,7 +37,11 @@ namespace Ewoms {
         bool operator==(const WellTracerProperties& other) const;
         bool operator!=(const WellTracerProperties& other) const;
 
-        const ConcentrationMap& getConcentrations() const;
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_tracerConcentrations);
+        }
 
     private:
         ConcentrationMap m_tracerConcentrations;

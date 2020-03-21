@@ -1878,7 +1878,18 @@ namespace ParserKeywords {
        PYACTION();
        static const std::string keywordName;
 
-       class code {
+       class NAME {
+       public:
+           static const std::string itemName;
+       };
+
+       class RUN_COUNT {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class FILENAME {
        public:
            static const std::string itemName;
        };

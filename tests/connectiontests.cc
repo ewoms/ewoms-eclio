@@ -53,7 +53,7 @@ inline std::ostream& operator<<( std::ostream& stream, const WellConnections& cs
 }
 
 BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
-    Ewoms::WellConnections completionSet(1,1);
+    Ewoms::WellConnections completionSet(Ewoms::Connection::Order::TRACK, 1,1);
     BOOST_CHECK_EQUAL( 0U , completionSet.size() );
     BOOST_CHECK(!completionSet.allConnectionsShut());
 }
@@ -61,9 +61,9 @@ BOOST_AUTO_TEST_CASE(CreateWellConnectionsOK) {
 BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
     auto dir = Ewoms::Connection::Direction::Z;
     const auto kind = Ewoms::Connection::CTFKind::DeckValue;
-    Ewoms::WellConnections completionSet(1,1);
-    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true);
-    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true);
+    Ewoms::WellConnections completionSet(Ewoms::Connection::Order::TRACK, 1,1);
+    Ewoms::Connection completion1( 10,10,10, 100, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true);
+    Ewoms::Connection completion2( 10,10,11, 102, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0, 0., 0., true);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(AddCompletionSizeCorrect) {
 BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
     auto dir = Ewoms::Connection::Direction::Z;
     const auto kind = Ewoms::Connection::CTFKind::DeckValue;
-    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
-    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
-    Ewoms::WellConnections completionSet(1,1);
+    Ewoms::Connection completion1( 10,10,10, 100, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion2( 10,10,11, 102, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::WellConnections completionSet(Ewoms::Connection::Order::TRACK, 1,1);
     completionSet.add( completion1 );
     BOOST_CHECK_EQUAL( 1U , completionSet.size() );
 
@@ -89,13 +89,13 @@ BOOST_AUTO_TEST_CASE(WellConnectionsGetOutOfRangeThrows) {
 }
 
 BOOST_AUTO_TEST_CASE(AddCompletionCopy) {
-    Ewoms::WellConnections completionSet(10,10);
+    Ewoms::WellConnections completionSet(Ewoms::Connection::Order::TRACK, 10,10);
     auto dir = Ewoms::Connection::Direction::Z;
     const auto kind = Ewoms::Connection::CTFKind::DeckValue;
 
-    Ewoms::Connection completion1( 10,10,10, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
-    Ewoms::Connection completion2( 10,10,11, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
-    Ewoms::Connection completion3( 10,10,12, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion1( 10,10,10, 100, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion2( 10,10,11, 101, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion3( 10,10,12, 102, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
 
     completionSet.add( completion1 );
     completionSet.add( completion2 );
@@ -114,10 +114,10 @@ BOOST_AUTO_TEST_CASE(ActiveCompletions) {
     Ewoms::EclipseGrid grid(10,20,20);
     auto dir = Ewoms::Connection::Direction::Z;
     const auto kind = Ewoms::Connection::CTFKind::Defaulted;
-    Ewoms::WellConnections completions(10,10);
-    Ewoms::Connection completion1( 0,0,0, 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
-    Ewoms::Connection completion2( 0,0,1, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
-    Ewoms::Connection completion3( 0,0,2, 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::WellConnections completions(Ewoms::Connection::Order::TRACK, 10,10);
+    Ewoms::Connection completion1( 0,0,0, grid.getGlobalIndex(0,0,0), 1, 0.0, Ewoms::Connection::State::OPEN , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion2( 0,0,1, grid.getGlobalIndex(0,0,1), 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
+    Ewoms::Connection completion3( 0,0,2, grid.getGlobalIndex(0,0,2), 1, 0.0, Ewoms::Connection::State::SHUT , 99.88, 355.113, 0.25, 0.0, 0.0, 0, dir, kind, 0,0., 0., true);
 
     completions.add( completion1 );
     completions.add( completion2 );
@@ -140,7 +140,7 @@ Ewoms::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     const auto deck = parser.parseString(compdat_keyword);
     Ewoms::FieldPropsManager field_props(deck, Ewoms::Phases{true, true, true}, grid, Ewoms::TableManager());
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
-    Ewoms::WellConnections connections(10,10);
+    Ewoms::WellConnections connections(Ewoms::Connection::Order::TRACK, 10,10);
     for (const auto& rec : keyword)
         connections.loadCOMPDAT(rec, grid, field_props);
 

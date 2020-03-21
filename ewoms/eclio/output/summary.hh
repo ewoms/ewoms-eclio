@@ -19,6 +19,8 @@
 #ifndef EWOMS_OUTPUT_SUMMARY_H
 #define EWOMS_OUTPUT_SUMMARY_H
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
+
 #include <map>
 #include <memory>
 #include <string>
@@ -35,6 +37,7 @@ namespace Ewoms {
 
 namespace Ewoms { namespace data {
     class WellRates;
+    class Group;
 }} // namespace Ewoms::data
 
 namespace Ewoms { namespace out {
@@ -61,6 +64,7 @@ public:
               const EclipseState&            es,
               const Schedule&                schedule,
               const data::WellRates&         well_solution,
+              const data::Group&             group_solution,
               const GlobalProcessParameters& single_values,
               const RegionParameters&        region_values = {},
               const BlockValues&             block_values  = {}) const;

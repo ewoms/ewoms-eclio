@@ -56,6 +56,17 @@ namespace Ewoms {
 
         bool operator==(const PlyshlogTable& data) const;
 
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            this->SimpleTable::serializeOp(serializer);
+            serializer(m_refPolymerConcentration);
+            serializer(m_refSalinity);
+            serializer(m_refTemperature);
+            serializer(m_hasRefSalinity);
+            serializer(m_hasRefTemperature);
+        }
+
     private:
         double m_refPolymerConcentration = 1.0;
         double m_refSalinity = 0.0;

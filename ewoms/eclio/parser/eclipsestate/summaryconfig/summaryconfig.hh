@@ -45,7 +45,7 @@ namespace Ewoms {
         };
 
         enum class Type {
-            Rate, Total, Ratio, Pressure, Count,
+            Rate, Total, Ratio, Pressure, Count, Mode,
             Undefined,
         };
 
@@ -72,7 +72,7 @@ namespace Ewoms {
         {
             serializer(keyword_);
             serializer(category_);
-            serializer(loc);
+            loc.serializeOp(serializer);
             serializer(type_);
             serializer(name_);
             serializer(number_);

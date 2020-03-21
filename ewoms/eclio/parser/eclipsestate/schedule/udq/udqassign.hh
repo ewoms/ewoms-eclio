@@ -44,6 +44,13 @@ public:
             return selector == data.selector &&
                    value == data.value;
         }
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(selector);
+            serializer(value);
+        }
     };
 
     UDQAssign();
@@ -57,9 +64,15 @@ public:
     void add_record(const std::vector<std::string>& selector, double value);
     UDQSet eval(const std::vector<std::string>& wells) const;
 
-    const std::vector<AssignRecord>& getRecords() const;
-
     bool operator==(const UDQAssign& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_keyword);
+        serializer(m_var_type);
+        serializer.vector(records);
+    }
 
 private:
     std::string m_keyword;

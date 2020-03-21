@@ -9,7 +9,7 @@
 #include <ewoms/eclio/io/ecloutput.hh>
 
 using namespace Ewoms::EclIO;
-using EclEntry = std::tuple<std::string, eclArrType, int>;
+using EclEntry = std::tuple<std::string, eclArrType, long int>;
 
 template <typename T>
 void write(EclOutput& outFile, EclFile& file1,

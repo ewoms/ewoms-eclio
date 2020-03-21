@@ -265,14 +265,6 @@ namespace Ewoms {
         return m_nosim;
     }
 
-    const std::string& IOConfig::getDeckFileName() const {
-        return m_deck_filename;
-    }
-
-    bool IOConfig::getNoSim() const {
-        return m_nosim;
-    }
-
     bool IOConfig::operator==(const IOConfig& data) const {
         return this->getWriteINITFile() == data.getWriteINITFile() &&
                this->getWriteEGRIDFile() == data.getWriteEGRIDFile() &&
@@ -280,10 +272,10 @@ namespace Ewoms {
                this->getUNIFOUT() == data.getUNIFOUT() &&
                this->getFMTIN() == data.getFMTIN() &&
                this->getFMTOUT() == data.getFMTOUT() &&
-               this->getDeckFileName() == data.getDeckFileName() &&
+               this->m_deck_filename == data.m_deck_filename &&
                this->getOutputEnabled() == data.getOutputEnabled() &&
                this->getOutputDir() == data.getOutputDir() &&
-               this->getNoSim() == data.getNoSim() &&
+               this->initOnly() == data.initOnly() &&
                this->getBaseName() == data.getBaseName() &&
                this->getEclCompatibleRST() == data.getEclCompatibleRST();
     }

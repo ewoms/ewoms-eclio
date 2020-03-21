@@ -52,6 +52,16 @@ public:
 
     bool operator==(const FoamData& data) const;
 
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(reference_surfactant_concentration_);
+        serializer(exponent_);
+        serializer(minimum_surfactant_concentration_);
+        serializer(allow_desorption_);
+        serializer(rock_density_);
+    }
+
 private:
     double reference_surfactant_concentration_;
     double exponent_;
@@ -76,7 +86,6 @@ public:
                MobilityModel mobility_model);
 
     const FoamData& getRecord(std::size_t index) const;
-    const std::vector<FoamData>& records() const;
 
     Ewoms::Phase getTransportPhase() const;
     MobilityModel getMobilityModel() const;
@@ -89,6 +98,14 @@ public:
     const_iterator end() const;
 
     bool operator==(const FoamConfig& data) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer.vector(data_);
+        serializer(transport_phase_);
+        serializer(mobility_model_);
+    }
 
 private:
     std::vector<FoamData> data_;

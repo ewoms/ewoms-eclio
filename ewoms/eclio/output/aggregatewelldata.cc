@@ -288,7 +288,7 @@ namespace {
             using COVal = ::Ewoms::RestartIO::Helpers::
                 VectorItems::IWell::Value::CompOrder;
 
-            switch (well.getWellConnectionOrdering()) {
+            switch (well.getConnections().ordering()) {
             case WCO::TRACK: return COVal::Track;
             case WCO::DEPTH: return COVal::Depth;
             case WCO::INPUT: return COVal::Input;

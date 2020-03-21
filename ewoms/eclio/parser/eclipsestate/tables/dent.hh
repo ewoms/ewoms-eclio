@@ -38,6 +38,14 @@ namespace Ewoms {
             entry(double T0_, double C1_, double C2_);
             explicit entry(const DeckRecord& record);
             bool operator==(const entry& other) const;
+
+            template<class Serializer>
+            void serializeOp(Serializer& serializer)
+            {
+                serializer(T0);
+                serializer(C1);
+                serializer(C2);
+            }
         };
 
         DenT() = default;
@@ -48,6 +56,13 @@ namespace Ewoms {
         const entry& operator[](const std::size_t index) const;
         bool operator==(const DenT& other) const;
         std::size_t size() const;
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer.vector(m_records);
+        }
+
     private:
         std::vector<entry> m_records;
     };

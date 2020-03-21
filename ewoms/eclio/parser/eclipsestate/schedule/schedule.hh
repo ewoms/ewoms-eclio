@@ -265,25 +265,6 @@ namespace Ewoms
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
 
-        const WellMap& getStaticWells() const;
-        const GroupMap& getGroups() const;
-        const DynamicState<OilVaporizationProperties>& getOilVapProps() const;
-        const DynamicVector<Deck>& getModifierDeck() const;
-        const Runspec& getRunspec() const;
-        const VFPProdMap& getVFPProdTables() const;
-        const VFPInjMap& getVFPInjTables() const;
-        const DynamicState<std::shared_ptr<WellTestConfig>>& getWellTestConfig() const;
-        const DynamicState<std::shared_ptr<WListManager>>& getWListManager() const;
-        const DynamicState<std::shared_ptr<UDQConfig>>& getUDQConfig() const;
-        const DynamicState<std::shared_ptr<UDQActive>>& getUDQActive() const;
-        const DynamicState<std::shared_ptr<GuideRateConfig>>& getGuideRateConfig() const;
-        const DynamicState<std::shared_ptr<GConSale>>& getGConSale() const;
-        const DynamicState<std::shared_ptr<GConSump>>& getGConSump() const;
-        const DynamicState<Well::ProducerCMode>& getGlobalWhistCtlMode() const;
-        const DynamicState<std::shared_ptr<Action::Actions>>& getActions() const;
-        const DynamicState<int>& getNupCol() const;
-        const std::map<std::string,Events>& getWellGroupEvents() const;
-
         bool operator==(const Schedule& data) const;
 
         /*
@@ -293,7 +274,52 @@ namespace Ewoms
           for the schedule instances created by loading a restart file.
         */
         static bool cmp(const Schedule& sched1, const Schedule& sched2, std::size_t report_step);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            m_timeMap.serializeOp(serializer);
+            auto splitWells = splitDynMap(wells_static);
+            serializer.vector(splitWells.first);
+            serializer(splitWells.second);
+            auto splitGroups = splitDynMap(groups);
+            serializer.vector(splitGroups.first);
+            serializer(splitGroups.second);
+            m_oilvaporizationproperties.serializeOp(serializer);
+            m_events.serializeOp(serializer);
+            m_modifierDeck.serializeOp(serializer);
+            m_tuning.serializeOp(serializer);
+            m_messageLimits.serializeOp(serializer);
+            m_runspec.serializeOp(serializer);
+            auto splitvfpprod = splitDynMap<Map2>(vfpprod_tables);
+            serializer.vector(splitvfpprod.first);
+            serializer(splitvfpprod.second);
+            auto splitvfpinj = splitDynMap<Map2>(vfpinj_tables);
+            serializer.vector(splitvfpinj.first);
+            serializer(splitvfpinj.second);
+            wtest_config.serializeOp(serializer);
+            wlist_manager.serializeOp(serializer);
+            udq_config.serializeOp(serializer);
+            udq_active.serializeOp(serializer);
+            guide_rate_config.serializeOp(serializer);
+            gconsale.serializeOp(serializer);
+            gconsump.serializeOp(serializer);
+            global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
+            m_actions.serializeOp(serializer);
+            rft_config.serializeOp(serializer);
+            m_nupcol.template serializeOp<Serializer, false>(serializer);
+            restart_config.serializeOp(serializer);
+            serializer.map(wellgroup_events);
+            if (!serializer.isSerializing()) {
+                reconstructDynMap(splitWells.first, splitWells.second, wells_static);
+                reconstructDynMap(splitGroups.first, splitGroups.second, groups);
+                reconstructDynMap<Map2>(splitvfpprod.first, splitvfpprod.second, vfpprod_tables);
+                reconstructDynMap<Map2>(splitvfpinj.first, splitvfpinj.second, vfpinj_tables);
+            }
+        }
+
     private:
+        template<class Key, class Value> using Map2 = std::map<Key,Value>;
         TimeMap m_timeMap;
         WellMap wells_static;
         GroupMap groups;
@@ -343,7 +369,7 @@ namespace Ewoms
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
         bool updateWellStatus( const std::string& well, size_t reportStep , Well::Status status, bool update_connections);
         void addWellToGroup( const std::string& group_name, const std::string& well_name , size_t timeStep);
-        void iterateScheduleSection(const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
+        void iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
         void addACTIONX(const Action::ActionX& action, std::size_t currentStep);
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, size_t timeStep);
@@ -388,6 +414,7 @@ namespace Ewoms
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
 
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
+        void handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
         void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);
         void handleGRUPTREE( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGRUPNET( const DeckKeyword& keyword, size_t currentStep, const UnitSystem& unit_system);
@@ -407,7 +434,8 @@ namespace Ewoms
         void handleVFPINJ(const DeckKeyword& vfpprodKeyword, const UnitSystem& unit_system, size_t currentStep);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(size_t currentStep);
-        void handleKeyword(size_t currentStep,
+        void handleKeyword(const std::string& input_path,
+                           size_t currentStep,
                            const SCHEDULESection& section,
                            size_t keywordIdx,
                            const DeckKeyword& keyword,
@@ -417,6 +445,32 @@ namespace Ewoms
                            const UnitSystem& unit_system,
                            std::vector<std::pair<const DeckKeyword*, size_t > >& rftProperties);
         void addWellGroupEvent(const std::string& wellGroup, ScheduleEvents::Events event, size_t reportStep);
+
+        template<template<class, class> class Map, class Type, class Key>
+        std::pair<std::vector<Type>, std::vector<std::pair<Key, std::vector<size_t>>>>
+        splitDynMap(const Map<Key, Ewoms::DynamicState<Type>>& map)
+        {
+            // we have to pack the unique ptrs separately, and use an index map
+            // to allow reconstructing the appropriate structures.
+            std::vector<std::pair<Key, std::vector<size_t>>> asMap;
+            std::vector<Type> unique;
+            for (const auto& it : map) {
+                auto indices = it.second.split(unique);
+                asMap.push_back(std::make_pair(it.first, indices));
+            }
+
+            return std::make_pair(unique, asMap);
+        }
+
+        template<template<class, class> class Map, class Type, class Key>
+        void reconstructDynMap(const std::vector<Type>& unique,
+                               const std::vector<std::pair<Key, std::vector<size_t>>>& asMap,
+                               Map<Key, Ewoms::DynamicState<Type>>& result)
+        {
+            for (const auto& it : asMap) {
+                result[it.first].reconstruct(unique, it.second);
+            }
+        }
     };
 }
 

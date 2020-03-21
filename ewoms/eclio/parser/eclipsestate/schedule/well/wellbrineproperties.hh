@@ -30,6 +30,12 @@ struct WellBrineProperties
     void handleWSALT(const DeckRecord& rec);
     bool operator!=(const WellBrineProperties& other) const;
     bool operator==(const WellBrineProperties& other) const;
+
+    template<class Serializer>
+    void serializeOp(Serializer& serializer)
+    {
+        serializer(m_saltConcentration);
+    }
 };
 
 } // namespace Ewoms

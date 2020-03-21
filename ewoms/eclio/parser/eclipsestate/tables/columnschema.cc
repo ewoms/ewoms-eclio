@@ -50,10 +50,6 @@ namespace Ewoms {
         return m_name;
     }
 
-    Table::ColumnOrderEnum ColumnSchema::order() const {
-        return m_order;
-    }
-
     bool ColumnSchema::validOrder( double value1 , double value2) const {
         switch (m_order) {
         case Table::RANDOM:
@@ -117,10 +113,9 @@ namespace Ewoms {
 
     bool ColumnSchema::operator==(const ColumnSchema& data) const {
         return this->name() == data.name() &&
-               this->order() == data.order() &&
+               this->m_order == data.m_order &&
                this->getDefaultMode() == data.getDefaultMode() &&
                m_defaultValue == data.m_defaultValue;
     }
 
 }
-

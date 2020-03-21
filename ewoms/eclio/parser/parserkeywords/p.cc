@@ -2817,23 +2817,37 @@ const std::string PVZG::table::itemName = "table";
 
 PYACTION::PYACTION( ) : ParserKeyword("PYACTION")
 {
-  setSizeType(FIXED_CODE);
+  setFixedSize( (size_t) 2);
   addValidSectionName("SCHEDULE");
   clearDeckNames();
   addDeckName("PYACTION");
-  setCodeEnd("PYEND");
   {
      ParserRecord record;
      {
-        ParserItem item("code", ParserItem::itype::RAW_STRING);
-        item.setSizeType(ParserItem::item_size::ALL);
+        ParserItem item("NAME", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("RUN_COUNT", ParserItem::itype::STRING);
+        item.setDefault( std::string("SINGLE") );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+  {
+     ParserRecord record;
+     {
+        ParserItem item("FILENAME", ParserItem::itype::STRING);
         record.addItem(item);
      }
      addRecord( record );
   }
 }
 const std::string PYACTION::keywordName = "PYACTION";
-const std::string PYACTION::code::itemName = "code";
+const std::string PYACTION::NAME::itemName = "NAME";
+const std::string PYACTION::RUN_COUNT::itemName = "RUN_COUNT";
+const std::string PYACTION::RUN_COUNT::defaultValue = "SINGLE";
+const std::string PYACTION::FILENAME::itemName = "FILENAME";
 
 
 PYINPUT::PYINPUT( ) : ParserKeyword("PYINPUT")

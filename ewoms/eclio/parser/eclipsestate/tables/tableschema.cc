@@ -46,11 +46,7 @@ namespace Ewoms {
         return m_columns.count( name ) > 0;
     }
 
-    const OrderedMap<std::string, ColumnSchema>& TableSchema::getColumns() const {
-        return m_columns;
-    }
-
     bool TableSchema::operator==(const TableSchema& data) const {
-        return this->getColumns() == data.getColumns();
+        return this->m_columns == data.m_columns;
     }
 }

@@ -53,7 +53,4 @@ namespace Ewoms {
         return !(*this == other);
     }
 
-    const WellTracerProperties::ConcentrationMap& WellTracerProperties::getConcentrations() const {
-        return m_tracerConcentrations;
-    }
 }

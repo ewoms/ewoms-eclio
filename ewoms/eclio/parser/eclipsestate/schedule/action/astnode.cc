@@ -137,18 +137,6 @@ Action::Result ASTNode::eval(const Action::Context& context) const {
     return v1.eval_cmp(this->type, v2);
 }
 
-const std::vector<std::string>& ASTNode::argList() const {
-    return arg_list;
-}
-
-double ASTNode::getNumber() const {
-    return number;
-}
-
-const std::vector<ASTNode>& ASTNode::childrens() const {
-    return children;
-}
-
 bool ASTNode::operator==(const ASTNode& data) const {
     return type == data.type &&
            func_type == data.func_type &&

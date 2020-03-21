@@ -42,6 +42,16 @@ namespace Ewoms {
         void handleWPOLYMER(const DeckRecord& record);
         void handleWPMITAB(const DeckRecord& record);
         void handleWSKPTAB(const DeckRecord& record);
+
+        template<class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(m_polymerConcentration);
+            serializer(m_saltConcentration);
+            serializer(m_plymwinjtable);
+            serializer(m_skprwattable);
+            serializer(m_skprpolytable);
+        }
     };
 }
 
