@@ -25,7 +25,6 @@
 #include <ewoms/eclio/opmlog/logutil.hh>
 #include <ewoms/eclio/utility/numeric/cmp.hh>
 
-#include <ewoms/eclio/parser/python/python.hh>
 #include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
@@ -616,27 +615,14 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
     }
 
     void Schedule::handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
-        if (!Python::enabled()) {
-            const auto& loc = keyword.location();
-            OpmLog::warning("This version of flow is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
-            return;
-        }
-
-        using PY = ParserKeywords::PYACTION;
-        const auto& name = keyword.getRecord(0).getItem<PY::NAME>().get<std::string>(0);
-        const auto& run_count = Action::PyAction::from_string( keyword.getRecord(0).getItem<PY::RUN_COUNT>().get<std::string>(0) );
-        const auto& code = Action::PyAction::load( input_path, keyword.getRecord(1).getItem<PY::FILENAME>().get<std::string>(0) );
-
-        Action::PyAction pyaction(name, run_count, code);
-        auto new_actions = std::make_shared<Action::Actions>( this->actions(currentStep) );
-        new_actions->add(pyaction);
-        this->m_actions.update(currentStep, new_actions);
+        const auto& loc = keyword.location();
+        OpmLog::warning("This version of ewoms is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
     }
 
     void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {
         int nupcol = keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
         if (keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
-            std::string msg = "eflow uses 12 as default NUPCOL value";
+            std::string msg = "ewoms uses 12 as default NUPCOL value";
             OpmLog::note(msg);
         }
 
