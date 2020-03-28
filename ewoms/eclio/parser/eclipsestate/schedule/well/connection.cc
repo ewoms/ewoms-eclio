@@ -50,7 +50,7 @@ namespace Ewoms {
                            const int satTableId,
                            const Direction directionArg,
                            const CTFKind ctf_kind,
-			   const std::size_t seqIndex,
+			   const std::size_t sort_value,
 			   const double segDistStart,
 			   const double segDistEnd,
 			   const bool defaultSatTabId)
@@ -67,7 +67,7 @@ namespace Ewoms {
           ijk({i,j,k}),
           m_ctfkind(ctf_kind),
           m_global_index(global_index),
-          m_seqIndex(seqIndex),
+          m_sort_value(sort_value),
           m_segDistStart(segDistStart),
           m_segDistEnd(segDistEnd),
           m_defaultSatTabId(defaultSatTabId)
@@ -76,7 +76,6 @@ namespace Ewoms {
 
 namespace {
 constexpr bool defaultSatTabId = true;
-constexpr int compseg_seqIndex = 1;
 constexpr double def_wellPi = 1.0;
 }
 
@@ -93,11 +92,11 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         m_skin_factor(rst_connection.skin_factor),
         ijk(rst_connection.ijk),
         m_ctfkind(rst_connection.cf_kind),
-        m_seqIndex(insert_index),
+        m_global_index(grid.getGlobalIndex(this->ijk[0], this->ijk[1], this->ijk[2])),
+        m_sort_value(insert_index),
         m_segDistStart(rst_connection.segdist_start),
         m_segDistEnd(rst_connection.segdist_end),
         m_defaultSatTabId(defaultSatTabId),
-        m_compSeg_seqIndex(compseg_seqIndex),
         segment_number(rst_connection.segment),
         wPi(def_wellPi)
     {
@@ -109,42 +108,35 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
 
     }
 
-    Connection::Connection(Direction dir, double depth, State state,
-                           int satTableId, int complnum, double CF,
-                           double Kh, double rw, double r0, double skinFactor,
-                           const std::array<int,3>& IJK,
-                           std::size_t global_index,
-                           CTFKind kind, std::size_t seqIndex,
-                           double segDistStart, double segDistEnd,
-                           bool defaultSatTabId, std::size_t compSegSeqIndex,
-                           int segment, double wellPi)
-        : direction(dir)
-        , center_depth(depth)
-        , open_state(state)
-        , sat_tableId(satTableId)
-        , m_complnum(complnum)
-        , m_CF(CF)
-        , m_Kh(Kh)
-        , m_rw(rw)
-        , m_r0(r0)
-        , m_skin_factor(skinFactor)
-        , ijk(IJK)
-        , m_global_index(global_index)
-        , m_ctfkind(kind)
-        , m_seqIndex(seqIndex)
-        , m_segDistStart(segDistStart)
-        , m_segDistEnd(segDistEnd)
-        , m_defaultSatTabId(defaultSatTabId)
-        , m_compSeg_seqIndex(compSegSeqIndex)
-        , segment_number(segment)
-        , wPi(wellPi)
+    Connection::Connection()
+          : Connection(0, 0, 0, 0, 0, 0.0, State::SHUT, 0.0, 0.0, 0.0, 0.0, 0.0,
+                       0, Direction::X, CTFKind::DeckValue, 0, 0.0, 0.0, false)
     {}
 
-    Connection::Connection()
-          : Connection(Direction::X, 1.0, State::SHUT,
-                       0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                      {0,0,0},0, CTFKind::Defaulted, 0, 0.0, 0.0, false, 0, 0, 0.0)
-    {}
+    Connection Connection::serializeObject()
+    {
+        Connection result;
+        result.direction = Direction::Y;
+        result.center_depth = 1.0;
+        result.open_state = State::OPEN;
+        result.sat_tableId = 2;
+        result.m_complnum = 3;
+        result.m_CF = 4.0;
+        result.m_Kh = 5.0;
+        result.m_rw = 6.0;
+        result.m_r0 = 7.0;
+        result.m_skin_factor = 8.0;
+        result.ijk = {9, 10, 11};
+        result.m_ctfkind = CTFKind::Defaulted;
+        result.m_global_index = 12;
+        result.m_sort_value = 14;
+        result.m_segDistEnd = 15.0;
+        result.m_defaultSatTabId = true;
+        result.segment_number = 16;
+        result.wPi = 17.0;
+
+        return result;
+    }
 
     bool Connection::sameCoordinate(const int i, const int j, const int k) const {
         if ((ijk[0] == i) && (ijk[1] == j) && (ijk[2] == k)) {
@@ -174,16 +166,12 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         return (segment_number > 0);
     }
 
-    const std::size_t& Connection::getSeqIndex() const {
-        return m_seqIndex;
+    std::size_t Connection::sort_value() const {
+        return m_sort_value;
     }
 
     const bool& Connection::getDefaultSatTabId() const {
         return m_defaultSatTabId;
-    }
-
-    const std::size_t& Connection::getCompSegSeqIndex() const {
-        return m_compSeg_seqIndex;
     }
 
     Connection::Direction Connection::dir() const {
@@ -253,7 +241,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
                                    double end) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
-        this->m_compSeg_seqIndex = compseg_insert_index;
+        this->m_sort_value = compseg_insert_index;
         this->m_segDistStart = start;
         this->m_segDistEnd = end;
     }
@@ -286,7 +274,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
         ss << "CTF Source " << Connection::CTFKindToString(this->m_ctfkind) << '\n';
         ss << "segment_nr " << this->segment_number << std::endl;
         ss << "center_depth " << this->center_depth << std::endl;
-        ss << "seqIndex " << this->m_seqIndex << std::endl;
+        ss << "sort_value" << this->m_sort_value<< std::endl;
 
         return ss.str();
 }
@@ -306,7 +294,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, std::size
             && this->direction == rhs.direction
             && this->segment_number == rhs.segment_number
             && this->center_depth == rhs.center_depth
-            && this->m_seqIndex == rhs.m_seqIndex;
+            && this->m_sort_value == rhs.m_sort_value;
     }
 
     bool Connection::operator!=( const Connection& rhs ) const {

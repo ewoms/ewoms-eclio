@@ -60,10 +60,6 @@ Aquifetp::AQUFETP_data::AQUFETP_data(int aquiferID_, int pvttableID_, double J_,
     p0(p0_)
 {}
 
-Aquifetp::Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data) :
-    m_aqufetp(data)
-{}
-
 Aquifetp::Aquifetp(const Deck& deck)
 {
     if (!deck.hasKeyword<AQUFETP>())
@@ -72,6 +68,18 @@ Aquifetp::Aquifetp(const Deck& deck)
     const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>();
     for (auto& record : aqufetpKeyword)
         this->m_aqufetp.emplace_back(record);
+}
+
+Aquifetp::Aquifetp(const std::vector<Aquifetp::AQUFETP_data>& data) :
+    m_aqufetp(data)
+{}
+
+Aquifetp Aquifetp::serializeObject()
+{
+    Aquifetp result;
+    result.m_aqufetp = {{1, 2, 3.0, 4.0, 5.0, 6.0, {true, 7.0}}};
+
+    return result;
 }
 
 const std::vector<Aquifetp::AQUFETP_data>& Aquifetp::data() const

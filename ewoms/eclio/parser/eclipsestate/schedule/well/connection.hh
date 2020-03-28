@@ -88,33 +88,14 @@ namespace RestartIO {
                    const int satTableId,
                    const Direction direction,
                    const CTFKind ctf_kind,
-                   const std::size_t seqIndex,
+                   const std::size_t sort_value,
                    const double segDistStart,
                    const double segDistEnd,
                    const bool defaultSatTabId);
 
-        Connection(Direction dir,
-                   double depth,
-                   State state,
-                   int satTableId,
-                   int complnum,
-                   double CF,
-                   double Kh,
-                   double rw,
-                   double r0,
-                   double skinFactor,
-                   const std::array<int,3>& IJK,
-                   std::size_t global_index,
-                   CTFKind kind,
-                   std::size_t seqIndex,
-                   double segDistStart,
-                   double segDistEnd,
-                   bool defaultSatTabId,
-                   std::size_t compSegSeqIndex,
-                   int segment,
-                   double wellPi);
-
         Connection(const RestartIO::RstConnection& rst_connection, std::size_t insert_index, const EclipseGrid& grid, const FieldPropsManager& fp);
+
+        static Connection serializeObject();
 
         bool attachedToSegment() const;
         bool sameCoordinate(const int i, const int j, const int k) const;
@@ -144,9 +125,8 @@ namespace RestartIO {
                            std::size_t compseg_insert_index,
                            double start,
                            double end);
-        const std::size_t& getSeqIndex() const;
+        std::size_t sort_value() const;
         const bool& getDefaultSatTabId() const;
-        const std::size_t& getCompSegSeqIndex() const;
         void setDefaultSatTabId(bool id);
         const double& getSegDistStart() const;
         const double& getSegDistEnd() const;
@@ -175,11 +155,10 @@ namespace RestartIO {
             serializer(ijk);
             serializer(m_global_index);
             serializer(m_ctfkind);
-            serializer(m_seqIndex);
+            serializer(m_sort_value);
             serializer(m_segDistStart);
             serializer(m_segDistEnd);
             serializer(m_defaultSatTabId);
-            serializer(m_compSeg_seqIndex);
             serializer(segment_number);
             serializer(wPi);
         }
@@ -199,11 +178,62 @@ namespace RestartIO {
         std::array<int,3> ijk;
         CTFKind m_ctfkind;
         std::size_t m_global_index;
-        std::size_t m_seqIndex;
+        /*
+          The sort_value member is a peculiar quantity. The connections are
+          assembled in the WellConnections class. During the lifetime of the
+          connections there are three different sort orders which are all
+          relevant:
+
+             input: This is the ordering implied be the order of the
+                connections in the input deck.
+
+             simulation: This is the ordering the connections have in
+                WellConnections container during the simulation and RFT output.
+
+             restart: This is the ordering the connections have when they are
+                written out to a restart file.
+
+          Exactly what consitutes input, simulation and restart ordering, and
+          how the connections transition between the three during application
+          lifetime is different from MSW and normal wells.
+
+          normal wells: For normal wells the simulation order is given by the
+          COMPORD keyword, and then when the connections are serialized to the
+          restart file they are written in input order; i.e. we have:
+
+               input == restart and simulation given COMPORD
+
+          To recover the input order when creating the restart files the
+          sort_value member corresponds to the insert index for normal wells.
+
+          MSW wells: For MSW wells the wells simulator order[*] is given by
+          COMPSEGS keyword, the COMPORD keyword is ignored. The connections are
+          sorted in WellConnections::order() and then retain that order for all
+          eternity i.e.
+
+               input and simulation == restart
+
+          Now the important point is that the COMPSEGS detail used to perform
+          this sorting is not available when loading from a restart file, but
+          then the connections are already sorted correctly. I.e. *after* a
+          restart we will have:
+
+               input(from restart) == simulation == restart
+
+          The sort_value member is used to sort the connections into restart
+          ordering. In the case of normal wells this corresponds to recovering
+          the input order, whereas for MSW wells this is equivalent to the
+          simulation order.
+
+          [*]: For MSW wells the topology is given by the segments and entered
+               explicitly, so the truth is probably that the storage order
+               during simulation makes no difference?
+        */
+
+        std::size_t m_sort_value;
         double m_segDistStart;
         double m_segDistEnd;
         bool m_defaultSatTabId;
-        std::size_t m_compSeg_seqIndex=0;
 
         // related segment number
         // 0 means the completion is not related to segment

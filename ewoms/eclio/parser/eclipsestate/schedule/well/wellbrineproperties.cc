@@ -21,6 +21,14 @@
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/udavalue.hh>
 
+Ewoms::WellBrineProperties Ewoms::WellBrineProperties::serializeObject()
+{
+    Ewoms::WellBrineProperties result;
+    result.m_saltConcentration = 1.0;
+
+    return result;
+}
+
 void Ewoms::WellBrineProperties::handleWSALT(const DeckRecord& rec)
 {
     this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).get<double>();

@@ -32,8 +32,8 @@ public:
 
     JFunc();
     explicit JFunc(const Deck& deck);
-    JFunc(Flag flag, double ow, double go,
-          double alpha, double beta, Direction dir);
+
+    static JFunc serializeObject();
 
     double alphaFactor() const;
     double betaFactor() const;

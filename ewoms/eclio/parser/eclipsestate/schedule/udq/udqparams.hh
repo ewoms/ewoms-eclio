@@ -31,9 +31,8 @@ namespace Ewoms {
     public:
         explicit UDQParams(const Deck& deck);
         UDQParams();
-        UDQParams(bool reseed, int seed,
-                  double range, double undefined,
-                  double cmp);
+
+        static UDQParams serializeObject();
 
         bool reseed() const;
         int rand_seed() const noexcept;

@@ -29,13 +29,14 @@ namespace Ewoms {
         {
         }
 
-        PvtwsaltTable::PvtwsaltTable(double refPressValue,
-                                     double refSaltConValue,
-                                     const std::vector<double>& tableValues)
-            : m_pRefValues(refPressValue)
-            , m_saltConsRefValues(refSaltConValue)
-            , m_tableValues(tableValues)
+        PvtwsaltTable PvtwsaltTable::serializeObject()
         {
+            PvtwsaltTable result;
+            result.m_pRefValues = 1.0;
+            result.m_saltConsRefValues = 2.0;
+            result.m_tableValues = {3.0, 4.0, 5.0};
+
+            return result;
         }
 
         void PvtwsaltTable::init(const Ewoms::DeckRecord& record0, const Ewoms::DeckRecord& record1)

@@ -23,14 +23,12 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
 
 namespace Ewoms {
-
-        BrineDensityTable::BrineDensityTable()
+        BrineDensityTable BrineDensityTable::serializeObject()
         {
-        }
+            BrineDensityTable result;
+            result.m_tableValues = {1.0, 2.0, 3.0};
 
-        BrineDensityTable::BrineDensityTable(const std::vector<double>& tableValues)
-            : m_tableValues(tableValues)
-        {
+            return result;
         }
 
         void BrineDensityTable::init(const Ewoms::DeckRecord& record )

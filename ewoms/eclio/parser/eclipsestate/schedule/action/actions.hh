@@ -37,6 +37,9 @@ class Actions {
 public:
     Actions() = default;
     Actions(const std::vector<ActionX>& action);
+
+    static Actions serializeObject();
+
     size_t size() const;
     int max_input_lines() const;
     bool empty() const;

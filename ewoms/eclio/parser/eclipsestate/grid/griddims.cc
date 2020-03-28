@@ -42,6 +42,16 @@ namespace Ewoms {
     {
     }
 
+    GridDims GridDims::serializeObject()
+    {
+        GridDims result;
+        result.m_nx = 1;
+        result.m_ny = 2;
+        result.m_nz = 3;
+
+        return result;
+    }
+
     GridDims::GridDims(const Deck& deck) {
         if (deck.hasKeyword("SPECGRID"))
             init(deck.getKeyword("SPECGRID"));

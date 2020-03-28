@@ -52,10 +52,13 @@ namespace Ewoms {
                 }
     }
 
-    FaultFace::FaultFace(const std::vector<size_t>& indices, FaceDir::DirEnum faceDir)
-        : m_faceDir(faceDir)
-        , m_indexList(indices)
+    FaultFace FaultFace::serializeObject()
     {
+        FaultFace result;
+        result.m_faceDir = FaceDir::YPlus;
+        result.m_indexList = {1,2,3,4,5,6};
+
+        return result;
     }
 
     void FaultFace::checkCoord(size_t dim , size_t l1 , size_t l2) {

@@ -47,6 +47,16 @@ namespace Ewoms {
         this->loadWELSEGS(keyword);
     }
 
+    WellSegments WellSegments::serializeObject()
+    {
+        WellSegments result;
+        result.m_comp_pressure_drop = CompPressureDrop::HF_;
+        result.m_segments = {Ewoms::Segment::serializeObject()};
+        result.segment_number_to_index = {{1, 2}};
+
+        return result;
+    }
+
     std::size_t WellSegments::size() const {
         return m_segments.size();
     }

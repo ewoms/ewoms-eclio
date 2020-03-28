@@ -581,7 +581,7 @@ struct SimulationCase
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.
     Ewoms::EclipseState es;
-    Ewoms::EclipseGrid grid;
+    Ewoms::EclipseGrid  grid;
     Ewoms::Schedule     sched;
 };
 

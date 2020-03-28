@@ -23,6 +23,10 @@
 #include <iterator>
 #include <iomanip>
 #include <iostream>
+#include <stack>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <ewoms/common/filesystem.hh>
 

@@ -34,6 +34,7 @@
 #include <ewoms/eclio/output/data/groups.hh>
 #include <ewoms/eclio/output/summary.hh>
 
+#include <ewoms/eclio/parser/python/python.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
@@ -169,8 +170,8 @@ static data::Wells result_wells() {
         { { segment.segNumber, segment } },
         data::CurrentControl{}
     };
-    well1.current_control.isProducer = false;
-    well1.current_control.inj =::Ewoms::Well::InjectorCMode::BHP;
+    well1.current_control.isProducer = true;
+    well1.current_control.prod = ::Ewoms::Well::ProducerCMode::BHP;
 
     data::Wells wellrates;
 
@@ -200,6 +201,7 @@ static data::Group result_groups() {
 }
 
 struct setup {
+    Python python;
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
@@ -216,7 +218,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
-        schedule( deck, es),
+        schedule( deck, es, python),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
         groups( result_groups() ),

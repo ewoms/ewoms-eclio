@@ -27,9 +27,8 @@ namespace Ewoms {
     class PvtwsaltTable {
     public:
         PvtwsaltTable();
-        PvtwsaltTable(double refPressValue,
-                      double refSaltConValue,
-                      const std::vector<double>& tableValues);
+
+        static PvtwsaltTable serializeObject();
 
         void init(const Ewoms::DeckRecord& record0, const Ewoms::DeckRecord& record1);
         size_t size() const;

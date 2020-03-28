@@ -30,9 +30,8 @@ namespace Ewoms {
         RocktabTable(const DeckItem& item,
                      bool isDirectional,
                      bool hasStressOption);
-        RocktabTable(const TableSchema& schema,
-                     const OrderedMap<std::string, TableColumn>& columns,
-                     bool jfunc, bool isDirectional);
+
+        static RocktabTable serializeObject();
 
         const TableColumn& getPressureColumn() const;
         const TableColumn& getPoreVolumeMultiplierColumn() const;

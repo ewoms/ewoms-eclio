@@ -122,14 +122,9 @@ namespace Ewoms {
             using iterator = std::vector< DeckKeyword >::iterator;
 
             Deck();
-
             Deck( const Deck& );
-            Deck(const std::vector<DeckKeyword>& keywords,
-                 const UnitSystem& defUnits,
-                 const UnitSystem* activeUnits,
-                 const std::string& dataFile,
-                 const std::string& inputPath,
-                 size_t accessCount);
+
+            static Deck serializeObject();
 
             Deck& operator=(const Deck& rhs);
             bool operator==(const Deck& data) const;

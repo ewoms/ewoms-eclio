@@ -23,12 +23,13 @@
 
 namespace Ewoms {
 
-    WellTracerProperties::WellTracerProperties() {
-    }
+    WellTracerProperties WellTracerProperties::serializeObject()
+    {
+        WellTracerProperties result;
+        result.m_tracerConcentrations = {{"test", 1.0}, {"test2", 2.0}};
 
-    WellTracerProperties::WellTracerProperties(const ConcentrationMap& concentrations)
-        : m_tracerConcentrations(concentrations)
-    { }
+        return result;
+    }
 
     bool WellTracerProperties::operator==(const WellTracerProperties& other) const {
         if (m_tracerConcentrations == other.m_tracerConcentrations)

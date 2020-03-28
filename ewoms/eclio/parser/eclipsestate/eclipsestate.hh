@@ -25,6 +25,7 @@
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/aquiferconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipseconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/tracerconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/edit/editnnc.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
@@ -111,6 +112,7 @@ namespace Ewoms {
 
         const Runspec& runspec() const;
         const AquiferConfig& aquifer() const;
+        const TracerConfig& tracer() const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -128,6 +130,7 @@ namespace Ewoms {
             m_faults.serializeOp(serializer);
             serializer(m_title);
             aquifer_config.serializeOp(serializer);
+            tracer_config.serializeOp(serializer);
         }
 
     private:
@@ -156,6 +159,7 @@ namespace Ewoms {
         FaultCollection m_faults;
         std::string m_title;
         AquiferConfig aquifer_config;
+        TracerConfig tracer_config;
     };
 }
 

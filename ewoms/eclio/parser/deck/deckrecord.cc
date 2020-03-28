@@ -49,6 +49,14 @@ namespace Ewoms {
         throw std::invalid_argument( msg );
     }
 
+    DeckRecord DeckRecord::serializeObject()
+    {
+        DeckRecord result;
+        result.m_items = {DeckItem::serializeObject()};
+
+        return result;
+    }
+
     size_t DeckRecord::size() const {
         return m_items.size();
     }

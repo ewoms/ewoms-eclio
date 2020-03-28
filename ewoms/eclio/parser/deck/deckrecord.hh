@@ -35,6 +35,8 @@ namespace Ewoms {
         DeckRecord() = default;
         DeckRecord( std::vector< DeckItem >&& );
 
+        static DeckRecord serializeObject();
+
         size_t size() const;
         void addItem( DeckItem deckItem );
 

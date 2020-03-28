@@ -206,55 +206,36 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         Schedule(deck, es, ParseContext(), ErrorGuard(), rst)
     {}
 
-    Schedule::Schedule(const TimeMap& timeMap,
-                       const WellMap& wellsStatic,
-                       const GroupMap& group,
-                       const DynamicState<OilVaporizationProperties>& oilVapProps,
-                       const Events& events,
-                       const DynamicVector<Deck>& modifierDeck,
-                       const DynamicState<Tuning>& tuning,
-                       const MessageLimits& messageLimits,
-                       const Runspec& runspec,
-                       const VFPProdMap& vfpProdTables,
-                       const VFPInjMap& vfpInjTables,
-                       const DynamicState<std::shared_ptr<WellTestConfig>>& wtestConfig,
-                       const DynamicState<std::shared_ptr<WListManager>>& wListManager,
-                       const DynamicState<std::shared_ptr<UDQConfig>>& udqConfig,
-                       const DynamicState<std::shared_ptr<UDQActive>>& udqActive,
-                       const DynamicState<std::shared_ptr<GuideRateConfig>>& guideRateConfig,
-                       const DynamicState<std::shared_ptr<GConSale>>& gconSale,
-                       const DynamicState<std::shared_ptr<GConSump>>& gconSump,
-                       const DynamicState<Well::ProducerCMode>& globalWhistCtlMode,
-                       const DynamicState<std::shared_ptr<Action::Actions>>& actions,
-                       const RFTConfig& rftconfig,
-                       const DynamicState<int>& nupCol,
-                       const RestartConfig& rst_config,
-                       const std::map<std::string,Events>& wellGroupEvents) :
-        m_timeMap(timeMap),
-        wells_static(wellsStatic),
-        groups(group),
-        m_oilvaporizationproperties(oilVapProps),
-        m_events(events),
-        m_modifierDeck(modifierDeck),
-        m_tuning(tuning),
-        m_messageLimits(messageLimits),
-        m_runspec(runspec),
-        vfpprod_tables(vfpProdTables),
-        vfpinj_tables(vfpInjTables),
-        wtest_config(wtestConfig),
-        wlist_manager(wListManager),
-        udq_config(udqConfig),
-        udq_active(udqActive),
-        guide_rate_config(guideRateConfig),
-        gconsale(gconSale),
-        gconsump(gconSump),
-        global_whistctl_mode(globalWhistCtlMode),
-        m_actions(actions),
-        rft_config(rftconfig),
-        m_nupcol(nupCol),
-        restart_config(rst_config),
-        wellgroup_events(wellGroupEvents)
-    {}
+    Schedule Schedule::serializeObject()
+    {
+        Schedule result;
+        result.m_timeMap = TimeMap::serializeObject();
+        result.wells_static.insert({"test1", {{std::make_shared<Ewoms::Well>(Ewoms::Well::serializeObject())},1}});
+        result.groups.insert({"test2", {{std::make_shared<Ewoms::Group>(Ewoms::Group::serializeObject())},1}});
+        result.m_oilvaporizationproperties = {{Ewoms::OilVaporizationProperties::serializeObject()},1};
+        result.m_events = Events::serializeObject();
+        result.m_modifierDeck = DynamicVector<Deck>({Deck::serializeObject()});
+        result.m_tuning = {{Tuning::serializeObject()}, 1};
+        result.m_messageLimits = MessageLimits::serializeObject();
+        result.m_runspec = Runspec::serializeObject();
+        result.vfpprod_tables = {{1, {{std::make_shared<VFPProdTable>(VFPProdTable::serializeObject())}, 1}}};
+        result.vfpinj_tables = {{2, {{std::make_shared<VFPInjTable>(VFPInjTable::serializeObject())}, 1}}};
+        result.wtest_config = {{std::make_shared<WellTestConfig>(WellTestConfig::serializeObject())}, 1};
+        result.wlist_manager = {{std::make_shared<WListManager>(WListManager::serializeObject())}, 1};
+        result.udq_config = {{std::make_shared<UDQConfig>(UDQConfig::serializeObject())}, 1};
+        result.udq_active = {{std::make_shared<UDQActive>(UDQActive::serializeObject())}, 1};
+        result.guide_rate_config = {{std::make_shared<GuideRateConfig>(GuideRateConfig::serializeObject())}, 1};
+        result.gconsale = {{std::make_shared<GConSale>(GConSale::serializeObject())}, 1};
+        result.gconsump = {{std::make_shared<GConSump>(GConSump::serializeObject())}, 1};
+        result.global_whistctl_mode = {{Well::ProducerCMode::CRAT}, 1};
+        result.m_actions = {{std::make_shared<Action::Actions>(Action::Actions::serializeObject())}, 1};
+        result.rft_config = RFTConfig::serializeObject();
+        result.m_nupcol = {{1}, 1};
+        result.restart_config = RestartConfig::serializeObject();
+        result.wellgroup_events = {{"test", Events::serializeObject()}};
+
+        return result;
+    }
 
     std::time_t Schedule::getStartTime() const {
         return this->posixStartTime( );
@@ -616,13 +597,13 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
 
     void Schedule::handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep) {
         const auto& loc = keyword.location();
-        OpmLog::warning("This version of ewoms is built without support for Python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
+        OpmLog::warning("eWoms currently does not support python. Keyword PYACTION in file: " + loc.filename + " line: " + std::to_string(loc.lineno) + " is ignored.");
     }
 
     void Schedule::handleNUPCOL( const DeckKeyword& keyword, size_t currentStep) {
         int nupcol = keyword.getRecord(0).getItem("NUM_ITER").get<int>(0);
         if (keyword.getRecord(0).getItem("NUM_ITER").defaultApplied(0)) {
-            std::string msg = "ewoms uses 12 as default NUPCOL value";
+            std::string msg = "eflow uses 12 as default NUPCOL value";
             OpmLog::note(msg);
         }
 
@@ -1566,7 +1547,8 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                 if (!record.getItem("VOIDAGE_GROUP").defaultApplied(0))
                     voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);;
 
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0))
+                    && (group_name != "FIELD");
                 //surfaceInjectionRate = injection::rateToSI(surfaceInjectionRate, phase, section.unitSystem());
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
@@ -1640,7 +1622,8 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     }
                 }
                 auto resv_target = record.getItem("RESERVOIR_FLUID_TARGET").getSIDouble(0);
-                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0));
+                bool availableForGroupControl = DeckItem::to_bool(record.getItem("RESPOND_TO_PARENT").getTrimmedString(0))
+                    && (group_name != "FIELD");
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, currentStep));
                     Group::GroupProductionProperties production;
@@ -3030,7 +3013,7 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
                 well_count += not_equal( conn1.complnum() , conn2.complnum(), well_msg(well1.name(), "connection: complnum"));
                 well_count += not_equal( conn1.segment() , conn2.segment(), well_msg(well1.name(), "Connection: segment"));
                 well_count += not_equal( conn1.kind() , conn2.kind(), well_msg(well1.name(), "Connection: CFKind"));
-                well_count += not_equal( conn1.getSeqIndex(), conn2.getSeqIndex(), well_msg(well1.name(), "Connection: insertIndex"));
+                well_count += not_equal( conn1.sort_value(), conn2.sort_value(), well_msg(well1.name(), "Connection: sort_value"));
 
                 well_count += not_equal( conn1.CF(), conn2.CF(), well_msg(well1.name(), "Connection: CF"));
                 well_count += not_equal( conn1.Kh(), conn2.Kh(), well_msg(well1.name(), "Connection: Kh"));

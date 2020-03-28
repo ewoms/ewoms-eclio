@@ -28,8 +28,8 @@ namespace Ewoms {
 
     class TableSchema {
     public:
-        TableSchema() = default;
-        TableSchema(const OrderedMap<std::string, ColumnSchema>& columns);
+        static TableSchema serializeObject();
+
         void addColumn( ColumnSchema );
         const ColumnSchema& getColumn( const std::string& name ) const;
         const ColumnSchema& getColumn( size_t columnIndex ) const;

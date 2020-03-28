@@ -26,6 +26,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/group/guideratemodel.hh>
 
 namespace Ewoms {
 

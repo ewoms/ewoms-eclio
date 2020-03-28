@@ -27,9 +27,7 @@ namespace Ewoms {
     class WellTracerProperties {
 
     public:
-        using ConcentrationMap = std::map<std::string,double>;
-        WellTracerProperties();
-        WellTracerProperties(const std::map<std::string,double>& concentrations);
+        static WellTracerProperties serializeObject();
 
         void setConcentration(const std::string& name, const double& concentration);
         double getConcentration(const std::string& name) const;
@@ -44,7 +42,7 @@ namespace Ewoms {
         }
 
     private:
-        ConcentrationMap m_tracerConcentrations;
+        std::map<std::string,double> m_tracerConcentrations;
     };
 
 }

@@ -34,16 +34,15 @@
 namespace Ewoms{
 
     // PolyInjTable
-
-    PolyInjTable::PolyInjTable(const std::vector<double>& throughputs,
-                               const std::vector<double>& velocities,
-                               int tableNumber,
-                               const std::vector<std::vector<double>>& data)
-        : m_throughputs(throughputs)
-        , m_velocities(velocities)
-        , m_table_number(tableNumber)
-        , m_data(data)
+    PolyInjTable PolyInjTable::serializeObject()
     {
+        PolyInjTable result;
+        result.m_throughputs = {1.0};
+        result.m_velocities = {2.0};
+        result.m_table_number = 1;
+        result.m_data = {{1.0}, {2.0}};
+
+        return result;
     }
 
     int PolyInjTable::getTableNumber() const
@@ -75,13 +74,12 @@ namespace Ewoms{
     }
 
     // PlymwinjTable
-
-    PlymwinjTable::PlymwinjTable(const std::vector<double>& throughputs,
-                                 const std::vector<double>& velocities,
-                                 int tableNumber,
-                                 const std::vector<std::vector<double>>& data)
-        : PolyInjTable(throughputs, velocities, tableNumber, data)
+    PlymwinjTable PlymwinjTable::serializeObject()
     {
+        PlymwinjTable result;
+        static_cast<PolyInjTable&>(result) = PolyInjTable::serializeObject();
+
+        return result;
     }
 
     PlymwinjTable::PlymwinjTable(const Ewoms::DeckKeyword& table)
@@ -133,13 +131,12 @@ namespace Ewoms{
     }
 
     // SkprwatTable
-
-    SkprwatTable::SkprwatTable(const std::vector<double>& throughputs,
-                               const std::vector<double>& velocities,
-                               int tableNumber,
-                               const std::vector<std::vector<double>>& data)
-        : PolyInjTable(throughputs, velocities, tableNumber, data)
+    SkprwatTable SkprwatTable::serializeObject()
     {
+        SkprwatTable result;
+        static_cast<PolyInjTable&>(result) = PolyInjTable::serializeObject();
+
+        return result;
     }
 
     SkprwatTable::SkprwatTable(const Ewoms::DeckKeyword &table)
@@ -191,15 +188,13 @@ namespace Ewoms{
     }
 
     // SkprpolyTable
-
-    SkprpolyTable::SkprpolyTable(const std::vector<double>& throughputs,
-                                 const std::vector<double>& velocities,
-                                 int tableNumber,
-                                 const std::vector<std::vector<double>>& data,
-                                 double referenceConcentration)
-        : PolyInjTable(throughputs, velocities, tableNumber, data)
-        , m_ref_polymer_concentration(referenceConcentration)
+    SkprpolyTable SkprpolyTable::serializeObject()
     {
+        SkprpolyTable result;
+        static_cast<PolyInjTable&>(result) = PolyInjTable::serializeObject();
+        result.m_ref_polymer_concentration = 3.0;
+
+        return result;
     }
 
     SkprpolyTable::SkprpolyTable(const Ewoms::DeckKeyword &table)

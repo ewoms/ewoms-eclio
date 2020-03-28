@@ -26,14 +26,10 @@ namespace Ewoms {
 
     class SkprwatTable : public PolyInjTable {
     public:
-
         SkprwatTable() = default;
-        SkprwatTable(const std::vector<double>& throughputs,
-                     const std::vector<double>& velocities,
-                     int tableNumber,
-                     const std::vector<std::vector<double>>& data);
-
         explicit SkprwatTable(const DeckKeyword& table);
+
+        static SkprwatTable serializeObject();
 
         const std::vector<std::vector<double>>& getSkinPressures() const;
 

@@ -626,7 +626,7 @@ captureDeclaredActionxData( const Ewoms::Schedule&    sched,
                             const std::vector<int>& actDims,
                             const std::size_t       simStep)
 {
-    const auto acts = sched.actions(simStep);
+    const auto& acts = sched.actions(simStep);
     std::size_t act_ind = 0;
     for (auto actx_it = acts.begin(); actx_it < acts.end(); actx_it++) {
         {

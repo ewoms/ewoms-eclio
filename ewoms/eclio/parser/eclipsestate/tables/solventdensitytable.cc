@@ -23,14 +23,12 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/solventdensitytable.hh>
 
 namespace Ewoms {
-
-        SolventDensityTable::SolventDensityTable()
+        SolventDensityTable SolventDensityTable::serializeObject()
         {
-        }
+            SolventDensityTable result;
+            result.m_tableValues = {1.0, 2.0, 3.0};
 
-        SolventDensityTable::SolventDensityTable(const std::vector<double>& tableValues)
-            : m_tableValues(tableValues)
-        {
+            return result;
         }
 
         void SolventDensityTable::init(const Ewoms::DeckRecord& record )

@@ -21,6 +21,14 @@
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/udavalue.hh>
 
+Ewoms::WellFoamProperties Ewoms::WellFoamProperties::serializeObject()
+{
+    Ewoms::WellFoamProperties result;
+    result.m_foamConcentration = 1.0;
+
+    return result;
+}
+
 void Ewoms::WellFoamProperties::handleWFOAM(const DeckRecord& rec)
 {
     this->m_foamConcentration = rec.getItem("FOAM_CONCENTRATION").get<UDAValue>(0).getSI();

@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 
+#include <ewoms/eclio/io/summarynode.hh>
 #include <ewoms/eclio/opmlog/location.hh>
 
 namespace Ewoms {
@@ -37,20 +38,13 @@ namespace Ewoms {
 
     class SummaryConfigNode {
     public:
-        enum class Category {
-            Well, Group, Field,
-            Region, Block,
-            Connection, Segment,
-            Miscellaneous,
-        };
-
-        enum class Type {
-            Rate, Total, Ratio, Pressure, Count, Mode,
-            Undefined,
-        };
+        using Category = Ewoms::EclIO::SummaryNode::Category;
+        using Type = Ewoms::EclIO::SummaryNode::Type;
 
         SummaryConfigNode() = default;
         explicit SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg);
+
+        static SummaryConfigNode serializeObject();
 
         SummaryConfigNode& parameterType(const Type type);
         SummaryConfigNode& namedEntity(std::string name);
@@ -66,6 +60,10 @@ namespace Ewoms {
 
         std::string uniqueNodeKey() const;
         const Location& location( ) const { return this->loc; }
+
+        operator Ewoms::EclIO::SummaryNode() const {
+            return { keyword_, category_, type_, name_, number_ };
+        }
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)
@@ -148,6 +146,8 @@ namespace Ewoms {
             SummaryConfig(const keyword_list& kwds,
                           const std::set<std::string>& shortKwds,
                           const std::set<std::string>& smryKwds);
+
+            static SummaryConfig serializeObject();
 
             const_iterator begin() const;
             const_iterator end() const;

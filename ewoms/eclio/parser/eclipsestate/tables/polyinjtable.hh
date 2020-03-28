@@ -41,12 +41,7 @@ namespace Ewoms {
 
     class PolyInjTable {
     public:
-
-        PolyInjTable() = default;
-        PolyInjTable(const std::vector<double>& throughputs,
-                     const std::vector<double>& velocities,
-                     int tableNumber,
-                     const std::vector<std::vector<double>>& data);
+        static PolyInjTable serializeObject();
 
         int getTableNumber() const;
 

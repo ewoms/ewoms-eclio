@@ -38,13 +38,14 @@ namespace Ewoms {
         addColumns();
     }
 
-    SimpleTable::SimpleTable(const TableSchema& schema,
-                             const OrderedMap<std::string, TableColumn>& columns,
-                             bool jf) :
-        m_schema(schema),
-        m_columns(columns),
-        m_jfunc(jf)
+    SimpleTable SimpleTable::serializeObject()
     {
+        SimpleTable result;
+        result.m_schema = Ewoms::TableSchema::serializeObject();
+        result.m_columns.insert({"test3", Ewoms::TableColumn::serializeObject()});
+        result.m_jfunc = true;
+
+        return result;
     }
 
     void SimpleTable::addRow( const std::vector<double>& row) {
@@ -94,6 +95,31 @@ namespace Ewoms {
                 }
                 else
                     column.addValue( deckItem.getSIDouble(deckItemIdx) );
+            }
+            if (colIdx > 0)
+                column.applyDefaults(getColumn( 0 ));
+        }
+    }
+
+    void SimpleTable::init( const DeckItem& deckItem, double scaling_factor) {
+        this->addColumns();
+
+        if ( (deckItem.data_size() % numColumns()) != 0)
+            throw std::runtime_error("Number of columns in the data file is"
+                    "inconsistent with the ones specified");
+
+        size_t rows = deckItem.data_size() / numColumns();
+        for (size_t colIdx = 0; colIdx < numColumns(); ++colIdx) {
+            auto& column = getColumn( colIdx );
+            for (size_t rowIdx = 0; rowIdx < rows; rowIdx++) {
+                size_t deckItemIdx = rowIdx*numColumns() + colIdx;
+                if (deckItem.defaultApplied(deckItemIdx))
+                    column.addDefault( );
+                else if (m_jfunc) {
+                    column.addValue( deckItem.getData<double>()[deckItemIdx] );
+                }
+                else
+                    column.addValue( scaling_factor * deckItem.get<double>(deckItemIdx) );
             }
             if (colIdx > 0)
                 column.applyDefaults(getColumn( 0 ));

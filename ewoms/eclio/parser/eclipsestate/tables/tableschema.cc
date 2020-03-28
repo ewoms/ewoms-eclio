@@ -21,9 +21,12 @@
 
 namespace Ewoms {
 
-    TableSchema::TableSchema(const OrderedMap<std::string, ColumnSchema>& columns) :
-        m_columns(columns)
+    TableSchema TableSchema::serializeObject()
     {
+        TableSchema result;
+        result.m_columns.insert({"test1", ColumnSchema::serializeObject()});
+
+        return result;
     }
 
     void TableSchema::addColumn( ColumnSchema column ) {

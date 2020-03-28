@@ -55,7 +55,7 @@ bool isFormatted(const std::string& filename)
 bool isEOF(std::fstream* fileH)
 {
     int num;
-    long int pos = fileH->tellg();
+    int64_t pos = fileH->tellg();
     fileH->read(reinterpret_cast<char*>(&num), sizeof(num));
 
     if (fileH->eof()) {
@@ -96,7 +96,7 @@ void readBinaryHeader(std::fstream& fileH, std::string& tmpStrName,
 }
 
 void readBinaryHeader(std::fstream& fileH, std::string& arrName,
-                      long int& size, Ewoms::EclIO::eclArrType &arrType)
+                      int64_t& size, Ewoms::EclIO::eclArrType &arrType)
 {
     std::string tmpStrName(8,' ');
     std::string tmpStrType(4,' ');
@@ -116,9 +116,9 @@ void readBinaryHeader(std::fstream& fileH, std::string& arrName,
         if (x231exp < 0)
             EWOMS_THROW(std::runtime_error, "Invalied X231 header, size of array should be negative'");
 
-        size = static_cast<long int>(tmpSize) + static_cast<long int>(x231exp) * pow(2,31);
+        size = static_cast<int64_t>(tmpSize) + static_cast<int64_t>(x231exp) * pow(2,31);
     } else {
-        size = static_cast<long int>(tmpSize);
+        size = static_cast<int64_t>(tmpSize);
     }
 
     arrName = tmpStrName;
@@ -138,9 +138,9 @@ void readBinaryHeader(std::fstream& fileH, std::string& arrName,
         EWOMS_THROW(std::runtime_error, "Error, unknown array type '" + tmpStrType +"'");
 }
 
-unsigned long int sizeOnDiskBinary(long int num, Ewoms::EclIO::eclArrType arrType)
+uint64_t sizeOnDiskBinary(int64_t num, Ewoms::EclIO::eclArrType arrType)
 {
-    unsigned long int size = 0;
+    uint64_t size = 0;
 
     if (arrType == Ewoms::EclIO::MESS) {
         if (num > 0) {
@@ -155,16 +155,16 @@ unsigned long int sizeOnDiskBinary(long int num, Ewoms::EclIO::eclArrType arrTyp
             int maxBlockSize = std::get<1>(sizeData);
             int maxNumberOfElements = maxBlockSize / sizeOfElement;
 
-            long unsigned int numBlocks = static_cast<unsigned long int>(num)/static_cast<unsigned long int>(maxNumberOfElements);
-            long unsigned int rest = static_cast<unsigned long int>(num) - numBlocks*static_cast<unsigned long int>(maxNumberOfElements);
+            auto numBlocks = static_cast<uint64_t>(num)/static_cast<uint64_t>(maxNumberOfElements);
+            auto rest = static_cast<uint64_t>(num) - numBlocks*static_cast<uint64_t>(maxNumberOfElements);
 
-            long unsigned int size2Inte = static_cast<long unsigned int>(Ewoms::EclIO::sizeOfInte) * 2;
-            long unsigned int sizeFullBlocks = numBlocks * (static_cast<long unsigned int>(maxBlockSize) + size2Inte);
+            auto size2Inte = static_cast<uint64_t>(Ewoms::EclIO::sizeOfInte) * 2;
+            auto sizeFullBlocks = numBlocks * (static_cast<uint64_t>(maxBlockSize) + size2Inte);
 
-            long unsigned int sizeLastBlock = 0;
+            uint64_t sizeLastBlock = 0;
 
             if (rest > 0)
-                sizeLastBlock = rest * static_cast<long unsigned int>(sizeOfElement) + size2Inte;
+                sizeLastBlock = rest * static_cast<uint64_t>(sizeOfElement) + size2Inte;
 
             size = sizeFullBlocks + sizeLastBlock;
         }
@@ -173,9 +173,9 @@ unsigned long int sizeOnDiskBinary(long int num, Ewoms::EclIO::eclArrType arrTyp
     return size;
 }
 
-unsigned long int sizeOnDiskFormatted(const long int num, Ewoms::EclIO::eclArrType arrType)
+uint64_t sizeOnDiskFormatted(const int64_t num, Ewoms::EclIO::eclArrType arrType)
 {
-    unsigned long int size = 0;
+    uint64_t size = 0;
 
     if (arrType == Ewoms::EclIO::MESS) {
         if (num > 0) {
@@ -201,7 +201,7 @@ unsigned long int sizeOnDiskFormatted(const long int num, Ewoms::EclIO::eclArrTy
                 nLinesBlock++;
             }
 
-            long int blockSize = maxBlockSize * columnWidth + nLinesBlock;
+            int64_t blockSize = maxBlockSize * columnWidth + nLinesBlock;
             size = nBlocks * blockSize;
         }
 
@@ -219,7 +219,7 @@ unsigned long int sizeOnDiskFormatted(const long int num, Ewoms::EclIO::eclArrTy
 }
 
 template<typename T, typename T2>
-std::vector<T> readBinaryArray(std::fstream& fileH, const long int size, Ewoms::EclIO::eclArrType type,
+std::vector<T> readBinaryArray(std::fstream& fileH, const int64_t size, Ewoms::EclIO::eclArrType type,
                                std::function<T(T2)>& flip)
 {
     std::vector<T> arr;
@@ -231,7 +231,7 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const long int size, Ewoms::
 
     arr.reserve(size);
 
-    long int rest = size;
+    int64_t rest = size;
     while (rest > 0) {
         int dhead;
         fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
@@ -269,25 +269,25 @@ std::vector<T> readBinaryArray(std::fstream& fileH, const long int size, Ewoms::
     return arr;
 }
 
-std::vector<int> readBinaryInteArray(std::fstream &fileH, const long int size)
+std::vector<int> readBinaryInteArray(std::fstream &fileH, const int64_t size)
 {
     std::function<int(int)> f = Ewoms::EclIO::flipEndianInt;
     return readBinaryArray<int,int>(fileH, size, Ewoms::EclIO::INTE, f);
 }
 
-std::vector<float> readBinaryRealArray(std::fstream& fileH, const long int size)
+std::vector<float> readBinaryRealArray(std::fstream& fileH, const int64_t size)
 {
     std::function<float(float)> f = Ewoms::EclIO::flipEndianFloat;
     return readBinaryArray<float,float>(fileH, size, Ewoms::EclIO::REAL, f);
 }
 
-std::vector<double> readBinaryDoubArray(std::fstream& fileH, const long int size)
+std::vector<double> readBinaryDoubArray(std::fstream& fileH, const int64_t size)
 {
     std::function<double(double)> f = Ewoms::EclIO::flipEndianDouble;
     return readBinaryArray<double,double>(fileH, size, Ewoms::EclIO::DOUB, f);
 }
 
-std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const long int size)
+std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const int64_t size)
 {
     std::function<bool(unsigned int)> f = [](unsigned int intVal)
                                           {
@@ -305,7 +305,7 @@ std::vector<bool> readBinaryLogiArray(std::fstream &fileH, const long int size)
     return readBinaryArray<bool,unsigned int>(fileH, size, Ewoms::EclIO::LOGI, f);
 }
 
-std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const long int size)
+std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const int64_t size)
 {
     using Char8 = std::array<char, 8>;
     std::function<std::string(Char8)> f = [](const Char8& val)
@@ -317,7 +317,7 @@ std::vector<std::string> readBinaryCharArray(std::fstream& fileH, const long int
 }
 
 void readFormattedHeader(std::fstream& fileH, std::string& arrName,
-                         long int &num, Ewoms::EclIO::eclArrType &arrType)
+                         int64_t &num, Ewoms::EclIO::eclArrType &arrType)
 {
     std::string line;
     std::getline(fileH,line);
@@ -358,18 +358,18 @@ void readFormattedHeader(std::fstream& fileH, std::string& arrName,
 }
 
 template<typename T>
-std::vector<T> readFormattedArray(const std::string& file_str, const int size, long int fromPos,
+std::vector<T> readFormattedArray(const std::string& file_str, const int size, int64_t fromPos,
                                  std::function<T(const std::string&)>& process)
 {
     std::vector<T> arr;
 
     arr.reserve(size);
 
-    long int p1=fromPos;
+    int64_t p1=fromPos;
 
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_not_of(' ',p1);
-        long int p2 = file_str.find_first_of(' ', p1);
+        int64_t p2 = file_str.find_first_of(' ', p1);
 
         arr.push_back(process(file_str.substr(p1, p2-p1)));
 
@@ -380,7 +380,7 @@ std::vector<T> readFormattedArray(const std::string& file_str, const int size, l
 
 }
 
-std::vector<int> readFormattedInteArray(const std::string& file_str, const long int size, long int fromPos)
+std::vector<int> readFormattedInteArray(const std::string& file_str, const int64_t size, int64_t fromPos)
 {
 
     std::function<int(const std::string&)> f = [](const std::string& val)
@@ -391,12 +391,12 @@ std::vector<int> readFormattedInteArray(const std::string& file_str, const long 
     return readFormattedArray(file_str, size, fromPos, f);
 }
 
-std::vector<std::string> readFormattedCharArray(const std::string& file_str, const long int size, long int fromPos)
+std::vector<std::string> readFormattedCharArray(const std::string& file_str, const int64_t size, int64_t fromPos)
 {
     std::vector<std::string> arr;
     arr.reserve(size);
 
-    long int p1=fromPos;
+    int64_t p1=fromPos;
 
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_of('\'',p1);
@@ -414,7 +414,7 @@ std::vector<std::string> readFormattedCharArray(const std::string& file_str, con
     return arr;
 }
 
-std::vector<float> readFormattedRealArray(const std::string& file_str, const long int size, long int fromPos)
+std::vector<float> readFormattedRealArray(const std::string& file_str, const int64_t size, int64_t fromPos)
 {
 
     std::function<float(const std::string&)> f = [](const std::string& val)
@@ -428,7 +428,7 @@ std::vector<float> readFormattedRealArray(const std::string& file_str, const lon
     return readFormattedArray<float>(file_str, size, fromPos, f);
 }
 
-std::vector<bool> readFormattedLogiArray(const std::string& file_str, const long int size, long int fromPos)
+std::vector<bool> readFormattedLogiArray(const std::string& file_str, const int64_t size, int64_t fromPos)
 {
 
     std::function<bool(const std::string&)> f = [](const std::string& val)
@@ -446,7 +446,7 @@ std::vector<bool> readFormattedLogiArray(const std::string& file_str, const long
     return readFormattedArray<bool>(file_str, size, fromPos, f);
 }
 
-std::vector<double> readFormattedDoubArray(const std::string& file_str, const long int size, long int fromPos)
+std::vector<double> readFormattedDoubArray(const std::string& file_str, const int64_t size, int64_t fromPos)
 {
 
     std::function<double(const std::string&)> f = [](std::string val)
@@ -500,7 +500,7 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
     while (!isEOF(&fileH)) {
         std::string arrName(8,' ');
         eclArrType arrType;
-        long int num;
+        int64_t num;
 
         if (formatted) {
             readFormattedHeader(fileH,arrName,num,arrType);
@@ -514,17 +514,17 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
         array_name.push_back(trimr(arrName));
         array_index[array_name[n]] = n;
 
-        unsigned long int pos = fileH.tellg();
+        uint64_t pos = fileH.tellg();
         ifStreamPos.push_back(pos);
 
         arrayLoaded.push_back(false);
 
         if (num > 0){
             if (formatted) {
-                unsigned long int sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
+                uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
                 fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
             } else {
-                unsigned long int sizeOfNextArray = sizeOnDiskBinary(num, arrType);
+                uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType);
                 fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
             }
         }
@@ -533,7 +533,7 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
     };
 
     fileH.seekg(0, std::ios_base::end);
-    this->ifStreamPos.push_back(static_cast<unsigned long>(fileH.tellg()));
+    this->ifStreamPos.push_back(static_cast<uint64_t>(fileH.tellg()));
     fileH.close();
 
     if (preload)
@@ -570,7 +570,7 @@ void EclFile::loadBinaryArray(std::fstream& fileH, std::size_t arrIndex)
     arrayLoaded[arrIndex] = true;
 }
 
-void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, long int fromPos)
+void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, int64_t fromPos)
 {
 
     switch (array_type[arrIndex]) {
@@ -795,6 +795,11 @@ bool EclFile::hasKey(const std::string &name) const
 {
     auto search = array_index.find(name);
     return search != array_index.end();
+}
+
+size_t EclFile::count(const std::string &name) const
+{
+    return std::count (array_name.begin(), array_name.end(), name);
 }
 
 std::streampos

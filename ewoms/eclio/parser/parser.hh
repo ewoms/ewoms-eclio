@@ -20,11 +20,15 @@
 #define EWOMS_PARSER_H
 
 #include <iosfwd>
+#include <list>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
-#include <list>
+
+#include <stddef.h>
+
 #include <ewoms/common/filesystem.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>

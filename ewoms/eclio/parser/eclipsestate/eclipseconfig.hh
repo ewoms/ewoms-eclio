@@ -35,6 +35,8 @@ namespace Ewoms {
         EclipseConfig(const Deck& deck);
         EclipseConfig(const InitConfig& initConfig, const IOConfig& io_conf);
 
+        static EclipseConfig serializeObject();
+
         const InitConfig& init() const;
         IOConfig& io();
         const IOConfig& io() const;

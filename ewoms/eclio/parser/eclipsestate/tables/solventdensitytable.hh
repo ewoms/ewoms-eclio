@@ -24,8 +24,7 @@ namespace Ewoms {
 
     class SolventDensityTable {
     public:
-        SolventDensityTable();
-        SolventDensityTable(const std::vector<double>& tableValues);
+        static SolventDensityTable serializeObject();
 
         void init(const Ewoms::DeckRecord& record);
         const std::vector<double>& getSolventDensityColumn() const;

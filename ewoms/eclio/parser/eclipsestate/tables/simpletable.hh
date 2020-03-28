@@ -36,13 +36,13 @@ namespace Ewoms {
     public:
         SimpleTable() = default;
         SimpleTable(TableSchema, const DeckItem& deckItem);
-        SimpleTable(const TableSchema& schema,
-                    const OrderedMap<std::string, TableColumn>& columns,
-                    bool jfunc);
         explicit SimpleTable( TableSchema );
+
+        static SimpleTable serializeObject();
 
         void addColumns();
         void init(const DeckItem& deckItem );
+        void init( const DeckItem& deckItem, double scaling_factor);
         size_t numColumns() const;
         size_t numRows() const;
         void addRow( const std::vector<double>& row);

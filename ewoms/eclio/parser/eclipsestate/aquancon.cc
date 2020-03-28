@@ -103,6 +103,14 @@ namespace Ewoms {
         }
     }
 
+    Aquancon Aquancon::serializeObject()
+    {
+        Aquancon result;
+        result.cells = {{1, {{2, 3, {true, 4.0}, 5.0, FaceDir::XPlus}}}};
+
+        return result;
+    }
+
     const std::vector<Aquancon::AquancCell> Aquancon::operator[](int aquiferID) const {
         return this->cells.at( aquiferID );
     }

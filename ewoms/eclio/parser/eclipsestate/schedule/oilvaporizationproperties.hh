@@ -40,12 +40,9 @@ namespace Ewoms
 
         OilVaporizationProperties();
         explicit OilVaporizationProperties(const size_t numPvtReginIdx);
-        OilVaporizationProperties(OilVaporization type,
-                                  double vap1,
-                                  double vap2,
-                                  const std::vector<double>& maxDRSDT,
-                                  const std::vector<bool>& maxDRSDT_allCells,
-                                  const std::vector<double>& maxDRVDT);
+
+        static OilVaporizationProperties serializeObject();
+
         static void updateDRSDT(Ewoms::OilVaporizationProperties& ovp, const std::vector<double>& maxDRSDT, const std::vector<std::string>& option);
         static void updateDRVDT(Ewoms::OilVaporizationProperties& ovp, const std::vector<double>& maxDRVDT);
         static void updateVAPPARS(Ewoms::OilVaporizationProperties& ovp, double vap1, double vap2);

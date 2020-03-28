@@ -18,7 +18,6 @@
 #include "config.h"
 
 #define BOOST_TEST_MODULE ParserKeywordsIntegrationTests
-#include <boost/algorithm/string/join.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -1075,9 +1074,8 @@ BOOST_AUTO_TEST_CASE( TITLE ) {
     const auto& item = record.getItem(0);
 
     std::vector<std::string> itemValue = item.getData< std::string >();
-    std::string itemValueString = boost::algorithm::join(itemValue, " ");
-
-    BOOST_CHECK_EQUAL(0, itemValueString.compare("This is the title of the model."));
+    std::vector<std::string> expected = {"This", "is", "the", "title", "of", "the", "model."};
+    BOOST_CHECK(itemValue == expected);
     BOOST_CHECK_EQUAL(true, deck.hasKeyword("START"));
 }
 
@@ -1364,7 +1362,7 @@ BOOST_AUTO_TEST_CASE( WCONPROD ) {
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule sched(deck, grid, fp, runspec );
+    Schedule sched(deck, grid, fp, runspec);
 
     BOOST_CHECK_EQUAL(5U, sched.numWells());
     BOOST_CHECK(sched.hasWell("INJE1"));

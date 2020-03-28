@@ -145,8 +145,9 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
             VoidPrTotal  = 21, // Well's total cumulative reservoir
                                // voidage production
 
-            WatInjTotal = 23,  // Well's total cumulative water injection
-            GasInjTotal = 24,  // Well's total cumulative gas injection
+            WatInjTotal  = 23, // Well's total cumulative water injection
+            GasInjTotal  = 24, // Well's total cumulative gas injection
+            VoidInjTotal = 25, // Well's total cumulative reservoir volume injection
 
             GasFVF      = 34,  // Well's producing gas formation volume factor.
 

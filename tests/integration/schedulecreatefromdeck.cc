@@ -22,7 +22,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_tools.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
@@ -330,11 +329,11 @@ BOOST_AUTO_TEST_CASE(GroupTreeTest_GRUPTREE_WITH_REPARENT_correct_tree) {
     BOOST_CHECK_EQUAL(field_group.groups().size(), 2);
     BOOST_CHECK( field_group.hasGroup("GROUP_NEW"));
     BOOST_CHECK( field_group.hasGroup("GROUP_BJARNE"));
-    BOOST_CHECK_EQUAL( new_group.control_group(), "FIELD");
-    BOOST_CHECK_EQUAL( new_group.flow_group(), "FIELD");
+    BOOST_CHECK_EQUAL( new_group.control_group().value_or("ERROR"), "FIELD");
+    BOOST_CHECK_EQUAL( new_group.flow_group().value_or("ERROR"), "FIELD");
     BOOST_CHECK( new_group.hasGroup("GROUP_NILS"));
-    BOOST_CHECK_EQUAL( nils_group.control_group(), "GROUP_NEW");
-    BOOST_CHECK_EQUAL( nils_group.flow_group(), "GROUP_NEW");
+    BOOST_CHECK_EQUAL( nils_group.control_group().value_or("ERROR"), "GROUP_NEW");
+    BOOST_CHECK_EQUAL( nils_group.flow_group().value_or("ERROR"), "GROUP_NEW");
 }
 
 BOOST_AUTO_TEST_CASE( WellTestGroups ) {

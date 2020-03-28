@@ -25,8 +25,7 @@ namespace Ewoms {
 
     class BrineDensityTable {
     public:
-        BrineDensityTable();
-        BrineDensityTable(const std::vector<double>& tableValues);
+        static BrineDensityTable serializeObject();
 
         void init(const Ewoms::DeckRecord& record);
         const std::vector<double>& getBrineDensityColumn() const;

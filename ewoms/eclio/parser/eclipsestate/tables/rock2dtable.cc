@@ -28,11 +28,13 @@ namespace Ewoms {
         {
         }
 
-        Rock2dTable::Rock2dTable(const std::vector<std::vector<double>>& pvmultValues,
-                                 const std::vector<double>& pressureValues)
-            : m_pvmultValues(pvmultValues)
-            , m_pressureValues(pressureValues)
+        Rock2dTable Rock2dTable::serializeObject()
         {
+            Rock2dTable result;
+            result.m_pvmultValues = {{1.0,2.0},{3.0,4.0}};
+            result.m_pressureValues = {1.0, 2.0, 3.0};
+
+            return result;
         }
 
         void Rock2dTable::init(const DeckRecord& record, size_t /* tableIdx */)

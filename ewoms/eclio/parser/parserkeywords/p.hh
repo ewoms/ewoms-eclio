@@ -1679,7 +1679,6 @@ namespace ParserKeywords {
        class OIL_VISCOSIBILITY {
        public:
            static const std::string itemName;
-           static const double defaultValue;
        };
    };
 

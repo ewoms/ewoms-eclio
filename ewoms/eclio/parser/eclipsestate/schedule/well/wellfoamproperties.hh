@@ -26,6 +26,8 @@ class DeckRecord;
 
 struct WellFoamProperties
 {
+    static WellFoamProperties serializeObject();
+
     double m_foamConcentration = 0.0;
     void handleWFOAM(const DeckRecord& rec);
     bool operator==(const WellFoamProperties& other) const;

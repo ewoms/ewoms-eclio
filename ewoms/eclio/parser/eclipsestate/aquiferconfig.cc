@@ -36,6 +36,16 @@ AquiferConfig::AquiferConfig(const Aquifetp& fetp, const AquiferCT& ct, const Aq
     aqconn(conn)
 {}
 
+AquiferConfig AquiferConfig::serializeObject()
+{
+    AquiferConfig result;
+    result.aquifetp = Aquifetp::serializeObject();
+    result.aquiferct = AquiferCT::serializeObject();
+    result.aqconn = Aquancon::serializeObject();
+
+    return result;
+}
+
 bool AquiferConfig::active() const {
     return this->aqconn.active();
 }

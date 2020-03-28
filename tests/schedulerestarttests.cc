@@ -47,7 +47,7 @@ void compare_connections(const RestartIO::RstConnection& rst_conn, const Connect
     BOOST_CHECK_EQUAL(rst_conn.ijk[2], sched_conn.getK());
 
     BOOST_CHECK_EQUAL(rst_conn.segment, sched_conn.segment());
-    BOOST_CHECK_EQUAL(rst_conn.insert_index, static_cast<int>(sched_conn.getSeqIndex()));
+    BOOST_CHECK_EQUAL(rst_conn.insert_index, static_cast<int>(sched_conn.sort_value()));
     BOOST_CHECK(rst_conn.state == sched_conn.state());
     BOOST_CHECK(rst_conn.dir == sched_conn.dir());
     BOOST_CHECK_CLOSE( rst_conn.cf, sched_conn.CF() , 1e-6);
@@ -73,7 +73,6 @@ BOOST_AUTO_TEST_CASE(LoadRST) {
     EclIO::ERst rst_file("SPE1CASE2.X0060");
     auto rst_state = RestartIO::RstState::load(rst_file, 60);
     BOOST_REQUIRE_THROW( rst_state.get_well("NO_SUCH_WELL"), std::out_of_range);
-
     EclipseState ecl_state(deck);
     Schedule sched(deck, ecl_state);
     const auto& well_names = sched.wellNames(60);

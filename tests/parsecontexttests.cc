@@ -718,7 +718,6 @@ BOOST_AUTO_TEST_CASE( test_invalid_wtemplate_config ) {
     testSamples.push_back(testSample);
 
     std::string deckinput;
-
     for (std::string sample : testSamples) {
 
         deckinput = defDeckString + sample;

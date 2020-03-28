@@ -25,9 +25,13 @@ namespace Ewoms {
         m_events( DynamicVector<uint64_t>( timeMap , 0 ) )
     { }
 
-    Events::Events(const DynamicVector<uint64_t>& events) :
-        m_events(events)
-    { }
+    Events Events::serializeObject()
+    {
+        Events result;
+        result.m_events = DynamicVector<uint64_t>({1,2,3,4,5});
+
+        return result;
+    }
 
     bool Events::hasEvent(uint64_t eventMask , size_t reportStep) const {
         uint64_t eventSum = m_events[reportStep];

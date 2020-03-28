@@ -29,28 +29,6 @@
 
 namespace Ewoms {
 
-DeckItem::DeckItem(const std::vector<double>& dVec,
-                   const std::vector<int>& iVec,
-                   const std::vector<std::string>& sVec,
-                   const std::vector<UDAValue>& uVec,
-                   type_tag typ,
-                   const std::string& itemName,
-                   const std::vector<value::status>& valueStat,
-                   bool rawdata,
-                   const std::vector<Dimension>& activeDim,
-                   const std::vector<Dimension>& defDim)
-    : dval(dVec)
-    , ival(iVec)
-    , sval(sVec)
-    , uval(uVec)
-    , type(typ)
-    , item_name(itemName)
-    , value_status(valueStat)
-    , raw_data(rawdata)
-    , active_dimensions(activeDim)
-    , default_dimensions(defDim)
-{}
-
 template< typename T >
 std::vector< T >& DeckItem::value_ref() {
     return const_cast< std::vector< T >& >(
@@ -116,6 +94,23 @@ DeckItem::DeckItem( const std::string& nm, UDAValue, const std::vector<Dimension
     active_dimensions(active_dim),
     default_dimensions(default_dim)
 {
+}
+
+DeckItem DeckItem::serializeObject()
+{
+    DeckItem result;
+    result.dval = {1.0};
+    result.ival = {2};
+    result.sval = {"test1"};
+    result.uval = {UDAValue(3.0)};
+    result.type = type_tag::string;
+    result.item_name = "test2";
+    result.value_status = {value::status::deck_value};
+    result.raw_data = false;
+    result.active_dimensions = {Dimension::serializeObject()};
+    result.default_dimensions = {Dimension::serializeObject()};
+
+    return result;
 }
 
 const std::string& DeckItem::name() const {

@@ -27,6 +27,14 @@ Actions::Actions(const std::vector<ActionX>& action)
     : actions(action)
 {}
 
+Actions Actions::serializeObject()
+{
+    Actions result;
+    result.actions = {ActionX::serializeObject()};
+
+    return result;
+}
+
 size_t Actions::size() const {
     return this->actions.size();
 }

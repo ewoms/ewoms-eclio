@@ -131,23 +131,6 @@ namespace Ewoms {
         Deck( std::vector<DeckKeyword>() )
     {}
 
-    Deck::Deck(const std::vector<DeckKeyword>& keywords,
-               const UnitSystem& defUnits,
-               const UnitSystem* activeUnit,
-               const std::string& dataFile,
-               const std::string& inputPath,
-               size_t accessCount) :
-        keywordList(keywords),
-        defaultUnits(defUnits),
-        m_dataFile(dataFile),
-        input_path(inputPath),
-        unit_system_access_count(accessCount)
-    {
-        if (activeUnit)
-            activeUnits.reset(new UnitSystem(*activeUnit));
-        this->init(keywordList.begin(), keywordList.end());
-    }
-
     /*
       This constructor should be ssen as a technical implemtation detail of the
       default constructor, and not something which should be invoked directly.
@@ -173,6 +156,19 @@ namespace Ewoms {
         if (d.activeUnits)
             this->activeUnits.reset( new UnitSystem(*d.activeUnits.get()));
         unit_system_access_count = d.unit_system_access_count;
+    }
+
+    Deck Deck::serializeObject()
+    {
+        Deck result;
+        result.keywordList = {DeckKeyword::serializeObject()};
+        result.defaultUnits = UnitSystem::serializeObject();
+        result.activeUnits = std::make_unique<UnitSystem>(UnitSystem::serializeObject());
+        result.m_dataFile = "test1";
+        result.input_path = "test2";
+        result.unit_system_access_count = 1;
+
+        return result;
     }
 
     void Deck::addKeyword( DeckKeyword&& keyword ) {

@@ -75,6 +75,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/swfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/swoftable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablecontainer.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/tracervdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/watviscttable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/aqutabtable.hh>
 
@@ -95,15 +96,11 @@ PvtgTable::PvtgTable( const DeckKeyword& keyword, size_t tableIdx ) :
         PvtxTable::init(keyword, tableIdx);
     }
 
-PvtgTable::PvtgTable(const ColumnSchema& outer_schema,
-                     const TableColumn& outer_column,
-                     const TableSchema& undersat_schema,
-                     const TableSchema& sat_schema,
-                     const std::vector<SimpleTable>& undersat_tables,
-                     const SimpleTable& sat_table) :
-      PvtxTable(outer_schema, outer_column, undersat_schema, sat_schema,
-                undersat_tables, sat_table)
-{
+PvtgTable PvtgTable::serializeObject() {
+    PvtgTable result;
+    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+
+    return result;
 }
 
 bool PvtgTable::operator==(const PvtgTable& data) const {
@@ -124,15 +121,11 @@ PvtoTable::PvtoTable( const DeckKeyword& keyword, size_t tableIdx) :
         PvtxTable::init(keyword , tableIdx);
     }
 
-PvtoTable::PvtoTable(const ColumnSchema& outer_schema,
-                     const TableColumn& outer_column,
-                     const TableSchema& undersat_schema,
-                     const TableSchema& sat_schema,
-                     const std::vector<SimpleTable>& undersat_tables,
-                     const SimpleTable& sat_table) :
-      PvtxTable(outer_schema, outer_column, undersat_schema, sat_schema,
-                undersat_tables, sat_table)
-{
+PvtoTable PvtoTable::serializeObject() {
+    PvtoTable result;
+    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+
+    return result;
 }
 
 bool PvtoTable::operator==(const PvtoTable& data) const {
@@ -635,21 +628,17 @@ PlyshlogTable::PlyshlogTable(
     SimpleTable::init( dataRecord.getItem<ParserKeywords::PLYSHLOG::DATA>() );
 }
 
-PlyshlogTable::PlyshlogTable(const TableSchema& schema,
-                             const OrderedMap<std::string, TableColumn>& columns,
-                             bool jfunc,
-                             double refPolymerConcentration,
-                             double refSalinity,
-                             double refTemperature,
-                             bool hasRefSalinity,
-                             bool hasRefTemperature)
-    : SimpleTable(schema, columns, jfunc)
-    , m_refPolymerConcentration(refPolymerConcentration)
-    , m_refSalinity(refSalinity)
-    , m_refTemperature(refTemperature)
-    , m_hasRefSalinity(hasRefSalinity)
-    , m_hasRefTemperature(hasRefTemperature)
+PlyshlogTable PlyshlogTable::serializeObject()
 {
+    PlyshlogTable result;
+    static_cast<SimpleTable&>(result) = SimpleTable::serializeObject();
+    result.m_refPolymerConcentration = 1.0;
+    result.m_refSalinity = 2.0;
+    result.m_refTemperature = 3.0;
+    result.m_hasRefSalinity = true;
+    result.m_hasRefTemperature = true;
+
+    return result;
 }
 
 double PlyshlogTable::getRefPolymerConcentration() const {
@@ -829,12 +818,13 @@ RocktabTable::RocktabTable(
     SimpleTable::init(item);
 }
 
-RocktabTable::RocktabTable(const TableSchema& schema,
-                           const OrderedMap<std::string, TableColumn>& columns,
-                           bool jfunc, bool isDirectional)
-    : SimpleTable(schema, columns, jfunc)
-    , m_isDirectional(isDirectional)
+RocktabTable RocktabTable::serializeObject()
 {
+    RocktabTable result;
+    static_cast<SimpleTable&>(result) = Ewoms::SimpleTable::serializeObject();
+    result.m_isDirectional = true;
+
+    return result;
 }
 
 const TableColumn& RocktabTable::getPressureColumn() const {
@@ -1261,6 +1251,20 @@ const TableColumn& OverburdTable::getDepthColumn() const {
 }
 
 const TableColumn& OverburdTable::getOverburdenPressureColumn() const {
+    return SimpleTable::getColumn(1);
+}
+
+TracerVdTable::TracerVdTable(const Ewoms::DeckItem& item, double inv_volume) {
+    m_schema.addColumn(Ewoms::ColumnSchema("DEPTH", Table::STRICTLY_INCREASING, Table::DEFAULT_NONE));
+    m_schema.addColumn(Ewoms::ColumnSchema("TRACER_CONCENTRATION", Table::RANDOM, Table::DEFAULT_NONE));
+    SimpleTable::init(item, inv_volume);
+}
+
+const TableColumn& TracerVdTable::getDepthColumn() const {
+    return SimpleTable::getColumn(0);
+}
+
+const TableColumn& TracerVdTable::getTracerConcentration() const {
     return SimpleTable::getColumn(1);
 }
 

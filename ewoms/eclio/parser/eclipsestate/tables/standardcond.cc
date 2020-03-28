@@ -31,4 +31,13 @@ StandardCond::StandardCond() {
     this->pressure = units.to_si(UnitSystem::measure::pressure, input_pressure);
 }
 
+StandardCond StandardCond::serializeObject()
+{
+    StandardCond result;
+    result.temperature = 1.0;
+    result.pressure = 2.0;
+
+    return result;
+}
+
 }

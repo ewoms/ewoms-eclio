@@ -164,6 +164,25 @@ VFPProdTable::VFPProdTable(int table_num,
     //check();
 }
 
+VFPProdTable VFPProdTable::serializeObject()
+{
+    VFPProdTable result;
+    result.m_table_num = 1;
+    result.m_datum_depth = 2;
+    result.m_flo_type = FLO_OIL;
+    result.m_wfr_type = WFR_WOR;
+    result.m_gfr_type = GFR_GLR;
+    result.m_alq_type = ALQ_TGLR;
+    result.m_flo_data = {1.0, 2.0, 3.0, 4.0, 5.0};
+    result.m_thp_data = {6.0};
+    result.m_wfr_data = {7.0};
+    result.m_gfr_data = {8.0};
+    result.m_alq_data = {9.0, 10.0, 11.0};
+    result.m_data = {12.0, 13.0, 14.0, 15.0, 16.0};
+
+    return result;
+}
+
 VFPProdTable::VFPProdTable( const DeckKeyword& table, const UnitSystem& deck_unit_system) {
     using ParserKeywords::VFPPROD;
 

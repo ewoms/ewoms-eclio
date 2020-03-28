@@ -19,6 +19,7 @@
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/io/rst/well.hh>
+#include <ewoms/eclio/output/vectoritems/well.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
@@ -26,6 +27,8 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellproductionproperties.hh>
 #include <fnmatch.h>
+
+#include <cmath>
 
 namespace Ewoms {
 
@@ -247,10 +250,25 @@ Well::Well(const RestartIO::RstWell& rst_well,
         default:
             throw std::invalid_argument("What ...");
         }
+
+        if ((std::abs(rst_well.wrat_target) > 0.0f) ||
+            (std::abs(rst_well.grat_target) > 0.0f))
+            i->addInjectionControl(Well::InjectorCMode::RATE);
+
+        if (std::abs(rst_well.resv_target) > 0.0f) {
+            i->reservoirInjectionRate = rst_well.resv_target;
+            i->addInjectionControl(Well::InjectorCMode::RESV);
+        }
+
         i->addInjectionControl(Well::InjectorCMode::BHP);
         i->BHPTarget = rst_well.bhp_target_float;
         if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
+
+        if (std::abs(rst_well.thp_target) < 1.0e+20f) {
+            i->THPTarget = rst_well.thp_target;
+            i->addInjectionControl(Well::InjectorCMode::THP);
+        }
 
         this->updateInjection(std::move(i));
     }
@@ -302,61 +320,38 @@ Well::Well(const std::string& wname_arg,
     this->updateProduction(p);
 }
 
-Well::Well(const std::string& wname_arg,
-          const std::string& gname,
-          std::size_t init_step_arg,
-          std::size_t insert_index_arg,
-          int headI_arg,
-          int headJ_arg,
-          double ref_depth_arg,
-          const WellType& wtype_arg,
-          const UnitSystem& units,
-          double udq_undefined_arg,
-          Status status_arg,
-          double drainageRadius,
-          bool allowCrossFlow,
-          bool automaticShutIn,
-          const WellGuideRate& guideRate,
-          double efficiencyFactor,
-          double solventFraction,
-          bool predictionMode,
-          std::shared_ptr<WellEconProductionLimits> econLimits,
-          std::shared_ptr<WellFoamProperties> foamProperties,
-          std::shared_ptr<WellPolymerProperties> polymerProperties,
-          std::shared_ptr<WellBrineProperties> brineProperties,
-          std::shared_ptr<WellTracerProperties> tracerProperties,
-          std::shared_ptr<WellConnections> connections_arg,
-          std::shared_ptr<WellProductionProperties> production_arg,
-          std::shared_ptr<WellInjectionProperties> injection_arg,
-          std::shared_ptr<WellSegments> segments_arg) :
-    wname(wname_arg),
-    group_name(gname),
-    init_step(init_step_arg),
-    insert_index(insert_index_arg),
-    headI(headI_arg),
-    headJ(headJ_arg),
-    ref_depth(ref_depth_arg),
-    unit_system(units),
-    udq_undefined(udq_undefined_arg),
-    status(status_arg),
-    drainage_radius(drainageRadius),
-    allow_cross_flow(allowCrossFlow),
-    automatic_shutin(automaticShutIn),
-    wtype(wtype_arg),
-    guide_rate(guideRate),
-    efficiency_factor(efficiencyFactor),
-    solvent_fraction(solventFraction),
-    prediction_mode(predictionMode),
-    econ_limits(econLimits),
-    foam_properties(foamProperties),
-    polymer_properties(polymerProperties),
-    brine_properties(brineProperties),
-    tracer_properties(tracerProperties),
-    connections(connections_arg),
-    production(production_arg),
-    injection(injection_arg),
-    segments(segments_arg)
+Well Well::serializeObject()
 {
+    Well result;
+    result.wname = "test1";
+    result.group_name = "test2";
+    result.init_step = 1;
+    result.insert_index = 2;
+    result.headI = 3;
+    result.headJ = 4;
+    result.ref_depth = 5;
+    result.unit_system = UnitSystem::serializeObject();
+    result.udq_undefined = 6.0;
+    result.status = Status::SHUT;
+    result.drainage_radius = 7.0;
+    result.allow_cross_flow = true;
+    result.automatic_shutin = false;
+    result.wtype = WellType(Phase::WATER);
+    result.guide_rate = WellGuideRate::serializeObject();
+    result.efficiency_factor = 8.0;
+    result.solvent_fraction = 9.0;
+    result.prediction_mode = false;
+    result.econ_limits = std::make_shared<Ewoms::WellEconProductionLimits>(Ewoms::WellEconProductionLimits::serializeObject());
+    result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
+    result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
+    result.brine_properties = std::make_shared<WellBrineProperties>(WellBrineProperties::serializeObject());
+    result.tracer_properties = std::make_shared<WellTracerProperties>(WellTracerProperties::serializeObject());
+    result.connections = std::make_shared<WellConnections>(WellConnections::serializeObject());
+    result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializeObject());
+    result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializeObject());
+    result.segments = std::make_shared<WellSegments>(WellSegments::serializeObject());
+
+    return result;
 }
 
 bool Well::updateEfficiencyFactor(double efficiency_factor_arg) {
@@ -600,7 +595,7 @@ bool Well::updateAutoShutin(bool auto_shutin) {
 }
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
-    connections_arg->order( this->headI, this->headJ );
+    connections_arg->order(  );
     if (*this->connections != *connections_arg) {
         this->connections = connections_arg;
         //if (this->connections->allConnectionsShut()) {}
@@ -1305,4 +1300,78 @@ bool Well::operator==(const Well& data) const {
            this->getInjectionProperties() == data.getInjectionProperties();
 }
 
+}
+
+int Ewoms::eclipseControlMode(const Ewoms::Well::InjectorCMode imode,
+                            const Ewoms::InjectorType        itype,
+                            const Ewoms::Well::Status        wellStatus)
+{
+    using IMode = ::Ewoms::Well::InjectorCMode;
+    using Val   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    using IType = ::Ewoms::InjectorType;
+
+    switch (imode) {
+        case IMode::RATE: {
+            switch (itype) {
+            case IType::OIL:   return Val::OilRate;
+            case IType::WATER: return Val::WatRate;
+            case IType::GAS:   return Val::GasRate;
+            case IType::MULTI: return Val::WMCtlUnk;
+            }}
+            break;
+
+        case IMode::RESV: return Val::ResVRate;
+        case IMode::THP:  return Val::THP;
+        case IMode::BHP:  return Val::BHP;
+        case IMode::GRUP: return Val::Group;
+
+        default:
+            if (wellStatus == ::Ewoms::Well::Status::SHUT) {
+                return Val::Shut;
+            }
+    }
+
+    return Val::WMCtlUnk;
+}
+
+int Ewoms::eclipseControlMode(const Ewoms::Well::ProducerCMode pmode,
+                            const Ewoms::Well::Status        wellStatus)
+{
+    using PMode = ::Ewoms::Well::ProducerCMode;
+    using Val   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+
+    switch (pmode) {
+        case PMode::ORAT: return Val::OilRate;
+        case PMode::WRAT: return Val::WatRate;
+        case PMode::GRAT: return Val::GasRate;
+        case PMode::LRAT: return Val::LiqRate;
+        case PMode::RESV: return Val::ResVRate;
+        case PMode::THP:  return Val::THP;
+        case PMode::BHP:  return Val::BHP;
+        case PMode::CRAT: return Val::CombRate;
+        case PMode::GRUP: return Val::Group;
+
+        default:
+            if (wellStatus == ::Ewoms::Well::Status::SHUT) {
+                return Val::Shut;
+            }
+    }
+
+    return Val::WMCtlUnk;
+}
+
+int Ewoms::eclipseControlMode(const Well&         well,
+                            const SummaryState& st)
+{
+    if (well.isProducer()) {
+        const auto& ctrl = well.productionControls(st);
+
+        return eclipseControlMode(ctrl.cmode, well.getStatus());
+    }
+    else { // Injector
+        const auto& ctrl = well.injectionControls(st);
+
+        return eclipseControlMode(ctrl.cmode, well.injectorType(), well.getStatus());
+    }
 }

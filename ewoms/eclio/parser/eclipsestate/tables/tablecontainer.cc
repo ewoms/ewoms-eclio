@@ -34,6 +34,16 @@ namespace Ewoms {
     {
     }
 
+    TableContainer TableContainer::serializeObject()
+    {
+        TableContainer result;
+        result.m_maxTables = 2;
+        result.addTable(0, std::make_shared<Ewoms::SimpleTable>(Ewoms::SimpleTable::serializeObject()));
+        result.addTable(1, std::make_shared<Ewoms::SimpleTable>(Ewoms::SimpleTable::serializeObject()));
+
+        return result;
+    }
+
     bool TableContainer::empty() const {
         return m_tables.empty();
     }

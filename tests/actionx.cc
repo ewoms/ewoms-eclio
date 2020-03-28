@@ -127,7 +127,7 @@ TSTEP
     Runspec runspec (deck1);
 
     // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec ), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec), std::invalid_argument);
 
     Schedule sched(deck2, grid1, fp, runspec);
     BOOST_CHECK( !sched.hasWell("W1") );

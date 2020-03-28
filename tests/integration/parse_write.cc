@@ -24,13 +24,15 @@
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
+#include <ewoms/eclio/parser/python/python.hh>
 
 inline void loadDeck( const char * deck_file) {
     Ewoms::Parser parser;
+    Ewoms::Python python;
 
     auto deck = parser.parseFile(deck_file);
     Ewoms::EclipseState state( deck);
-    Ewoms::Schedule schedule( deck, state);
+    Ewoms::Schedule schedule( deck, state, python);
     Ewoms::SummaryConfig summary( deck, schedule, state.getTableManager( ));
     {
         std::stringstream ss;

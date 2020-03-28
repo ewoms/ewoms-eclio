@@ -79,7 +79,7 @@ struct SimulationCase
     explicit SimulationCase(const Ewoms::Deck& deck)
         : es   { deck }
 	, grid { deck }
-	, sched{ deck, es }
+        , sched{ deck, es}
     {}
 
     // Order requirement: 'es' must be declared/initialised before 'sched'.

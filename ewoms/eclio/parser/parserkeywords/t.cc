@@ -206,7 +206,6 @@ TBLK::TBLK( ) : ParserKeyword("TBLK")
      {
         ParserItem item("data", ParserItem::itype::DOUBLE);
         item.setSizeType(ParserItem::item_size::ALL);
-        item.push_backDimension("1");
         record.addDataItem(item);
      }
      addDataRecord( record );

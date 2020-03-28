@@ -137,6 +137,17 @@ UDQDefine::UDQDefine(const std::string& keyword,
     , string_data(stringData)
 {}
 
+UDQDefine UDQDefine::serializeObject()
+{
+    UDQDefine result;
+    result.m_keyword = "test1";
+    result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializeObject());
+    result.m_var_type = UDQVarType::SEGMENT_VAR;
+    result.string_data = "test2";
+
+    return result;
+}
+
 namespace {
 
 /*

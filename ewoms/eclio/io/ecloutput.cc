@@ -89,15 +89,15 @@ void EclOutput::flushStream()
     this->ofileH.flush();
 }
 
-void EclOutput::writeBinaryHeader(const std::string&arrName, long int size, eclArrType arrType)
+void EclOutput::writeBinaryHeader(const std::string&arrName, int64_t size, eclArrType arrType)
 {
     int bhead = flipEndianInt(16);
     std::string name = arrName + std::string(8 - arrName.size(),' ');
 
     // write X231 header if size larger that limits for 4 byte integers
     if (size > std::numeric_limits<int>::max()) {
-        long int val231 = std::pow(2,31);
-        long int x231 = size / val231;
+        int64_t val231 = std::pow(2,31);
+        int64_t x231 = size / val231;
 
         int flippedx231 = flipEndianInt(static_cast<int>( (-1)*x231 ));
 
@@ -145,14 +145,14 @@ template <typename T>
 void EclOutput::writeBinaryArray(const std::vector<T>& data)
 {
     int num, rval;
-    long int rest;
+    int64_t rest;
     int dhead;
     float value_f;
     double value_d;
     int intVal;
 
-    long int n = 0;
-    long int size = data.size();
+    int64_t n = 0;
+    int64_t size = data.size();
 
     eclArrType arrType = MESS;
 
@@ -176,7 +176,7 @@ void EclOutput::writeBinaryArray(const std::vector<T>& data)
         EWOMS_THROW(std::runtime_error, "fstream fileH not open for writing");
     }
 
-    rest = size * static_cast<long int>(sizeOfElement);
+    rest = size * static_cast<int64_t>(sizeOfElement);
     while (rest > 0) {
         if (rest > maxBlockSize) {
             rest -= maxBlockSize;

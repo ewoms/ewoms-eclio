@@ -223,6 +223,15 @@ namespace {
         return is_in_set(countkw, keyword);
     }
 
+    bool is_control_mode(const std::string& keyword) {
+        static const keyword_set countkw {
+            "MCTP", "MCTW", "MCTG"
+        };
+
+        return (keyword == "WMCTL")
+            || is_in_set(countkw, keyword.substr(1));
+    }
+
     bool is_region_to_region(const std::string& keyword) {
         using sz_t = std::string::size_type;
         if ((keyword.size() == sz_t{3}) && keyword[2] == 'F') return true;
@@ -243,6 +252,7 @@ namespace {
         if (is_ratio(keyword)) return SummaryConfigNode::Type::Ratio;
         if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
         if (is_count(keyword)) return SummaryConfigNode::Type::Count;
+        if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
 
         return SummaryConfigNode::Type::Undefined;
     }
@@ -289,18 +299,17 @@ inline void keywordW( SummaryConfig::keyword_list& list,
                       const DeckKeyword& keyword,
                       const Schedule& schedule ) {
     /*
-      Here is a two step check whether this keyword should be discarded as not
-      supported:
+      Two step check for whether to discard this keyword as unsupported:
 
-      1. Well keywords ending with 'L' represent completions, they are not
-      supported.
+      1. Completion quantity keywords are currently not supported.  These are
+      well summary keywords, apart from "WMCTL", that end in 'L'.
 
       2. If the keyword is a UDQ keyword there is no convention enforced to
       the last character, and in that case it is treated as a normal well
       keyword anyways.
     */
     if (keyword.name().back() == 'L') {
-        if (!is_udq(keyword.name())) {
+        if (! (is_control_mode(keyword.name()) || is_udq(keyword.name()))) {
             const auto& location = keyword.location();
             std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported at: " + location.filename + ", line " + std::to_string(location.lineno));
             parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
@@ -695,6 +704,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
 
     std::string to_string(const SummaryConfigNode::Category cat) {
         switch( cat ) {
+            case SummaryConfigNode::Category::Aquifer: return "Aquifer";
             case SummaryConfigNode::Category::Well: return "Well";
             case SummaryConfigNode::Category::Group: return "Group";
             case SummaryConfigNode::Category::Field: return "Field";
@@ -808,6 +818,7 @@ SummaryConfigNode::Category parseKeywordCategory(const std::string& keyword) {
     if (is_special(keyword)) { return Cat::Miscellaneous; }
 
     switch (keyword[0]) {
+        case 'A': return Cat::Aquifer;
         case 'W': return Cat::Well;
         case 'G': return Cat::Group;
         case 'F': return Cat::Field;
@@ -826,6 +837,20 @@ SummaryConfigNode::SummaryConfigNode(std::string keyword, const Category cat, Lo
     category_(cat),
     loc(std::move(loc_arg))
 {}
+
+SummaryConfigNode SummaryConfigNode::serializeObject()
+{
+    SummaryConfigNode result;
+    result.keyword_ = "test1";
+    result.category_ = Category::Region;
+    result.loc = Location::serializeObject();
+    result.type_ = Type::Pressure;
+    result.name_ = "test2";
+    result.number_ = 2;
+    result.userDefined_ = true;
+
+    return result;
+}
 
 SummaryConfigNode& SummaryConfigNode::parameterType(const Type type)
 {
@@ -862,6 +887,7 @@ std::string SummaryConfigNode::uniqueNodeKey() const
     case SummaryConfigNode::Category::Miscellaneous:
         return this->keyword();
 
+    case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
     case SummaryConfigNode::Category::Region: [[fallthrough]];
     case SummaryConfigNode::Category::Block:
         return this->keyword() + ':' + std::to_string(this->number());
@@ -894,6 +920,7 @@ bool operator==(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
             // Equal if associated to same named entity
             return lhs.namedEntity() == rhs.namedEntity();
 
+        case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
         case SummaryConfigNode::Category::Region: [[fallthrough]];
         case SummaryConfigNode::Category::Block:
             // Equal if associated to same numeric entity
@@ -929,6 +956,7 @@ bool operator<(const SummaryConfigNode& lhs, const SummaryConfigNode& rhs)
             // Ordering determined by namedEntityd entity
             return lhs.namedEntity() < rhs.namedEntity();
 
+        case SummaryConfigNode::Category::Aquifer: [[fallthrough]];
         case SummaryConfigNode::Category::Region: [[fallthrough]];
         case SummaryConfigNode::Category::Block:
             // Ordering determined by numeric entity
@@ -1017,6 +1045,16 @@ SummaryConfig::SummaryConfig(const keyword_list& kwds,
                              const std::set<std::string>& smryKwds) :
     keywords(kwds), short_keywords(shortKwds), summary_keywords(smryKwds)
 {}
+
+SummaryConfig SummaryConfig::serializeObject()
+{
+    SummaryConfig result;
+    result.keywords = {SummaryConfigNode::serializeObject()};
+    result.short_keywords = {"test1"};
+    result.summary_keywords = {"test2"};
+
+    return result;
+}
 
 SummaryConfig::const_iterator SummaryConfig::begin() const {
     return this->keywords.cbegin();

@@ -51,7 +51,7 @@ public:
       char_array.clear();
     }
 
-    using EclEntry = std::tuple<std::string, eclArrType, long int>;
+    using EclEntry = std::tuple<std::string, eclArrType, int64_t>;
     std::vector<EclEntry> getList() const;
 
     template <typename T>
@@ -61,6 +61,7 @@ public:
     const std::vector<T>& get(const std::string& name);
 
     bool hasKey(const std::string &name) const;
+    std::size_t count(const std::string& name) const;
 
     const std::vector<std::string>& arrayNames() const { return array_name; }
     std::size_t size() const;
@@ -77,9 +78,9 @@ protected:
 
     std::vector<std::string> array_name;
     std::vector<eclArrType> array_type;
-    std::vector<long int> array_size;
+    std::vector<int64_t> array_size;
 
-    std::vector<unsigned long int> ifStreamPos;
+    std::vector<uint64_t> ifStreamPos;
 
     std::map<std::string, int> array_index;
 
@@ -107,7 +108,7 @@ private:
     std::vector<bool> arrayLoaded;
 
     void loadBinaryArray(std::fstream& fileH, std::size_t arrIndex);
-    void loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, long int fromPos);
+    void loadFormattedArray(const std::string& fileStr, std::size_t arrIndex, int64_t fromPos);
 
 };
 
