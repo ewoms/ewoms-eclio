@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <cassert>
 
 #include <ewoms/eclio/io/summarynode.hh>
 
@@ -41,7 +42,7 @@ constexpr bool use_number(Ewoms::EclIO::SummaryNode::Category category) {
         return false;
     }
 
-    static_assert("Unhandled category in use_number");
+    assert("Unhandled category in use_number");
     return false; // Never reached, but quells compiler warning
 }
 
@@ -60,7 +61,7 @@ constexpr bool use_name(Ewoms::EclIO::SummaryNode::Category category) {
         return false;
     }
 
-    static_assert("Unhandled category in use_name");
+    assert("Unhandled category in use_name");
     return false; // Never reached, but quells compiler warning
 }
 

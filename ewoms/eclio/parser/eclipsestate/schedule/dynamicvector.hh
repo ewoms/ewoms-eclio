@@ -68,7 +68,7 @@ namespace Ewoms {
         template<class Serializer, bool complexType = true>
         void serializeOp(Serializer& serializer)
         {
-            serializer.template vector<T, complexType>(m_data);
+            serializer.template vector<T>(m_data);
         }
 
     private:

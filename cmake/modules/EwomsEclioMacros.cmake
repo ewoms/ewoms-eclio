@@ -11,12 +11,15 @@ set(ENABLE_ECL_OUTPUT ON)
 set(HAVE_ECL_INPUT ON)
 set(HAVE_ECL_OUTPUT ON)
 
-# we need support for either std::filesystem or std::experimental::filesystem
+# either std::filesystem or std::experimental::filesystem  needs to be supported
 find_package(StdFilesystem REQUIRED)
 if(STD_FILESYSTEM_LIBRARIES)
   dune_register_package_flags(
     LIBRARIES "${STD_FILESYSTEM_LIBRARIES}")
 endif()
+
+# either std::optional or std::experimental::optional needs to be supported
+find_package(StdOptional REQUIRED)
 
 # handle boost: the base package which contains the template libraries
 # is currently still required for ewoms-eclio

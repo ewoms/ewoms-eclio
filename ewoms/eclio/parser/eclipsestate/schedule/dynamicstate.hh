@@ -218,12 +218,12 @@ class DynamicState {
     }
 
     // complexType=true if contained type has a serializeOp
-    template<class Serializer, bool complexType = true>
+    template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
         std::vector<T> unique;
         auto indices = split(unique);
-        serializer.template vector<T,complexType>(unique);
+        serializer.template vector<T>(unique);
         serializer(indices);
         if (!serializer.isSerializing())
             reconstruct(unique, indices);

@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
@@ -347,16 +348,16 @@ const std::string& Group::parent() const {
     return this->parent_group;
 }
 
-std::optional<std::string> Group::control_group() const {
+Ewoms::optional<std::string> Group::control_group() const {
     if (m_name == "FIELD")
-        return std::nullopt;
+        return Ewoms::nullopt;
     else
         return this->parent();
 }
 
-std::optional<std::string> Group::flow_group() const {
+Ewoms::optional<std::string> Group::flow_group() const {
     if (m_name == "FIELD")
-        return std::nullopt;
+        return Ewoms::nullopt;
     else
         return this->parent();
 }

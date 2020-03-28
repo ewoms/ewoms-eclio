@@ -108,8 +108,7 @@ namespace Ewoms {
     }
 
     inline bool currentGroupConstraints::has() {
-        return ((&this->currentGasInjectionConstraint != nullptr) && (&this->currentGasInjectionConstraint != nullptr)
-        && (&this->currentProdConstraint != nullptr));
+        return true;
     }
 
 }} // Ewoms::data

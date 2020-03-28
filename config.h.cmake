@@ -54,6 +54,12 @@
 /* Define whether std::experimental::filesystem is available */
 #cmakedefine HAVE_STD_EXPERIMENTAL_FILESYSTEM 1
 
+/* Define whether std::optional is available */
+#cmakedefine HAVE_STD_OPTIONAL 1
+
+/* Define whether std::experimental::optional is available */
+#cmakedefine HAVE_STD_EXPERIMENTAL_OPTIONAL 1
+
 /* begin bottom */
 
 /* end bottom */

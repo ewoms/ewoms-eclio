@@ -19,6 +19,16 @@ ewoms_project()
 # testing framework is optional
 find_package(Boost REQUIRED OPTIONAL_COMPONENTS unit_test_framework)
 
+# either std::filesystem or std::experimental::filesystem  needs to be supported
+find_package(StdFilesystem REQUIRED)
+if(STD_FILESYSTEM_LIBRARIES)
+  dune_register_package_flags(
+    LIBRARIES "${STD_FILESYSTEM_LIBRARIES}")
+endif()
+
+# either std::optional or std::experimental::optional needs to be supported
+find_package(StdOptional REQUIRED)
+
 # we want all features detected by the build system to be enabled,
 # thank you!
 dune_enable_all_packages()

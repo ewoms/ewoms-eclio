@@ -23,7 +23,8 @@
 #include <string>
 #include <unordered_set>
 
-namespace Ewoms::EclIO {
+namespace Ewoms {
+namespace EclIO {
 
 struct SummaryNode {
     enum class Category {
@@ -66,6 +67,6 @@ struct SummaryNode {
     static Category category_from_keyword(const std::string&, const std::unordered_set<std::string> &miscellaneous_keywords = {});
 };
 
-} // namespace Ewoms::EclIO
+}} // namespace EclIO, Ewoms
 
 #endif // EWOMS_IO_SUMMARYNODE_H

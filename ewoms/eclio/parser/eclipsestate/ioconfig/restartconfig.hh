@@ -333,7 +333,7 @@ namespace Ewoms {
             serializer(m_first_restart_step);
             serializer(m_write_initial_RST_file);
             restart_schedule.serializeOp(serializer);
-            restart_keywords.serializeOp<Serializer, false>(serializer);
+            restart_keywords.serializeOp<Serializer>(serializer);
             serializer(save_keywords);
         }
 
