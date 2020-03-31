@@ -77,7 +77,6 @@ namespace Ewoms {
 
 namespace {
 constexpr bool defaultSatTabId = true;
-constexpr double def_wellPi = 1.0;
 }
 
 Connection::Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp) :
@@ -98,8 +97,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         m_segDistStart(rst_connection.segdist_start),
         m_segDistEnd(rst_connection.segdist_end),
         m_defaultSatTabId(defaultSatTabId),
-        segment_number(rst_connection.segment),
-        wPi(def_wellPi)
+        segment_number(rst_connection.segment)
     {
         if (this->m_defaultSatTabId) {
             const auto& satnum = fp.get_int("SATNUM");
@@ -134,7 +132,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         result.m_segDistEnd = 15.0;
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
-        result.wPi = 17.0;
 
         return result;
     }
@@ -258,11 +255,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
     }
 
     void Connection::scaleWellPi(double wellPi) {
-        this->wPi *= wellPi;
-    }
-
-    double Connection::wellPi() const {
-        return this->wPi;
+        this->m_CF *= wellPi;
     }
 
     std::string Connection::str() const {
@@ -273,7 +266,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         ss << "RW " << this->m_rw << std::endl;
         ss << "R0 " << this->m_r0 << std::endl;
         ss << "skinf " << this->m_skin_factor << std::endl;
-        ss << "wPi " << this->wPi << std::endl;
         ss << "kh " << this->m_Kh << std::endl;
         ss << "sat_tableId " << this->sat_tableId << std::endl;
         ss << "open_state " << Connection::State2String(this->open_state) << std::endl;
@@ -294,7 +286,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
             && this->m_rw == rhs.m_rw
             && this->m_r0 == rhs.m_r0
             && this->m_skin_factor == rhs.m_skin_factor
-            && this->wPi == rhs.wPi
             && this->m_Kh == rhs.m_Kh
             && this->sat_tableId == rhs.sat_tableId
             && this->open_state == rhs.open_state

@@ -23,7 +23,6 @@
 #include <ewoms/eclio/io/erst.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
-#include <ewoms/eclio/parser/python/python.hh>
 
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
@@ -64,7 +63,7 @@ void initLogging() {
   must also be present.
 */
 
-Ewoms::Schedule load_schedule(const Ewoms::Python& python, const std::string& fname, int& report_step) {
+Ewoms::Schedule load_schedule(const std::string& fname, int& report_step) {
     Ewoms::Parser parser;
     auto deck = parser.parseFile(fname);
     Ewoms::EclipseState state(deck);
@@ -76,25 +75,24 @@ Ewoms::Schedule load_schedule(const Ewoms::Python& python, const std::string& fn
         Ewoms::EclIO::ERst rst_file(rst_filename);
 
         const auto& rst = Ewoms::RestartIO::RstState::load(rst_file, report_step);
-        return Ewoms::Schedule(deck, state, python, &rst);
+        return Ewoms::Schedule(deck, state, &rst);
     } else
-        return Ewoms::Schedule(deck, state, python);
+        return Ewoms::Schedule(deck, state);
 }
 
-Ewoms::Schedule load_schedule(const Ewoms::Python& python, const std::string& fname) {
+Ewoms::Schedule load_schedule(const std::string& fname) {
     int report_step;
-    return load_schedule(python, fname, report_step);
+    return load_schedule(fname, report_step);
 }
 
 int main(int argc, char ** argv) {
-    Ewoms::Python python;
     initLogging();
     if (argc == 2)
-        load_schedule(python, argv[1]);
+        load_schedule(argv[1]);
     else {
         int report_step;
-        const auto& sched = load_schedule(python, argv[1]);
-        const auto& rst_sched = load_schedule(python, argv[2], report_step);
+        const auto& sched = load_schedule(argv[1]);
+        const auto& rst_sched = load_schedule(argv[2], report_step);
 
         if (Ewoms::Schedule::cmp(sched, rst_sched, report_step) ) {
             std::cout << "Schedule objects were equal!" << std::endl;

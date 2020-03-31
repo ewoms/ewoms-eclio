@@ -147,8 +147,10 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
         };
 
     double secs_elapsed = 3.1536E07;
-    const auto ih = Ewoms::RestartIO::Helpers::createInteHead(es, grid, sched,
-                                                secs_elapsed, rptStep, rptStep);
+    const auto ih = Ewoms::RestartIO::Helpers::
+        createInteHead(es, grid, sched, secs_elapsed,
+                       rptStep, rptStep, rptStep);
+
     //set dummy value for next_step_size
     const double next_step_size= 0.1;
     const auto dh = Ewoms::RestartIO::Helpers::createDoubHead(es, sched, rptStep,

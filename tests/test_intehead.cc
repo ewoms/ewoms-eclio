@@ -331,8 +331,8 @@ BOOST_AUTO_TEST_CASE(Time_and_report_step)
 
     const auto& v = ih.data();
 
-    BOOST_CHECK_EQUAL(v[VI::intehead::NUM_SOLVER_STEPS], 12);    // TSTEP
-    BOOST_CHECK_EQUAL(v[VI::intehead::REPORT_STEP], 2 + 1); // REP_STEP (= sim_step + 1)
+    BOOST_CHECK_EQUAL(v[VI::intehead::NUM_SOLVER_STEPS], 12); // TSTEP (1st argument to stepParam)
+    BOOST_CHECK_EQUAL(v[VI::intehead::REPORT_STEP],       2); // REP_STEP (2nd argument to stepParam)
 }
 
 BOOST_AUTO_TEST_CASE(Tuning_param)
@@ -489,6 +489,12 @@ TSTEP
     checkDate(11, { 2010, 12, 30 }); // RStep 11 == 2009-12-30 -> 2010-12-30
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Member_Functions
+
+// =====================================================================
+
+BOOST_AUTO_TEST_SUITE(Transfer_Protocol)
+
 BOOST_AUTO_TEST_CASE(TestHeader) {
     using Ph = Ewoms::RestartIO::InteHEAD::Phases;
 
@@ -529,8 +535,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     const auto nscaqz = 1111111;
     const auto nacaqz = 11111111;
     const auto tstep  = 78;
-    const auto sim_step = 12;
-    const auto report_step = sim_step + 1;
+    const auto report_step = 12;
     const auto newtmx	= 17;
     const auto newtmn	=  5;
     const auto litmax	= 102;
@@ -561,7 +566,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .params_NCON(niconz, nsconz, nxconz)
          .params_GRPZ({nigrpz, nsgrpz, nxgrpz, nzgrpz})
          .params_NAAQZ(ncamax, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz)
-         .stepParam(tstep, sim_step)
+         .stepParam(tstep, report_step)
          .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit})
          .variousParam(version, iprog)
          .wellSegDimensions({nsegwl, nswlmx, nsegmx, nlbrmx, nisegz, nrsegz, nilbrz})
@@ -623,5 +628,4 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
     BOOST_CHECK_EQUAL(header.ngroup, ngroup);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
+BOOST_AUTO_TEST_SUITE_END() // Transfer_Protocol

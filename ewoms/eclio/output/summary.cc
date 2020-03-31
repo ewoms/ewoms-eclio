@@ -552,7 +552,7 @@ inline quantity trans_factors ( const fn_args& args ) {
 
     if( connection == connections.end() ) return zero;
 
-    const auto& v = connection->CF() * connection->wellPi();
+    const auto& v = connection->CF();
     return { v, measure::transmissibility };
 }
 
@@ -2560,10 +2560,15 @@ void Summary::eval(SummaryState&                  st,
 
     const double duration = secs_elapsed - st.get_elapsed();
 
-    /* report_step is the number of the file we are about to write - i.e. for instance CASE.S$report_step
-     * for the data in a non-unified summary file.
-     * sim_step is the timestep which has been effective in the simulator, and as such is the value
-     * necessary to use when consulting the Schedule object. */
+    /* Report_step is the one-based sequence number of the containing report.
+     * Report_step = 0 for the initial condition, before simulation starts.
+     * We typically don't get reports_step = 0 here.  When outputting
+     * separate summary files 'report_step' is the number that gets
+     * incorporated into the filename extension.
+     *
+     * Sim_step is the timestep which has been effective in the simulator,
+     * and as such is the value necessary to use when looking up active
+     * wells, groups, connections &c in the Schedule object. */
     const auto sim_step = std::max( 0, report_step - 1 );
 
     this->pImpl_->eval(es, schedule, sim_step, duration,

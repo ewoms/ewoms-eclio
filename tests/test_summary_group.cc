@@ -34,7 +34,6 @@
 #include <ewoms/eclio/output/data/groups.hh>
 #include <ewoms/eclio/output/summary.hh>
 
-#include <ewoms/eclio/parser/python/python.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
@@ -201,7 +200,6 @@ static data::Group result_groups() {
 }
 
 struct setup {
-    Python python;
     Deck deck;
     EclipseState es;
     const EclipseGrid& grid;
@@ -218,7 +216,7 @@ struct setup {
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
-        schedule( deck, es, python),
+        schedule( deck, es),
         config( deck, schedule, es.getTableManager()),
         wells( result_wells() ),
         groups( result_groups() ),

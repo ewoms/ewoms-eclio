@@ -95,7 +95,6 @@ namespace Ewoms
     class EclipseGrid;
     class EclipseState;
     class FieldPropsManager;
-    class Python;
     class Runspec;
     class SCHEDULESection;
     class SummaryState;

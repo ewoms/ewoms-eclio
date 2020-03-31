@@ -285,7 +285,7 @@ namespace {
     {
         {
             const auto ih = ::Ewoms::RestartIO::Helpers::
-                createInteHead(es, grid, sched, 0.0, 0, 0);
+                createInteHead(es, grid, sched, 0.0, 0, 0, 0);
 
             initFile.write("INTEHEAD", ih);
         }
