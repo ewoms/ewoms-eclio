@@ -246,24 +246,6 @@ public:
     }
 
     template <typename T>
-    std::vector<T> get_copy(const std::string& keyword, bool global) {
-        bool has0 = this->has<T>(keyword);
-        const auto& data = this->get<T>(keyword);
-
-        if (has0) {
-            if (global)
-                return this->global_copy(data);
-            else
-                return data;
-        } else {
-            if (global)
-                return this->global_copy(this->extract<T>(keyword));
-            else
-                return this->extract<T>(keyword);
-        }
-    }
-
-    template <typename T>
     std::vector<bool> defaulted(const std::string& keyword) {
         const auto& field = this->init_get<T>(keyword);
         std::vector<bool> def(field.size());

@@ -223,7 +223,7 @@ class DynamicState {
     {
         std::vector<T> unique;
         auto indices = split(unique);
-        serializer.template vector<T>(unique);
+        serializer.vector(unique);
         serializer(indices);
         if (!serializer.isSerializing())
             reconstruct(unique, indices);
