@@ -49,6 +49,7 @@ namespace Ewoms {
         m_deckUnitSystem(    deck.getActiveUnitSystem() ),
         m_inputNnc(          deck ),
         m_inputEditNnc(      deck ),
+        thpresft_(deck),
         m_inputGrid(         deck, nullptr ),
         m_gridDims(          deck ),
         field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),

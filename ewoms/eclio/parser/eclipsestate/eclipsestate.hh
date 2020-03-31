@@ -27,6 +27,7 @@
 #include <ewoms/eclio/parser/eclipsestate/eclipseconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/tracerconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/edit/editnnc.hh>
+#include <ewoms/eclio/parser/eclipsestate/thpresft.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/faultcollection.hh>
@@ -91,6 +92,9 @@ namespace Ewoms {
         const EDITNNC& getInputEDITNNC() const;
         bool hasInputEDITNNC() const;
 
+        const Thpresft& getThpresft() const
+        { return thpresft_; }
+
         // The potentially parallelized field properties
         virtual const FieldPropsManager& fieldProps() const;
         // Always the non-parallel field properties
@@ -124,6 +128,7 @@ namespace Ewoms {
             m_deckUnitSystem.serializeOp(serializer);
             m_inputNnc.serializeOp(serializer);
             m_inputEditNnc.serializeOp(serializer);
+            thpresft_.serializeOp(serializer);
             m_gridDims.serializeOp(serializer);
             m_simulationConfig.serializeOp(serializer);
             m_transMult.serializeOp(serializer);
@@ -150,6 +155,7 @@ namespace Ewoms {
         UnitSystem m_deckUnitSystem;
         NNC m_inputNnc;
         EDITNNC m_inputEditNnc;
+        Thpresft thpresft_;
         EclipseGrid m_inputGrid;
         GridDims m_gridDims;
         FieldPropsManager field_props;
