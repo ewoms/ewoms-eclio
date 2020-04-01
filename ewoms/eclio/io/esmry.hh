@@ -18,6 +18,7 @@
 #ifndef EWOMS_IO_ESMRY_H
 #define EWOMS_IO_ESMRY_H
 
+#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -56,7 +57,11 @@ public:
     const std::string& get_unit(const std::string& name) const;
     const std::string& get_unit(const SummaryNode& node) const;
 
+    void write_rsm(std::ostream&) const;
+    void write_rsm_file(std::optional<Ewoms::filesystem::path> = std::nullopt) const;
+
 private:
+    Ewoms::filesystem::path inputFileName;
     int nVect, nI, nJ, nK;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
@@ -83,8 +88,16 @@ private:
 
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;
+
+    void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
 };
 
 }} // namespace Ewoms::EclIO
+
+inline std::ostream& operator<<(std::ostream& os, const Ewoms::EclIO::ESmry& smry) {
+    smry.write_rsm(os);
+
+    return os;
+}
 
 #endif // EWOMS_IO_ESMRY_H

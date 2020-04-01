@@ -53,10 +53,10 @@
 namespace Ewoms { namespace EclIO {
 
 ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
+    inputFileName { filename },
     summaryNodes { }
 {
 
-    Ewoms::filesystem::path inputFileName(filename);
     Ewoms::filesystem::path rootName = inputFileName.parent_path() / inputFileName.stem();
 
     // if root name (without any extension) given as first argument in constructor, binary will then be assumed

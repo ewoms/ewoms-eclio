@@ -18,10 +18,11 @@
 #include "config.h"
 
 #include <fnmatch.h>
-#include <string>
-#include <vector>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <ewoms/eclio/opmlog/logutil.hh>
 #include <ewoms/eclio/utility/numeric/cmp.hh>
@@ -55,6 +56,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/oilvaporizationproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/rptconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/tuning.hh>
@@ -139,7 +141,8 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         m_actions(this->m_timeMap, std::make_shared<Action::Actions>()),
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, ParserKeywords::NUPCOL::NUM_ITER::defaultValue),
-        restart_config(m_timeMap, deck, parseContext, errors)
+        restart_config(m_timeMap, deck, parseContext, errors),
+        rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
     {
         addGroup( "FIELD", 0, deck.getActiveUnitSystem());
         if (rst)
@@ -429,6 +432,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         else if (keyword.name() == "MESSAGES")
             handleMESSAGES(keyword, currentStep);
 
+        else if (keyword.name() == "RPTSCHED")
+            handleRPTSCHED(keyword, currentStep);
+
         else if (keyword.name() == "WEFAC")
             handleWEFAC(keyword, currentStep, parseContext, errors);
 
@@ -461,6 +467,13 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
         size_t keywordIdx = 0;
+        /*
+          The keywords in the skiprest_whitelist set are loaded from the
+          SCHEDULE section even though the SKIPREST keyword is in action. The
+          full list includes some additional keywords which we do not support at
+          all.
+        */
+        std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
 
         size_t currentStep;
         if (this->m_timeMap.skiprest())
@@ -502,7 +515,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
             }
 
             else {
-                if (currentStep >= this->m_timeMap.restart_offset())
+                if (currentStep >= this->m_timeMap.restart_offset() || skiprest_whitelist.count(keyword.name()))
                     this->handleKeyword(input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, unit_system, rftProperties);
                 else
                     OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
@@ -1872,6 +1885,10 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         }
     }
 
+    void Schedule::handleRPTSCHED( const DeckKeyword& keyword, size_t currentStep) {
+        this->rpt_config.update(currentStep, std::make_shared<RPTConfig>(keyword));
+    }
+
     void Schedule::handleCOMPDAT( const DeckKeyword& keyword, size_t currentStep, const EclipseGrid& grid, const FieldPropsManager& fp, const ParseContext& parseContext, ErrorGuard& errors) {
         for (const auto& record : keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
@@ -2731,6 +2748,11 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return *ptr;
     }
 
+    const RPTConfig& Schedule::report_config(size_t timeStep) const {
+        const auto& ptr = this->rpt_config.get(timeStep);
+        return *ptr;
+    }
+
     size_t Schedule::size() const {
         return this->m_timeMap.size();
     }
@@ -2830,6 +2852,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                compareDynState(this->gconsump, data.gconsump) &&
                this->global_whistctl_mode == data.global_whistctl_mode &&
                compareDynState(this->m_actions, data.m_actions) &&
+               compareDynState(this->rpt_config, data.rpt_config) &&
                rft_config  == data.rft_config &&
                this->m_nupcol == data.m_nupcol &&
                this->restart_config == data.restart_config &&

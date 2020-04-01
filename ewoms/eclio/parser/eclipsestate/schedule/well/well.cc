@@ -170,36 +170,44 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (rst_well.resv_target != 0)
             p->addProductionControl( Well::ProducerCMode::RESV );
 
-        switch (rst_well.active_control) {
-        case 1:
-            p->controlMode = Well::ProducerCMode::ORAT;
-            break;
-        case 2:
-            p->controlMode = Well::ProducerCMode::WRAT;
-            p->addProductionControl( Well::ProducerCMode::WRAT );
-            break;
-        case 3:
-            p->controlMode = Well::ProducerCMode::GRAT;
-            p->addProductionControl( Well::ProducerCMode::GRAT );
-            break;
-        case 4:
-            p->controlMode = Well::ProducerCMode::LRAT;
-            p->addProductionControl( Well::ProducerCMode::LRAT );
-            break;
-        case 5:
-            p->controlMode = Well::ProducerCMode::RESV;
-            p->addProductionControl( Well::ProducerCMode::RESV );
-            break;
-        case 6:
-            p->controlMode = Well::ProducerCMode::THP;
+        if (rst_well.thp_target != 0) {
+            p->THPTarget = rst_well.thp_target;
             p->addProductionControl( Well::ProducerCMode::THP );
-            break;
-        case 7:
-            p->controlMode = Well::ProducerCMode::BHP;
-            p->addProductionControl( Well::ProducerCMode::BHP );
-            break;
-        default:
-            throw std::invalid_argument("Can convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
+        }
+
+        if (this->status == Well::Status::OPEN) {
+            switch (rst_well.active_control) {
+            case 1:
+                p->controlMode = Well::ProducerCMode::ORAT;
+                break;
+            case 2:
+                p->controlMode = Well::ProducerCMode::WRAT;
+                p->addProductionControl(Well::ProducerCMode::WRAT);
+                break;
+            case 3:
+                p->controlMode = Well::ProducerCMode::GRAT;
+                p->addProductionControl(Well::ProducerCMode::GRAT);
+                break;
+            case 4:
+                p->controlMode = Well::ProducerCMode::LRAT;
+                p->addProductionControl(Well::ProducerCMode::LRAT);
+                break;
+            case 5:
+                p->controlMode = Well::ProducerCMode::RESV;
+                p->addProductionControl(Well::ProducerCMode::RESV);
+                break;
+            case 6:
+                p->controlMode = Well::ProducerCMode::THP;
+                p->addProductionControl(Well::ProducerCMode::THP);
+                break;
+            case 7:
+                p->controlMode = Well::ProducerCMode::BHP;
+                p->addProductionControl(Well::ProducerCMode::BHP);
+                break;
+            default:
+                throw std::invalid_argument("Can not convert integer value: " + std::to_string(rst_well.active_control)
+                                            + " to control type");
+            }
         }
 
         p->addProductionControl(Well::ProducerCMode::BHP);
@@ -210,30 +218,33 @@ Well::Well(const RestartIO::RstWell& rst_well,
         auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
         // Reverse of function ctrlMode() in AggregateWellData.cpp
 
-        switch (rst_well.active_control) {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-            i->controlMode = Well::InjectorCMode::RATE;
-            i->addInjectionControl(Well::InjectorCMode::RATE);
-            break;
-        case 5:
-            i->controlMode = Well::InjectorCMode::RESV;
-            i->addInjectionControl(Well::InjectorCMode::RESV);
-            break;
-        case 6:
-            i->controlMode = Well::InjectorCMode::THP;
-            i->addInjectionControl(Well::InjectorCMode::THP);
-            break;
-        case 7:
-            i->controlMode = Well::InjectorCMode::BHP;
-            break;
-        case -1:
-            i->controlMode = Well::InjectorCMode::GRUP;
-            break;
-        default:
-            throw std::invalid_argument("Could not convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
+        if (this->status == Well::Status::OPEN) {
+            switch (rst_well.active_control) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                i->controlMode = Well::InjectorCMode::RATE;
+                i->addInjectionControl(Well::InjectorCMode::RATE);
+                break;
+            case 5:
+                i->controlMode = Well::InjectorCMode::RESV;
+                i->addInjectionControl(Well::InjectorCMode::RESV);
+                break;
+            case 6:
+                i->controlMode = Well::InjectorCMode::THP;
+                i->addInjectionControl(Well::InjectorCMode::THP);
+                break;
+            case 7:
+                i->controlMode = Well::InjectorCMode::BHP;
+                break;
+            case -1:
+                i->controlMode = Well::InjectorCMode::GRUP;
+                break;
+            default:
+                throw std::invalid_argument(
+                    "Could not convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
+            }
         }
 
         i->injectorType = rst_well.wtype.injector_type();
@@ -262,7 +273,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
         if (this->isAvailableForGroupControl())
             i->addInjectionControl(Well::InjectorCMode::GRUP);
 
-        if (std::abs(rst_well.thp_target) < 1.0e+20f) {
+        if (rst_well.thp_target != 0) {
             i->THPTarget = rst_well.thp_target;
             i->addInjectionControl(Well::InjectorCMode::THP);
         }
@@ -1305,9 +1316,11 @@ int Ewoms::eclipseControlMode(const Ewoms::Well::InjectorCMode imode,
 {
     using IMode = ::Ewoms::Well::InjectorCMode;
     using Val   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-
     using IType = ::Ewoms::InjectorType;
 
+    if (wellStatus == ::Ewoms::Well::Status::SHUT) {
+        return Val::Shut;
+    }
     switch (imode) {
         case IMode::RATE: {
             switch (itype) {
@@ -1338,6 +1351,9 @@ int Ewoms::eclipseControlMode(const Ewoms::Well::ProducerCMode pmode,
     using PMode = ::Ewoms::Well::ProducerCMode;
     using Val   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
+    if (wellStatus == ::Ewoms::Well::Status::SHUT) {
+        return Val::Shut;
+    }
     switch (pmode) {
         case PMode::ORAT: return Val::OilRate;
         case PMode::WRAT: return Val::WatRate;
@@ -1357,6 +1373,19 @@ int Ewoms::eclipseControlMode(const Ewoms::Well::ProducerCMode pmode,
 
     return Val::WMCtlUnk;
 }
+
+/*
+  The purpose of this function is to convert OPM well status to an integer value
+  suitable for output in the eclipse restart file. In OPM we have different
+  variables for the wells status and the active control, when this is written to
+  a restart file they are combined to one integer. In OPM a well can have an
+  active control while still being shut, when this is converted to an integer
+  value suitable for the eclipse formatted restart file the value 0 will be used
+  to signal a SHUT well and the active control will be lost.
+
+  In the case of a well which is in state 'STOP' or 'AUTO' an integer
+  corresponding to the currently active control is writte to the restart file.
+*/
 
 int Ewoms::eclipseControlMode(const Well&         well,
                             const SummaryState& st)

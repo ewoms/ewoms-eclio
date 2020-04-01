@@ -18,6 +18,7 @@
 #include "config.h"
 
 #include <ewoms/eclio/io/esmry.hh>
+#include <ewoms/common/filesystem.hh>
 
 #define BOOST_TEST_MODULE Test EclIO
 #include <boost/test/unit_test.hpp>
@@ -340,6 +341,17 @@ BOOST_AUTO_TEST_CASE(TestESmry_4) {
     BOOST_CHECK_EQUAL(smryVect==time_ref, false);
     BOOST_CHECK_EQUAL(smryVect_rstep==time_ref, true);
 
+}
+
+namespace fs = Ewoms::filesystem;
+BOOST_AUTO_TEST_CASE(TestCreateRSM) {
+    ESmry smry1("SPE1CASE1.SMSPEC");
+
+    smry1.write_rsm_file();
+    BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
+
+    smry1.write_rsm_file("TEST.RSM");
+    BOOST_CHECK(fs::exists("TEST.RSM"));
 }
 
 BOOST_AUTO_TEST_CASE(TestUnits) {
