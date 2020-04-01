@@ -1,3 +1,5 @@
+#include "config.h"
+
 #define BOOST_TEST_MODULE StringTests
 
 #include <boost/test/unit_test.hpp>

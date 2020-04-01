@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 // NOTE: This file is inteded to be copy-pasted into user code
 // through an #include statement.

@@ -16,7 +16,7 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.h>
+#include "config.h"
 
 #define BOOST_TEST_MODULE SIMULATION_DATA_CONTAINER_TESTS
 #include <boost/test/unit_test.hpp>
