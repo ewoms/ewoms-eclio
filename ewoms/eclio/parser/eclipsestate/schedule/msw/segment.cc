@@ -24,6 +24,8 @@
 #include <cassert>
 #include <stdexcept>
 
+#include <string>
+
 namespace Ewoms {
 namespace {
 
@@ -325,7 +327,7 @@ namespace {
         case -5:
             return SegmentType::VALVE;
         default:
-            throw std::invalid_argument("Unhanedled segment type");
+            throw std::invalid_argument("Unhandeled segment type: " + std::to_string(ecl_id));
         }
     }
 }

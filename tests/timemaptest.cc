@@ -578,6 +578,17 @@ BOOST_AUTO_TEST_CASE(TimeServiceOperatorPlus) {
     BOOST_CHECK_EQUAL(t1.year(), 2010);
     BOOST_CHECK_EQUAL(t1.month(), 1);
     BOOST_CHECK_EQUAL(t1.day(), 2);
+
+    auto tl = Ewoms::asLocalTimeT(t0);
+    auto tu = Ewoms::asTimeT(t0);
+    auto diff1 = std::difftime(tl, tu);
+
+    auto tml = *std::gmtime(&tl);
+    auto tmu = *std::gmtime(&tu);
+
+    auto diff2 = std::difftime( std::mktime(&tml), std::mktime(&tmu) );
+
+    BOOST_CHECK_CLOSE( diff1, diff2, 1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(RESTART) {

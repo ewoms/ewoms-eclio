@@ -20,6 +20,7 @@
 #include <ewoms/eclio/io/esmry.hh>
 
 #include <algorithm>
+#include <chrono>
 #include <exception>
 #include <iterator>
 #include <limits>
@@ -28,7 +29,7 @@
 #include <string>
 
 #include <ewoms/common/filesystem.hh>
-
+#include <ewoms/eclio/utility/timeservice.hh>
 #include <ewoms/eclio/io/eclfile.hh>
 /*
 
@@ -48,7 +49,30 @@
      RXF            +-+-+-         32768*R1(R2 + 10) |       11        RXF:2-3
      SOFX           OP_1           12675             |       12        SOFX:OP_1:12675, SOFX:OP_1:i,j,jk
 
- */
+*/
+
+namespace {
+
+std::chrono::system_clock::time_point make_date(const std::vector<int>& datetime) {
+    auto day = datetime[0];
+    auto month = datetime[1];
+    auto year = datetime[2];
+    auto hour = 0;
+    auto minute = 0;
+    auto second = 0;
+
+    if (datetime.size() == 6) {
+        hour = datetime[3];
+        minute = datetime[4];
+        auto total_usec = datetime[5];
+        second = total_usec / 1000000;
+    }
+
+    const auto ts = Ewoms::TimeStampUTC{ Ewoms::TimeStampUTC::YMD{ year, month, day}}.hour(hour).minutes(minute).seconds(second);
+    return std::chrono::system_clock::from_time_t( Ewoms::asTimeT(ts) );
+}
+
+}
 
 namespace Ewoms { namespace EclIO {
 
@@ -110,7 +134,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         const std::vector<int> nums = smspec.get<int>("NUMS");
         const std::vector<std::string> units = smspec.get<std::string>("UNITS");
 
-        startdat = smspec.get<int>("STARTDAT");
+        this->startdat = make_date(smspec.get<int>("STARTDAT"));
 
         for (unsigned int i=0; i<keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -161,7 +185,7 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
         const std::vector<int> nums = smspec_rst.get<int>("NUMS");
         const std::vector<std::string> units = smspec_rst.get<std::string>("UNITS");
 
-        startdat = smspec_rst.get<int>("STARTDAT");
+        this->startdat = make_date(smspec_rst.get<int>("STARTDAT"));
 
         for (size_t i = 0; i < keywords.size(); i++) {
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
@@ -345,7 +369,6 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             time = tmpData[0];
 
             if (time == 0.0) {
-                seqTime.push_back(time);
                 seqIndex.push_back(step);
             }
 
@@ -355,12 +378,10 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
                 if (std::get<0>(arraySourceList[i]) == "SEQHDR") {
                     i++;
                     reportStepNumber++;
-                    seqTime.push_back(time);
                     seqIndex.push_back(step);
                 }
             } else {
                 reportStepNumber++;
-                seqTime.push_back(time);
                 seqIndex.push_back(step);
             }
 
@@ -564,16 +585,7 @@ const std::vector<float>& ESmry::get(const std::string& name) const
 
 std::vector<float> ESmry::get_at_rstep(const std::string& name) const
 {
-    const std::vector<float> full_vector= this->get(name);
-
-    std::vector<float> rstep_vector;
-    rstep_vector.reserve(seqIndex.size());
-
-    for (const auto& ind : seqIndex){
-        rstep_vector.push_back(full_vector[ind]);
-    }
-
-    return rstep_vector;
+    return this->rstep_vector( this->get(name) );
 }
 
 int ESmry::timestepIdxAtReportstepStart(const int reportStep) const
@@ -600,6 +612,25 @@ const std::vector<std::string>& ESmry::keywordList() const {
 
 const std::vector<SummaryNode>& ESmry::summaryNodeList() const {
     return summaryNodes;
+}
+
+std::vector<std::chrono::system_clock::time_point> ESmry::dates() const {
+    double time_unit = 24 * 3600;
+    std::vector<std::chrono::system_clock::time_point> d;
+
+    using namespace std::chrono;
+    using TP      = time_point<system_clock>;
+    using DoubSec = duration<double, seconds::period>;
+
+    for (const auto& t : this->get("TIME"))
+        d.push_back( this->startdat + duration_cast<TP::duration>(DoubSec(t * time_unit)));
+
+    return d;
+}
+
+std::vector<std::chrono::system_clock::time_point> ESmry::dates_at_rstep() const {
+    const auto& full_vector = this->dates();
+    return this->rstep_vector(full_vector);
 }
 
 }} // namespace Ewoms::ecl

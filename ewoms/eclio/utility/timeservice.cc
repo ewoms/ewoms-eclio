@@ -50,6 +50,20 @@ namespace {
         // have the same broken-down elements as 'tp'.
         return advance(ltime, offset);
     }
+
+    std::tm makeTm(const Ewoms::TimeStampUTC& tp) {
+        auto timePoint = std::tm{};
+
+        timePoint.tm_year = tp.year()  - 1900;
+        timePoint.tm_mon  = tp.month() -    1;
+        timePoint.tm_mday = tp.day();
+        timePoint.tm_hour = tp.hour();
+        timePoint.tm_min  = tp.minutes();
+        timePoint.tm_sec  = tp.seconds();
+
+        return timePoint;
+    }
+
 }
 
 Ewoms::TimeStampUTC::TimeStampUTC(const std::time_t tp)
@@ -122,17 +136,13 @@ Ewoms::TimeStampUTC& Ewoms::TimeStampUTC::microseconds(const int us)
 
 std::time_t Ewoms::asTimeT(const TimeStampUTC& tp)
 {
-    auto timePoint = std::tm{};
+    return makeUTCTime(makeTm(tp));
+}
 
-    timePoint.tm_year = tp.year()  - 1900;
-    timePoint.tm_mon  = tp.month() -    1;
-    timePoint.tm_mday = tp.day();
-
-    timePoint.tm_hour = tp.hour();
-    timePoint.tm_min  = tp.minutes();
-    timePoint.tm_sec  = tp.seconds();
-
-    return makeUTCTime(timePoint);
+std::time_t Ewoms::asLocalTimeT(const TimeStampUTC& tp)
+{
+    auto tm = makeTm(tp);
+    return std::mktime(&tm);
 }
 
 Ewoms::TimeStampUTC Ewoms::operator+(const Ewoms::TimeStampUTC& lhs, std::chrono::duration<double> delta) {

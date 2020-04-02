@@ -20,6 +20,7 @@
 #define WELL2_H
 
 #include <string>
+#include <iosfwd>
 
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
@@ -603,6 +604,10 @@ int eclipseControlMode(const Well::ProducerCMode pmode,
 
 int eclipseControlMode(const Well&         well,
                        const SummaryState& st);
-}
 
+std::ostream& operator<<(std::ostream& os, const Well::Status& st);
+std::ostream& operator<<(std::ostream& os, const Well::ProducerCMode& cm);
+std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm);
+
+}
 #endif

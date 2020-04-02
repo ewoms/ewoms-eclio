@@ -242,5 +242,11 @@ ewoms_add_test(RootFinders
 # deal with the data required by the unit tests
 ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/ECLFILE*" "tests/*.json" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA")
 
+# link the UNRST files for the restart test to the build directory
+set(FROMDIR "${PROJECT_BINARY_DIR}/restart")
+set(TODIR "${PROJECT_SOURCE_DIR}/tests/restart")
+execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink "${TODIR}" "${FROMDIR}")
+message("-- Created symlink: ${FROMFILE} -> ${TOFILE}")
+
 # finalize the project, e.g. generate the config.h etc.
 finalize_ewoms_project()
