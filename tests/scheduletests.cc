@@ -3667,7 +3667,6 @@ END
 }
 
 BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
-    auto python = std::make_shared<Python>();
     Parser parser;
     auto deck = parser.parseFile("MODEL2_RESTART.DATA");
     EclipseState es{ deck };
@@ -3676,7 +3675,7 @@ BOOST_AUTO_TEST_CASE(SKIPREST_VFP) {
     const auto& rst_filename = es.getIOConfig().getRestartFileName( init_config.getRestartRootName(), report_step, false );
     Ewoms::EclIO::ERst rst_file(rst_filename);
     const auto& rst = Ewoms::RestartIO::RstState::load(rst_file, report_step);
-    const auto sched = Schedule{ deck, es, python , &rst};
+    const auto sched = Schedule{ deck, es , &rst};
     const auto& tables = sched.getVFPProdTables(3);
     BOOST_CHECK( !tables.empty() );
 }
