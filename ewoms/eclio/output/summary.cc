@@ -1990,7 +1990,7 @@ void reportUnsupportedKeywords(std::vector<Ewoms::SummaryConfigNode> keywords)
 
     for (auto node = keywords.begin(); node != uend; ++node) {
         const auto& location = node->location();
-        ::Ewoms::OpmLog::warning("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
+        ::Ewoms::OpmLog::note("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
     }
 }
 
