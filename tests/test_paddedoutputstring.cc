@@ -5,7 +5,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/io/paddedoutputstring.hh>
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 // Convenience alias.
 template <std::size_t N>

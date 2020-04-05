@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #include "config.h"
 
@@ -49,7 +50,7 @@
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/parserrecord.hh>
 #include <ewoms/eclio/parser/utility/stringview.hh>
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 #include <ewoms/eclio/parser/rawdeck/rawconsts.hh>
 #include <ewoms/eclio/parser/rawdeck/rawenums.hh>

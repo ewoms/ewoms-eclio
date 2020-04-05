@@ -15,11 +15,12 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <iostream>
 #include <stdexcept>
 
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
 #include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>

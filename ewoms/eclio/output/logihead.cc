@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <ewoms/eclio/output/logihead.hh>
 
 #include <ewoms/eclio/output/vectoritems/logihead.hh>

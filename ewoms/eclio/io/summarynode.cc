@@ -15,6 +15,7 @@
    You should have received a copy of the GNU General Public License
    along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
    */
+#include "config.h"
 
 #include <numeric>
 #include <regex>
@@ -153,22 +154,22 @@ Ewoms::EclIO::SummaryNode::Category Ewoms::EclIO::SummaryNode::category_from_key
     }
 }
 
-std::optional<std::string> Ewoms::EclIO::SummaryNode::display_name() const {
+Ewoms::optional<std::string> Ewoms::EclIO::SummaryNode::display_name() const {
     if (use_name(category)) {
         return wgname;
     } else {
-        return std::nullopt;
+        return Ewoms::nullopt;
     }
 }
 
-std::optional<std::string> Ewoms::EclIO::SummaryNode::display_number() const {
+Ewoms::optional<std::string> Ewoms::EclIO::SummaryNode::display_number() const {
     return display_number(default_number_renderer);
 }
 
-std::optional<std::string> Ewoms::EclIO::SummaryNode::display_number(number_renderer render_number) const {
+Ewoms::optional<std::string> Ewoms::EclIO::SummaryNode::display_number(number_renderer render_number) const {
     if (use_number(category)) {
         return render_number(*this);
     } else {
-        return std::nullopt;
+        return Ewoms::nullopt;
     }
 }

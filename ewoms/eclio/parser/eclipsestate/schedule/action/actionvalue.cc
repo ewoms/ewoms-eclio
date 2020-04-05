@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 
 #include <stdexcept>

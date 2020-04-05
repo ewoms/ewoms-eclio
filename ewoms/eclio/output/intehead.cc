@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <ewoms/eclio/output/intehead.hh>
 
 #include <ewoms/eclio/output/vectoritems/intehead.hh>

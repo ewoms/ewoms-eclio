@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <chrono>
 #include <iomanip>
 #include <iostream>

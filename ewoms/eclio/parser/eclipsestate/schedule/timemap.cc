@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <cassert>
 #include <ctime>
@@ -31,7 +32,7 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 constexpr const std::time_t invalid_time = -1;
 
@@ -54,6 +55,7 @@ namespace {
                                                       {"NOV", 11},
                                                       {"DEC", 12},
                                                       {"DES", 12}};
+
 }
 
     void TimeMap::init_start(std::time_t start_time) {

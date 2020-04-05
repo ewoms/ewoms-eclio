@@ -15,6 +15,8 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
+
 #include <algorithm>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>

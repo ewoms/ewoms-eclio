@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/eclipsestate/initconfig/equil.hh>
 

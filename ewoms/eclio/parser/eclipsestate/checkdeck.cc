@@ -22,13 +22,12 @@
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/opmlog/logutil.hh>
 
-#include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 namespace Ewoms {
 bool checkDeck( const Deck& deck, const Parser& parser, const ParseContext& parseContext, ErrorGuard& errorGuard, size_t enabledChecks) {

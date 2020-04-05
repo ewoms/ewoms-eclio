@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "config.h"
 
 #include <stdexcept>
 #include <iostream>
@@ -27,7 +28,6 @@
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
-#include <ewoms/eclio/parser/python/python.hh>
 
 Ewoms::Schedule make_schedule(const std::string& sched_string) {
     std::string deck_string = R"(
@@ -70,8 +70,7 @@ SCHEDULE
     Ewoms::Parser parser;
     auto deck = parser.parseString(deck_string + sched_string);
     Ewoms::EclipseState ecl_state(deck);
-    auto python = std::make_shared<Ewoms::Python>();
-    return Ewoms::Schedule(deck, ecl_state, python);
+    return Ewoms::Schedule(deck, ecl_state);
 }
 
 BOOST_AUTO_TEST_CASE(ReportConfig_INVALID) {

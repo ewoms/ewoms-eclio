@@ -930,6 +930,7 @@ BOOST_AUTO_TEST_CASE(UDQ_CMP_TEST) {
     UDQDefine def1(udqft, "WUBHP", {"WWCT", "+"});
 }
 */
+#include "config.h"
 
 BOOST_AUTO_TEST_CASE(UDQ_SCALAR_SET) {
     UDQParams udqp;

@@ -1,6 +1,8 @@
+#include "config.h"
+
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/endpointscaling.hh>
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 namespace Ewoms {
 

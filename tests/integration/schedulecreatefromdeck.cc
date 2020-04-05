@@ -443,6 +443,7 @@ BOOST_AUTO_TEST_CASE(WellTestWELOPENControlsSet) {
     BOOST_CHECK_EQUAL(WellCommon::StatusEnum::STOP, sched.getWell("W_1")->getStatus(5));
 }
 */
+#include "config.h"
 
 BOOST_AUTO_TEST_CASE(WellTestWGRUPCONWellPropertiesSet) {
     Parser parser;

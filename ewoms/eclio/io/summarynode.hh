@@ -19,8 +19,9 @@
 #ifndef EWOMS_IO_SUMMARYNODE_H
 #define EWOMS_IO_SUMMARYNODE_H
 
+#include <ewoms/common/optional.hh>
+
 #include <functional>
-#include <optional>
 #include <string>
 #include <unordered_set>
 
@@ -67,9 +68,9 @@ struct SummaryNode {
 
     static Category category_from_keyword(const std::string&, const std::unordered_set<std::string> &miscellaneous_keywords = {});
 
-    std::optional<std::string> display_name() const;
-    std::optional<std::string> display_number() const;
-    std::optional<std::string> display_number(number_renderer) const;
+    Ewoms::optional<std::string> display_name() const;
+    Ewoms::optional<std::string> display_number() const;
+    Ewoms::optional<std::string> display_number(number_renderer) const;
 };
 
 }} // namespace EclIO, Ewoms

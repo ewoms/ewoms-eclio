@@ -248,6 +248,7 @@ Ewoms::TimeStampUTC make_sim_time(const Ewoms::Schedule& sched, const Ewoms::Sum
  * requested output may be similar-but-not-quite. Through various techniques
  * the compiler writes a lot of this code for us.
  */
+#include "config.h"
 
 using rt = Ewoms::data::Rates::opt;
 using measure = Ewoms::UnitSystem::measure;

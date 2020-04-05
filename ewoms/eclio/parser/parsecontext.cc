@@ -15,6 +15,7 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -24,7 +25,7 @@
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/inputerroraction.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 namespace Ewoms {
 

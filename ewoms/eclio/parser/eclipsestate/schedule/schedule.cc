@@ -26,8 +26,8 @@
 
 #include <ewoms/eclio/opmlog/logutil.hh>
 #include <ewoms/eclio/utility/numeric/cmp.hh>
+#include <ewoms/common/string.hh>
 
-#include <ewoms/eclio/parser/utility/string.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>

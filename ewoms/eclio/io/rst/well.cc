@@ -14,8 +14,9 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "config.h"
 
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 
 #include <ewoms/eclio/io/rst/header.hh>
 #include <ewoms/eclio/io/rst/connection.hh>

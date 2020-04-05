@@ -4,7 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <ewoms/eclio/parser/utility/string.hh>
+#include <ewoms/common/string.hh>
 #include <ewoms/eclio/parser/utility/stringview.hh>
 
 using namespace Ewoms;

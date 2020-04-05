@@ -61,7 +61,7 @@ public:
     const std::string& get_unit(const SummaryNode& node) const;
 
     void write_rsm(std::ostream&) const;
-    void write_rsm_file(std::optional<Ewoms::filesystem::path> = std::nullopt) const;
+    void write_rsm_file(Ewoms::optional<Ewoms::filesystem::path> = Ewoms::nullopt) const;
 
 private:
     Ewoms::filesystem::path inputFileName;
@@ -89,7 +89,7 @@ private:
     std::string unpackNumber(const SummaryNode&) const;
     std::string lookupKey(const SummaryNode&) const;
 
-    void write_block(std::ostream &, const std::vector<SummaryNode>&) const;
+    void write_block(std::ostream &, bool write_dates, const std::vector<std::string>& time_column, const std::vector<SummaryNode>&) const;
 
     template <typename T>
     std::vector<T> rstep_vector(const std::vector<T>& full_vector) const {
