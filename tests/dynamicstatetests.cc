@@ -30,7 +30,7 @@
 Ewoms::TimeMap make_timemap(int num) {
     std::vector<std::time_t> tp;
     for (int i = 0; i < num; i++)
-        tp.push_back( Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,i+1})));
+        tp.push_back( Ewoms::asTimeT(Ewoms::TimeStampUTC(2010,1,i+1)));
 
     Ewoms::TimeMap timeMap{ tp };
     return timeMap;

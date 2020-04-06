@@ -52,6 +52,7 @@ namespace Ewoms {
 
         explicit TimeStampUTC(const std::time_t tp);
         explicit TimeStampUTC(const YMD& ymd);
+        TimeStampUTC(int year, int month, int day);
         TimeStampUTC(const YMD& ymd,
                      int hour,
                      int minutes,

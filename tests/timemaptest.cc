@@ -44,14 +44,14 @@ BOOST_AUTO_TEST_CASE(GetStartDate) {
 }
 
 BOOST_AUTO_TEST_CASE(AddDateNegativeStepThrows) {
-    std::vector<std::time_t> time_points = { Ewoms::asTimeT(Ewoms::TimeStampUTC({2000,1,1})), Ewoms::asTimeT(Ewoms::TimeStampUTC({1999,1,1}))};
+    std::vector<std::time_t> time_points = { Ewoms::asTimeT(Ewoms::TimeStampUTC(2000,1,1)), Ewoms::asTimeT(Ewoms::TimeStampUTC(1999,1,1))};
     BOOST_CHECK_THROW(Ewoms::TimeMap timeMap(time_points), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(AddStepSizeCorrect) {
-    std::vector<std::time_t> time_points = { Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,1})),
-                                             Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,2})),
-                                             Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,3}))};
+    std::vector<std::time_t> time_points = { Ewoms::asTimeT(Ewoms::TimeStampUTC(2010,1,1)),
+                                             Ewoms::asTimeT(Ewoms::TimeStampUTC(2010,1,2)),
+                                             Ewoms::asTimeT(Ewoms::TimeStampUTC(2010,1,3))};
     Ewoms::TimeMap timeMap(time_points);
     BOOST_CHECK_EQUAL(3U, timeMap.size());
 
@@ -675,25 +675,25 @@ TSTEP
     const auto deck3 = parser.parseString(deck_string3);
 
     // The date 2005-01-02 is not present as a DATES in the deck; invalid input.
-    auto invalid_restart = std::make_pair(Ewoms::asTimeT(Ewoms::TimeStampUTC({2005, 1, 2})), 5);
-    auto valid_restart = std::make_pair(Ewoms::asTimeT(Ewoms::TimeStampUTC({2005, 1, 1})), 5);
+    auto invalid_restart = std::make_pair(Ewoms::asTimeT(Ewoms::TimeStampUTC(2005, 1, 2)), 5);
+    auto valid_restart = std::make_pair(Ewoms::asTimeT(Ewoms::TimeStampUTC(2005, 1, 1)), 5);
 
     BOOST_CHECK_THROW( Ewoms::TimeMap(deck1, invalid_restart) , std::invalid_argument);
     Ewoms::TimeMap tm1(deck1, valid_restart);
     BOOST_CHECK_THROW( tm1[1], std::invalid_argument );
     BOOST_CHECK_THROW( tm1[4], std::invalid_argument );
     auto start = tm1[0];
-    BOOST_CHECK_EQUAL(start , Ewoms::asTimeT(Ewoms::TimeStampUTC({2000,1,1})));
-    BOOST_CHECK_EQUAL(tm1[5] , Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,1})));
+    BOOST_CHECK_EQUAL(start , Ewoms::asTimeT(Ewoms::TimeStampUTC(2000,1,1)));
+    BOOST_CHECK_EQUAL(tm1[5] , Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,1,1)));
     BOOST_CHECK(tm1.skiprest());
 
     Ewoms::TimeMap tm2(deck2, valid_restart);
-    BOOST_CHECK_EQUAL(tm2[5], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,1})));
-    BOOST_CHECK_EQUAL(tm2[6], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,7,1})));
+    BOOST_CHECK_EQUAL(tm2[5], Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,1,1)));
+    BOOST_CHECK_EQUAL(tm2[6], Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,7,1)));
 
     Ewoms::TimeMap tm3(deck3, valid_restart);
-    BOOST_CHECK_EQUAL(tm3[5], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,1})));
-    BOOST_CHECK_EQUAL(tm3[6], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,2})));
-    BOOST_CHECK_EQUAL(tm3[7], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,3})));
-    BOOST_CHECK_EQUAL(tm3[8], Ewoms::asTimeT(Ewoms::TimeStampUTC({2005,1,4})));
+    BOOST_CHECK_EQUAL(tm3[5], Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,1,1)));
+    BOOST_CHECK_EQUAL(tm3[6], Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,1,2)));
+    BOOST_CHECK_EQUAL(tm3[7], Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,1,3)));
+    BOOST_CHECK_EQUAL(tm3[8], Ewoms::asTimeT(Ewoms::TimeStampUTC(2005,1,4)));
 }

@@ -29,10 +29,10 @@
 #include <ewoms/eclio/utility/timeservice.hh>
 
 BOOST_AUTO_TEST_CASE(CreateEmpty) {
-    std::vector<std::time_t> tp = { Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,1})) };
+    std::vector<std::time_t> tp = { Ewoms::asTimeT(Ewoms::TimeStampUTC(2010,1,1)) };
 
     for (int i = 0; i < 11; i++)
-        tp.push_back( Ewoms::asTimeT(Ewoms::TimeStampUTC({2010,1,i+2})));
+        tp.push_back( Ewoms::asTimeT(Ewoms::TimeStampUTC(2010,1,i+2)));
 
     Ewoms::TimeMap timeMap(tp);
     Ewoms::Events events( timeMap );

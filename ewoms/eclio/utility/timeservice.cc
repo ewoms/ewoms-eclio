@@ -111,6 +111,10 @@ Ewoms::TimeStampUTC::TimeStampUTC(const YMD& ymd)
     : ymd_{ std::move(ymd) }
 {}
 
+Ewoms::TimeStampUTC::TimeStampUTC(int year, int month, int day)
+    : ymd_{ year, month, day }
+{}
+
 Ewoms::TimeStampUTC& Ewoms::TimeStampUTC::hour(const int h)
 {
     this->hour_ = h;
