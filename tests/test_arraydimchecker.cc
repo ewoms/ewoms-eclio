@@ -19,8 +19,13 @@
 
 #define BOOST_TEST_MODULE Array_Dimension_Checker
 
+#include <boost/version.hpp>
 #include <boost/test/unit_test.hpp>
+
+#if BOOST_VERSION >= 105900
+// output test stream is only available since boost 1.59.0
 #include <boost/test/tools/output_test_stream.hpp>
+#endif
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/arraydimchecker.hh>
 
@@ -437,6 +442,7 @@ BOOST_AUTO_TEST_CASE(WellDims)
     // There *should* be errors from dimension checking
     BOOST_CHECK(cse.guard);
 
+#if BOOST_VERSION >= 105900 // output test stream is only available since boost 1.59.0
     // Verify that we get expected output from ErrorGuard::dump()
     boost::test_tools::output_test_stream output{"expect-wdims.err.out", true};
     {
@@ -446,6 +452,7 @@ BOOST_AUTO_TEST_CASE(WellDims)
 
         BOOST_CHECK(output.match_pattern());
     }
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
@@ -470,6 +477,7 @@ BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
     // There *should* be errors from dimension checking
     BOOST_CHECK(cse.guard);
 
+#if BOOST_VERSION >= 105900 // output test stream is only available since boost 1.59.0
     // Verify that we get expected output from ErrorGuard::dump()
     boost::test_tools::output_test_stream output{"expect-wdims.chldg.err.out", true};
     {
@@ -479,6 +487,7 @@ BOOST_AUTO_TEST_CASE(WellDims_ManyChildGroups)
 
         BOOST_CHECK(output.match_pattern());
     }
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()

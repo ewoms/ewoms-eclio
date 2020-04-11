@@ -35,6 +35,7 @@ public:
     using std::unordered_map<std::string,unsigned>::unordered_map;
 
     RPTConfig(const DeckKeyword&);
+    RPTConfig() = default;
 };
 
 }

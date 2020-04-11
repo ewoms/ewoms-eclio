@@ -85,13 +85,15 @@ ERft::ERft(const std::string &filename) : EclFile(filename)
 
 bool ERft::hasRft(const std::string& wellName, const RftDate& date) const
 {
-    return reportIndices.find({wellName, date}) != reportIndices.end();
+    std::tuple<std::string,RftDate> key(wellName, date);
+    return reportIndices.find(key) != reportIndices.end();
 }
 
 bool ERft::hasRft(const std::string& wellName, int year, int month, int day) const
 {
     RftDate date(year, month, day);
-    return reportIndices.find({wellName,date}) != reportIndices.end();
+    std::tuple<std::string,RftDate> key(wellName, date);
+    return reportIndices.find(key) != reportIndices.end();
 }
 
 int ERft::getReportIndex(const std::string& wellName, const RftDate& date) const

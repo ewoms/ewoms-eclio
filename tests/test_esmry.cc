@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(TestCreateRSM) {
     smry1.write_rsm_file();
     BOOST_CHECK(fs::exists("SPE1CASE1.RSM"));
 
-    smry1.write_rsm_file("TEST.RSM");
+    smry1.write_rsm_file(Ewoms::filesystem::path("TEST.RSM"));
     BOOST_CHECK(fs::exists("TEST.RSM"));
 }
 

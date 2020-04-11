@@ -87,12 +87,13 @@ BOOST_AUTO_TEST_CASE(TestERft_1) {
         Date{2017,7,31},
     };
 
-    const std::vector<std::tuple<std::string, Date, float>> ref_rftList = {
-        {"PROD", Date{2015,1, 1}, 0.00000000e+00},
-        {"INJ" , Date{2015,1, 1}, 0.00000000e+00},
-        {"A-1H", Date{2015,9, 1}, 0.24300000E+03},
-        {"B-2H", Date{2016,5,31}, 0.51600000E+03},
-        {"PROD", Date{2017,7,31}, 0.94200000E+03}
+    typedef std::tuple<std::string, Date, float> FileListKey;
+    const std::vector<FileListKey> ref_rftList = {
+        FileListKey{"PROD", Date{2015,1, 1}, 0.00000000e+00},
+        FileListKey{"INJ" , Date{2015,1, 1}, 0.00000000e+00},
+        FileListKey{"A-1H", Date{2015,9, 1}, 0.24300000E+03},
+        FileListKey{"B-2H", Date{2016,5,31}, 0.51600000E+03},
+        FileListKey{"PROD", Date{2017,7,31}, 0.94200000E+03}
     };
 
     std::string testFile="SPE1CASE1.RFT";

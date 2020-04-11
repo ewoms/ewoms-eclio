@@ -21,7 +21,6 @@
 
 #define BOOST_TEST_MODULE CubicTest
 #include <boost/test/unit_test.hpp>
-#include <boost/test/tools/floating_point_comparison.hpp>
 
 /* --- our own headers --- */
 #include <ewoms/eclio/utility/numeric/calculatecellvol.hh>
