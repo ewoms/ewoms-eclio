@@ -25,6 +25,7 @@
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/rftconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/rptconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
@@ -36,6 +37,7 @@
 #include <ewoms/eclio/output/summary.hh>
 #include <ewoms/eclio/output/writeinit.hh>
 #include <ewoms/eclio/output/writerft.hh>
+#include <ewoms/eclio/output/writerpt.hh>
 
 #include <ewoms/eclio/io/esmry.hh>
 #include <ewoms/eclio/io/outputstream.hh>
@@ -248,6 +250,13 @@ void EclipseIO::writeTimeStep(const SummaryState& st,
 
         RftIO::write(report_step, secs_elapsed, es.getUnits(),
                      grid, schedule, value.wells, rftFile);
+    }
+
+    if (!isSubstep) {
+        for (const auto& report : schedule.report_config(report_step)) {
+            std::stringstream ss;
+            RptIO::write_report(ss, report.first, report.second, schedule, report_step);
+        }
     }
  }
 

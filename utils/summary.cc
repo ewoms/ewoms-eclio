@@ -103,8 +103,21 @@ int main(int argc, char **argv) {
     }
 
     std::vector<std::string> smryList;
-    for (int i=0; i<argc - argOffset-1;i++){
-       smryList.push_back(argv[i+argOffset+1]);
+    for (int i=0; i<argc - argOffset-1; i++) {
+        if (smryFile.hasKey(argv[i+argOffset+1])) {
+            smryList.push_back(argv[i+argOffset+1]);
+        } else {
+            auto list = smryFile.keywordList(argv[i+argOffset+1]);
+
+            if (list.size()==0) {
+                std::string message = "Key " + std::string(argv[i+argOffset+1]) + " not found in summary file " + filename;
+                std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
+                return EXIT_FAILURE;
+            }
+
+            for (auto vect : list)
+                smryList.push_back(vect);
+        }
     }
 
     if (smryList.size()==0){
@@ -115,16 +128,8 @@ int main(int argc, char **argv) {
 
     std::vector<std::vector<float>> smryData;
 
-    for (auto key : smryList){
-
-        if (!smryFile.hasKey(key)){
-            std::string message = "Key " + key + " not found in summary file " + filename;
-            std::cout << "\n!Runtime Error \n >> " << message << "\n\n";
-            return EXIT_FAILURE;
-        }
-
+    for (auto key : smryList) {
         std::vector<float> vect = reportStepsOnly ? smryFile.get_at_rstep(key) : smryFile.get(key);
-
         smryData.push_back(vect);
     }
 

@@ -22,7 +22,9 @@
 #include <ewoms/eclio/io/erft.hh>
 #include <ewoms/eclio/io/erst.hh>
 #include <ewoms/eclio/io/esmry.hh>
+#include <ewoms/eclio/io/ersm.hh>
 
+#include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/errormacros.hh>
 
 #include <algorithm>
@@ -956,6 +958,15 @@ void ECLRegressionTest::results_smry()
                 printDeviationReport();
             }
         }
+
+        namespace fs = Ewoms::filesystem;
+        std::string rsm_file = rootName2 + ".RSM";
+        if (fs::is_regular_file(fs::path(rsm_file))) {
+            auto rsm = ERsm(rsm_file);
+            if (!cmp(smry2, rsm))
+                HANDLE_ERROR(std::runtime_error, "The RSM file did not compare equal to the summary file");
+        }
+
     } else {
         std::cout << "\n!Warning, summary files not found, hence not compared. \n" << std::endl;
     }

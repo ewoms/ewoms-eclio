@@ -60,6 +60,12 @@
 /* Define whether std::experimental::optional is available */
 #cmakedefine HAVE_STD_EXPERIMENTAL_OPTIONAL 1
 
+/* Define whether std::variant is available */
+#cmakedefine HAVE_STD_VARIANT 1
+
+/* Define whether boost::variant is available */
+#cmakedefine HAVE_BOOST_VARIANT 1
+
 /* begin bottom */
 
 /* end bottom */

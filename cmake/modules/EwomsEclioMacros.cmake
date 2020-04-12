@@ -21,6 +21,9 @@ endif()
 # either std::optional or std::experimental::optional needs to be supported
 find_package(StdOptional REQUIRED)
 
+# either std::variant or boost::variant needs to be supported
+find_package(StdVariant REQUIRED)
+
 # handle boost: the base package which contains the template libraries
 # is currently still required for ewoms-eclio
 find_package(Boost REQUIRED)

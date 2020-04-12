@@ -29,6 +29,9 @@ endif()
 # either std::optional or std::experimental::optional needs to be supported
 find_package(StdOptional REQUIRED)
 
+# either std::variant or std::experimental::variant needs to be supported
+find_package(StdVariant REQUIRED)
+
 # we want all features detected by the build system to be enabled,
 # thank you!
 dune_enable_all_packages()
