@@ -2124,6 +2124,109 @@ const std::string COPYREG::REGION_NAME::itemName = "REGION_NAME";
 const std::string COPYREG::REGION_NAME::defaultValue = "M";
 
 
+CPIFACT::CPIFACT( ) : ParserKeyword("CPIFACT")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("CPIFACT");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("WELL", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MULT", ParserItem::itype::UDA);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("I", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("J", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("K", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("C1", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("C2", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string CPIFACT::keywordName = "CPIFACT";
+const std::string CPIFACT::WELL::itemName = "WELL";
+const std::string CPIFACT::MULT::itemName = "MULT";
+const std::string CPIFACT::I::itemName = "I";
+const std::string CPIFACT::J::itemName = "J";
+const std::string CPIFACT::K::itemName = "K";
+const std::string CPIFACT::C1::itemName = "C1";
+const std::string CPIFACT::C2::itemName = "C2";
+
+
+CPIFACTL::CPIFACTL( ) : ParserKeyword("CPIFACTL")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("CPIFACTL");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("WELL", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MULT", ParserItem::itype::UDA);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("LGR", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("I", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("J", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("K", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("C1", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("C2", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string CPIFACTL::keywordName = "CPIFACTL";
+const std::string CPIFACTL::WELL::itemName = "WELL";
+const std::string CPIFACTL::MULT::itemName = "MULT";
+const std::string CPIFACTL::LGR::itemName = "LGR";
+const std::string CPIFACTL::I::itemName = "I";
+const std::string CPIFACTL::J::itemName = "J";
+const std::string CPIFACTL::K::itemName = "K";
+const std::string CPIFACTL::C1::itemName = "C1";
+const std::string CPIFACTL::C2::itemName = "C2";
+
+
 CPR::CPR( ) : ParserKeyword("CPR")
 {
   setSizeType(SLASH_TERMINATED);

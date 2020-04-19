@@ -63,6 +63,7 @@ namespace Ewoms {
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
+        const Connection& lowest() const;
         Connection& getFromIJK(const int i, const int j, const int k);
 
         const_iterator begin() const { return this->m_connections.begin(); }

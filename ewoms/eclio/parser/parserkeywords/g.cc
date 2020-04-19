@@ -1748,6 +1748,46 @@ const std::string GEFAC::TRANSFER_EXT_NET::itemName = "TRANSFER_EXT_NET";
 const std::string GEFAC::TRANSFER_EXT_NET::defaultValue = "YES";
 
 
+GETDATA::GETDATA( ) : ParserKeyword("GETDATA")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("EDIT");
+  addValidSectionName("GRID");
+  addValidSectionName("PROPS");
+  addValidSectionName("REGIONS");
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("GETDATA");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("FILENAME", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("FORMATTED", ParserItem::itype::STRING);
+        item.setDefault( std::string("UNFORMATTED") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("ZNAME", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("ZALT", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string GETDATA::keywordName = "GETDATA";
+const std::string GETDATA::FILENAME::itemName = "FILENAME";
+const std::string GETDATA::FORMATTED::itemName = "FORMATTED";
+const std::string GETDATA::FORMATTED::defaultValue = "UNFORMATTED";
+const std::string GETDATA::ZNAME::itemName = "ZNAME";
+const std::string GETDATA::ZALT::itemName = "ZALT";
+
+
 GETGLOB::GETGLOB( ) : ParserKeyword("GETGLOB")
 {
   setFixedSize( (size_t) 0);

@@ -82,6 +82,24 @@ namespace ParserKeywords {
 
 
 
+   class SAMG : public ParserKeyword {
+   public:
+       SAMG();
+       static const std::string keywordName;
+
+       class EPS {
+       public:
+           static const std::string itemName;
+       };
+
+       class REUSE {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class SATNUM : public ParserKeyword {
    public:
        SATNUM();

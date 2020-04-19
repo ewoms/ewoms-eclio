@@ -1330,6 +1330,35 @@ namespace ParserKeywords {
 
 
 
+   class GETDATA : public ParserKeyword {
+   public:
+       GETDATA();
+       static const std::string keywordName;
+
+       class FILENAME {
+       public:
+           static const std::string itemName;
+       };
+
+       class FORMATTED {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class ZNAME {
+       public:
+           static const std::string itemName;
+       };
+
+       class ZALT {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class GETGLOB : public ParserKeyword {
    public:
        GETGLOB();

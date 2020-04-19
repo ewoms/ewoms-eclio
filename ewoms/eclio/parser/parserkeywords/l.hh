@@ -755,6 +755,24 @@ namespace ParserKeywords {
 
 
 
+   class LXFIN : public ParserKeyword {
+   public:
+       LXFIN();
+       static const std::string keywordName;
+
+       class CELL_THICKNESS {
+       public:
+           static const std::string itemName;
+       };
+
+       class SIZE_OPTION {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class LY : public ParserKeyword {
    public:
        LY();
@@ -768,12 +786,48 @@ namespace ParserKeywords {
 
 
 
+   class LYFIN : public ParserKeyword {
+   public:
+       LYFIN();
+       static const std::string keywordName;
+
+       class CELL_THICKNESS {
+       public:
+           static const std::string itemName;
+       };
+
+       class SIZE_OPTION {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class LZ : public ParserKeyword {
    public:
        LZ();
        static const std::string keywordName;
 
        class data {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class LZFIN : public ParserKeyword {
+   public:
+       LZFIN();
+       static const std::string keywordName;
+
+       class CELL_THICKNESS {
+       public:
+           static const std::string itemName;
+       };
+
+       class SIZE_OPTION {
        public:
            static const std::string itemName;
        };

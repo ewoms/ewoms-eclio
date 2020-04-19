@@ -143,6 +143,30 @@ const std::string SALTVD::keywordName = "SALTVD";
 const std::string SALTVD::DATA::itemName = "DATA";
 
 
+SAMG::SAMG( ) : ParserKeyword("SAMG")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("RUNSPEC");
+  clearDeckNames();
+  addDeckName("SAMG");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("EPS", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("REUSE", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string SAMG::keywordName = "SAMG";
+const std::string SAMG::EPS::itemName = "EPS";
+const std::string SAMG::REUSE::itemName = "REUSE";
+
+
 SATNUM::SATNUM( ) : ParserKeyword("SATNUM")
 {
   setFixedSize( (size_t) 1);
@@ -467,6 +491,7 @@ SEGMENT_PROBE::SEGMENT_PROBE( ) : ParserKeyword("SEGMENT_PROBE")
   addDeckName("SOFR");
   addDeckName("SPR");
   addDeckName("SPRD");
+  addDeckName("SPRDA");
   addDeckName("SPRDF");
   addDeckName("SPRDH");
   addDeckName("SWFR");

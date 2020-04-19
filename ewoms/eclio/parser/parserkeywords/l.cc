@@ -1141,6 +1141,31 @@ const std::string LX::keywordName = "LX";
 const std::string LX::data::itemName = "data";
 
 
+LXFIN::LXFIN( ) : ParserKeyword("LXFIN")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("LXFIN");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("CELL_THICKNESS", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Length");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("SIZE_OPTION", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string LXFIN::keywordName = "LXFIN";
+const std::string LXFIN::CELL_THICKNESS::itemName = "CELL_THICKNESS";
+const std::string LXFIN::SIZE_OPTION::itemName = "SIZE_OPTION";
+
+
 LY::LY( ) : ParserKeyword("LY")
 {
   setFixedSize( (size_t) 1);
@@ -1162,6 +1187,31 @@ const std::string LY::keywordName = "LY";
 const std::string LY::data::itemName = "data";
 
 
+LYFIN::LYFIN( ) : ParserKeyword("LYFIN")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("LYFIN");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("CELL_THICKNESS", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Length");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("SIZE_OPTION", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string LYFIN::keywordName = "LYFIN";
+const std::string LYFIN::CELL_THICKNESS::itemName = "CELL_THICKNESS";
+const std::string LYFIN::SIZE_OPTION::itemName = "SIZE_OPTION";
+
+
 LZ::LZ( ) : ParserKeyword("LZ")
 {
   setFixedSize( (size_t) 1);
@@ -1181,6 +1231,31 @@ LZ::LZ( ) : ParserKeyword("LZ")
 }
 const std::string LZ::keywordName = "LZ";
 const std::string LZ::data::itemName = "data";
+
+
+LZFIN::LZFIN( ) : ParserKeyword("LZFIN")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("LZFIN");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("CELL_THICKNESS", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Length");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("SIZE_OPTION", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string LZFIN::keywordName = "LZFIN";
+const std::string LZFIN::CELL_THICKNESS::itemName = "CELL_THICKNESS";
+const std::string LZFIN::SIZE_OPTION::itemName = "SIZE_OPTION";
 
 
 }

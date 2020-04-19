@@ -2010,6 +2010,40 @@ const std::string WELL_PROBE::keywordName = "WELL_PROBE";
 const std::string WELL_PROBE::WELLS::itemName = "WELLS";
 
 
+WELMOVEL::WELMOVEL( ) : ParserKeyword("WELMOVEL")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("WELMOVEL");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("WELLNAME", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("LGRNAME", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("WELLHEAD_I", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("WELLHEAD_J", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string WELMOVEL::keywordName = "WELMOVEL";
+const std::string WELMOVEL::WELLNAME::itemName = "WELLNAME";
+const std::string WELMOVEL::LGRNAME::itemName = "LGRNAME";
+const std::string WELMOVEL::WELLHEAD_I::itemName = "WELLHEAD_I";
+const std::string WELMOVEL::WELLHEAD_J::itemName = "WELLHEAD_J";
+
+
 WELOPEN::WELOPEN( ) : ParserKeyword("WELOPEN")
 {
   setSizeType(SLASH_TERMINATED);

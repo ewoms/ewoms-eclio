@@ -1609,6 +1609,97 @@ namespace ParserKeywords {
 
 
 
+   class CPIFACT : public ParserKeyword {
+   public:
+       CPIFACT();
+       static const std::string keywordName;
+
+       class WELL {
+       public:
+           static const std::string itemName;
+       };
+
+       class MULT {
+       public:
+           static const std::string itemName;
+       };
+
+       class I {
+       public:
+           static const std::string itemName;
+       };
+
+       class J {
+       public:
+           static const std::string itemName;
+       };
+
+       class K {
+       public:
+           static const std::string itemName;
+       };
+
+       class C1 {
+       public:
+           static const std::string itemName;
+       };
+
+       class C2 {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class CPIFACTL : public ParserKeyword {
+   public:
+       CPIFACTL();
+       static const std::string keywordName;
+
+       class WELL {
+       public:
+           static const std::string itemName;
+       };
+
+       class MULT {
+       public:
+           static const std::string itemName;
+       };
+
+       class LGR {
+       public:
+           static const std::string itemName;
+       };
+
+       class I {
+       public:
+           static const std::string itemName;
+       };
+
+       class J {
+       public:
+           static const std::string itemName;
+       };
+
+       class K {
+       public:
+           static const std::string itemName;
+       };
+
+       class C1 {
+       public:
+           static const std::string itemName;
+       };
+
+       class C2 {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class CPR : public ParserKeyword {
    public:
        CPR();

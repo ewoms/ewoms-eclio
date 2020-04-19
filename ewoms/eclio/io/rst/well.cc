@@ -33,6 +33,7 @@ namespace Ewoms {
 namespace RestartIO {
 
 constexpr int def_ecl_phase = 1;
+constexpr int def_pvt_table = 0;
 
 using M  = ::Ewoms::UnitSystem::measure;
 
@@ -66,6 +67,7 @@ RstWell::RstWell(const ::Ewoms::UnitSystem& unit_system,
     hist_requested_control(                                          iwel[VI::IWell::HistReqWCtrl]),
     msw_index(                                                       iwel[VI::IWell::MsWID]),
     completion_ordering(                                             iwel[VI::IWell::CompOrd]),
+    pvt_table(                                                       def_pvt_table),
     orat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::OilRateTarget]))),
     wrat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::WatRateTarget]))),
     grat_target(         unit_system.to_si(M::identity,              swel_value(swel[VI::SWell::GasRateTarget]))),

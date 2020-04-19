@@ -149,6 +149,7 @@ namespace Ewoms {
         std::array<double, 3> getCellCenter(size_t i,size_t j, size_t k) const;
         std::array<double, 3> getCellCenter(size_t globalIndex) const;
         std::array<double, 3> getCornerPos(size_t i,size_t j, size_t k, size_t corner_index) const;
+        std::vector<double> activeVolume() const;
         double getCellVolume(size_t globalIndex) const;
         double getCellVolume(size_t i , size_t j , size_t k) const;
         double getCellThickness(size_t globalIndex) const;
@@ -240,10 +241,6 @@ namespace Ewoms {
         std::vector<double> makeZcornDzTops(const std::vector<double>& dz, const std::vector<double>& tops) const ;
         std::vector<double> makeZcornDzvDepthz(const std::vector<double>& dzv, const std::vector<double>& depthz) const;
         std::vector<double> makeCoordDxvDyvDzvDepthz(const std::vector<double>& dxv, const std::vector<double>& dyv, const std::vector<double>& dzv, const std::vector<double>& depthz) const;
-
-        double sumIdir(int j, int k, int i1, const std::vector<double>& dx) const;
-        double sumJdir(int i, int k, int j1, const std::vector<double>& dy) const;
-        double sumKdir(int i, int j, const std::vector<double>& dz) const;
 
         void getCellCorners(const std::array<int, 3>& ijk, const std::array<int, 3>& dims, std::array<double,8>& X, std::array<double,8>& Y, std::array<double,8>& Z) const;
         void getCellCorners(const std::size_t globalIndex,

@@ -899,6 +899,20 @@ namespace ParserKeywords {
 
 
 
+   class EXIT : public ParserKeyword {
+   public:
+       EXIT();
+       static const std::string keywordName;
+
+       class STATUS_CODE {
+       public:
+           static const std::string itemName;
+           static const int defaultValue;
+       };
+   };
+
+
+
    class EXTFIN : public ParserKeyword {
    public:
        EXTFIN();

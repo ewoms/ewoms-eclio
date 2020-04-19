@@ -105,6 +105,7 @@ struct GroupInjectionProperties {
     UDAValue target_void_fraction;
     std::string reinj_group;
     std::string voidage_group;
+    bool available_group_control;
 
     static GroupInjectionProperties serializeObject();
 
@@ -124,6 +125,7 @@ struct GroupInjectionProperties {
         serializer(reinj_group);
         serializer(voidage_group);
         serializer(injection_controls);
+        serializer(available_group_control);
     }
 };
 
@@ -150,7 +152,7 @@ struct GroupProductionProperties {
     double guide_rate;
     GuideRateTarget guide_rate_def;
     double resv_target = 0;
-
+    bool available_group_control = true;
     static GroupProductionProperties serializeObject();
 
     int production_controls = 0;
@@ -169,6 +171,7 @@ struct GroupProductionProperties {
         serializer(guide_rate);
         serializer(guide_rate_def);
         serializer(resv_target);
+        serializer(available_group_control);
         serializer(production_controls);
     }
 };
@@ -214,8 +217,6 @@ struct ProductionControls {
     void setInjectionGroup();
     double getGroupEfficiencyFactor() const;
     bool   getTransferGroupEfficiencyFactor() const;
-    bool isAvailableForGroupControl() const;
-    void setAvailableForGroupControl(const bool available);
 
     std::size_t numWells() const;
     bool addGroup(const std::string& group_name);
@@ -239,6 +240,8 @@ struct ProductionControls {
     Phase injection_phase() const;
     bool has_control(ProductionCMode control) const;
     bool has_control(InjectionCMode control) const;
+    bool productionGroupControlAvailable() const;
+    bool injectionGroupControlAvailable(const Phase phase) const;
 
     bool operator==(const Group& data) const;
     const Phase& topup_phase() const;
@@ -255,7 +258,6 @@ struct ProductionControls {
         serializer(group_type);
         serializer(gefac);
         serializer(transfer_gefac);
-        serializer(available_for_group_control);
         serializer(vfp_table);
         serializer(parent_group);
         m_wells.serializeOp(serializer);
@@ -277,7 +279,6 @@ private:
     GroupType group_type;
     double gefac;
     bool transfer_gefac;
-    bool available_for_group_control;
     int vfp_table;
 
     std::string parent_group;

@@ -1500,10 +1500,12 @@ AQUCT::AQUCT( ) : ParserKeyword("AQUCT")
      {
         ParserItem item("INI_SALT", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
+        item.push_backDimension("Salinity");
         record.addItem(item);
      }
      {
         ParserItem item("TEMP_AQUIFER", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Temperature");
         record.addItem(item);
      }
      addRecord( record );
@@ -1651,7 +1653,7 @@ AQUFET::AQUFET( ) : ParserKeyword("AQUFET")
      }
      {
         ParserItem item("V0", ParserItem::itype::DOUBLE);
-        item.push_backDimension("Length*Length*Length");
+        item.push_backDimension("LiquidSurfaceVolume");
         record.addItem(item);
      }
      {
@@ -1661,7 +1663,7 @@ AQUFET::AQUFET( ) : ParserKeyword("AQUFET")
      }
      {
         ParserItem item("PI", ParserItem::itype::DOUBLE);
-        item.push_backDimension("ReservoirVolume/Pressure*Time");
+        item.push_backDimension("LiquidSurfaceVolume/Pressure*Time");
         record.addItem(item);
      }
      {
@@ -1699,7 +1701,7 @@ AQUFET::AQUFET( ) : ParserKeyword("AQUFET")
      {
         ParserItem item("SC_0", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
-        item.push_backDimension("Density");
+        item.push_backDimension("Salinity");
         record.addItem(item);
      }
      addRecord( record );
@@ -1774,6 +1776,7 @@ AQUFETP::AQUFETP( ) : ParserKeyword("AQUFETP")
      }
      {
         ParserItem item("TEMP", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Temperature");
         record.addItem(item);
      }
      addRecord( record );

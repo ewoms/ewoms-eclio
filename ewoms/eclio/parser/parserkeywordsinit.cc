@@ -132,6 +132,8 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::COPY >();
    p.addKeyword< ParserKeywords::COPYBOX >();
    p.addKeyword< ParserKeywords::COPYREG >();
+   p.addKeyword< ParserKeywords::CPIFACT >();
+   p.addKeyword< ParserKeywords::CPIFACTL >();
    p.addKeyword< ParserKeywords::CPR >();
    p.addKeyword< ParserKeywords::CREF >();
    p.addKeyword< ParserKeywords::CREFS >();
@@ -238,6 +240,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::ESSNODE >();
    p.addKeyword< ParserKeywords::EXCAVATE >();
    p.addKeyword< ParserKeywords::EXCEL >();
+   p.addKeyword< ParserKeywords::EXIT >();
    p.addKeyword< ParserKeywords::EXTFIN >();
    p.addKeyword< ParserKeywords::EXTHOST >();
    p.addKeyword< ParserKeywords::EXTRAPMS >();
@@ -316,6 +319,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::GECON >();
    p.addKeyword< ParserKeywords::GECONT >();
    p.addKeyword< ParserKeywords::GEFAC >();
+   p.addKeyword< ParserKeywords::GETDATA >();
    p.addKeyword< ParserKeywords::GETGLOB >();
    p.addKeyword< ParserKeywords::GI >();
    p.addKeyword< ParserKeywords::GIALL >();
@@ -486,8 +490,11 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::LWSWLPC >();
    p.addKeyword< ParserKeywords::LWSWU >();
    p.addKeyword< ParserKeywords::LX >();
+   p.addKeyword< ParserKeywords::LXFIN >();
    p.addKeyword< ParserKeywords::LY >();
+   p.addKeyword< ParserKeywords::LYFIN >();
    p.addKeyword< ParserKeywords::LZ >();
+   p.addKeyword< ParserKeywords::LZFIN >();
    p.addKeyword< ParserKeywords::MAPAXES >();
    p.addKeyword< ParserKeywords::MAPUNITS >();
    p.addKeyword< ParserKeywords::MASSFLOW >();
@@ -591,7 +598,9 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::OPERATER >();
    p.addKeyword< ParserKeywords::OPERNUM >();
    p.addKeyword< ParserKeywords::OPTIONS >();
+   p.addKeyword< ParserKeywords::OPTIONS3 >();
    p.addKeyword< ParserKeywords::OUTRAD >();
+   p.addKeyword< ParserKeywords::OUTSOL >();
    p.addKeyword< ParserKeywords::OVERBURD >();
    p.addKeyword< ParserKeywords::PARALLEL >();
    p.addKeyword< ParserKeywords::PARAOPTS >();
@@ -613,6 +622,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PENUM >();
    p.addKeyword< ParserKeywords::PERFORMANCE_PROBE >();
    p.addKeyword< ParserKeywords::PERMAVE >();
+   p.addKeyword< ParserKeywords::PERMJFUN >();
    p.addKeyword< ParserKeywords::PERMR >();
    p.addKeyword< ParserKeywords::PERMRED >();
    p.addKeyword< ParserKeywords::PERMTHT >();
@@ -640,6 +650,8 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PLYATEMP >();
    p.addKeyword< ParserKeywords::PLYCAMAX >();
    p.addKeyword< ParserKeywords::PLYDHFLF >();
+   p.addKeyword< ParserKeywords::PLYESAL >();
+   p.addKeyword< ParserKeywords::PLYKRRF >();
    p.addKeyword< ParserKeywords::PLYMAX >();
    p.addKeyword< ParserKeywords::PLYMWINJ >();
    p.addKeyword< ParserKeywords::PLYOPTS >();
@@ -767,6 +779,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::SALTREST >();
    p.addKeyword< ParserKeywords::SALTSOL >();
    p.addKeyword< ParserKeywords::SALTVD >();
+   p.addKeyword< ParserKeywords::SAMG >();
    p.addKeyword< ParserKeywords::SATNUM >();
    p.addKeyword< ParserKeywords::SATOPTS >();
    p.addKeyword< ParserKeywords::SAVE >();
@@ -1011,6 +1024,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::WELLDIMS >();
    p.addKeyword< ParserKeywords::WELL_COMPLETION_PROBE >();
    p.addKeyword< ParserKeywords::WELL_PROBE >();
+   p.addKeyword< ParserKeywords::WELMOVEL >();
    p.addKeyword< ParserKeywords::WELOPEN >();
    p.addKeyword< ParserKeywords::WELOPENL >();
    p.addKeyword< ParserKeywords::WELPI >();

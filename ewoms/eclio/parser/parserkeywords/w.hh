@@ -1383,6 +1383,34 @@ namespace ParserKeywords {
 
 
 
+   class WELMOVEL : public ParserKeyword {
+   public:
+       WELMOVEL();
+       static const std::string keywordName;
+
+       class WELLNAME {
+       public:
+           static const std::string itemName;
+       };
+
+       class LGRNAME {
+       public:
+           static const std::string itemName;
+       };
+
+       class WELLHEAD_I {
+       public:
+           static const std::string itemName;
+       };
+
+       class WELLHEAD_J {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class WELOPEN : public ParserKeyword {
    public:
        WELOPEN();

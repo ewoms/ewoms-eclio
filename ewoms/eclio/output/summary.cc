@@ -562,7 +562,8 @@ inline quantity trans_factors ( const fn_args& args ) {
     return { v, measure::transmissibility };
 }
 
-inline quantity spr ( const fn_args& args ) {
+template <Ewoms::data::SegmentPressures::Value ix>
+inline quantity segpress ( const fn_args& args ) {
     const quantity zero = { 0, measure::pressure };
 
     if( args.schedule_wells.empty() ) return zero;
@@ -581,8 +582,7 @@ inline quantity spr ( const fn_args& args ) {
 
     if( segment == well_data.segments.end() ) return zero;
 
-    const auto& v = segment->second.pressure;
-    return { v, measure::pressure };
+    return { segment->second.pressures[ix], measure::pressure };
 }
 
 inline quantity bhp( const fn_args& args ) {
@@ -1198,7 +1198,11 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SOFR", srate< rt::oil > },
     { "SWFR", srate< rt::wat > },
     { "SGFR", srate< rt::gas > },
-    { "SPR",  spr },
+    { "SPR", segpress<Ewoms::data::SegmentPressures::Value::Pressure> },
+    { "SPRD", segpress<Ewoms::data::SegmentPressures::Value::PDrop> },
+    { "SPRDH", segpress<Ewoms::data::SegmentPressures::Value::PDropHydrostatic> },
+    { "SPRDF", segpress<Ewoms::data::SegmentPressures::Value::PDropFriction> },
+    { "SPRDA", segpress<Ewoms::data::SegmentPressures::Value::PDropAccel> },
     // Well productivity index
     { "WPIW", potential_rate< rt::productivity_index_water >},
     { "WPIO", potential_rate< rt::productivity_index_oil >},

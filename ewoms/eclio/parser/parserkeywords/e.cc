@@ -1402,6 +1402,27 @@ EXCEL::EXCEL( ) : ParserKeyword("EXCEL")
 const std::string EXCEL::keywordName = "EXCEL";
 
 
+EXIT::EXIT( ) : ParserKeyword("EXIT")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("EXIT");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("STATUS_CODE", ParserItem::itype::INT);
+        item.setDefault( 0 );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string EXIT::keywordName = "EXIT";
+const std::string EXIT::STATUS_CODE::itemName = "STATUS_CODE";
+const int EXIT::STATUS_CODE::defaultValue = 0;
+
+
 EXTFIN::EXTFIN( ) : ParserKeyword("EXTFIN")
 {
   setFixedSize( (size_t) 1);

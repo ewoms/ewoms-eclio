@@ -30,7 +30,7 @@ namespace Ewoms {
 namespace Action {
 
 bool ActionX::valid_keyword(const std::string& keyword) {
-    static std::unordered_set<std::string> actionx_whitelist = {"WELSPECS","WELOPEN"};
+    static std::unordered_set<std::string> actionx_whitelist = {"EXIT", "WELSPECS","WELOPEN"};
     return (actionx_whitelist.find(keyword) != actionx_whitelist.end());
 }
 

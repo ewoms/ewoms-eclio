@@ -645,6 +645,27 @@ const std::string PERMAVE::EXPO_2::itemName = "EXPO_2";
 const int PERMAVE::EXPO_2::defaultValue = -1;
 
 
+PERMJFUN::PERMJFUN( ) : ParserKeyword("PERMJFUN")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("PERMJFUN");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("data", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Permeability");
+        record.addDataItem(item);
+     }
+     addDataRecord( record );
+  }
+}
+const std::string PERMJFUN::keywordName = "PERMJFUN";
+const std::string PERMJFUN::data::itemName = "data";
+
+
 PERMR::PERMR( ) : ParserKeyword("PERMR")
 {
   setFixedSize( (size_t) 1);
@@ -1390,6 +1411,47 @@ PLYDHFLF::PLYDHFLF( ) : ParserKeyword("PLYDHFLF")
 }
 const std::string PLYDHFLF::keywordName = "PLYDHFLF";
 const std::string PLYDHFLF::DATA::itemName = "DATA";
+
+
+PLYESAL::PLYESAL( ) : ParserKeyword("PLYESAL")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTSFUN",0);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PLYESAL");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("ALPHAP", ParserItem::itype::DOUBLE);
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PLYESAL::keywordName = "PLYESAL";
+const std::string PLYESAL::ALPHAP::itemName = "ALPHAP";
+
+
+PLYKRRF::PLYKRRF( ) : ParserKeyword("PLYKRRF")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PLYKRRF");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("data", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("1");
+        record.addDataItem(item);
+     }
+     addDataRecord( record );
+  }
+}
+const std::string PLYKRRF::keywordName = "PLYKRRF";
+const std::string PLYKRRF::data::itemName = "data";
 
 
 PLYMAX::PLYMAX( ) : ParserKeyword("PLYMAX")

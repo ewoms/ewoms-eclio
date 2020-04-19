@@ -210,6 +210,13 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         Schedule(deck, es, ParseContext(), ErrorGuard(), rst)
     {}
 
+    /*
+      In general the serializeObject() instances are used as targets for
+      deserialization, i.e. the serialized buffer is unpacked into this
+      instance. However the Schedule object is a top level object, and the
+      simulator will instantiate and manage a Schedule object to unpack into, so
+      the instance created here is only for testing.
+    */
     Schedule Schedule::serializeObject()
     {
         Schedule result;
@@ -462,7 +469,7 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
         }
     }
 
-void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
+    void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
         const auto& unit_system = section.unitSystem();
         std::vector<std::pair< const DeckKeyword* , size_t> > rftProperties;
@@ -624,6 +631,13 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         this->m_nupcol.update(currentStep, nupcol);
     }
 
+    void Schedule::handleEXIT(const DeckKeyword& keyword, std::size_t report_step ) {
+        using ex = ParserKeywords::EXIT;
+        int status = keyword.getRecord(0).getItem<ex::STATUS_CODE>().get<int>(0);
+        OpmLog::info("Simulation exit with status: " + std::to_string(status) + " requested as part of ACTIONX at report_step: " + std::to_string(report_step));
+        this->exit_status = status;
+    }
+
     /*
       The COMPORD keyword is handled together with the WELSPECS keyword in the
       handleWELSPECS function.
@@ -685,11 +699,26 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
         };
 
         const auto& keyword = section.getKeyword( index );
+        using WS = ParserKeywords::WELSPECS;
 
         for (size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
-            const std::string& wellName = trim_wgname(keyword, record.getItem("WELL").get<std::string>(0), parseContext, errors);
-            const std::string& groupName = trim_wgname(keyword, record.getItem("GROUP").get<std::string>(0), parseContext, errors);
+            const std::string& wellName = trim_wgname(keyword, record.getItem<WS::WELL>().get<std::string>(0), parseContext, errors);
+            const std::string& groupName = trim_wgname(keyword, record.getItem<WS::GROUP>().get<std::string>(0), parseContext, errors);
+            auto density_calc_type = record.getItem<WS::DENSITY_CALC>().get<std::string>(0);
+            auto fip_region_number = record.getItem<WS::FIP_REGION>().get<int>(0);
+
+            if (fip_region_number != 0) {
+                const auto& location = keyword.location();
+                std::string msg = "The FIP_REGION item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + std::to_string(WS::FIP_REGION::defaultValue);
+                OpmLog::warning(msg);
+            }
+
+            if (density_calc_type != "SEG") {
+                const auto& location = keyword.location();
+                std::string msg = "The DENSITY_CALC item in the WELSPECS keyword in file: " + location.filename + " line: " + std::to_string(location.lineno) + " using default value: " + WS::DENSITY_CALC::defaultValue;
+                OpmLog::warning(msg);
+            }
 
             if (!hasGroup(groupName))
                 addGroup(groupName , currentStep, unit_system);
@@ -713,10 +742,11 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                 this->addWell(wellName, record, currentStep, wellConnectionOrder, unit_system);
                 this->addWellToGroup(groupName, wellName, currentStep);
             } else {
-                const auto headI = record.getItem( "HEAD_I" ).get< int >( 0 ) - 1;
-                const auto headJ = record.getItem( "HEAD_J" ).get< int >( 0 ) - 1;
-                const auto& refDepthItem = record.getItem( "REF_DEPTH" );
-                double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
+                const auto headI = record.getItem<WS::HEAD_I>().get< int >( 0 ) - 1;
+                const auto headJ = record.getItem<WS::HEAD_J>().get< int >( 0 ) - 1;
+                const auto& refDepthItem = record.getItem<WS::REF_DEPTH>();
+                int pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
+                double drainageRadius = record.getItem<WS::D_RADIUS>().getSIDouble(0);
                 double refDepth = refDepthItem.hasValue( 0 )
                     ? refDepthItem.getSIDouble( 0 )
                     : -1.0;
@@ -726,6 +756,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     update = well2->updateHead(headI, headJ);
                     update |= well2->updateRefDepth(refDepth);
                     update |= well2->updateDrainageRadius(drainageRadius);
+                    update |= well2->updatePVTTable(pvt_table);
 
                     if (update) {
                         this->updateWell(std::move(well2), currentStep);
@@ -1576,6 +1607,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     injection.injection_controls = 0;
                     injection.reinj_group = reinj_group;
                     injection.voidage_group = voidage_group;
+                    injection.available_group_control = availableForGroupControl;
 
                     if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::RATE);
@@ -1589,9 +1621,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                         injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
 
-                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
-                    if (group_ptr->updateInjection(injection) ||  must_update_avail) {
-                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
+                    if (group_ptr->updateInjection(injection)) {
                         this->updateGroup(std::move(group_ptr), currentStep);
                         m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , currentStep);
                         this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, currentStep);
@@ -1649,6 +1679,8 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     production.guide_rate = guide_rate;
                     production.guide_rate_def = guide_rate_def;
                     production.resv_target = resv_target;
+                    production.available_group_control = availableForGroupControl;
+
                     if ((production.cmode == Group::ProductionCMode::ORAT) ||
                         (production.cmode == Group::ProductionCMode::WRAT) ||
                         (production.cmode == Group::ProductionCMode::GRAT) ||
@@ -1674,9 +1706,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                     if (!record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0))
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
-                    const bool must_update_avail = group_ptr->isAvailableForGroupControl() != availableForGroupControl;
-                    if (group_ptr->updateProduction(production) || must_update_avail) {
-                        group_ptr->setAvailableForGroupControl(availableForGroupControl);
+                    if (group_ptr->updateProduction(production)) {
                         auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(currentStep) );
                         new_config->update_group(*group_ptr);
                         this->guide_rate_config.update( currentStep, std::move(new_config) );
@@ -1924,7 +1954,7 @@ void Schedule::iterateScheduleSection(const std::string& input_path, const Parse
                         }
                     }
                     */
-                    if (well2->updateConnections(connections))
+                    if (well2->updateConnections(connections, grid, fp.get_int("PVTNUM")))
                         this->updateWell(well2, currentStep);
 
                     if (well2->getStatus() == Well::Status::SHUT) {
@@ -2136,6 +2166,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system)
     {
+        using WS = ParserKeywords::WELSPECS;
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
         int headJ = record.getItem("HEAD_J").get< int >(0) - 1;
@@ -2171,6 +2202,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         }
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
+        auto pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
 
         this->addWell(wellName,
                       group,
@@ -2181,6 +2213,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                       drainageRadius,
                       allowCrossFlow,
                       automaticShutIn,
+                      pvt_table,
                       timeStep,
                       wellConnectionOrder,
                       unit_system);
@@ -2208,6 +2241,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                            double drainageRadius,
                            bool allowCrossFlow,
                            bool automaticShutIn,
+                           int pvt_table,
                            size_t timeStep,
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
@@ -2225,7 +2259,8 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                   this->getUDQConfig(timeStep).params().undefinedValue(),
                   drainageRadius,
                   allowCrossFlow,
-                  automaticShutIn);
+                  automaticShutIn,
+                  pvt_table);
 
         this->addWell( std::move(well), timeStep );
     }
@@ -2753,6 +2788,10 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return *ptr;
     }
 
+    std::optional<int> Schedule::exitStatus() const {
+        return this->exit_status;
+    }
+
     size_t Schedule::size() const {
         return this->m_timeMap.size();
     }
@@ -2784,6 +2823,9 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
 
             if (keyword.name() == "WELOPEN")
                 this->handleWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
+
+            if (keyword.name() == "EXIT")
+                this->handleEXIT(keyword, reportStep);
         }
 
     }
@@ -2907,7 +2949,7 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
         {
             std::shared_ptr<Ewoms::WellConnections> well_connections = std::make_shared<Ewoms::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], connections);
-            well.updateConnections( std::move(well_connections) );
+            well.updateConnections( std::move(well_connections), grid, fp.get_int("PVTNUM") );
         }
 
         if (!segments.empty()) {

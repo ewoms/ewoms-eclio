@@ -622,7 +622,7 @@ REGION_PROBE::REGION_PROBE( ) : ParserKeyword("REGION_PROBE")
   addDeckName("RWPV");
   addDeckName("RWSAT");
   addDeckName("RWVIS");
-  setMatchRegex("R[OGW]?[IP][PRT]_.+|RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+");
+  setMatchRegex("R[OGW]?[OIP][EPRT]_.+|RU.+|RTIPF.+|RTIPS.+|RTFTF.+|RTFTS.+|RTFTT.+|RTIPT.+|RTIPF.+|RTIPS.+|RTIP[1-9][0-9]*.+|RTFTT.+|RTFTF.+|RTFTS.+|RTFT[1-9][0-9]*.+|RTADS.+|RTDCY.+");
   {
      ParserRecord record;
      {

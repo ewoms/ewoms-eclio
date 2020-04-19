@@ -412,6 +412,19 @@ namespace ParserKeywords {
 
 
 
+   class PERMJFUN : public ParserKeyword {
+   public:
+       PERMJFUN();
+       static const std::string keywordName;
+
+       class data {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class PERMR : public ParserKeyword {
    public:
        PERMR();
@@ -907,6 +920,32 @@ namespace ParserKeywords {
        static const std::string keywordName;
 
        class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class PLYESAL : public ParserKeyword {
+   public:
+       PLYESAL();
+       static const std::string keywordName;
+
+       class ALPHAP {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class PLYKRRF : public ParserKeyword {
+   public:
+       PLYKRRF();
+       static const std::string keywordName;
+
+       class data {
        public:
            static const std::string itemName;
        };
