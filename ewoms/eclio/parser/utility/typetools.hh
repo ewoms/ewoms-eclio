@@ -36,6 +36,7 @@ enum class type_tag {
 class RawString : public std::string
 {
 public:
+    using std::string::string; // inherit std::string's constructors
 
     static std::vector<std::string> strings(const std::vector<RawString>& raw_strings) {
         std::vector<std::string> std_strings;

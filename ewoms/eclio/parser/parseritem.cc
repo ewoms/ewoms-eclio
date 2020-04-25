@@ -450,7 +450,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
         if (parse_raw) {
             while (record.size()) {
                 auto token = record.pop_front();
-                auto raw_string = RawString{ token.string() };
+                auto raw_string = RawString{ token.string().c_str() };
                 deck_item.push_back( raw_string );
             }
             return;
@@ -503,7 +503,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
 
     if (parse_raw) {
         auto token = record.pop_front();
-        auto raw_string = RawString{ token.string() };
+        auto raw_string = RawString(token.string().c_str());
         deck_item.push_back( raw_string );
         return;
     }

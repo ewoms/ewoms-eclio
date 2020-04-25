@@ -120,7 +120,7 @@ namespace Ewoms {
 
     template <>
     RawString readValueToken<RawString>( string_view view ) {
-        return { view.string() };
+        return RawString(view.string().c_str());
     }
 
     template<>

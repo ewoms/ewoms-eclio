@@ -46,6 +46,8 @@
 #include <ewoms/eclio/utility/activegridcells.hh>
 #include <ewoms/eclio/io/rst/state.hh>
 
+#include <ewoms/common/optional.hh>
+
 /*
   The DynamicState<std::shared_ptr<T>> pattern: The quantities in the Schedule
   section like e.g. wellrates and completion properties are typically
@@ -166,7 +168,7 @@ namespace Ewoms
         time_t simTime(size_t timeStep) const;
         double seconds(size_t timeStep) const;
         double stepLength(size_t timeStep) const;
-        std::optional<int> exitStatus() const;
+        Ewoms::optional<int> exitStatus() const;
 
         const TimeMap& getTimeMap() const;
 
@@ -325,7 +327,7 @@ namespace Ewoms
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
-        std::optional<int> exit_status;
+        Ewoms::optional<int> exit_status;
 
         std::map<std::string,Events> wellgroup_events;
         void load_rst(const RestartIO::RstState& rst,

@@ -2818,7 +2818,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return *ptr;
     }
 
-    std::optional<int> Schedule::exitStatus() const {
+    Ewoms::optional<int> Schedule::exitStatus() const {
         return this->exit_status;
     }
 
