@@ -2203,6 +2203,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
 
         const std::string& group = record.getItem<ParserKeywords::WELSPECS::GROUP>().getTrimmedString(0);
         auto pvt_table = record.getItem<WS::P_TABLE>().get<int>(0);
+        auto gas_inflow = Well::GasInflowEquationFromString( record.getItem<WS::INFLOW_EQ>().get<std::string>(0) );
 
         this->addWell(wellName,
                       group,
@@ -2214,6 +2215,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                       allowCrossFlow,
                       automaticShutIn,
                       pvt_table,
+                      gas_inflow,
                       timeStep,
                       wellConnectionOrder,
                       unit_system);
@@ -2242,6 +2244,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                            bool allowCrossFlow,
                            bool automaticShutIn,
                            int pvt_table,
+                           Well::GasInflowEquation gas_inflow,
                            size_t timeStep,
                            Connection::Order wellConnectionOrder,
                            const UnitSystem& unit_system) {
@@ -2260,7 +2263,8 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                   drainageRadius,
                   allowCrossFlow,
                   automaticShutIn,
-                  pvt_table);
+                  pvt_table,
+                  gas_inflow);
 
         this->addWell( std::move(well), timeStep );
     }
@@ -2324,6 +2328,32 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
             } else
                 return {};
         }
+    }
+
+    /*
+      This function will return a list of wells which have changed
+      *structurally* in the last report_step; wells where only production
+      settings have changed will not be included.
+    */
+    std::vector<std::string> Schedule::changed_wells(std::size_t report_step) const {
+        std::vector<std::string> wells;
+
+        for (const auto& dynamic_pair : this->wells_static) {
+            const auto& well_ptr = dynamic_pair.second.get(report_step);
+            if (well_ptr) {
+                if (report_step > 0) {
+                    const auto& prev = dynamic_pair.second.get(report_step - 1);
+                    if (prev) {
+                        if (!well_ptr->cmp_structure( *prev ))
+                            wells.push_back( well_ptr->name() );
+                    } else
+                        wells.push_back( well_ptr->name() );
+                } else
+                    wells.push_back( well_ptr->name() );
+            }
+        }
+
+        return wells;
     }
 
     std::vector<Well> Schedule::getWells(size_t timeStep) const {

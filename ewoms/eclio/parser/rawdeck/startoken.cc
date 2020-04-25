@@ -118,6 +118,11 @@ namespace Ewoms {
         return view.substr( 1, view.size() - 2 );
     }
 
+    template <>
+    RawString readValueToken<RawString>( string_view view ) {
+        return { view.string() };
+    }
+
     template<>
     UDAValue readValueToken< UDAValue >( string_view view ) {
         double n = 0;

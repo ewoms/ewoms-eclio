@@ -1804,7 +1804,7 @@ namespace Evaluator {
 
             const auto val = st.get_elapsed() + stepSize;
 
-            st.update(this->saveKey_, convert::to(val, year));
+            st.update(this->saveKey_, convert::to(val, ecl_year));
         }
 
     private:
@@ -2466,7 +2466,6 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
             .makeParameter(kw, dfltwgname, dfltnum, "", std::move(eval));
     }
 
-#if NOT_YET
     // YEARS
     {
         const auto& kw = std::string("YEARS");
@@ -2477,7 +2476,6 @@ configureTimeVectors(const EclipseState& es, const SummaryConfig& sumcfg)
         this->outputParameters_
             .makeParameter(kw, dfltwgname, dfltnum, kw, std::move(eval));
     }
-#endif // NOT_YET
 }
 
 void

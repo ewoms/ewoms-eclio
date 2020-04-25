@@ -379,6 +379,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::HMMLFTAQ >();
    p.addKeyword< ParserKeywords::HMMLTWCN >();
    p.addKeyword< ParserKeywords::HMMULTFT >();
+   p.addKeyword< ParserKeywords::HMMULTSG >();
    p.addKeyword< ParserKeywords::HMPROPS >();
    p.addKeyword< ParserKeywords::HMROCK >();
    p.addKeyword< ParserKeywords::HMROCKT >();

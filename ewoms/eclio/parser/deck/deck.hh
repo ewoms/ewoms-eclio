@@ -159,6 +159,8 @@ namespace Ewoms {
                 serializer(m_dataFile);
                 serializer(input_path);
                 serializer(unit_system_access_count);
+                if (!serializer.isSerializing())
+                  this->init(this->keywordList.begin(), this->keywordList.end());
             }
 
         private:

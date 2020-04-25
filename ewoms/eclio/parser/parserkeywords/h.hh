@@ -395,6 +395,19 @@ namespace ParserKeywords {
 
 
 
+   class HMMULTSG : public ParserKeyword {
+   public:
+       HMMULTSG();
+       static const std::string keywordName;
+
+       class data {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class HMPROPS : public ParserKeyword {
    public:
        HMPROPS();

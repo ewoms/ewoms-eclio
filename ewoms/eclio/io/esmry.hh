@@ -23,11 +23,16 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <map>
+#include <stdint.h>
 
 #include <ewoms/common/filesystem.hh>
 #include <ewoms/eclio/io/summarynode.hh>
 
 namespace Ewoms { namespace EclIO {
+
+using ArrSourceEntry = std::tuple<std::string, std::string, int, uint64_t>;
+using TimeStepEntry = std::tuple<int, int, uint64_t>;
 
 class ESmry
 {
@@ -48,6 +53,9 @@ public:
     std::vector<float> get_at_rstep(const SummaryNode& node) const;
     std::vector<std::chrono::system_clock::time_point> dates_at_rstep() const;
 
+    void LoadData(const std::vector<std::string>& vectList) const;
+    void LoadData() const;
+
     std::chrono::system_clock::time_point startdate() const { return startdat; }
 
     const std::vector<std::string>& keywordList() const;
@@ -56,7 +64,7 @@ public:
 
     int timestepIdxAtReportstepStart(const int reportStep) const;
 
-    size_t numberOfTimeSteps() const { return param[0].size(); }
+    size_t numberOfTimeSteps() const { return timeStepList.size(); }
 
     const std::string& get_unit(const std::string& name) const;
     const std::string& get_unit(const SummaryNode& node) const;
@@ -66,15 +74,28 @@ public:
 
 private:
     Ewoms::filesystem::path inputFileName;
-    int nVect, nI, nJ, nK;
+    int nI, nJ, nK, nSpecFiles;
+    size_t nVect;
+
+    std::vector<bool> formattedFiles;
+    std::vector<std::string> dataFileList;
+    mutable std::vector<std::vector<float>> vectorData;
+    mutable std::vector<bool> vectorLoaded;
+    std::vector<TimeStepEntry> timeStepList;
+    std::vector<std::map<int, int>> arrayPos;
+    std::vector<std::string> keyword;
+    std::map<std::string, int> keyword_index;
+    std::vector<int> nParamsSpecFile;
+
+    std::vector<std::vector<std::string>> keywordListSpecFile;
+
+    std::vector<int> seqIndex;
 
     void ijk_from_global_index(int glob, int &i, int &j, int &k) const;
-    std::vector<std::vector<float>> param;
-    std::vector<std::string> keyword;
+
     std::vector<SummaryNode> summaryNodes;
     std::unordered_map<std::string, std::string> kwunits;
 
-    std::vector<int> seqIndex;
     std::chrono::system_clock::time_point startdat;
 
     std::vector<std::string> checkForMultipleResultFiles(const Ewoms::filesystem::path& rootN, bool formatted) const;
@@ -103,6 +124,9 @@ private:
 
         return result;
     }
+
+    std::vector<std::tuple <std::string, uint64_t>> getListOfArrays(std::string filename, bool formatted);
+    std::vector<int> makeKeywPosVector(int speInd) const;
 };
 
 }} // namespace Ewoms::EclIO

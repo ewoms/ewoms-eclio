@@ -16,6 +16,8 @@
 #define BOOST_TEST_MODULE UDQTests
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/eclio/parser/utility/typetools.hh>
+#include <ewoms/eclio/parser/python/python.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -457,7 +459,7 @@ UDQ
     const auto& udq = deck.getKeyword("UDQ");
     const auto& record = udq.getRecord(0);
     const auto& data_item = record.getItem("DATA");
-    const auto& data = data_item.getData<std::string>();
+    const auto& data = RawString::strings( data_item.getData<RawString>() );
     std::vector<std::string> exp = {"WWPR", "/", "(", "WWPR", "+", "WOPR", ")"};
     BOOST_CHECK_EQUAL_COLLECTIONS(data.begin(), data.end(),
                                   exp.begin(), exp.end());

@@ -421,12 +421,16 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
     }
 
     const Connection& WellConnections::lowest() const {
+        if (this->m_connections.empty())
+            throw std::logic_error("Tried to get lowest connection from empty set");
+
         const auto max_iter = std::max_element(this->m_connections.begin(),
                                                this->m_connections.end(),
                                                [](const Connection& c1, const Connection& c2)
                                                {
                                                    return c1.depth() < c2.depth();
                                                });
+
         return *max_iter;
     }
 

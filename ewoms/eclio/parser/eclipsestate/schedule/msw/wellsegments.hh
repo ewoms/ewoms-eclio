@@ -19,8 +19,9 @@
 #ifndef SEGMENTSET_HH_H
 #define SEGMENTSET_HH_H
 
-#include <vector>
 #include <map>
+#include <set>
+#include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
 
@@ -83,6 +84,9 @@ namespace Ewoms {
         bool operator!=( const WellSegments& ) const;
 
         double segmentLength(const int segment_number) const;
+        double segmentDepthChange(const int segment_number) const;
+        std::vector<Segment> branchSegments(int branch) const;
+        std::set<int> branches() const;
 
         // it returns true if there is no error encountered during the update
         bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);

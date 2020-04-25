@@ -37,6 +37,7 @@ namespace Ewoms {
 
         DeckItem() = default;
         DeckItem( const std::string&, int);
+        DeckItem( const std::string&, RawString);
         DeckItem( const std::string&, std::string);
         DeckItem( const std::string&, double) = delete;
         DeckItem( const std::string&, UDAValue) = delete;
@@ -77,6 +78,7 @@ namespace Ewoms {
         void push_back( int );
         void push_back( double );
         void push_back( std::string );
+        void push_back( RawString );
         void push_back( UDAValue, size_t );
         void push_back( int, size_t );
         void push_back( double, size_t );
@@ -85,6 +87,7 @@ namespace Ewoms {
         void push_backDefault( int );
         void push_backDefault( double );
         void push_backDefault( std::string );
+        void push_backDefault( RawString );
         // trying to access the data of a "dummy default item" will raise an exception
 
         template <typename T>
@@ -141,6 +144,7 @@ namespace Ewoms {
         mutable std::vector< double > dval;
         std::vector< int > ival;
         std::vector< std::string > sval;
+        std::vector< RawString > rsval;
         std::vector< UDAValue > uval;
 
         type_tag type = type_tag::unknown;

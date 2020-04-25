@@ -186,6 +186,7 @@ namespace Ewoms
         std::vector<std::string> groupNames() const;
 
         void updateWell(std::shared_ptr<Well> well, size_t reportStep);
+        std::vector<std::string> changed_wells(size_t reportStep) const;
         const Well& getWell(const std::string& wellName, size_t timeStep) const;
         const Well& getWellatEnd(const std::string& well_name) const;
         std::vector<Well> getWells(size_t timeStep) const;
@@ -342,6 +343,7 @@ namespace Ewoms
                      bool allowCrossFlow,
                      bool automaticShutIn,
                      int pvt_table,
+                     Well::GasInflowEquation gas_inflow,
                      size_t timeStep,
                      Connection::Order wellConnectionOrder,
                      const UnitSystem& unit_system);

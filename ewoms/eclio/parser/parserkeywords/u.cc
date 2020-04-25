@@ -55,7 +55,7 @@ UDQ::UDQ( ) : ParserKeyword("UDQ")
   {
      ParserRecord record;
      {
-        ParserItem item("ACTION", ParserItem::itype::STRING);
+        ParserItem item("ACTION", ParserItem::itype::RAW_STRING);
         record.addItem(item);
      }
      {

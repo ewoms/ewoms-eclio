@@ -20,6 +20,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include <ewoms/eclio/parser/utility/typetools.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
@@ -60,7 +61,7 @@ ActionX::ActionX(const DeckKeyword& kw, std::time_t start_time) :
     std::vector<std::string> tokens;
     for (size_t record_index = 1; record_index < kw.size(); record_index++) {
         const auto& record = kw.getRecord(record_index);
-        const auto& cond_tokens = record.getItem("CONDITION").getData<std::string>();
+        const auto& cond_tokens = RawString::strings( record.getItem("CONDITION").getData<RawString>() );
 
         for (const auto& token : cond_tokens)
             tokens.push_back(token);

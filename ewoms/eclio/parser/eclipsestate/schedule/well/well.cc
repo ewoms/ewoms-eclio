@@ -284,7 +284,8 @@ Well::Well(const std::string& wname_arg,
            double dr,
            bool allow_xflow,
            bool auto_shutin,
-           int pvt_table_):
+           int pvt_table_,
+           GasInflowEquation inflow_eq):
     wname(wname_arg),
     group_name(gname),
     init_step(init_step_arg),
@@ -296,6 +297,7 @@ Well::Well(const std::string& wname_arg,
     allow_cross_flow(allow_xflow),
     automatic_shutin(auto_shutin),
     pvt_table(pvt_table_),
+    gas_inflow(inflow_eq),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
     status(Status::SHUT),
@@ -334,6 +336,7 @@ Well Well::serializeObject()
     result.allow_cross_flow = true;
     result.automatic_shutin = false;
     result.pvt_table = 77;
+    result.gas_inflow = GasInflowEquation::GPP;
     result.wtype = WellType(Phase::WATER);
     result.guide_rate = WellGuideRate::serializeObject();
     result.efficiency_factor = 8.0;
@@ -607,7 +610,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg);
-    if (this->pvt_table == 0) {
+    if (this->pvt_table == 0 && this->connections->size() > 0) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
         this->pvt_table = pvtnum[active_index];
@@ -945,6 +948,41 @@ bool Well::hasBeenDefined(size_t timeStep) const {
         return false;
     else
         return true;
+}
+
+Well::GasInflowEquation Well::gas_inflow_equation() const {
+    return this->gas_inflow;
+}
+
+const std::string Well::GasInflowEquation2String(GasInflowEquation enumValue) {
+    switch(enumValue) {
+    case GasInflowEquation::STD:
+        return "STD";
+    case GasInflowEquation::R_G:
+        return "R-G";
+    case GasInflowEquation::P_P:
+        return "P-P";
+    case GasInflowEquation::GPP:
+        return "GPP";
+    default:
+        throw std::invalid_argument("Unhandled enum value");
+    }
+}
+
+Well::GasInflowEquation Well::GasInflowEquationFromString(const std::string& stringValue) {
+    if (stringValue == "STD" || stringValue == "NO")
+        return GasInflowEquation::STD;
+
+    if (stringValue == "R-G" || stringValue == "YES")
+        return GasInflowEquation::R_G;
+
+    if (stringValue == "P-P")
+        return GasInflowEquation::P_P;
+
+    if (stringValue == "GPP")
+        return GasInflowEquation::GPP;
+
+    throw std::invalid_argument("Gas inflow equation type: " + stringValue + " not recognized");
 }
 
 bool Well::canOpen() const {
@@ -1309,35 +1347,40 @@ Well::GuideRateTarget Well::GuideRateTargetFromString( const std::string& string
         throw std::invalid_argument("Unknown enum state string: " + stringValue );
 }
 
+bool Well::cmp_structure(const Well& other) const {
+    if ((segments && !other.segments) || (!segments && other.segments)) {
+        return false;
+    }
+
+    if (segments && (this->getSegments() != other.getSegments()))  {
+        return false;
+    }
+
+    return this->name() == other.name() &&
+        this->groupName() == other.groupName() &&
+        this->firstTimeStep() == other.firstTimeStep() &&
+        this->seqIndex() == other.seqIndex() &&
+        this->getHeadI() == other.getHeadI() &&
+        this->getHeadJ() == other.getHeadJ() &&
+        this->getRefDepth() == other.getRefDepth() &&
+        this->getPreferredPhase() == other.getPreferredPhase() &&
+        this->unit_system == other.unit_system &&
+        this->udq_undefined == other.udq_undefined &&
+        this->getConnections() == other.getConnections() &&
+        this->getDrainageRadius() == other.getDrainageRadius() &&
+        this->getAllowCrossFlow() == other.getAllowCrossFlow() &&
+        this->getAutomaticShutIn() == other.getAutomaticShutIn() &&
+        this->getEfficiencyFactor() == other.getEfficiencyFactor();
+}
+
 bool Well::operator==(const Well& data) const {
-    if ((segments && !data.segments) || (!segments && data.segments)) {
-        return false;
-    }
-
-    if (segments && (this->getSegments() != data.getSegments()))  {
-        return false;
-    }
-
-    return this->name() == data.name() &&
-           this->groupName() == data.groupName() &&
-           this->firstTimeStep() == data.firstTimeStep() &&
-           this->seqIndex() == data.seqIndex() &&
-           this->getHeadI() == data.getHeadI() &&
-           this->getHeadJ() == data.getHeadJ() &&
-           this->getRefDepth() == data.getRefDepth() &&
-           this->getPreferredPhase() == data.getPreferredPhase() &&
-           this->unit_system == data.unit_system &&
-           this->udq_undefined == data.udq_undefined &&
-           this->getStatus() == data.getStatus() &&
-           this->getDrainageRadius() == data.getDrainageRadius() &&
-           this->getAllowCrossFlow() == data.getAllowCrossFlow() &&
-           this->getAutomaticShutIn() == data.getAutomaticShutIn() &&
-           this->isProducer() == data.isProducer() &&
-           this->guide_rate == data.guide_rate &&
-           this->getEfficiencyFactor() == data.getEfficiencyFactor() &&
+    return this->cmp_structure(data) &&
            this->getSolventFraction() == data.getSolventFraction() &&
            this->getEconLimits() == data.getEconLimits() &&
+           this->isProducer() == data.isProducer() &&
            this->getFoamProperties() == data.getFoamProperties() &&
+           this->getStatus() == data.getStatus() &&
+           this->guide_rate == data.guide_rate &&
            this->getTracerProperties() == data.getTracerProperties() &&
            this->getProductionProperties() == data.getProductionProperties() &&
            this->getInjectionProperties() == data.getInjectionProperties();

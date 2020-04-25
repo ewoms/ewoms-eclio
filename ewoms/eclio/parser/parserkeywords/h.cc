@@ -541,6 +541,27 @@ const std::string HMMULTFT::DIFF_MULT::itemName = "DIFF_MULT";
 const double HMMULTFT::DIFF_MULT::defaultValue = 1.000000;
 
 
+HMMULTSG::HMMULTSG( ) : ParserKeyword("HMMULTSG")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("GRID");
+  clearDeckNames();
+  addDeckName("HMMULTSG");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("data", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("1");
+        record.addDataItem(item);
+     }
+     addDataRecord( record );
+  }
+}
+const std::string HMMULTSG::keywordName = "HMMULTSG";
+const std::string HMMULTSG::data::itemName = "data";
+
+
 HMPROPS::HMPROPS( ) : ParserKeyword("HMPROPS")
 {
   setFixedSize( (size_t) 0);

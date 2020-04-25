@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <set>
 
 #define BOOST_TEST_MODULE WellConnectionsTests
 #include <boost/test/unit_test.hpp>
@@ -31,6 +32,7 @@
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
@@ -436,4 +438,65 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK_EQUAL(segment2.internalDiameter(), valv2->pipeDiameter());
     BOOST_CHECK_EQUAL(segment2.roughness(), valv2->pipeRoughness());
     BOOST_CHECK_EQUAL(segment2.crossArea(), valv2->pipeCrossArea());
+}
+
+Ewoms::Schedule make_schedule(const std::string& fname) {
+    Ewoms::Parser parser;
+    Ewoms::Deck deck = parser.parseFile(fname);
+    Ewoms::EclipseState st(deck);
+    return Ewoms::Schedule(deck, st);
+}
+
+BOOST_AUTO_TEST_CASE(MSW_SEGMENT_LENGTH) {
+    const auto& sched = make_schedule("MSW.DATA");
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    BOOST_CHECK_CLOSE( segments.segmentLength(1), 2512.50, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(2), 25, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(6), 25, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentLength(7), 200, 1e-5);
+
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(1), 2512.50, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(2), 22, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(6), 21, 1e-5);
+    BOOST_CHECK_CLOSE( segments.segmentDepthChange(7),  4, 1e-5);
+}
+
+BOOST_AUTO_TEST_CASE(MSW_BRANCH_SEGMENTS) {
+    const auto& sched = make_schedule("MSW.DATA");
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    {
+        auto seg100 = segments.branchSegments(100);
+        BOOST_CHECK(seg100.empty());
+    }
+    {
+        auto seg1 = segments.branchSegments(1);
+        BOOST_CHECK_EQUAL( seg1.size(), 6 );
+        const std::vector<int> expected = {1,2,3,4,5,6};
+        for (std::size_t index = 0; index < seg1.size(); index++)
+            BOOST_CHECK_EQUAL( expected[index], seg1[index].segmentNumber());
+    }
+    {
+        auto seg2 = segments.branchSegments(2);
+        const std::vector<int> expected = {7,8,9,10,11};
+        BOOST_CHECK_EQUAL( seg2.size(), 5 );
+        for (std::size_t index = 0; index < seg2.size(); index++)
+            BOOST_CHECK_EQUAL( expected[index], seg2[index].segmentNumber());
+    }
+    {
+        auto seg5 = segments.branchSegments(5);
+        const std::vector<int> expected = {22,23,24,25,26};
+        BOOST_CHECK_EQUAL( seg5.size(), 5 );
+        for (std::size_t index = 0; index < seg5.size(); index++)
+            BOOST_CHECK_EQUAL( expected[index], seg5[index].segmentNumber());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(Branches) {
+    const auto& sched = make_schedule("MSW.DATA");
+    const auto& well = sched.getWell("PROD01", 0);
+    const auto& segments = well.getSegments();
+    std::set<int> expected = {1,2,3,4,5};
+    BOOST_CHECK( expected == segments.branches() );
 }

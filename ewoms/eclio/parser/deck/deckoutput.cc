@@ -21,6 +21,7 @@
 
 #include <ewoms/eclio/parser/deck/deckoutput.hh>
 #include <ewoms/eclio/parser/deck/udavalue.hh>
+#include <ewoms/eclio/parser/utility/typetools.hh>
 
 namespace Ewoms {
 
@@ -66,6 +67,11 @@ namespace Ewoms {
     template <>
     void DeckOutput::write_value( const std::string& value ) {
         this->os << "'" << value << "'";
+    }
+
+    template <>
+    void DeckOutput::write_value( const RawString& value ) {
+        this->os << value;
     }
 
     template <>
@@ -132,5 +138,6 @@ namespace Ewoms {
     template void DeckOutput::write( const int& value);
     template void DeckOutput::write( const double& value);
     template void DeckOutput::write( const std::string& value);
+    template void DeckOutput::write( const RawString& value);
     template void DeckOutput::write( const UDAValue& value);
 }

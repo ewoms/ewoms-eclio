@@ -23,6 +23,7 @@
 #include <string>
 
 #include <ewoms/eclio/parser/utility/stringview.hh>
+#include <ewoms/eclio/parser/utility/typetools.hh>
 
 namespace Ewoms {
     bool isStarToken(const string_view& token,
