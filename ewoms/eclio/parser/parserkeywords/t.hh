@@ -321,20 +321,6 @@ namespace ParserKeywords {
 
 
 
-   class THERMEX1 : public ParserKeyword {
-   public:
-       THERMEX1();
-       static const std::string keywordName;
-
-       class EXPANSION_COEFF {
-       public:
-           static const std::string itemName;
-           static const double defaultValue;
-       };
-   };
-
-
-
    class THPRES : public ParserKeyword {
    public:
        THPRES();

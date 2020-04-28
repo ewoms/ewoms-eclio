@@ -144,16 +144,6 @@ const std::string DCQDEFN::QUANTITY::itemName = "QUANTITY";
 const std::string DCQDEFN::QUANTITY::defaultValue = "GAS";
 
 
-DEADOIL::DEADOIL( ) : ParserKeyword("DEADOIL")
-{
-  setFixedSize( (size_t) 0);
-  addValidSectionName("RUNSPEC");
-  clearDeckNames();
-  addDeckName("DEADOIL");
-}
-const std::string DEADOIL::keywordName = "DEADOIL";
-
-
 DEBUG_::DEBUG_( ) : ParserKeyword("DEBUG_")
 {
   setFixedSize( (size_t) 1);

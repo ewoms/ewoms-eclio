@@ -439,30 +439,6 @@ THERMAL::THERMAL( ) : ParserKeyword("THERMAL")
 const std::string THERMAL::keywordName = "THERMAL";
 
 
-THERMEX1::THERMEX1( ) : ParserKeyword("THERMEX1")
-{
-  setSizeType(OTHER_KEYWORD_IN_DECK);
-  initSizeKeyword("TABDIMS","NUM_STATE_EQ",0);
-  addValidSectionName("PROPS");
-  clearDeckNames();
-  addDeckName("THERMEX1");
-  {
-     ParserRecord record;
-     {
-        ParserItem item("EXPANSION_COEFF", ParserItem::itype::DOUBLE);
-        item.setSizeType(ParserItem::item_size::ALL);
-        item.setDefault( double(0) );
-        item.push_backDimension("1/AbsoluteTemperature");
-        record.addItem(item);
-     }
-     addRecord( record );
-  }
-}
-const std::string THERMEX1::keywordName = "THERMEX1";
-const std::string THERMEX1::EXPANSION_COEFF::itemName = "EXPANSION_COEFF";
-const double THERMEX1::EXPANSION_COEFF::defaultValue = 0.000000;
-
-
 THPRES::THPRES( ) : ParserKeyword("THPRES")
 {
   setSizeType(SLASH_TERMINATED);

@@ -412,6 +412,24 @@ namespace ParserKeywords {
 
 
 
+   class PERMFACT : public ParserKeyword {
+   public:
+       PERMFACT();
+       static const std::string keywordName;
+
+       class POROSITY {
+       public:
+           static const std::string itemName;
+       };
+
+       class PERMFACTMULT {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class PERMJFUN : public ParserKeyword {
    public:
        PERMJFUN();
@@ -431,24 +449,6 @@ namespace ParserKeywords {
        static const std::string keywordName;
 
        class data {
-       public:
-           static const std::string itemName;
-       };
-   };
-
-
-
-   class PERMRED : public ParserKeyword {
-   public:
-       PERMRED();
-       static const std::string keywordName;
-
-       class POROSITY {
-       public:
-           static const std::string itemName;
-       };
-
-       class PERMREDMULT {
        public:
            static const std::string itemName;
        };
@@ -1595,6 +1595,19 @@ namespace ParserKeywords {
 
 
 
+   class PRVD : public ParserKeyword {
+   public:
+       PRVD();
+       static const std::string keywordName;
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class PSTEADY : public ParserKeyword {
    public:
        PSTEADY();
@@ -1778,6 +1791,42 @@ namespace ParserKeywords {
    class PVTG : public ParserKeyword {
    public:
        PVTG();
+       static const std::string keywordName;
+
+       class GAS_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class PVTGW : public ParserKeyword {
+   public:
+       PVTGW();
+       static const std::string keywordName;
+
+       class GAS_PRESSURE {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
+   class PVTGWO : public ParserKeyword {
+   public:
+       PVTGWO();
        static const std::string keywordName;
 
        class GAS_PRESSURE {

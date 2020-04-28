@@ -145,7 +145,6 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::DATUMR >();
    p.addKeyword< ParserKeywords::DATUMRX >();
    p.addKeyword< ParserKeywords::DCQDEFN >();
-   p.addKeyword< ParserKeywords::DEADOIL >();
    p.addKeyword< ParserKeywords::DEBUG_ >();
    p.addKeyword< ParserKeywords::DELAYACT >();
    p.addKeyword< ParserKeywords::DENSITY >();
@@ -623,9 +622,9 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PENUM >();
    p.addKeyword< ParserKeywords::PERFORMANCE_PROBE >();
    p.addKeyword< ParserKeywords::PERMAVE >();
+   p.addKeyword< ParserKeywords::PERMFACT >();
    p.addKeyword< ParserKeywords::PERMJFUN >();
    p.addKeyword< ParserKeywords::PERMR >();
-   p.addKeyword< ParserKeywords::PERMRED >();
    p.addKeyword< ParserKeywords::PERMTHT >();
    p.addKeyword< ParserKeywords::PERMX >();
    p.addKeyword< ParserKeywords::PERMXY >();
@@ -682,6 +681,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PRIORITY >();
    p.addKeyword< ParserKeywords::PROPS >();
    p.addKeyword< ParserKeywords::PRORDER >();
+   p.addKeyword< ParserKeywords::PRVD >();
    p.addKeyword< ParserKeywords::PSTEADY >();
    p.addKeyword< ParserKeywords::PSWRG >();
    p.addKeyword< ParserKeywords::PSWRO >();
@@ -691,6 +691,8 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PVDO >();
    p.addKeyword< ParserKeywords::PVDS >();
    p.addKeyword< ParserKeywords::PVTG >();
+   p.addKeyword< ParserKeywords::PVTGW >();
+   p.addKeyword< ParserKeywords::PVTGWO >();
    p.addKeyword< ParserKeywords::PVTNUM >();
    p.addKeyword< ParserKeywords::PVTO >();
    p.addKeyword< ParserKeywords::PVTW >();
@@ -774,6 +776,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::RVCONSTT >();
    p.addKeyword< ParserKeywords::RVGI >();
    p.addKeyword< ParserKeywords::RVVD >();
+   p.addKeyword< ParserKeywords::RWGSALT >();
    p.addKeyword< ParserKeywords::SALT >();
    p.addKeyword< ParserKeywords::SALTNODE >();
    p.addKeyword< ParserKeywords::SALTPVD >();
@@ -909,7 +912,6 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::THCROCK >();
    p.addKeyword< ParserKeywords::THCWATER >();
    p.addKeyword< ParserKeywords::THERMAL >();
-   p.addKeyword< ParserKeywords::THERMEX1 >();
    p.addKeyword< ParserKeywords::THPRES >();
    p.addKeyword< ParserKeywords::THPRESFT >();
    p.addKeyword< ParserKeywords::TIGHTEN >();

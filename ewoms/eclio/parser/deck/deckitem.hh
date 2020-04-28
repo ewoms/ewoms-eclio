@@ -77,6 +77,7 @@ namespace Ewoms {
         void push_back( UDAValue );
         void push_back( int );
         void push_back( double );
+        void push_back( const char* );
         void push_back( std::string );
         void push_back( RawString );
         void push_back( UDAValue, size_t );
@@ -86,6 +87,7 @@ namespace Ewoms {
         void push_backDefault( UDAValue );
         void push_backDefault( int );
         void push_backDefault( double );
+        void push_backDefault( const char* );
         void push_backDefault( std::string );
         void push_backDefault( RawString );
         // trying to access the data of a "dummy default item" will raise an exception

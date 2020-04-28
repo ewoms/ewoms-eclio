@@ -645,6 +645,32 @@ const std::string PERMAVE::EXPO_2::itemName = "EXPO_2";
 const int PERMAVE::EXPO_2::defaultValue = -1;
 
 
+PERMFACT::PERMFACT( ) : ParserKeyword("PERMFACT")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PERMFACT");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("POROSITY", ParserItem::itype::DOUBLE);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("PERMFACTMULT", ParserItem::itype::DOUBLE);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PERMFACT::keywordName = "PERMFACT";
+const std::string PERMFACT::POROSITY::itemName = "POROSITY";
+const std::string PERMFACT::PERMFACTMULT::itemName = "PERMFACTMULT";
+
+
 PERMJFUN::PERMJFUN( ) : ParserKeyword("PERMJFUN")
 {
   setFixedSize( (size_t) 1);
@@ -685,32 +711,6 @@ PERMR::PERMR( ) : ParserKeyword("PERMR")
 }
 const std::string PERMR::keywordName = "PERMR";
 const std::string PERMR::data::itemName = "data";
-
-
-PERMRED::PERMRED( ) : ParserKeyword("PERMRED")
-{
-  setSizeType(SLASH_TERMINATED);
-  addValidSectionName("PROPS");
-  clearDeckNames();
-  addDeckName("PERMRED");
-  {
-     ParserRecord record;
-     {
-        ParserItem item("POROSITY", ParserItem::itype::DOUBLE);
-        item.push_backDimension("1");
-        record.addItem(item);
-     }
-     {
-        ParserItem item("PERMREDMULT", ParserItem::itype::DOUBLE);
-        item.push_backDimension("1");
-        record.addItem(item);
-     }
-     addRecord( record );
-  }
-}
-const std::string PERMRED::keywordName = "PERMRED";
-const std::string PERMRED::POROSITY::itemName = "POROSITY";
-const std::string PERMRED::PERMREDMULT::itemName = "PERMREDMULT";
 
 
 PERMTHT::PERMTHT( ) : ParserKeyword("PERMTHT")
@@ -2388,6 +2388,29 @@ const std::string PRORDER::OPT5::itemName = "OPT5";
 const std::string PRORDER::OPT5::defaultValue = "YES";
 
 
+PRVD::PRVD( ) : ParserKeyword("PRVD")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("EQLDIMS","NTEQUL",0);
+  addValidSectionName("SOLUTION");
+  clearDeckNames();
+  addDeckName("PRVD");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Length");
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PRVD::keywordName = "PRVD";
+const std::string PRVD::DATA::itemName = "DATA";
+
+
 PSTEADY::PSTEADY( ) : ParserKeyword("PSTEADY")
 {
   setFixedSize( (size_t) 1);
@@ -2679,6 +2702,69 @@ PVTG::PVTG( ) : ParserKeyword("PVTG")
 const std::string PVTG::keywordName = "PVTG";
 const std::string PVTG::GAS_PRESSURE::itemName = "GAS_PRESSURE";
 const std::string PVTG::DATA::itemName = "DATA";
+
+
+PVTGW::PVTGW( ) : ParserKeyword("PVTGW")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PVTGW");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("GAS_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("Viscosity");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PVTGW::keywordName = "PVTGW";
+const std::string PVTGW::GAS_PRESSURE::itemName = "GAS_PRESSURE";
+const std::string PVTGW::DATA::itemName = "DATA";
+
+
+PVTGWO::PVTGWO( ) : ParserKeyword("PVTGWO")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PVTGWO");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("GAS_PRESSURE", ParserItem::itype::DOUBLE);
+        item.push_backDimension("Pressure");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("Viscosity");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PVTGWO::keywordName = "PVTGWO";
+const std::string PVTGWO::GAS_PRESSURE::itemName = "GAS_PRESSURE";
+const std::string PVTGWO::DATA::itemName = "DATA";
 
 
 PVTNUM::PVTNUM( ) : ParserKeyword("PVTNUM")

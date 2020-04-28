@@ -206,6 +206,10 @@ void DeckItem::push_back( double x ) {
     this->push( x );
 }
 
+void DeckItem::push_back( const char* x ) {
+    this->push( std::string( x ) );
+}
+
 void DeckItem::push_back( std::string x ) {
     this->push( std::move( x ) );
 }
@@ -259,6 +263,10 @@ void DeckItem::push_backDefault( int x ) {
 
 void DeckItem::push_backDefault( double x ) {
     this->push_default( x );
+}
+
+void DeckItem::push_backDefault( const char* x ) {
+    this->push_default( std::string( x ) );
 }
 
 void DeckItem::push_backDefault( std::string x ) {

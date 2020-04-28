@@ -99,14 +99,6 @@ namespace ParserKeywords {
 
 
 
-   class DEADOIL : public ParserKeyword {
-   public:
-       DEADOIL();
-       static const std::string keywordName;
-   };
-
-
-
    class DEBUG_ : public ParserKeyword {
    public:
        DEBUG_();

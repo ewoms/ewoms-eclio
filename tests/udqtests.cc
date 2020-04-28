@@ -17,7 +17,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ewoms/eclio/parser/utility/typetools.hh>
-#include <ewoms/eclio/parser/python/python.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
