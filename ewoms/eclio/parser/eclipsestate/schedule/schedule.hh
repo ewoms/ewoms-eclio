@@ -39,6 +39,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/rftconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpinjtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/network/extnetwork.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welltestconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
@@ -249,6 +250,8 @@ namespace Ewoms
         void applyAction(size_t reportStep, const Action::ActionX& action, const Action::Result& result);
         int getNupcol(size_t reportStep) const;
 
+        const Network::ExtNetwork& network(std::size_t report_step) const;
+
         bool operator==(const Schedule& data) const;
 
         /*
@@ -288,10 +291,11 @@ namespace Ewoms
             guide_rate_config.serializeOp(serializer);
             gconsale.serializeOp(serializer);
             gconsump.serializeOp(serializer);
-            global_whistctl_mode.template serializeOp<Serializer>(serializer);
+            global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
             m_actions.serializeOp(serializer);
+            m_network.serializeOp(serializer);
             rft_config.serializeOp(serializer);
-            m_nupcol.template serializeOp<Serializer>(serializer);
+            m_nupcol.template serializeOp<Serializer, false>(serializer);
             restart_config.serializeOp(serializer);
             serializer.map(wellgroup_events);
             if (!serializer.isSerializing()) {
@@ -324,6 +328,7 @@ namespace Ewoms
         DynamicState<std::shared_ptr<GConSump>> gconsump;
         DynamicState<Well::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
+        DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
@@ -351,6 +356,7 @@ namespace Ewoms
                      const UnitSystem& unit_system);
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
+        void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
@@ -402,6 +408,9 @@ namespace Ewoms
         void handleGUIDERAT( const DeckKeyword& keyword, size_t currentStep);
         void handleLINCOM( const DeckKeyword& keyword, size_t currentStep);
         void handleWEFAC( const DeckKeyword& keyword, size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+
+        void handleBRANPROP( const DeckKeyword& keyword, size_t currentStep);
+        void handleNODEPROP( const DeckKeyword& keyword, size_t currentStep);
 
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);

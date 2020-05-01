@@ -25,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/value.hh>
@@ -89,8 +90,6 @@ namespace RestartIO {
                    const Direction direction,
                    const CTFKind ctf_kind,
                    const std::size_t sort_value,
-                   const double segDistStart,
-                   const double segDistEnd,
                    const bool defaultSatTabId);
 
         Connection(const RestartIO::RstConnection& rst_connection, const EclipseGrid& grid, const FieldPropsManager& fp);
@@ -124,13 +123,11 @@ namespace RestartIO {
         void updateSegment(int segment_number_arg,
                            double center_depth_arg,
                            std::size_t compseg_insert_index,
-                           double start,
-                           double end);
+                           const std::pair<double,double>& perf_range);
         std::size_t sort_value() const;
         const bool& getDefaultSatTabId() const;
         void setDefaultSatTabId(bool id);
-        const double& getSegDistStart() const;
-        const double& getSegDistEnd() const;
+        const std::optional<std::pair<double, double>>& perf_range() const;
         std::string str() const;
         bool ctfAssignedFromInput() const
         {
@@ -157,8 +154,7 @@ namespace RestartIO {
             serializer(m_global_index);
             serializer(m_ctfkind);
             serializer(m_sort_value);
-            serializer(m_segDistStart);
-            serializer(m_segDistEnd);
+            serializer(m_perf_range);
             serializer(m_defaultSatTabId);
             serializer(segment_number);
         }
@@ -231,8 +227,7 @@ namespace RestartIO {
         */
 
         std::size_t m_sort_value;
-        double m_segDistStart;
-        double m_segDistEnd;
+        std::optional<std::pair<double,double>> m_perf_range;
         bool m_defaultSatTabId;
 
         // related segment number

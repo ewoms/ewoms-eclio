@@ -51,8 +51,6 @@ namespace Ewoms {
                            const Connection::Direction direction = Connection::Direction::Z,
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
-                           const double segDistStart= 0.0,
-                           const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
         void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties);
 
@@ -114,8 +112,6 @@ namespace Ewoms {
                            const Connection::Direction direction = Connection::Direction::Z,
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
-                           const double segDistStart= 0.0,
-                           const double segDistEnd= 0.0,
                            const bool defaultSatTabId = true);
 
         void loadCOMPDAT(const DeckRecord& record,

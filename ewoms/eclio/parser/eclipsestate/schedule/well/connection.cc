@@ -51,10 +51,8 @@ namespace Ewoms {
                            const int satTableId,
                            const Direction directionArg,
                            const CTFKind ctf_kind,
-			   const std::size_t sort_value,
-			   const double segDistStart,
-			   const double segDistEnd,
-			   const bool defaultSatTabId)
+                           const std::size_t sort_value,
+                           const bool defaultSatTabId)
         : direction(directionArg),
           center_depth(depth),
           open_state(stateArg),
@@ -69,8 +67,6 @@ namespace Ewoms {
           m_ctfkind(ctf_kind),
           m_global_index(global_index),
           m_sort_value(sort_value),
-          m_segDistStart(segDistStart),
-          m_segDistEnd(segDistEnd),
           m_defaultSatTabId(defaultSatTabId)
     {
     }
@@ -94,8 +90,6 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         m_ctfkind(rst_connection.cf_kind),
         m_global_index(grid.getGlobalIndex(this->ijk[0], this->ijk[1], this->ijk[2])),
         m_sort_value(rst_connection.rst_index),
-        m_segDistStart(rst_connection.segdist_start),
-        m_segDistEnd(rst_connection.segdist_end),
         m_defaultSatTabId(defaultSatTabId),
         segment_number(rst_connection.segment)
     {
@@ -104,12 +98,13 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
             auto active_index = grid.activeIndex(this->ijk[0], this->ijk[1], this->ijk[2]);
             this->sat_tableId = satnum[active_index];
         }
-
+        if (this->segment_number > 0)
+            this->m_perf_range = std::make_pair(rst_connection.segdist_start, rst_connection.segdist_end);
     }
 
     Connection::Connection()
           : Connection(0, 0, 0, 0, 0, 0.0, State::SHUT, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0, Direction::X, CTFKind::DeckValue, 0, 0.0, 0.0, false)
+                       0, Direction::X, CTFKind::DeckValue, 0, false)
     {}
 
     Connection Connection::serializeObject()
@@ -128,8 +123,8 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         result.ijk = {9, 10, 11};
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
+        result.m_perf_range = std::make_pair(14,15);
         result.m_sort_value = 14;
-        result.m_segDistEnd = 15.0;
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
 
@@ -176,12 +171,8 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         return this->direction;
     }
 
-    const double& Connection::getSegDistStart() const {
-        return m_segDistStart;
-    }
-
-    const double& Connection::getSegDistEnd() const {
-        return m_segDistEnd;
+const std::optional<std::pair<double, double>>& Connection::perf_range() const {
+        return this->m_perf_range;
     }
 
     void Connection::setDefaultSatTabId(bool id) {
@@ -235,13 +226,11 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
     void Connection::updateSegment(int segment_number_arg,
                                    double center_depth_arg,
                                    std::size_t compseg_insert_index,
-                                   double start,
-                                   double end) {
+                                   const std::pair<double, double>& perf_range) {
         this->segment_number = segment_number_arg;
         this->center_depth = center_depth_arg;
         this->m_sort_value = compseg_insert_index;
-        this->m_segDistStart = start;
-        this->m_segDistEnd = end;
+        this->m_perf_range = perf_range;
     }
 
     void Connection::updateSegmentRST(int segment_number_arg,

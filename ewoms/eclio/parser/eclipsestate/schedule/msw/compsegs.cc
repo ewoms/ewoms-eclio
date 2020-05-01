@@ -274,8 +274,7 @@ namespace Ewoms {
                 connection.updateSegment(compseg.segment_number,
                                          compseg.center_depth,
                                          compseg.m_seqIndex,
-                                         compseg.m_distance_start,
-                                         compseg.m_distance_end);
+                                         { compseg.m_distance_start, compseg.m_distance_end });
             }
         }
 

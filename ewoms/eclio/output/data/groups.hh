@@ -48,9 +48,6 @@ namespace Ewoms {
         inline currentGroupConstraints& set(  Ewoms::Group::ProductionCMode cpc,
         Ewoms::Group::InjectionCMode  cgic,
         Ewoms::Group::InjectionCMode  cwic);
-
-        inline bool has();
-
     };
 
     class Group : public std::map<std::string, Ewoms::data::currentGroupConstraints>  {
@@ -105,10 +102,6 @@ namespace Ewoms {
         this->currentWaterInjectionConstraint = cwic;
         this->currentProdConstraint = cpc;
         return *this;
-    }
-
-    inline bool currentGroupConstraints::has() {
-        return true;
     }
 
 }} // Ewoms::data

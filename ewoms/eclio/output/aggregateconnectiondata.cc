@@ -173,8 +173,11 @@ namespace {
 
             sConn[Ix::item12] = sConn[Ix::ConnTrans];
 
-            sConn[Ix::SegDistEnd]   = scprop(M::length, conn.getSegDistEnd());
-            sConn[Ix::SegDistStart] = scprop(M::length, conn.getSegDistStart());
+            if (conn.attachedToSegment()) {
+                const auto& [start, end] = *conn.perf_range();
+                sConn[Ix::SegDistStart] = scprop(M::length, start);
+                sConn[Ix::SegDistEnd]   = scprop(M::length, end);
+            }
 
             sConn[Ix::item30] = -1.0e+20f;
             sConn[Ix::item31] = -1.0e+20f;
