@@ -20,9 +20,10 @@
 #define EXT_NETWORK_H
 
 #include <map>
-#include <optional>
 #include <string>
 #include <vector>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/network/branch.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/network/node.hh>
@@ -40,7 +41,7 @@ public:
     const Node& node(const std::string& name) const;
     const Node& root() const;
     std::vector<Branch> downtree_branches(const std::string& node) const;
-    std::optional<Branch> uptree_branch(const std::string& node) const;
+    Ewoms::optional<Branch> uptree_branch(const std::string& node) const;
 
     bool operator==(const ExtNetwork& other) const;
     static ExtNetwork serializeObject();

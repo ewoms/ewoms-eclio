@@ -99,7 +99,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
             this->sat_tableId = satnum[active_index];
         }
         if (this->segment_number > 0)
-            this->m_perf_range = std::make_pair(rst_connection.segdist_start, rst_connection.segdist_end);
+            this->m_perf_range = std::make_pair((double) rst_connection.segdist_start, (double) rst_connection.segdist_end);
     }
 
     Connection::Connection()
@@ -123,7 +123,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         result.ijk = {9, 10, 11};
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
-        result.m_perf_range = std::make_pair(14,15);
+        result.m_perf_range = std::make_pair((double) 14, (double) 15);
         result.m_sort_value = 14;
         result.m_defaultSatTabId = true;
         result.segment_number = 16;
@@ -171,7 +171,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         return this->direction;
     }
 
-const std::optional<std::pair<double, double>>& Connection::perf_range() const {
+const Ewoms::optional<std::pair<double, double>>& Connection::perf_range() const {
         return this->m_perf_range;
     }
 

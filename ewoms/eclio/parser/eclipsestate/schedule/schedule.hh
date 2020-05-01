@@ -291,11 +291,11 @@ namespace Ewoms
             guide_rate_config.serializeOp(serializer);
             gconsale.serializeOp(serializer);
             gconsump.serializeOp(serializer);
-            global_whistctl_mode.template serializeOp<Serializer, false>(serializer);
+            global_whistctl_mode.serializeOp(serializer);
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
             rft_config.serializeOp(serializer);
-            m_nupcol.template serializeOp<Serializer, false>(serializer);
+            m_nupcol.serializeOp(serializer);
             restart_config.serializeOp(serializer);
             serializer.map(wellgroup_events);
             if (!serializer.isSerializing()) {

@@ -19,7 +19,6 @@
 
 #include <fnmatch.h>
 #include <iostream>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
@@ -75,6 +74,8 @@
 #include <ewoms/eclio/parser/units/dimension.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/units/units.hh>
+
+#include <ewoms/common/optional.hh>
 
 #include "well/injection.hh"
 
@@ -3018,11 +3019,6 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
     m_tuning.update(report_step, rst_state.tuning);
     m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
-}
-
-std::shared_ptr<const Python> Schedule::python() const
-{
-    return this->python_handle;
 }
 
 void Schedule::updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step) {

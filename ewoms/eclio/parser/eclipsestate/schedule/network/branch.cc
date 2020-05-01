@@ -81,7 +81,7 @@ Branch::AlqEQ Branch::AlqEqfromString(const std::string& input_string) {
     throw std::invalid_argument("Invalid input for ALQ surface density eq: " + input_string);
 }
 
-std::optional<int> Branch::vfp_table() const {
+Ewoms::optional<int> Branch::vfp_table() const {
     if (this->m_vfp_table == invalid_vfp_table)
         return {};
     else
@@ -92,7 +92,7 @@ Branch::AlqEQ Branch::alq_eq() const {
     return this->m_alq_eq;
 }
 
-std::optional<double> Branch::alq_value() const {
+Ewoms::optional<double> Branch::alq_value() const {
     return this->m_alq_value;
 }
 

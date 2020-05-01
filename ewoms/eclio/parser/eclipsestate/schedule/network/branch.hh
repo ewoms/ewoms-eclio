@@ -19,7 +19,8 @@
 #ifndef NETWORK_BRANCH_H
 #define NETWORK_BRANCH_H
 
-#include <optional>
+#include <ewoms/common/optional.hh>
+
 #include <string>
 
 namespace Ewoms {
@@ -42,9 +43,9 @@ public:
 
     const std::string& downtree_node() const;
     const std::string& uptree_node() const;
-    std::optional<int> vfp_table() const;
+    Ewoms::optional<int> vfp_table() const;
     AlqEQ alq_eq() const;
-    std::optional<double> alq_value() const;
+    Ewoms::optional<double> alq_value() const;
 
     static Branch serializeObject();
     bool operator==(const Branch& other) const;
@@ -62,7 +63,7 @@ private:
     std::string m_downtree_node;
     std::string m_uptree_node;
     int m_vfp_table;
-    std::optional<double> m_alq_value;
+    Ewoms::optional<double> m_alq_value;
     AlqEQ m_alq_eq;
 };
 

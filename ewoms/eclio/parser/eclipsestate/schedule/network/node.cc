@@ -32,11 +32,11 @@ const std::string& Node::name() const {
     return this->m_name;
 }
 
-const std::optional<std::string>& Node::target_group() const {
+const Ewoms::optional<std::string>& Node::target_group() const {
     return this->m_choke_target_group;
 }
 
-const std::optional<double>& Node::terminal_pressure() const {
+const Ewoms::optional<double>& Node::terminal_pressure() const {
     return this->m_terminal_pressure;
 }
 
@@ -45,7 +45,7 @@ bool Node::add_gas_lift_gas() const {
 }
 
 bool Node::as_choke() const {
-    return this->m_choke_target_group.has_value();
+    return this->m_choke_target_group.operator bool();
 }
 
 void Node::terminal_pressure(double pressure) {

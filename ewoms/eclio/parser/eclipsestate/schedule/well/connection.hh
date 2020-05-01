@@ -25,7 +25,8 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <optional>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/value.hh>
@@ -127,7 +128,7 @@ namespace RestartIO {
         std::size_t sort_value() const;
         const bool& getDefaultSatTabId() const;
         void setDefaultSatTabId(bool id);
-        const std::optional<std::pair<double, double>>& perf_range() const;
+        const Ewoms::optional<std::pair<double, double>>& perf_range() const;
         std::string str() const;
         bool ctfAssignedFromInput() const
         {
@@ -227,7 +228,7 @@ namespace RestartIO {
         */
 
         std::size_t m_sort_value;
-        std::optional<std::pair<double,double>> m_perf_range;
+        Ewoms::optional<std::pair<double,double>> m_perf_range;
         bool m_defaultSatTabId;
 
         // related segment number

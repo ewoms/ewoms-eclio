@@ -71,7 +71,7 @@ void ExtNetwork::add_branch(Branch branch)
     this->m_branches.push_back( std::move(branch) );
 }
 
-std::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
+Ewoms::optional<Branch> ExtNetwork::uptree_branch(const std::string& node) const {
     if (!this->has_node(node))
         throw std::out_of_range("No such node: " + node);
 
@@ -119,7 +119,7 @@ void ExtNetwork::add_node(Node node)
         throw std::invalid_argument("Node: " + name + " is not referenced by any branch and would be dangling.");
 
     if (branch->downtree_node() == name) {
-        if (node.as_choke() && branch->vfp_table().has_value())
+        if (node.as_choke() && branch->vfp_table().operator bool())
             throw std::invalid_argument("Node: " + name + " should serve as a choke => upstream branch can not have VFP table");
     }
 

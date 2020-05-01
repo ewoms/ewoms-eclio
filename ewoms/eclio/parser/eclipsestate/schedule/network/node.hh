@@ -19,7 +19,8 @@
 #ifndef NETWORK_NODE_H
 #define NETWORK_NODE_H
 
-#include <optional>
+#include <ewoms/common/optional.hh>
+
 #include <string>
 
 namespace Ewoms {
@@ -31,10 +32,10 @@ public:
     Node(const std::string& name);
 
     const std::string& name() const;
-    const std::optional<double>& terminal_pressure() const;
+    const Ewoms::optional<double>& terminal_pressure() const;
     bool as_choke() const;
     bool add_gas_lift_gas() const;
-    const std::optional<std::string>& target_group() const;
+    const Ewoms::optional<std::string>& target_group() const;
 
     void terminal_pressure(double pressure);
     void add_gas_lift_gas(bool add_gas);
@@ -53,8 +54,8 @@ public:
     }
 private:
     std::string m_name;
-    std::optional<double> m_terminal_pressure;
-    std::optional<std::string> m_choke_target_group;
+    Ewoms::optional<double> m_terminal_pressure;
+    Ewoms::optional<std::string> m_choke_target_group;
     bool m_add_gas_lift_gas = false;
 };
 }

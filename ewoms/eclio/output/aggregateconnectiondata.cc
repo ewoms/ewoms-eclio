@@ -174,7 +174,9 @@ namespace {
             sConn[Ix::item12] = sConn[Ix::ConnTrans];
 
             if (conn.attachedToSegment()) {
-                const auto& [start, end] = *conn.perf_range();
+                const auto& range = *conn.perf_range();
+                const auto& start = std::get<0>(range);
+                const auto& end = std::get<1>(range);
                 sConn[Ix::SegDistStart] = scprop(M::length, start);
                 sConn[Ix::SegDistEnd]   = scprop(M::length, end);
             }
