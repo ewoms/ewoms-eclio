@@ -20,6 +20,7 @@
 #define EWOMS_PARSER_ECLIPSE_ECLIPSESTATE_TABLES_VFPINJTABLE_HH_
 
 #include <array>
+#include <string>
 #include <vector>
 
 namespace Ewoms {

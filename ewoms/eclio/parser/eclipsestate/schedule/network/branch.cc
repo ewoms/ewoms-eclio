@@ -19,6 +19,8 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/network/branch.hh>
 
+#include <stdexcept>
+
 namespace Ewoms {
 namespace Network {
 
