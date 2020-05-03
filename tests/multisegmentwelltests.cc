@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     // only one connection attached to the outlet segment in this case
     const Ewoms::Connection& connection = new_connection_set->getFromIJK(15, 0, 1);
     const auto& perf_range = connection.perf_range();
-    const auto connection_length = perf_range->second - perf_range->first;
+    const auto connection_length = (*perf_range).second - (*perf_range).first;
     sicd_ptr->updateScalingFactor(outlet_segment_length, connection_length);
 
     // updated, so it should not throw
