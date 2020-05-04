@@ -2653,7 +2653,7 @@ WELTARG::WELTARG( ) : ParserKeyword("WELTARG")
         record.addItem(item);
      }
      {
-        ParserItem item("NEW_VALUE", ParserItem::itype::DOUBLE);
+        ParserItem item("NEW_VALUE", ParserItem::itype::UDA);
         record.addItem(item);
      }
      addRecord( record );
