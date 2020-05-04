@@ -57,12 +57,11 @@ using namespace Ewoms;
 
 Schedule make_schedule(const std::string& deck_string) {
     const auto& deck = Parser{}.parseString(deck_string);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    return Schedule(deck, grid , fp, runspec, python);
+    return Schedule(deck, grid , fp, runspec);
 }
 
 static std::string createDeck() {
@@ -360,12 +359,11 @@ BOOST_AUTO_TEST_CASE(CreateScheduleDeckMissingReturnsDefaults) {
     Deck deck;
     Parser parser;
     deck.addKeyword( DeckKeyword( parser.getKeyword("SCHEDULE" )));
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+    Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK_EQUAL( schedule.getStartTime() , TimeMap::mkdate(1983, 1 , 1));
 }
 
@@ -1132,7 +1130,6 @@ BOOST_AUTO_TEST_CASE(WELSPECS_WGNAME_SPACE) {
         )";
 
         auto deck = parser.parseString(input);
-        auto python = std::make_shared<Python>();
         EclipseGrid grid( deck );
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
@@ -1750,12 +1747,11 @@ BOOST_AUTO_TEST_CASE(unsupportedOptionWHISTCTL) {
             ;
 
     auto deck = parser.parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec, python), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
@@ -1780,12 +1776,11 @@ BOOST_AUTO_TEST_CASE(move_HEAD_I_location) {
     )";
 
     auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
     BOOST_CHECK_EQUAL(2, schedule.getWell("W1", 1).getHeadI());
     BOOST_CHECK_EQUAL(3, schedule.getWell("W1", 2).getHeadI());
 }
@@ -1812,12 +1807,11 @@ BOOST_AUTO_TEST_CASE(change_ref_depth) {
     )";
 
     auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
     BOOST_CHECK_CLOSE(2873.94, schedule.getWell("W1", 1).getRefDepth(), 1e-5);
     BOOST_CHECK_EQUAL(12.0, schedule.getWell("W1", 2).getRefDepth());
 }
@@ -1851,12 +1845,11 @@ BOOST_AUTO_TEST_CASE(WTEMP_well_template) {
     )";
 
     auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
 
     BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 1).getInjectionProperties().temperature, 1e-5);
     BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 2).getInjectionProperties().temperature, 1e-5);
@@ -1897,12 +1890,11 @@ BOOST_AUTO_TEST_CASE(WTEMPINJ_well_template) {
     )";
 
         auto deck = Parser().parseString(input);
-        auto python = std::make_shared<Python>();
         EclipseGrid grid(10,10,10);
         TableManager table ( deck );
         FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
         Runspec runspec (deck);
-        Schedule schedule( deck, grid, fp, runspec, python);
+        Schedule schedule( deck, grid, fp, runspec);
 
         // Producerwell - currently setting temperature only acts on injectors.
         BOOST_CHECK_CLOSE(288.71, schedule.getWell("W1", 1).getInjectionProperties().temperature, 1e-5);
@@ -1950,12 +1942,11 @@ BOOST_AUTO_TEST_CASE( COMPDAT_sets_automatic_complnum ) {
     )";
 
     auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
     const auto& cs1 = schedule.getWell( "W1", 1 ).getConnections(  );
     BOOST_CHECK_EQUAL( 1, cs1.get( 0 ).complnum() );
     BOOST_CHECK_EQUAL( 2, cs1.get( 1 ).complnum() );
@@ -2001,12 +1992,11 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_wells ) {
     )";
 
     auto deck = Parser().parseString( input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
 
     {
         const auto& w1cs = schedule.getWell( "W1", 1 ).getConnections();
@@ -2071,12 +2061,11 @@ BOOST_AUTO_TEST_CASE( COMPDAT_multiple_records_same_completion ) {
     )";
 
     auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
     const auto& cs = schedule.getWell( "W1", 1 ).getConnections();
     BOOST_CHECK_EQUAL( 3U, cs.size() );
     BOOST_CHECK_EQUAL( 1, cs.get( 0 ).complnum() );
@@ -2111,12 +2100,11 @@ BOOST_AUTO_TEST_CASE( complump_less_than_1 ) {
     )";
 
     auto deck = Parser().parseString( input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    BOOST_CHECK_THROW( Schedule( deck , grid, fp, runspec, python), std::invalid_argument );
+    BOOST_CHECK_THROW( Schedule( deck , grid, fp, runspec), std::invalid_argument );
 }
 
 BOOST_AUTO_TEST_CASE( complump ) {
@@ -2164,12 +2152,11 @@ BOOST_AUTO_TEST_CASE( complump ) {
     constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString(input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
 
     const auto& sc0 = schedule.getWell("W1", 0).getConnections();
     /* complnum should be modified by COMPLNUM */
@@ -2252,12 +2239,11 @@ BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
     constexpr auto shut = Connection::State::SHUT;
 
     auto deck = Parser().parseString( input);
-    auto python = std::make_shared<Python>();
     EclipseGrid grid( 10, 10, 10 );
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule( deck, grid, fp, runspec, python);
+    Schedule schedule( deck, grid, fp, runspec);
 
     const auto& cs1 = schedule.getWell("W1", 1).getConnections();
     const auto& cs2 = schedule.getWell("W1", 2).getConnections();
@@ -2768,12 +2754,11 @@ BOOST_AUTO_TEST_CASE(historic_BHP_and_THP) {
 
 BOOST_AUTO_TEST_CASE(FilterCompletions2) {
     const auto& deck = Parser{}.parseString(createDeckWithWellsAndCompletionData());
-    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1, fp, runspec, python);
+    Schedule schedule(deck, grid1, fp, runspec);
     std::vector<int> actnum = grid1.getACTNUM();
 
     {
@@ -3065,12 +3050,11 @@ bool has(const std::vector<std::string>& l, const std::string& s) {
 
 BOOST_AUTO_TEST_CASE(WELL_STATIC) {
     const auto& deck = Parser{}.parseString(createDeckWithWells());
-    auto python = std::make_shared<Python>();
     EclipseGrid grid1(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid1, fp, runspec, python);
+    Schedule schedule(deck, grid1, fp, runspec);
 
     BOOST_CHECK_THROW( schedule.getWell("NO_SUCH_WELL", 0), std::invalid_argument);
     BOOST_CHECK_THROW( schedule.getWell("W_3", 0), std::invalid_argument);
