@@ -23,6 +23,7 @@
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/restartconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/gasliftopt.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicstate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicvector.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/events.hh>
@@ -251,6 +252,7 @@ namespace Ewoms
         int getNupcol(size_t reportStep) const;
 
         const Network::ExtNetwork& network(std::size_t report_step) const;
+        const GasLiftOpt& glo(std::size_t report_step) const;
 
         bool operator==(const Schedule& data) const;
 
@@ -294,6 +296,7 @@ namespace Ewoms
             global_whistctl_mode.serializeOp(serializer);
             m_actions.serializeOp(serializer);
             m_network.serializeOp(serializer);
+            m_glo.serializeOp(serializer);
             rft_config.serializeOp(serializer);
             m_nupcol.serializeOp(serializer);
             restart_config.serializeOp(serializer);
@@ -329,6 +332,7 @@ namespace Ewoms
         DynamicState<Well::ProducerCMode> global_whistctl_mode;
         DynamicState<std::shared_ptr<Action::Actions>> m_actions;
         DynamicState<std::shared_ptr<Network::ExtNetwork>> m_network;
+        DynamicState<std::shared_ptr<GasLiftOpt>> m_glo;
         RFTConfig rft_config;
         DynamicState<int> m_nupcol;
         RestartConfig restart_config;
@@ -358,7 +362,7 @@ namespace Ewoms
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
 
-        GTNode groupTree(const std::string& root_node, std::size_t report_step, const GTNode * parent) const;
+        GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
@@ -411,7 +415,9 @@ namespace Ewoms
 
         void handleBRANPROP( const DeckKeyword& keyword, size_t currentStep);
         void handleNODEPROP( const DeckKeyword& keyword, size_t currentStep);
-
+        void handleLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep);
+        void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleWLIFTOPT(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors);
         void handleTUNING( const DeckKeyword& keyword, size_t currentStep);
         void handlePYACTION( const std::string& input_path, const DeckKeyword& keyword, size_t currentStep);
         void handleNUPCOL( const DeckKeyword& keyword, size_t currentStep);

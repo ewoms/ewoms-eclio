@@ -720,32 +720,33 @@ namespace {
             };
         }
 
-        Ewoms::RestartIO::Helpers::ActionResStatus
+        std::vector<std::pair<std::string, Ewoms::Action::Result>>
         act_res_stat(const Ewoms::Schedule& sched, const Ewoms::SummaryState&  smry, const std::size_t sim_step) {
-            std::vector<Ewoms::Action::Result> act_res;
-            std::vector<std::string> act_name;
+            std::vector<std::pair<std::string, Ewoms::Action::Result>> results;
             const auto& acts = sched.actions(sim_step);
             Ewoms::Action::Context context(smry);
             auto sim_time = sched.simTime(sim_step);
             for (const auto& action : acts.pending(sim_time)) {
-                act_res.push_back(action->eval(sim_time, context));
-                act_name.push_back(action->name());
+                auto result = action->eval(sim_time, context);
+                if (result)
+                    results.emplace_back( action->name(), std::move(result) );
             }
-            return {act_res, act_name};
+            return results;
         }
 
         template <class ZWellArray>
-        void staticContrib(const Ewoms::Well& well, const Ewoms::RestartIO::Helpers::ActionResStatus& actResStat, ZWellArray& zWell)
+        void staticContrib(const Ewoms::Well& well, const std::vector<std::pair<std::string, Ewoms::Action::Result>>& actResStat, ZWellArray& zWell)
         {
             using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::ZWell::index;
             zWell[Ix::WellName] = well.name();
             //loop over actions to assign action name for relevant wells
-            for (std::size_t ind = 0; ind < actResStat.result.size(); ind++) {
-                if (actResStat.result[ind].has_well(well.name())) {
-                    zWell[Ix::ActionX] = actResStat.name[ind];
+            for (const auto& [action_name, action_result] : actResStat) {
+                if (action_result.has_well(well.name())) {
+                    zWell[Ix::ActionX] = action_name;
                 }
             }
         }
+
     } // ZWell
 } // Anonymous
 

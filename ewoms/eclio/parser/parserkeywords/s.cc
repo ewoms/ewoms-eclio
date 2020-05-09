@@ -1563,7 +1563,7 @@ const std::string SOLVDIMS::data::itemName = "data";
 
 SOLVDIRS::SOLVDIRS( ) : ParserKeyword("SOLVDIRS")
 {
-  setSizeType(SLASH_TERMINATED);
+  setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
   clearDeckNames();
   addDeckName("SOLVDIRS");

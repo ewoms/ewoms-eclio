@@ -21,12 +21,12 @@
 
 #include <algorithm>
 #include <functional>
+#include <optional>
 
-#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/group/gtnode.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
-
-#include <ewoms/common/optional.hh>
 
 namespace {
 
@@ -69,6 +69,10 @@ namespace {
 
             string = std::string(left, field_padding) + string + std::string(right, field_padding);
         }
+    }
+
+    std::string underline(const std::string& string) {
+        return std::string(string.size(), divider_character);
     }
 
     struct context {
@@ -193,10 +197,6 @@ namespace {
             centre_align(decor, column_definition.total_width());
         }
 
-        std::string underline(const std::string& string) const {
-            return std::string(string.size(), divider_character);
-        }
-
         void print_header(std::ostream& os) const {
             os << title << record_separator;
             os << decor << record_separator;
@@ -204,7 +204,7 @@ namespace {
             column_definition.print_header(os, ctx);
         }
 
-        void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report, char bottom_border = '-') const {
+        void print_data(std::ostream& os, const std::vector<OutputType>& data, std::size_t sub_report = 0, char bottom_border = '-') const {
             column_definition.print_data(os, data, this->ctx, sub_report);
             column_definition.print_divider(os, bottom_border);
         }
@@ -368,10 +368,49 @@ void report_well_specification_data(std::ostream& os, const std::vector<Ewoms::W
     std::transform(data.begin(), data.end(), std::back_inserter(wrapper_data), [](const Ewoms::Well& well) { return WellWrapper { well } ; });
 
     well_specification.print_header(os);
-    well_specification.print_data(os, wrapper_data, 0);
+    well_specification.print_data(os, wrapper_data);
     well_specification.print_footer(os, {{1, "The WELL D-FACTOR is not implemented - and the report will always show the default value 0."}});
 }
 
+}
+
+namespace {
+
+    struct GroupWrapper {
+        const Ewoms::GTNode& node;
+
+        const std::string& group_name(const context&, std::size_t, std::size_t) const {
+            return node.group().name();
+        }
+
+        std::string group_level(const context&, std::size_t, std::size_t) const {
+            return std::to_string(node.level());
+        }
+
+        const std::string& group_parent(const context&, std::size_t, std::size_t) const {
+            return node.parent_name();
+        }
+    };
+
+    const table<GroupWrapper, 2> group_levels_table {
+        { 8, { "GROUP"   , "NAME"     }, &GroupWrapper::group_name  , left_align },
+        { 5, { "LEVEL"   ,            }, &GroupWrapper::group_level ,            },
+        { 8, { "PARENT"  , "GROUP"    }, &GroupWrapper::group_parent, left_align },
+    };
+
+    void report_group_levels_data(std::ostream& os, const context& ctx, std::size_t report_step) {
+        const report<Ewoms::GTNode, GroupWrapper, 2> group_levels { "GROUP LEVELS", group_levels_table, ctx } ;
+        group_levels.print_header(os);
+
+        std::vector<GroupWrapper> data { } ;
+        const Ewoms::GTNode root { ctx.sched.groupTree(report_step) } ;
+        std::vector<const Ewoms::GTNode*> nodes { root.all_nodes() } ;
+
+        std::transform(++nodes.begin(), nodes.end(), std::back_inserter(data), [](const Ewoms::GTNode* node) { return GroupWrapper { *node } ; });
+
+        group_levels.print_data(os, data);
+        group_levels.print_footer(os, {});
+    }
 }
 
 namespace {
@@ -672,6 +711,64 @@ namespace {
 
 namespace {
 
+    const std::string hierarchy_title     { "HIERARCHICAL DESCRIPTION OF GROUP CONTROL STRUCTURE" } ;
+    const std::string hierarchy_underline { underline(hierarchy_title)                            } ;
+
+    constexpr char horizontal_line  { '-' } ;
+    constexpr char vertical_line    { '|' } ;
+    constexpr char indent_character { ' ' } ;
+
+    std::string decorate_hierarchy_name(const std::string& name, bool first_line, bool last_child) {
+        if (first_line) {
+            return std::string(vertical_line, 1) + std::string(horizontal_line,  3) + name;
+        } else if (last_child) {
+            return                                 std::string(indent_character, 4) + name;
+        } else {
+            return std::string(vertical_line, 1) + std::string(indent_character, 3) + name;
+        }
+    }
+
+    std::vector<std::string> lines_for_node(const Ewoms::GTNode& node) {
+        std::vector<std::string> lines { node.group().name() } ;
+
+        const std::vector<Ewoms::GTNode>& children { node.groups() } ;
+
+        if (children.size()) {
+            lines.push_back(std::string(vertical_line, 1));
+
+            std::size_t i { 0 } ;
+            for (const auto& child : children) {
+                ++i;
+                std::vector<std::string> child_lines { lines_for_node(child) } ;
+
+                bool first_line { true } ;
+                for (const auto& line : child_lines) {
+                    lines.push_back(decorate_hierarchy_name(line, first_line, i == children.size()));
+
+                    first_line = false;
+                }
+            }
+        }
+
+        return lines;
+    }
+
+    void report_group_hierarchy_data(std::ostream& os, const context& ctx, std::size_t report_step = 0) {
+        os << hierarchy_title     << record_separator
+           << hierarchy_underline << record_separator
+           << section_separator;
+
+        for (const auto& line : lines_for_node(ctx.sched.groupTree(report_step))) {
+            os << line << record_separator;
+        }
+
+        os << section_separator << std::flush;
+    }
+
+}
+
+namespace {
+
 void report_well_connection_data(std::ostream& os, const std::vector<Ewoms::Well>& data, const context& ctx) {
     const report<Ewoms::Well, WellConnection, 3> well_connection { "WELL CONNECTION DATA", connection_table, ctx};
     well_connection.print_header(os);
@@ -739,4 +836,7 @@ void Ewoms::RptIO::workers::write_WELSPECS(std::ostream& os, unsigned, const Ewo
             }
         }
     }
+
+    report_group_hierarchy_data(os, ctx);
+    report_group_levels_data(os, ctx, report_step);
 }

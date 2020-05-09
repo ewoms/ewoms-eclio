@@ -40,11 +40,6 @@ namespace Ewoms { namespace data {
 
 namespace Ewoms { namespace RestartIO { namespace Helpers {
 
-    struct ActionResStatus {
-        std::vector<Ewoms::Action::Result> result;
-        std::vector<std::string> name;
-    };
-
     class AggregateWellData
     {
     public:

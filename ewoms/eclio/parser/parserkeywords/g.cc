@@ -1929,11 +1929,13 @@ GLIFTOPT::GLIFTOPT( ) : ParserKeyword("GLIFTOPT")
      {
         ParserItem item("MAX_LIFT_GAS_SUPPLY", ParserItem::itype::DOUBLE);
         item.setDefault( double(-100000000000000000000.000000) );
+        item.push_backDimension("GasSurfaceVolume/Time");
         record.addItem(item);
      }
      {
         ParserItem item("MAX_TOTAL_GAS_RATE", ParserItem::itype::DOUBLE);
         item.setDefault( double(-100000000000000000000.000000) );
+        item.push_backDimension("GasSurfaceVolume/Time");
         record.addItem(item);
      }
      addRecord( record );
