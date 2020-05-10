@@ -21,7 +21,8 @@
 
 #include <algorithm>
 #include <functional>
-#include <optional>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/gtnode.hh>

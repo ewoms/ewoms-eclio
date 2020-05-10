@@ -18,7 +18,8 @@
 #ifndef GAS_LIFT_OPT_H
 #define GAS_LIFT_OPT_H
 
-#include <optional>
+#include <ewoms/common/optional.hh>
+
 #include <string>
 #include <map>
 
@@ -35,7 +36,7 @@ public:
             m_name(name)
         {}
 
-        const std::optional<double>& max_lift_gas() const {
+        const Ewoms::optional<double>& max_lift_gas() const {
             return this->m_max_lift_gas;
         }
 
@@ -44,7 +45,7 @@ public:
                 this->m_max_lift_gas = value;
         }
 
-        const std::optional<double>& max_total_gas() const {
+        const Ewoms::optional<double>& max_total_gas() const {
             return this->m_max_total_gas;
         }
 
@@ -81,8 +82,8 @@ public:
 
     private:
         std::string m_name;
-        std::optional<double> m_max_lift_gas;
-        std::optional<double> m_max_total_gas;
+        Ewoms::optional<double> m_max_lift_gas;
+        Ewoms::optional<double> m_max_total_gas;
     };
 
     class Well {
@@ -108,10 +109,10 @@ public:
         /*
           The semantics of the max_rate is quite complicated:
 
-            1. If the std::optional<double> has a value that value should be
+            1. If the Ewoms::optional<double> has a value that value should be
                used as the maximum rate and all is fine.
 
-            2. If the std::optional<double> does not a have well we must check
+            2. If the Ewoms::optional<double> does not a have well we must check
                the value of Well::use_glo():
 
                False: The maximum gas lift should have been set with WCONPROD /
@@ -121,7 +122,7 @@ public:
                   the value to use should be the largest ALQ value in the wells
                   VFP table.
         */
-        const std::optional<double>& max_rate() const {
+        const Ewoms::optional<double>& max_rate() const {
             return this->m_max_rate;
         }
 
@@ -197,7 +198,7 @@ public:
 
     private:
         std::string m_name;
-        std::optional<double> m_max_rate;
+        Ewoms::optional<double> m_max_rate;
         double m_min_rate = 0;
         bool m_use_glo;
         double m_weight = 1;

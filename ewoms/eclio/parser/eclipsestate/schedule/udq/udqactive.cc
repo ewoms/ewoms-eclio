@@ -22,6 +22,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 #include <iostream>
+#include <algorithm>
 
 namespace Ewoms {
 

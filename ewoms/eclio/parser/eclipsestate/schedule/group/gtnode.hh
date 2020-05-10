@@ -16,7 +16,7 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <optional>
+#include <ewoms/common/optional.hh>
 #include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
@@ -29,7 +29,7 @@ namespace Ewoms {
 
 class GTNode {
 public:
-    GTNode(const Group& group, std::size_t level, const std::optional<std::string>& parent_name);
+    GTNode(const Group& group, std::size_t level, const Ewoms::optional<std::string>& parent_name);
 
     void add_group(const GTNode& child_group);
     void add_well(const Well& well);
@@ -45,7 +45,7 @@ public:
 private:
     const Group m_group;
     std::size_t m_level;
-    std::optional<std::string> m_parent_name;
+    Ewoms::optional<std::string> m_parent_name;
     /*
       Class T with a stl container <T> - supposedly undefined behavior before
       C++17 - but it compiles without warnings.

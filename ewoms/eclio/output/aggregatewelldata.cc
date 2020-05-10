@@ -740,7 +740,9 @@ namespace {
             using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::ZWell::index;
             zWell[Ix::WellName] = well.name();
             //loop over actions to assign action name for relevant wells
-            for (const auto& [action_name, action_result] : actResStat) {
+            for (const auto& act : actResStat) {
+                const auto& action_name = std::get<0>(act);
+                const auto& action_result = std::get<1>(act);
                 if (action_result.has_well(well.name())) {
                     zWell[Ix::ActionX] = action_name;
                 }

@@ -38,10 +38,11 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
 
+#include <ewoms/common/optional.hh>
+
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
-#include <optional>
 #include <iostream>
 #include <string>
 

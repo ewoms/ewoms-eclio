@@ -21,7 +21,7 @@
 
 namespace Ewoms {
 
-GTNode::GTNode(const Group& group_arg, std::size_t level, const std::optional<std::string>& parent_name) :
+GTNode::GTNode(const Group& group_arg, std::size_t level, const Ewoms::optional<std::string>& parent_name) :
     m_group(group_arg),
     m_level(level),
     m_parent_name(parent_name)
@@ -37,7 +37,7 @@ const Group& GTNode::group() const {
 }
 
 const std::string& GTNode::parent_name() const {
-    if (this->m_parent_name.has_value())
+  if (static_cast<bool>(this->m_parent_name))
         return *this->m_parent_name;
 
     throw std::invalid_argument("Tried to access parent of root in GroupTree. Root: " + this->name());

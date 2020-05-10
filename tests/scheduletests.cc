@@ -3539,7 +3539,7 @@ WLIFTOPT
     const auto& glo = sched.glo(0);
     const auto& plat_group = glo.group("PLAT-A");
     BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), siFactorG * 200000);
-    BOOST_CHECK(!plat_group.max_total_gas().has_value());
+    BOOST_CHECK(!static_cast<bool>(plat_group.max_total_gas()));
 
     const auto& w1 = glo.well("B-1H");
     BOOST_CHECK(w1.use_glo());

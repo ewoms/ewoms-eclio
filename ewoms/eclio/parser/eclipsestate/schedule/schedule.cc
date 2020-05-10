@@ -2161,7 +2161,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return this->m_timeMap;
     }
 
-    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const {
+    GTNode Schedule::groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const Ewoms::optional<std::string>& parent_name) const {
         auto root_group = this->getGroup(root_node, report_step);
         GTNode tree(root_group, level, parent_name);
 
