@@ -319,7 +319,7 @@ OPERATER::OPERATER( ) : ParserKeyword("OPERATER")
   {
      ParserRecord record;
      {
-        ParserItem item("RESULT_ARRAY", ParserItem::itype::STRING);
+        ParserItem item("TARGET_ARRAY", ParserItem::itype::STRING);
         record.addItem(item);
      }
      {
@@ -353,7 +353,7 @@ OPERATER::OPERATER( ) : ParserKeyword("OPERATER")
   }
 }
 const std::string OPERATER::keywordName = "OPERATER";
-const std::string OPERATER::RESULT_ARRAY::itemName = "RESULT_ARRAY";
+const std::string OPERATER::TARGET_ARRAY::itemName = "TARGET_ARRAY";
 const std::string OPERATER::REGION_NUMBER::itemName = "REGION_NUMBER";
 const std::string OPERATER::OPERATION::itemName = "OPERATION";
 const std::string OPERATER::ARRAY_PARAMETER::itemName = "ARRAY_PARAMETER";

@@ -31,6 +31,8 @@
 namespace Ewoms {
 
 class SummaryState;
+class UDQConfig;
+class UDQActive;
 class Group {
 public:
 
@@ -143,6 +145,12 @@ struct InjectionControls {
 };
 
 struct GroupProductionProperties {
+    GroupProductionProperties() = default;
+    GroupProductionProperties(const std::string& gname) :
+        name(gname)
+    {}
+
+    std::string name;
     ProductionCMode cmode = ProductionCMode::NONE;
     ExceedAction exceed_action = ExceedAction::NONE;
     UDAValue oil_target;
@@ -150,7 +158,7 @@ struct GroupProductionProperties {
     UDAValue gas_target;
     UDAValue liquid_target;
     double guide_rate;
-    GuideRateTarget guide_rate_def;
+    GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     bool available_group_control = true;
     static GroupProductionProperties serializeObject();
@@ -158,10 +166,12 @@ struct GroupProductionProperties {
     int production_controls = 0;
     bool operator==(const GroupProductionProperties& other) const;
     bool operator!=(const GroupProductionProperties& other) const;
+    bool updateUDQActive(const UDQConfig& udq_config, UDQActive& active) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
+        serializer(name);
         serializer(cmode);
         serializer(exceed_action);
         oil_target.serializeOp(serializer);
@@ -184,7 +194,7 @@ struct ProductionControls {
     double gas_target;
     double liquid_target;
     double guide_rate;
-    GuideRateTarget guide_rate_def;
+    GuideRateTarget guide_rate_def = GuideRateTarget::NO_GUIDE_RATE;
     double resv_target = 0;
     int production_controls = 0;
     bool has_control(ProductionCMode control) const;
@@ -286,7 +296,7 @@ private:
     IOrderSet<std::string> m_groups;
 
     std::map<Phase, GroupInjectionProperties> injection_properties;
-    GroupProductionProperties production_properties{};
+    GroupProductionProperties production_properties;
     std::pair<Phase, bool> m_topup_phase{Phase::WATER, false};
 };
 
