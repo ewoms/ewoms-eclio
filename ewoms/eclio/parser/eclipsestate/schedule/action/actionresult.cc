@@ -19,6 +19,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <stdexcept>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 

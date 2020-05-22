@@ -21,6 +21,8 @@
 
 #include <stdexcept>
 
+#include <stdexcept>
+
 namespace Ewoms {
 namespace Network {
 

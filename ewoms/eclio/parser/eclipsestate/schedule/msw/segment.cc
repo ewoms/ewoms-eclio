@@ -24,7 +24,6 @@
 
 #include <cassert>
 #include <stdexcept>
-
 #include <string>
 
 namespace Ewoms {

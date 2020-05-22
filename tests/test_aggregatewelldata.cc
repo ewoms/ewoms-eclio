@@ -234,6 +234,7 @@ TSTEP            -- 8
         state.update("WWCT:OP_1" ,    0.625);
         state.update("WGOR:OP_1" ,  234.5);
         state.update("WBHP:OP_1" ,  314.15);
+        state.update("WTHP:OP_1" ,  123.45);
         state.update("WOPTH:OP_1",  345.6);
         state.update("WWPTH:OP_1",  456.7);
         state.update("WGPTH:OP_1",  567.8);
@@ -241,6 +242,10 @@ TSTEP            -- 8
         state.update("WGITH:OP_1",    0.0);
         state.update("WGVIR:OP_1",    0.0);
         state.update("WWVIR:OP_1",    0.0);
+        state.update("WOPGR:OP_1",    4.9);
+        state.update("WWPGR:OP_1",    3.8);
+        state.update("WGPGR:OP_1",    2.7);
+        state.update("WVPGR:OP_1",    6.1);
 
         state.update("WOPR:OP_2" ,    0.0);
         state.update("WWPR:OP_2" ,    0.0);
@@ -258,6 +263,7 @@ TSTEP            -- 8
         state.update("WWCT:OP_2" ,    0.0);
         state.update("WGOR:OP_2" ,    0.0);
         state.update("WBHP:OP_2" ,  400.6);
+        state.update("WTHP:OP_2" ,  234.5);
         state.update("WOPTH:OP_2",    0.0);
         state.update("WWPTH:OP_2",    0.0);
         state.update("WGPTH:OP_2",    0.0);
@@ -265,6 +271,10 @@ TSTEP            -- 8
         state.update("WGITH:OP_2", 3030.0);
         state.update("WGVIR:OP_2", 1234.0);
         state.update("WWVIR:OP_2", 4321.0);
+        state.update("WOIGR:OP_2",    4.9);
+        state.update("WWIGR:OP_2",    3.8);
+        state.update("WGIGR:OP_2",    2.7);
+        state.update("WVIGR:OP_2",    6.1);
 
         state.update("WOPR:OP_3" ,   11.0);
         state.update("WWPR:OP_3" ,   12.0);
@@ -282,6 +292,7 @@ TSTEP            -- 8
         state.update("WWCT:OP_3" ,    0.0625);
         state.update("WGOR:OP_3" , 1234.5);
         state.update("WBHP:OP_3" ,  314.15);
+        state.update("WTHP:OP_3" ,  246.9);
         state.update("WOPTH:OP_3", 2345.6);
         state.update("WWPTH:OP_3", 3456.7);
         state.update("WGPTH:OP_3", 4567.8);
@@ -289,6 +300,10 @@ TSTEP            -- 8
         state.update("WGITH:OP_3",    0.0);
         state.update("WGVIR:OP_3",    0.0);
         state.update("WWVIR:OP_3",   43.21);
+        state.update("WOPGR:OP_3",    49.0);
+        state.update("WWPGR:OP_3",    38.9);
+        state.update("WGPGR:OP_3",    27.8);
+        state.update("WVPGR:OP_3",    61.2);
 
         return state;
     }
@@ -583,6 +598,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::TubHeadPr], 123.45, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15 , 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] ,   0.625, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5  , 1.0e-10);
@@ -604,6 +620,18 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistWatInjTotal], 0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistGasInjTotal], 0.0, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::PrimGuideRate], 4.9, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::PrimGuideRate], xwell[i0 + Ix::PrimGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrGuideRate], 3.8, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::WatPrGuideRate], xwell[i0 + Ix::WatPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrGuideRate], 2.7, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::GasPrGuideRate], xwell[i0 + Ix::GasPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrGuideRate], 6.1, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::VoidPrGuideRate], xwell[i0 + Ix::VoidPrGuideRate_2]);
     }
 
     // XWEL (OP_2)
@@ -615,6 +643,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasPrRate], -200.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrRate], -1234.0, 1.0e-10);
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::TubHeadPr], 234.5, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
@@ -632,6 +661,20 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistGasPrTotal] ,    0.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistWatInjTotal], 1515.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::HistGasInjTotal], 3030.0, 1.0e-10);
+
+        // Gas injector => primary guide rate == gas injection guide rate (with negative sign).
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::PrimGuideRate], -2.7, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::PrimGuideRate], xwell[i1 + Ix::PrimGuideRate_2]);
+
+        // Injector => all phase production guide rates are zero
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatPrGuideRate], 0.0, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::WatPrGuideRate], xwell[i1 + Ix::WatPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasPrGuideRate], 0.0, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::GasPrGuideRate], xwell[i1 + Ix::GasPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrGuideRate], 0.0, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::VoidPrGuideRate], xwell[i1 + Ix::VoidPrGuideRate_2]);
     }
 }
 
@@ -692,6 +735,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::LiqPrRate], 1.0 + 2.0, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrRate], 4.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::TubHeadPr], 123.45, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::FlowBHP], 314.15, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatCut] , 0.625, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::GORatio], 234.5, 1.0e-10);
@@ -710,6 +754,18 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistOilPrTotal], 345.6, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistWatPrTotal], 456.7, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i0 + Ix::HistGasPrTotal], 567.8, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::PrimGuideRate], 4.9, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::PrimGuideRate], xwell[i0 + Ix::PrimGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::WatPrGuideRate], 3.8, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::WatPrGuideRate], xwell[i0 + Ix::WatPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::GasPrGuideRate], 2.7, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::GasPrGuideRate], xwell[i0 + Ix::GasPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i0 + Ix::VoidPrGuideRate], 6.1, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i0 + Ix::VoidPrGuideRate], xwell[i0 + Ix::VoidPrGuideRate_2]);
     }
 
     // XWEL (OP_2) -- water injector
@@ -725,6 +781,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::LiqPrRate],
                           xwell[i1 + Ix::WatPrRate], 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::TubHeadPr], 234.5, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::FlowBHP], 400.6, 1.0e-10);
 
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatInjTotal], 1000.0, 1.0e-10);
@@ -744,6 +801,20 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         // WWVIR
         BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatVoidPrRate],
                           -4321.0, 1.0e-10);
+
+        // Water injector => primary guide rate == water injection guide rate (with negative sign).
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::PrimGuideRate], -3.8, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::PrimGuideRate], xwell[i1 + Ix::PrimGuideRate_2]);
+
+        // Injector => all phase production guide rates are zero
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::WatPrGuideRate], 0.0, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::WatPrGuideRate], xwell[i1 + Ix::WatPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::GasPrGuideRate], 0.0, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::GasPrGuideRate], xwell[i1 + Ix::GasPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i1 + Ix::VoidPrGuideRate], 0.0, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i1 + Ix::VoidPrGuideRate], xwell[i1 + Ix::VoidPrGuideRate_2]);
     }
 
     // XWEL (OP_3) -- producer
@@ -759,6 +830,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::LiqPrRate], 11.0 + 12.0, 1.0e-10); // LPR
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrRate], 14.0, 1.0e-10);
 
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::TubHeadPr], 246.9, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::FlowBHP], 314.15, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatCut] , 0.0625, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::GORatio], 1234.5, 1.0e-10);
@@ -779,6 +851,18 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistOilPrTotal], 2345.6, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistWatPrTotal], 3456.7, 1.0e-10);
         BOOST_CHECK_CLOSE(xwell[i2 + Ix::HistGasPrTotal], 4567.8, 1.0e-10);
+
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::PrimGuideRate], 49, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i2 + Ix::PrimGuideRate], xwell[i2 + Ix::PrimGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::WatPrGuideRate], 38.9, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i2 + Ix::WatPrGuideRate], xwell[i2 + Ix::WatPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::GasPrGuideRate], 27.8, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i2 + Ix::GasPrGuideRate], xwell[i2 + Ix::GasPrGuideRate_2]);
+
+        BOOST_CHECK_CLOSE(xwell[i2 + Ix::VoidPrGuideRate], 61.2, 1.0e-10);
+        BOOST_CHECK_EQUAL(xwell[i2 + Ix::VoidPrGuideRate], xwell[i2 + Ix::VoidPrGuideRate_2]);
     }
 }
 
