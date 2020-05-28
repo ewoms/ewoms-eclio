@@ -47,8 +47,13 @@ namespace Ewoms {
                             prev_cell.influx_coeff.second += cell.influx_coeff.second;
                     }
                 } else {
-                    std::string msg = "Cell with global index: " + std::to_string(cell.global_index) + " is already connected to Aquifer: " + std::to_string(prev_cell.aquiferID);
-                    throw std::invalid_argument( msg );
+                    static bool warningPrinted = false;
+                    if (!warningPrinted) {
+                        std::string msg = "Cell with global index: " + std::to_string(cell.global_index) + " is already connected to Aquifer: " + std::to_string(prev_cell.aquiferID);
+                        OpmLog::warning(msg);
+                        warningPrinted = true;
+                    }
+                    return;
                 }
             }
         }
