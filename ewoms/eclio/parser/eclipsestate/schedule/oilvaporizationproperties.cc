@@ -21,8 +21,6 @@
 
 #include <stdexcept>
 
-#include <stdexcept>
-
 namespace Ewoms {
 
     OilVaporizationProperties::OilVaporizationProperties()

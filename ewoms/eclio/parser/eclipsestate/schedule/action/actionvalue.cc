@@ -4,8 +4,6 @@
 
 #include <stdexcept>
 
-#include <stdexcept>
-
 namespace Ewoms {
 namespace Action {
 

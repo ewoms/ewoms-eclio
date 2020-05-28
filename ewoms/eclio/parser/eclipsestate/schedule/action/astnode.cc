@@ -24,8 +24,6 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/astnode.hh>
 
-#include <stdexcept>
-
 namespace {
     std::string strip_quotes(const std::string& s) {
         if (s[0] == '\'')
