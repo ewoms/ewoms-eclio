@@ -120,8 +120,36 @@ namespace Ewoms {
         if( deck.hasKeyword( "PVCDO" ) )
             this->m_pvcdoTable = PvcdoTable( deck.getKeyword( "PVCDO" ) );
 
-        if( deck.hasKeyword( "DENSITY" ) )
-            this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
+        if( deck.hasKeyword( "DENSITY" ) && deck.hasKeyword( "GRAVITY" ) )
+            OpmLog::error("The keywords DENSITY and GRAVITY are mutually exclusive!");
+        else {
+            if( deck.hasKeyword( "GRAVITY" ) ) {
+                const auto& kw = deck.getKeyword( "GRAVITY" );
+
+                this->m_densityTable.resize(kw.size());
+                for (unsigned recordIdx = 0; recordIdx < kw.size(); ++recordIdx) {
+                    // convert the API gravity into a quantity which mere mortals
+                    // understand (i.e., density)
+                    const auto record = kw.getRecord(recordIdx);
+                    double oilApi =
+                        record.getItem("API_GRAVITY").get<double>(0);
+                    double waterSpecificGravity =
+                        record.getItem("WATER_SP_GRAVITY").get<double>(0);;
+                    double gasSpecificGravity =
+                        record.getItem("GAS_SP_GRAVITY").get<double>(0);
+
+                    // we like magic formulas and magic numbers!
+                    double rhoRefWater = 1000.0; // [kg/m^3]
+                    double rhoRefAir = 1.22; // [kg/m^3]
+                    this->m_densityTable[recordIdx].oil = 141.5 / (oilApi - 131.5) * rhoRefWater;
+                    this->m_densityTable[recordIdx].water = waterSpecificGravity * rhoRefWater;
+                    this->m_densityTable[recordIdx].gas = gasSpecificGravity * rhoRefAir;
+                }
+            }
+
+            if( deck.hasKeyword( "DENSITY" ) )
+                this->m_densityTable = DensityTable( deck.getKeyword( "DENSITY" ) );
+        }
 
         if( deck.hasKeyword( "ROCK" ) )
             this->m_rockTable = RockTable( deck.getKeyword( "ROCK" ) );
