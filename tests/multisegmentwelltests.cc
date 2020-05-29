@@ -33,7 +33,7 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     BOOST_CHECK_EQUAL(8, start_segment);
     BOOST_CHECK_EQUAL(8, end_segment);
 
-    const auto sicd_map = Ewoms::SpiralICD::fromWSEGSICD(wsegsicd);
+    const auto sicd_map = Ewoms::SICD::fromWSEGSICD(wsegsicd);
 
     BOOST_CHECK_EQUAL(1U, sicd_map.size());
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const auto& sicd_vector = it->second;
     BOOST_CHECK_EQUAL(1U, sicd_vector.size());
     const int segment_number = sicd_vector[0].first;
-    const Ewoms::SpiralICD& sicd = sicd_vector[0].second;
+    const Ewoms::SICD& sicd = sicd_vector[0].second;
 
     BOOST_CHECK_EQUAL(8, segment_number);
 
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
     BOOST_CHECK(Ewoms::Segment::SegmentType::SICD==segment.segmentType());
 
-    const std::shared_ptr<Ewoms::SpiralICD> sicd_ptr = segment.spiralICD();
+    const std::shared_ptr<Ewoms::SICD> sicd_ptr = segment.spiralICD();
     BOOST_CHECK_GT(sicd_ptr->maxAbsoluteRate(), 1.e99);
     BOOST_CHECK(sicd_ptr->status()==Ewoms::ICDStatus::SHUT);
     // 0.002 bars*day*day/Volume^2

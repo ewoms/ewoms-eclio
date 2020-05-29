@@ -33,7 +33,7 @@
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
 
@@ -498,7 +498,7 @@ namespace Ewoms {
         return segments;
     }
 
-    bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
+    bool WellSegments::updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs) {
         if (m_comp_pressure_drop == CompPressureDrop::H__) {
             const std::string msg = "to use spiral ICD segment you have to activate the frictional pressure drop calculation";
             throw std::runtime_error(msg);
@@ -506,7 +506,7 @@ namespace Ewoms {
 
         for (const auto& pair_elem : sicd_pairs) {
             const int segment_number = pair_elem.first;
-            const SpiralICD& spiral_icd = pair_elem.second;
+            const SICD& spiral_icd = pair_elem.second;
             Segment segment = this->getFromSegmentNumber(segment_number);
             segment.updateSpiralICD(spiral_icd);
             this->addSegment(segment);

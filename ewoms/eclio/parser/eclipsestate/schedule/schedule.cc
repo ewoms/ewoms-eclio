@@ -49,7 +49,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicstate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicvector.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/events.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
@@ -2025,13 +2025,12 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
     void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
 
-        const std::map<std::string, std::vector<std::pair<int, SpiralICD> > > spiral_icds =
-                                SpiralICD::fromWSEGSICD(keyword);
+        const std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
 
         for (const auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, currentStep);
-            const std::vector<std::pair<int, SpiralICD> >& sicd_pairs = map_elem.second;
+            const std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);

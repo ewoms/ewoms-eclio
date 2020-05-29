@@ -19,7 +19,7 @@
 
 #include <ewoms/eclio/io/rst/segment.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 
 #include <cassert>
@@ -74,17 +74,17 @@ namespace {
         if (this->m_segment_type == SegmentType::SICD) {
             double scalingFactor = -1;  // The scaling factor will be and updated from the simulator.
 
-            SpiralICD icd(rst_segment.base_strength,
-                          rst_segment.icd_length,
-                          rst_segment.fluid_density,
-                          rst_segment.fluid_viscosity,
-                          rst_segment.critical_water_fraction,
-                          rst_segment.transition_region_width,
-                          rst_segment.max_emulsion_ratio,
-                          rst_segment.icd_scaling_mode,
-                          rst_segment.max_valid_flow_rate,
-                          rst_segment.icd_status,
-                          scalingFactor);
+            SICD icd(rst_segment.base_strength,
+                    rst_segment.icd_length,
+                    rst_segment.fluid_density,
+                    rst_segment.fluid_viscosity,
+                    rst_segment.critical_water_fraction,
+                    rst_segment.transition_region_width,
+                    rst_segment.max_emulsion_ratio,
+                    rst_segment.icd_scaling_mode,
+                    rst_segment.max_valid_flow_rate,
+                    rst_segment.icd_status,
+                    scalingFactor);
 
             this->updateSpiralICD(icd);
         }
@@ -174,7 +174,7 @@ namespace {
       result.m_volume = 11.0;
       result.m_data_ready = true;
       result.m_segment_type = SegmentType::SICD;
-      result.m_spiral_icd = std::make_shared<SpiralICD>(SpiralICD::serializeObject());
+      result.m_spiral_icd = std::make_shared<SICD>(SICD::serializeObject());
       result.m_valve = std::make_shared<Valve>(Valve::serializeObject());
 
       return result;
@@ -253,12 +253,12 @@ namespace {
         return !this->operator==(rhs);
     }
 
-    void Segment::updateSpiralICD(const SpiralICD& spiral_icd) {
+    void Segment::updateSpiralICD(const SICD& spiral_icd) {
         m_segment_type = SegmentType::SICD;
-        m_spiral_icd = std::make_shared<SpiralICD>(spiral_icd);
+        m_spiral_icd = std::make_shared<SICD>(spiral_icd);
     }
 
-    const std::shared_ptr<SpiralICD>& Segment::spiralICD() const {
+    const std::shared_ptr<SICD>& Segment::spiralICD() const {
         return m_spiral_icd;
     }
 

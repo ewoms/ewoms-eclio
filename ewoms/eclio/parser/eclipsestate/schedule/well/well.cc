@@ -917,7 +917,7 @@ bool Well::updatePVTTable(int pvt_table_) {
         return false;
 }
 
-bool Well::updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs) {
+bool Well::updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs) {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
     if (new_segments->updateWSEGSICD(sicd_pairs)) {
         this->segments = new_segments;

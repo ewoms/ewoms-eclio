@@ -26,7 +26,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
 
 namespace Ewoms {
-    class SpiralICD;
+    class SICD;
     class Valve;
 }
 
@@ -89,7 +89,7 @@ namespace Ewoms {
         std::set<int> branches() const;
 
         // it returns true if there is no error encountered during the update
-        bool updateWSEGSICD(const std::vector<std::pair<int, SpiralICD> >& sicd_pairs);
+        bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
         const std::vector<Segment>::const_iterator begin() const;

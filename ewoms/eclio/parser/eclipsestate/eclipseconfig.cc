@@ -49,12 +49,16 @@ namespace Ewoms {
         return result;
     }
 
-    const InitConfig& EclipseConfig::init() const {
+    InitConfig& EclipseConfig::init() {
+        return const_cast<InitConfig &>(this->m_initConfig);
+    }
+
+    const InitConfig& EclipseConfig::init() const{
         return m_initConfig;
     }
 
     // [[deprecated]] --- use init()
-    const InitConfig& EclipseConfig::getInitConfig() const {
+    const InitConfig& EclipseConfig::getInitConfig() const{
         return init();
     }
 

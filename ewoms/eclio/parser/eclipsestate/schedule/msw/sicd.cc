@@ -18,7 +18,7 @@
 #include "config.h"
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 
@@ -27,12 +27,12 @@
 
 namespace Ewoms {
 
-    SpiralICD::SpiralICD()
-        : SpiralICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, ICDStatus::SHUT, 1.0)
+    SICD::SICD()
+        : SICD(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0.0, ICDStatus::SHUT, 1.0)
     {
     }
 
-    SpiralICD::SpiralICD(double strength,
+    SICD::SICD(double strength,
                          double length,
                          double densityCalibration,
                          double viscosityCalibration,
@@ -57,7 +57,7 @@ namespace Ewoms {
     {
     }
 
-    SpiralICD::SpiralICD(const DeckRecord& record)
+    SICD::SICD(const DeckRecord& record)
             : m_strength(record.getItem("STRENGTH").getSIDouble(0)),
               m_length(record.getItem("LENGTH").getSIDouble(0)),
               m_density_calibration(record.getItem("DENSITY_CALI").getSIDouble(0)),
@@ -77,9 +77,9 @@ namespace Ewoms {
         }
     }
 
-    SpiralICD SpiralICD::serializeObject()
+    SICD SICD::serializeObject()
     {
-        SpiralICD result;
+        SICD result;
         result.m_strength = 1.0;
         result.m_length = 2.0;
         result.m_density_calibration = 3.0;
@@ -95,10 +95,10 @@ namespace Ewoms {
         return result;
     }
 
-    std::map<std::string, std::vector<std::pair<int, SpiralICD> > >
-    SpiralICD::fromWSEGSICD(const DeckKeyword& wsegsicd)
+    std::map<std::string, std::vector<std::pair<int, SICD> > >
+    SICD::fromWSEGSICD(const DeckKeyword& wsegsicd)
     {
-        std::map<std::string, std::vector<std::pair<int, SpiralICD> > > res;
+        std::map<std::string, std::vector<std::pair<int, SICD> > > res;
 
         for (const DeckRecord &record : wsegsicd) {
             const std::string well_name = record.getItem("WELL").getTrimmedString(0);
@@ -114,7 +114,7 @@ namespace Ewoms {
                 throw std::invalid_argument(message);
             }
 
-            const SpiralICD spiral_icd(record);
+            const SICD spiral_icd(record);
             for (int seg = start_segment; seg <= end_segment; seg++) {
                 res[well_name].push_back(std::make_pair(seg, spiral_icd));
             }
@@ -123,51 +123,51 @@ namespace Ewoms {
         return res;
     }
 
-    double SpiralICD::maxAbsoluteRate() const {
+    double SICD::maxAbsoluteRate() const {
         return m_max_absolute_rate;
     }
 
-    ICDStatus SpiralICD::status() const {
+    ICDStatus SICD::status() const {
         return m_status;
     }
 
-    double SpiralICD::strength() const {
+    double SICD::strength() const {
         return m_strength;
     }
 
-    double SpiralICD::length() const {
+    double SICD::length() const {
         return m_length;
     }
 
-    double SpiralICD::densityCalibration() const {
+    double SICD::densityCalibration() const {
         return m_density_calibration;
     }
 
-    double SpiralICD::viscosityCalibration() const
+    double SICD::viscosityCalibration() const
     {
         return m_viscosity_calibration;
     }
 
-    double SpiralICD::criticalValue() const {
+    double SICD::criticalValue() const {
         return m_critical_value;
     }
 
-    double SpiralICD::widthTransitionRegion() const
+    double SICD::widthTransitionRegion() const
     {
         return m_width_transition_region;
     }
 
-    double SpiralICD::maxViscosityRatio() const
+    double SICD::maxViscosityRatio() const
     {
         return m_max_viscosity_ratio;
     }
 
-    int SpiralICD::methodFlowScaling() const
+    int SICD::methodFlowScaling() const
     {
         return m_method_flow_scaling;
     }
 
-    double SpiralICD::scalingFactor() const
+    double SICD::scalingFactor() const
     {
         if (m_scaling_factor <= 0.)
             throw std::runtime_error("the scaling factor has invalid value " + std::to_string(m_scaling_factor));
@@ -175,7 +175,7 @@ namespace Ewoms {
         return m_scaling_factor;
     }
 
-    void SpiralICD::updateScalingFactor(const double outlet_segment_length, const double completion_length)
+    void SICD::updateScalingFactor(const double outlet_segment_length, const double completion_length)
     {
         if (m_method_flow_scaling < 0) {
             if (m_length > 0.) { // icd length / outlet segment length
@@ -202,7 +202,7 @@ namespace Ewoms {
         }
     }
 
-    bool SpiralICD::operator==(const SpiralICD& data) const {
+    bool SICD::operator==(const SICD& data) const {
         return this->strength() == data.strength() &&
                this->length() == data.length() &&
                this->densityCalibration() == data.densityCalibration() &&
@@ -216,7 +216,7 @@ namespace Ewoms {
                this->scalingFactor() == data.scalingFactor();
     }
 
-int SpiralICD::ecl_status() const {
+int SICD::ecl_status() const {
     return to_int(this->m_status);
 }
 

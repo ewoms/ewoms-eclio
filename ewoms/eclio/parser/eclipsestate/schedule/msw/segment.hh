@@ -23,7 +23,7 @@
 #include <vector>
 
 namespace Ewoms {
-    class SpiralICD;
+    class SICD;
     class Valve;
 
     namespace RestartIO {
@@ -76,10 +76,10 @@ namespace Ewoms {
         bool operator==( const Segment& ) const;
         bool operator!=( const Segment& ) const;
 
-        const std::shared_ptr<SpiralICD>& spiralICD() const;
+        const std::shared_ptr<SICD>& spiralICD() const;
         const Valve* valve() const;
 
-        void updateSpiralICD(const SpiralICD& spiral_icd);
+        void updateSpiralICD(const SICD& spiral_icd);
         void updateValve(const Valve& valve, const double segment_length);
         void addInletSegment(const int segment_number);
 
@@ -154,7 +154,7 @@ namespace Ewoms {
 
         // information related to SpiralICD. It is nullptr for segments are not
         // spiral ICD type
-        std::shared_ptr<SpiralICD> m_spiral_icd;
+        std::shared_ptr<SICD> m_spiral_icd;
 
         // information related to sub-critical valve. It is nullptr for segments are not
         // of type of Valve

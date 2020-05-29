@@ -24,7 +24,7 @@
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/spiralicd.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>

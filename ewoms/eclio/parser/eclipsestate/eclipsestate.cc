@@ -121,6 +121,10 @@ namespace Ewoms {
         return m_eclipseConfig.getInitConfig();
     }
 
+    /// [[deprecated]] --- use cfg().init()
+    InitConfig& EclipseState::getInitConfig() {
+        return m_eclipseConfig.init();
+    }
     /// [[deprecated]] --- use cfg()
     const EclipseConfig& EclipseState::getEclipseConfig() const {
         return cfg();
