@@ -22,11 +22,13 @@
 #include <ewoms/eclio/io/rst/well.hh>
 #include <ewoms/eclio/output/vectoritems/well.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellproductionproperties.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
+
+#include "../msw/compsegs.hh"
 
 #include <fnmatch.h>
 #include <cmath>
@@ -599,9 +601,6 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
     connections_arg->order(  );
     if (*this->connections != *connections_arg) {
         this->connections = connections_arg;
-        //if (this->connections->allConnectionsShut()) {}
-        // This status update breaks line 825 in ScheduleTests
-        //this->status = WellCommon::StatusEnum::SHUT;
         return true;
     }
 
@@ -630,9 +629,12 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
                            const ParseContext& parseContext, ErrorGuard& errors) {
-    std::shared_ptr<WellConnections> new_connection_set( newConnectionsWithSegments(keyword, *this->connections, *this->segments , grid,
-                                                                                    parseContext, errors) );
-    return this->updateConnections(std::move(new_connection_set));
+    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
+                                                                     parseContext, errors);
+
+    this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)) );
+    this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
+    return true;
 }
 
 const std::string& Well::groupName() const {

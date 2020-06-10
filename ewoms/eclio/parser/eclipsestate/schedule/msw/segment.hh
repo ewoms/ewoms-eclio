@@ -19,6 +19,7 @@
 #ifndef SEGMENT_HH_H
 #define SEGMENT_HH_H
 
+#include <optional>
 #include <memory>
 #include <vector>
 
@@ -57,6 +58,7 @@ namespace Ewoms {
         int segmentNumber() const;
         int branchNumber() const;
         int outletSegment() const;
+        double perfLength() const;
         double totalLength() const;
         double depth() const;
         double internalDiameter() const;
@@ -79,8 +81,10 @@ namespace Ewoms {
         const std::shared_ptr<SICD>& spiralICD() const;
         const Valve* valve() const;
 
+        void updatePerfLength(double perf_length);
         void updateSpiralICD(const SICD& spiral_icd);
         void updateValve(const Valve& valve, const double segment_length);
+        void updateValve(const Valve& valve);
         void addInletSegment(const int segment_number);
 
         template<class Serializer>
@@ -97,12 +101,14 @@ namespace Ewoms {
             serializer(m_cross_area);
             serializer(m_volume);
             serializer(m_data_ready);
+            serializer(m_perf_length);
             serializer(m_segment_type);
             serializer(m_spiral_icd);
             serializer(m_valve);
         }
 
     private:
+        void updateValve__(Valve& valve, const double segment_length);
         // segment number
         // it should work as a ID.
         int m_segment_number;
@@ -148,6 +154,7 @@ namespace Ewoms {
         // the volume will be updated at a final step.
         bool m_data_ready;
 
+        std::optional<double> m_perf_length;
         // indicate the type of the segment
         // regular, spiral ICD, or Valve.
         SegmentType m_segment_type;

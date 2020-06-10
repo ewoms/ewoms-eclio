@@ -110,15 +110,7 @@ namespace {
                         pipeCrossA,
                         rst_segment.icd_status);
 
-            /*
-              The segment length argument should be the length of this
-              particular segment; in the input phase that is calculated from the
-              WellSegments::segmentLength() function which also uses the outlet
-              segment.
-            */
-            double segment_length = -1;
-            throw std::logic_error("Sorry can not create a Valve segment from restart file");
-            this->updateValve(valve, segment_length);
+            this->updateValve(valve);
         }
     }
 
@@ -200,6 +192,10 @@ namespace {
         return m_depth;
     }
 
+    double Segment::perfLength() const {
+        return *this->m_perf_length;
+    }
+
     double Segment::internalDiameter() const {
         return m_internal_diameter;
     }
@@ -246,6 +242,7 @@ namespace {
             && this->m_roughness         == rhs.m_roughness
             && this->m_cross_area        == rhs.m_cross_area
             && this->m_volume            == rhs.m_volume
+            && this->m_perf_length       == rhs.m_perf_length
             && this->m_data_ready        == rhs.m_data_ready;
     }
 
@@ -262,13 +259,12 @@ namespace {
         return m_spiral_icd;
     }
 
-    void Segment::updateValve(const Valve& valve, const double segment_length) {
+    void Segment::updateValve(const Valve& valve) {
+        if (valve.pipeAdditionalLength() < 0)
+            throw std::logic_error("Bug in handling of pipe length for valves");
+
         // we need to update some values for the vale
         auto valve_ptr = std::make_shared<Valve>(valve);
-
-        if (valve_ptr->pipeAdditionalLength() < 0.) { // defaulted for this
-            valve_ptr->setPipeAdditionalLength(segment_length);
-        }
 
         if (valve_ptr->pipeDiameter() < 0.) {
             valve_ptr->setPipeDiameter(m_internal_diameter);
@@ -296,6 +292,22 @@ namespace {
 
         m_segment_type = SegmentType::VALVE;
     }
+
+    void Segment::updateValve__(Valve& valve, const double segment_length) {
+        if (valve.pipeAdditionalLength() < 0)
+            valve.setPipeAdditionalLength(segment_length);
+
+        this->updateValve(valve);
+    }
+
+    void Segment::updateValve(const Valve& valve, const double segment_length) {
+        auto new_valve = valve;
+        this->updateValve__(new_valve, segment_length);
+    }
+
+   void Segment::updatePerfLength(double perf_length) {
+       this->m_perf_length = perf_length;
+   }
 
     const Valve* Segment::valve() const {
         return m_valve.get();

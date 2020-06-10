@@ -22,6 +22,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <string>
 
 namespace Ewoms {
 

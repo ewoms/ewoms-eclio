@@ -28,6 +28,7 @@
 namespace Ewoms {
     class SICD;
     class Valve;
+    class WellConnections;
 }
 
 namespace Ewoms {
@@ -79,6 +80,7 @@ namespace Ewoms {
 
         const Segment& operator[](size_t idx) const;
         void orderSegments();
+        void updatePerfLength(const WellConnections& connections);
 
         bool operator==( const WellSegments& ) const;
         bool operator!=( const WellSegments& ) const;

@@ -846,8 +846,9 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
     std::vector<std::tuple <std::string, uint64_t>> resultVect;
 
     FILE *ptr;
-    char* arrName  = new char[9];
-    char* numstr  = new char[12];
+    char arrName[9];
+    char numstr[13];
+
     int64_t num;
 
     if (formatted)
@@ -904,6 +905,7 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
                 throw std::runtime_error("fread error when loading summary data");
 
             num = static_cast<int64_t>(Ewoms::EclIO::flipEndianInt(num_int));
+
             fseek(ptr, 8, SEEK_CUR);
 
             if ((strcmp(arrName, "SEQHDR  ") == 0) || (strcmp(arrName, "MINISTEP") == 0))
@@ -911,7 +913,6 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
             else if (strcmp(arrName, "PARAMS  ") == 0)
                 arrType = Ewoms::EclIO::REAL;
             else {
-                arrName[8]='\0';
                 throw std::invalid_argument("unknown array in UNSMRY file ");
             }
         }
@@ -937,9 +938,6 @@ ESmry::getListOfArrays(std::string filename, bool formatted)
         else
             fseek(ptr, -1, SEEK_CUR);
     }
-
-    delete[] arrName;
-    delete[] numstr;
 
     fclose(ptr);
 

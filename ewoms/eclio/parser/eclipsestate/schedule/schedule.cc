@@ -50,7 +50,6 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicvector.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/events.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
 
@@ -78,6 +77,7 @@
 #include <ewoms/common/optional.hh>
 
 #include "well/injection.hh"
+#include "msw/compsegs.hh"
 
 namespace Ewoms {
 
@@ -1961,38 +1961,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, currentStep)));
                     auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                     connections->loadCOMPDAT(record, grid, fp);
-                    /*
-                      This block implements the following dubious logic.
-
-                        1. All competions are shut.
-                        2. A new open completion is added.
-                        3. A currently SHUT well is opened.
-
-                      This code assumes that the reason the well is initially
-                      shut is due to all the shut completions, if the well was
-                      explicitly shut for another reason the explicit opening of
-                      the well might be in error?
-                    */
-                    /*if (all_shut0) {
-                        if (!connections->allConnectionsShut()) {
-                            if (well2->getStatus() == WellCommon::StatusEnum::SHUT) {
-                                printf("Running all_shut inner loop\n");
-                                if (this->updateWellStatus(well2->name(), currentStep, WellCommon::StatusEnum::OPEN))
-                                    // Refresh pointer if the status has updated current slot. Ugly
-                                    well2 = std::shared_ptr<Well>(new Well(this->getWell(name, currentStep)));
-                            }
-                        }
-                    }
-                    */
                     if (well2->updateConnections(connections, grid, fp.get_int("PVTNUM")))
                         this->updateWell(well2, currentStep);
 
-                    if (well2->getStatus() == Well::Status::SHUT) {
-                        std::string msg =
-                            "All completions in well " + well2->name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(currentStep) / (60*60*24) ) + " days. \n" +
-                            "The well is therefore also shut.";
-                        OpmLog::note(msg);
-                    }
                 }
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, currentStep);
             }
@@ -2025,16 +1996,24 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
     void Schedule::handleWSEGSICD( const DeckKeyword& keyword, size_t currentStep) {
 
-        const std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
+        std::map<std::string, std::vector<std::pair<int, SICD> > > spiral_icds = SICD::fromWSEGSICD(keyword);
 
-        for (const auto& map_elem : spiral_icds) {
+        for (auto& map_elem : spiral_icds) {
             const std::string& well_name_pattern = map_elem.first;
             const auto well_names = this->wellNames(well_name_pattern, currentStep);
-            const std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
+            std::vector<std::pair<int, SICD> >& sicd_pairs = map_elem.second;
 
             for (const auto& well_name : well_names) {
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+
+                const auto& connections = well_ptr->getConnections();
+                const auto& segments = well_ptr->getSegments();
+                for (auto& [segment_nr, sicd] : sicd_pairs) {
+                    const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
+                    sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
+                }
+
                 if (well_ptr -> updateWSEGSICD(sicd_pairs) )
                     this->updateWell(std::move(well_ptr), currentStep);
             }
@@ -2729,8 +2708,13 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         for (const auto& wname : well_names) {
             const auto& well = this->getWell(wname, timeStep);
             const auto& connections = well.getConnections();
-            if (connections.allConnectionsShut())
+            if (connections.allConnectionsShut() && well.getStatus() != Well::Status::SHUT) {
+                std::string msg =
+                    "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(timeStep) / (60*60*24) ) + " days. \n" +
+                    "The well is therefore also shut.";
+                OpmLog::note(msg);
                 this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT, false);
+            }
         }
     }
 
@@ -2961,6 +2945,7 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+
 namespace {
 // Duplicated from Well.cpp
 Connection::Order order_from_int(int int_value) {
@@ -2975,7 +2960,6 @@ Connection::Order order_from_int(int int_value) {
         throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
     }
 }
-
 }
 
 void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
@@ -2988,49 +2972,27 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
 
     for (const auto& rst_well : rst_state.wells) {
         Ewoms::Well well(rst_well, report_step, unit_system, udq_undefined);
-        std::vector<Ewoms::Connection> connections;
-        std::unordered_map<int, Ewoms::Segment> segments;
+        std::vector<Ewoms::Connection> rst_connections;
 
         for (const auto& rst_conn : rst_well.connections)
-            connections.emplace_back(rst_conn, grid, fp);
+            rst_connections.emplace_back(rst_conn, grid, fp);
 
-        for (const auto& rst_segment : rst_well.segments) {
-            Ewoms::Segment segment(rst_segment);
-            segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
-        }
-
-        for (auto& connection : connections) {
-            int segment_id = connection.segment();
-            if (segment_id > 0) {
-                const auto& segment = segments.at(segment_id);
-                connection.updateSegmentRST(segment.segmentNumber(),
-                                            segment.depth());
+        if (rst_well.segments.empty()) {
+            Ewoms::WellConnections connections(order_from_int(rst_well.completion_ordering),
+                                             rst_well.ij[0],
+                                             rst_well.ij[1],
+                                             rst_connections);
+            well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
+        } else {
+            std::unordered_map<int, Ewoms::Segment> rst_segments;
+            for (const auto& rst_segment : rst_well.segments) {
+                Ewoms::Segment segment(rst_segment);
+                rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
             }
-        }
 
-        {
-            std::shared_ptr<Ewoms::WellConnections> well_connections = std::make_shared<Ewoms::WellConnections>(order_from_int(rst_well.completion_ordering), rst_well.ij[0], rst_well.ij[1], connections);
-            well.updateConnections( std::move(well_connections), grid, fp.get_int("PVTNUM") );
-        }
-
-        if (!segments.empty()) {
-            std::vector<Segment> segments_list;
-            /*
-              The ordering of the segments in the WellSegments structure seems a
-              bit random; in some parts of the code the segment_number seems to
-              be treated like a random integer ID, whereas in other parts it
-              seems to be treated like a running index. Here the segments in
-              WellSegments are sorted according to the segment number - observe
-              that this is somewhat important because the first top segment is
-              treated differently from the other segment.
-            */
-            for (const auto& segment_pair : segments)
-                segments_list.push_back( std::move(segment_pair.second) );
-
-            std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
-            auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
-            std::shared_ptr<Ewoms::WellSegments> well_segments = std::make_shared<Ewoms::WellSegments>(comp_pressure_drop, segments_list);
-            well.updateSegments( std::move(well_segments) );
+            auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+            well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
+            well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
         }
 
         this->addWell(well, report_step);

@@ -37,12 +37,11 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/compsegs.hh>
 
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
-
-#include <ewoms/eclio/parser/eclipsestate/schedule/msw/updatingconnectionswithsegments.hh>
 
 BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
 
@@ -101,8 +100,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::THROW_EXCEPTION);
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::THROW_EXCEPTION);
-    std::unique_ptr<Ewoms::WellConnections> new_connection_set{nullptr};
-    BOOST_CHECK_NO_THROW(new_connection_set.reset(Ewoms::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    const auto& [new_connection_set, new_segment_set] = Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
 
     // checking the ICD segment
     const Ewoms::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
@@ -152,7 +150,7 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     const int outlet_segment_number = segment.outletSegment();
     const double outlet_segment_length = segment_set.segmentLength(outlet_segment_number);
     // only one connection attached to the outlet segment in this case
-    const Ewoms::Connection& connection = new_connection_set->getFromIJK(15, 0, 1);
+    const Ewoms::Connection& connection = new_connection_set.getFromIJK(15, 0, 1);
     const auto& perf_range = connection.perf_range();
     const auto connection_length = (*perf_range).second - (*perf_range).first;
     sicd_ptr->updateScalingFactor(outlet_segment_length, connection_length);
@@ -161,33 +159,33 @@ BOOST_AUTO_TEST_CASE(MultisegmentWellTest) {
     BOOST_CHECK_NO_THROW(sicd_ptr->scalingFactor());
     BOOST_CHECK_EQUAL(0.7, sicd_ptr->scalingFactor());
 
-    BOOST_CHECK_EQUAL(7U, new_connection_set->size());
+    BOOST_CHECK_EQUAL(7U, new_connection_set.size());
 
-    const Ewoms::Connection& connection1 = new_connection_set->get(0);
+    const Ewoms::Connection& connection1 = new_connection_set.get(0);
     const int segment_number_connection1 = connection1.segment();
     const double center_depth_connection1 = connection1.depth();
     BOOST_CHECK_EQUAL(segment_number_connection1, 1);
     BOOST_CHECK_EQUAL(center_depth_connection1, 2512.5);
 
-    const Ewoms::Connection& connection3 = new_connection_set->get(2);
+    const Ewoms::Connection& connection3 = new_connection_set.get(2);
     const int segment_number_connection3 = connection3.segment();
     const double center_depth_connection3 = connection3.depth();
     BOOST_CHECK_EQUAL(segment_number_connection3, 3);
     BOOST_CHECK_EQUAL(center_depth_connection3, 2562.5);
 
-    const Ewoms::Connection& connection5 = new_connection_set->get(4);
+    const Ewoms::Connection& connection5 = new_connection_set.get(4);
     const int segment_number_connection5 = connection5.segment();
     const double center_depth_connection5 = connection5.depth();
     BOOST_CHECK_EQUAL(segment_number_connection5, 6);
     BOOST_CHECK_CLOSE(center_depth_connection5, 2538.83, 0.001);
 
-    const Ewoms::Connection& connection6 = new_connection_set->get(5);
+    const Ewoms::Connection& connection6 = new_connection_set.get(5);
     const int segment_number_connection6 = connection6.segment();
     const double center_depth_connection6 = connection6.depth();
     BOOST_CHECK_EQUAL(segment_number_connection6, 6);
     BOOST_CHECK_CLOSE(center_depth_connection6,  2537.83, 0.001);
 
-    const Ewoms::Connection& connection7 = new_connection_set->get(6);
+    const Ewoms::Connection& connection7 = new_connection_set.get(6);
     const int segment_number_connection7 = connection7.segment();
     const double center_depth_connection7 = connection7.depth();
     BOOST_CHECK_EQUAL(segment_number_connection7, 8);
@@ -246,10 +244,10 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     Ewoms::ErrorGuard   errorGuard;
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(std::unique_ptr<Ewoms::WellConnections>(Ewoms::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
 
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(std::unique_ptr<Ewoms::WellConnections>(Ewoms::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    BOOST_CHECK_NO_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
 }
 
 BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
@@ -302,12 +300,11 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
 
     Ewoms::ErrorGuard   errorGuard;
     Ewoms::ParseContext parseContext;
-    std::unique_ptr<Ewoms::WellConnections> wconns{nullptr};
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(wconns.reset(Ewoms::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
 
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::IGNORE);
-    BOOST_CHECK_NO_THROW(wconns.reset(Ewoms::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    BOOST_CHECK_NO_THROW( Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard) );
 }
 
 BOOST_AUTO_TEST_CASE(testwsegvalv) {
@@ -368,8 +365,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::THROW_EXCEPTION);
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::THROW_EXCEPTION);
-    std::unique_ptr<Ewoms::WellConnections> new_connection_set{nullptr};
-    BOOST_CHECK_NO_THROW(new_connection_set.reset(Ewoms::newConnectionsWithSegments(compsegs, connection_set, segment_set, grid, parseContext, errorGuard)));
+    BOOST_CHECK_NO_THROW( Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
 
     // checking the WSEGVALV segment
     const Ewoms::DeckKeyword wsegvalv = deck.getKeyword("WSEGVALV");

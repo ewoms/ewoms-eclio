@@ -32,6 +32,7 @@
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/sicd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
@@ -605,6 +606,13 @@ WellSegments::MultiPhaseModel WellSegments::MultiPhaseModelFromString(const std:
         return MultiPhaseModel::DF;
     } else {
         throw std::invalid_argument("Unknown enum string_value: " + string_value + " for MultiPhaseModel");
+    }
+}
+
+void WellSegments::updatePerfLength(const WellConnections& connections) {
+    for (auto& segment : this->m_segments) {
+        auto perf_length = connections.segment_perf_length( segment.segmentNumber() );
+        segment.updatePerfLength(perf_length);
     }
 }
 
