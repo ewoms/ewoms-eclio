@@ -39,6 +39,7 @@
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
 
 #include <ewoms/eclio/io/rst/connection.hh>
 #include <ewoms/eclio/io/rst/header.hh>
@@ -256,6 +257,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
     const auto rptStep = std::size_t{4};
     const auto sim_step = rptStep - 1;
     Ewoms::SummaryState sumState(std::chrono::system_clock::now());
+    Ewoms::Action::State action_state;
 
     const auto ih = Ewoms::RestartIO::Helpers::createInteHead(simCase.es,
                                                             simCase.grid,
@@ -273,7 +275,7 @@ BOOST_AUTO_TEST_CASE(State_test) {
                                                             0, 0);
 
     auto wellData = Ewoms::RestartIO::Helpers::AggregateWellData(ih);
-    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, sumState, ih);
+    wellData.captureDeclaredWellData(simCase.sched, units, sim_step, action_state, sumState, ih);
     wellData.captureDynamicWellData(simCase.sched, sim_step, {} , sumState);
 
     auto connectionData = Ewoms::RestartIO::Helpers::AggregateConnectionData(ih);

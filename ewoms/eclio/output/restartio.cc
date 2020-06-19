@@ -54,6 +54,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace Ewoms { namespace RestartIO {
@@ -313,6 +314,7 @@ namespace {
                       const int                     sim_step,
                       const EclipseState&           es,
                       const Schedule&               schedule,
+                      const Action::State&          action_state,
                       const SummaryState&           sum_state,
                       EclIO::OutputStream::Restart& rstFile)
     {
@@ -326,7 +328,7 @@ namespace {
 
         const auto actDims = Ewoms::RestartIO::Helpers::createActionxDims(es.runspec(), schedule, simStep);
         auto  actionxData = Ewoms::RestartIO::Helpers::AggregateActionxData(actDims);
-        actionxData.captureDeclaredActionxData(schedule, sum_state, actDims, simStep);
+        actionxData.captureDeclaredActionxData(schedule, action_state, sum_state, actDims, simStep);
 
         if (actDims[0] >= 1) {
             rstFile.write("IACT", actionxData.getIACT());
@@ -347,12 +349,13 @@ namespace {
                    const Schedule&                 schedule,
                    const std::vector<std::string>& well_names,
                    const data::Wells&              wells,
+                   const Ewoms::Action::State&       action_state,
                    const Ewoms::SummaryState&        sumState,
                    const std::vector<int>&         ih,
                    EclIO::OutputStream::Restart&   rstFile)
     {
         auto wellData = Helpers::AggregateWellData(ih);
-        wellData.captureDeclaredWellData(schedule, units, sim_step, sumState, ih);
+        wellData.captureDeclaredWellData(schedule, units, sim_step, action_state, sumState, ih);
         wellData.captureDynamicWellData(schedule, sim_step,
                                         wells, sumState);
 
@@ -390,6 +393,7 @@ namespace {
                           const EclipseGrid&            grid,
                           const Schedule&               schedule,
                           const data::WellRates&        wellSol,
+                          const Ewoms::Action::State&     action_state,
                           const Ewoms::SummaryState&      sumState,
                           const std::vector<int>&       inteHD,
                           EclIO::OutputStream::Restart& rstFile)
@@ -414,7 +418,7 @@ namespace {
 
             writeWell(sim_step, ecl_compatible_rst,
                       phases, units, grid, schedule, wells,
-                      wellSol, sumState, inteHD, rstFile);
+                      wellSol, action_state, sumState, inteHD, rstFile);
         }
     }
 
@@ -449,6 +453,81 @@ namespace {
         }
 
         return smax;
+    }
+
+    std::vector<std::string>
+    solutionVectorNames(const RestartValue& value)
+    {
+        auto vectors = std::vector<std::string>{};
+        vectors.reserve(value.solution.size());
+
+        for (const auto& [name, vector] : value.solution) {
+            if (vector.target == data::TargetType::RESTART_SOLUTION) {
+                vectors.push_back(name);
+            }
+        }
+
+        return vectors;
+    }
+
+    std::vector<std::string>
+    extendedSolutionVectorNames(const RestartValue& value)
+    {
+        auto vectors = std::vector<std::string>{};
+        vectors.reserve(value.solution.size());
+
+        for (const auto& [name, vector] : value.solution) {
+            if ((vector.target == data::TargetType::RESTART_AUXILIARY) ||
+                (vector.target == data::TargetType::RESTART_EWOMS_EXTENDED))
+            {
+                vectors.push_back(name);
+            }
+        }
+
+        return vectors;
+    }
+
+    template <class OutputVector>
+    void writeSolutionVectors(const RestartValue&             value,
+                              const std::vector<std::string>& vectors,
+                              const bool                      write_double,
+                              OutputVector&&                  writeVector)
+    {
+        for (const auto& vector : vectors) {
+            writeVector(vector, value.solution.data(vector), write_double);
+        }
+    }
+
+    template <class OutputVector>
+    void writeRegularSolutionVectors(const RestartValue& value,
+                                     const bool          write_double,
+                                     OutputVector&&      writeVector)
+    {
+        writeSolutionVectors(value, solutionVectorNames(value), write_double,
+                             std::forward<OutputVector>(writeVector));
+    }
+
+    template <class OutputVector>
+    void writeExtendedSolutionVectors(const RestartValue& value,
+                                      const bool          write_double,
+                                      OutputVector&&      writeVector)
+    {
+        writeSolutionVectors(value, extendedSolutionVectorNames(value), write_double,
+                             std::forward<OutputVector>(writeVector));
+    }
+
+    template <class OutputVector>
+    void writeExtraVectors(const RestartValue& value,
+                           OutputVector&&      writeVector)
+    {
+        for (const auto& elm : value.extra) {
+            const std::string& key = elm.first.key;
+            if (extraInSolution(key)) {
+                // Observe that the extra data is unconditionally
+                // output as double precision.
+                writeVector(key, elm.second, true);
+            }
+        }
     }
 
     template <class OutputVector>
@@ -491,8 +570,6 @@ namespace {
                        const std::vector<int>&       inteHD,
                        EclIO::OutputStream::Restart& rstFile)
     {
-        rstFile.message("STARTSOL");
-
         auto write = [&rstFile]
             (const std::string&         key,
              const std::vector<double>& data,
@@ -508,39 +585,23 @@ namespace {
             }
         };
 
-        for (const auto& elm : value.solution) {
-            if (elm.second.target == data::TargetType::RESTART_SOLUTION)
-            {
-                write(elm.first, elm.second.data, write_double_arg);
-            }
-        }
+        rstFile.message("STARTSOL");
+
+        writeRegularSolutionVectors(value, write_double_arg, write);
 
         writeUDQ(report_step, sim_step, schedule, sum_state, inteHD, rstFile);
 
-        for (const auto& elm : value.extra) {
-            const std::string& key = elm.first.key;
-            if (extraInSolution(key)) {
-                // Observe that the extra data is unconditionally
-                // output as double precision.
-                write(key, elm.second, true);
-            }
-        }
+        writeExtraVectors(value, write);
 
         if (ecl_compatible_rst && haveHysteresis(value)) {
             writeEclipseCompatHysteresis(value, write_double_arg, write);
         }
 
+        if (! ecl_compatible_rst) {
+            writeExtendedSolutionVectors(value, write_double_arg, write);
+        }
+
         rstFile.message("ENDSOL");
-
-        if (ecl_compatible_rst) {
-            return;
-        }
-
-        for (const auto& elm : value.solution) {
-            if (elm.second.target == data::TargetType::RESTART_AUXILIARY) {
-                write(elm.first, elm.second.data, write_double_arg);
-            }
-        }
     }
 
     void writeExtraData(const RestartValue::ExtraVector& extra_data,
@@ -588,6 +649,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
           const EclipseState&           es,
           const EclipseGrid&            grid,
           const Schedule&               schedule,
+          const Action::State&          action_state,
           const SummaryState&           sumState,
           bool                          write_double)
 {
@@ -612,11 +674,11 @@ void save(EclIO::OutputStream::Restart& rstFile,
 
     if (report_step > 0) {
         writeDynamicData(sim_step, ecl_compatible_rst, es.runspec().phases(),
-                         units, grid, schedule, value.wells, sumState,
+                         units, grid, schedule, value.wells, action_state, sumState,
                          inteHD, rstFile);
     }
 
-    writeActionx(report_step, sim_step, es, schedule, sumState, rstFile);
+    writeActionx(report_step, sim_step, es, schedule, action_state, sumState, rstFile);
 
     writeSolution(value, schedule, sumState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);

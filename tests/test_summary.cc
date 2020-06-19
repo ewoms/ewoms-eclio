@@ -86,7 +86,7 @@ static const int day = 24 * 60 * 60;
   This is quite misleading, because the values prepared in the test
   input deck are NOT used.
 */
-static data::Wells result_wells() {
+static data::Wells result_wells(const bool w3_injector = true) {
     /* populate with the following pattern:
      *
      * Wells are named W_1, W_2 etc, i.e. wells are 1 indexed.
@@ -255,8 +255,13 @@ static data::Wells result_wells() {
     well2.current_control.prod = ::Ewoms::Well::ProducerCMode::ORAT;
 
     data::Well well3 { rates3, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well3_comp1} }, SegRes{}, Ctrl{} };
-    well3.current_control.isProducer = false;
-    well3.current_control.inj = ::Ewoms::Well::InjectorCMode::BHP;
+    well3.current_control.isProducer = !w3_injector;
+    if (! well3.current_control.isProducer) { // W_3 is injector
+        well3.current_control.inj = ::Ewoms::Well::InjectorCMode::BHP;
+    }
+    else {
+        well3.current_control.prod = ::Ewoms::Well::ProducerCMode::BHP;
+    }
 
     data::Well well6 { rates6, 2.1 * ps, 2.2 * ps, 2.3 * ps, 3, { {well6_comp1} }, SegRes{}, Ctrl{} };
     well6.current_control.isProducer = false;
@@ -380,13 +385,13 @@ struct setup {
 
     /*-----------------------------------------------------------------*/
 
-    setup(std::string fname, const std::string& path = "summary_deck.DATA") :
+    setup(std::string fname, const std::string& path = "summary_deck.DATA", const bool w3_injector = true) :
         deck( Parser().parseFile( path) ),
         es( deck ),
         grid( es.getInputGrid() ),
         schedule( deck, es),
         config( deck, schedule, es.getTableManager()),
-        wells( result_wells() ),
+        wells( result_wells(w3_injector) ),
         groups( result_groups() ),
         name( toupper(std::move(fname)) ),
         ta( "summary_test" )
@@ -1576,7 +1581,8 @@ BOOST_AUTO_TEST_CASE(READ_WRITE_WELLDATA) {
 //
 
 BOOST_AUTO_TEST_CASE(efficiency_factor) {
-        setup cfg( "test_efficiency_factor", "SUMMARY_EFF_FAC.DATA" );
+        // W_3 is a producer in SUMMARY_EFF_FAC.DATA
+        setup cfg( "test_efficiency_factor", "SUMMARY_EFF_FAC.DATA", false );
 
         out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule, cfg.name );
         SummaryState st(std::chrono::system_clock::now());
@@ -1782,6 +1788,18 @@ BOOST_AUTO_TEST_CASE(Test_SummaryState) {
     // The well 'OP_2' which was indirectly added with the
     // st.update("WWCT:OP_2", 100) call is *not* counted as a well!
     BOOST_CHECK_EQUAL(st.num_wells(), 3);
+
+    BOOST_CHECK( st.erase("WWCT:OP2") );
+    BOOST_CHECK( !st.has("WWCT:OP2") );
+    BOOST_CHECK( !st.erase("WWCT:OP2") );
+
+    BOOST_CHECK( st.erase_well_var("OP1", "WWCT") );
+    BOOST_CHECK( !st.has_well_var("OP1", "WWCT"));
+    BOOST_CHECK( !st.has("WWCT:OP1") );
+
+    BOOST_CHECK( st.erase_group_var("G1", "GWCT") );
+    BOOST_CHECK( !st.has_group_var("G1", "GWCT"));
+    BOOST_CHECK( !st.has("GWCT:G1") );
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -1815,10 +1833,13 @@ namespace {
 
     auto calculateRestartVectorsEffFac()
         -> decltype(calculateRestartVectors({"test.Restart.EffFac",
-                                             "SUMMARY_EFF_FAC.DATA"}))
+                                             "SUMMARY_EFF_FAC.DATA", false}))
     {
+        // W_3 is a producer in SUMMARY_EFF_FAC.DATA
+        const auto w3_injector = false;
+
         return calculateRestartVectors({
-            "test.Restart.EffFac", "SUMMARY_EFF_FAC.DATA"
+            "test.Restart.EffFac", "SUMMARY_EFF_FAC.DATA", w3_injector
         });
     }
 

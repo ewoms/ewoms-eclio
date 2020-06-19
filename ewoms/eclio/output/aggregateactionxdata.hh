@@ -40,6 +40,10 @@ namespace Ewoms {
     class Schedule;
     class UDQInput;
     class UDQActive;
+
+    namespace Action {
+        class State;
+    }
 } // namespace Ewoms
 
 namespace Ewoms { namespace RestartIO { namespace Helpers {
@@ -49,10 +53,11 @@ class AggregateActionxData
 public:
     explicit AggregateActionxData(const std::vector<int>& actDims);
 
-    void captureDeclaredActionxData(    const Ewoms::Schedule&    sched,
-                                        const Ewoms::SummaryState& st,
-                                        const std::vector<int>& actDims,
-                                        const std::size_t       simStep);
+    void captureDeclaredActionxData(    const Ewoms::Schedule&      sched,
+                                        const Ewoms::Action::State& action_state,
+                                        const Ewoms::SummaryState&  st,
+                                        const std::vector<int>&   actDims,
+                                        const std::size_t         simStep);
 
     const std::vector<int>& getIACT() const
     {

@@ -34,10 +34,10 @@ namespace data {
       from the TargetType enum which indicates why they they have been
       added to the container - and where they are headed.
 
-      RESTART_SOLUTION : Fields which represent primary variables, and
-       are reqired for restart. Typically pressure and
-       suturation. WIll end up in the SOLUTION section of the restart
-       file.
+     RESTART_SOLUTION : Cell-based quantities that are output to the
+       SOLUTION section of the restart file.  ECLIPSE-compatible names.
+       Many, but not necessarily all, of these quantities are required
+       for restarting the simulator.
 
      RESTART_AUXILIARY : Fields with extra information, not required
        for restart. Examples of this include fluid in place values or
@@ -50,6 +50,10 @@ namespace data {
        will not be output anywhere else.
 
      INIT : Fields which should go to the INIT file.
+
+     RESTART_EWOMS_EXTENDED: Cell-based quantities that are specific to
+       EFlow.  Output only to extended OPM restart files.  Specifically
+       not output to ECLIPSE-compatible restart files.
     */
 
     enum class TargetType {
@@ -57,6 +61,7 @@ namespace data {
         RESTART_AUXILIARY,
         SUMMARY,
         INIT,
+        RESTART_EWOMS_EXTENDED,
     };
 
     /**

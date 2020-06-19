@@ -35,6 +35,7 @@
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/parser.hh>
@@ -271,6 +272,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto step_time  = timeStamp(::Ewoms::EclIO::ERft::RftDate{ 2008, 10, 10 });
 
         SummaryState st(std::chrono::system_clock::now());
+        Action::State action_state;
 
         data::Rates r1, r2;
         r1.set( data::Rates::opt::wat, 4.11 );
@@ -303,7 +305,8 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         RestartValue restart_value(std::move(solution), std::move(wells));
 
-        eclipseWriter.writeTimeStep( st,
+        eclipseWriter.writeTimeStep( action_state,
+                                     st,
                                      2,
                                      false,
                                      step_time - start_time,
@@ -386,6 +389,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         Schedule schedule(deck, eclipseState);
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
         SummaryState st(std::chrono::system_clock::now());
+        Action::State action_state;
 
         const auto  start_time = schedule.posixStartTime();
         const auto& time_map   = schedule.getTimeMap( );
@@ -426,7 +430,8 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 RestartValue restart_value(std::move(solution), std::move(wells));
 
-                eclipseWriter.writeTimeStep( st,
+                eclipseWriter.writeTimeStep( action_state,
+                                             st,
                                              step,
                                              false,
                                              step_time - start_time,

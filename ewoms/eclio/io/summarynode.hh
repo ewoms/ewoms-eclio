@@ -25,8 +25,7 @@
 #include <string>
 #include <unordered_set>
 
-namespace Ewoms {
-namespace EclIO {
+namespace Ewoms { namespace EclIO {
 
 struct SummaryNode {
     enum class Category {
@@ -73,6 +72,6 @@ struct SummaryNode {
     Ewoms::optional<std::string> display_number(number_renderer) const;
 };
 
-}} // namespace EclIO, Ewoms
+ }} // namespace Ewoms::EclIO
 
 #endif // EWOMS_IO_SUMMARYNODE_H

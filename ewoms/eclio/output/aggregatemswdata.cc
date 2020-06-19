@@ -422,8 +422,8 @@ namespace {
                 VectorItems::ISeg::index;
 
             const auto& sicd = segment.spiralICD();
-            iSeg[baseIndex + Ix::ICDScalingMode] = sicd->methodFlowScaling();
-            iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd->ecl_status();
+            iSeg[baseIndex + Ix::ICDScalingMode] = sicd.methodFlowScaling();
+            iSeg[baseIndex + Ix::ICDOpenShutFlag] = sicd.ecl_status();
         }
 
         template <class ISegArray>
@@ -431,7 +431,7 @@ namespace {
                                               const std::size_t   baseIndex,
                                               ISegArray&          iSeg)
         {
-            if (isSpiralICD(segment)) {
+            if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, baseIndex, iSeg);
             }
         }
@@ -472,7 +472,7 @@ namespace {
                     iSeg[iS + 8] = seg_reorder[ind];
 
                     iSeg[iS + Ix::SegmentType] = segment.ecl_type_id();
-                    if (! isRegular(segment)) {
+                    if (! segment.isRegular()) {
                         assignSegmentTypeCharacteristics(segment, iS, iSeg);
                     }
                 }
@@ -541,17 +541,17 @@ namespace {
             using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::RSeg::index;
             using M  = ::Ewoms::UnitSystem::measure;
 
-            const auto* valve = segment.valve();
+            const auto& valve = segment.valve();
 
             rSeg[baseIndex + Ix::ValveLength] =
-                usys.from_si(M::length, valve->pipeAdditionalLength());
+                usys.from_si(M::length, valve.pipeAdditionalLength());
 
             rSeg[baseIndex + Ix::ValveArea] =
-                usys.from_si(M::length, usys.from_si(M::length, valve->conCrossArea()));
+                usys.from_si(M::length, usys.from_si(M::length, valve.conCrossArea()));
 
-            rSeg[baseIndex + Ix::ValveFlowCoeff] = valve->conEFlowCoefficient();
+            rSeg[baseIndex + Ix::ValveFlowCoeff] = valve.conEFlowCoefficient();
             rSeg[baseIndex + Ix::ValveMaxArea]   =
-                usys.from_si(M::length, usys.from_si(M::length, valve->conMaxCrossArea()));
+                usys.from_si(M::length, usys.from_si(M::length, valve.conMaxCrossArea()));
 
             const auto Cu   = valveEFlowUnitCoefficient(usys.getType());
             const auto CvAc = rSeg[baseIndex + Ix::ValveFlowCoeff]
@@ -575,27 +575,27 @@ namespace {
             const auto& sicd = segment.spiralICD();
 
             rSeg[baseIndex + Ix::DeviceBaseStrength] =
-                usys.from_si(M::icd_strength, sicd->strength());
+                usys.from_si(M::icd_strength, sicd.strength());
 
             rSeg[baseIndex + Ix::CalibrFluidDensity] =
-                usys.from_si(M::density, sicd->densityCalibration());
+                usys.from_si(M::density, sicd.densityCalibration());
 
             rSeg[baseIndex + Ix::CalibrFluidViscosity] =
-                usys.from_si(M::viscosity, sicd->viscosityCalibration());
+                usys.from_si(M::viscosity, sicd.viscosityCalibration());
 
-            rSeg[baseIndex + Ix::CriticalWaterFraction] = sicd->criticalValue();
+            rSeg[baseIndex + Ix::CriticalWaterFraction] = sicd.criticalValue();
 
             rSeg[baseIndex + Ix::TransitionRegWidth] =
-                sicd->widthTransitionRegion();
+                sicd.widthTransitionRegion();
 
             rSeg[baseIndex + Ix::MaxEmulsionRatio] =
-                sicd->maxViscosityRatio();
+                sicd.maxViscosityRatio();
 
             rSeg[baseIndex + Ix::MaxValidFlowRate] =
-                usys.from_si(M::geometric_volume_rate, sicd->maxAbsoluteRate());
+                usys.from_si(M::geometric_volume_rate, sicd.maxAbsoluteRate());
 
             rSeg[baseIndex + Ix::ICDLength] =
-                usys.from_si(M::length, sicd->length());
+                usys.from_si(M::length, sicd.length());
         }
 
         template <class RSegArray>
@@ -604,11 +604,11 @@ namespace {
                                               const int                baseIndex,
                                               RSegArray&               rSeg)
         {
-            if (isSpiralICD(segment)) {
+            if (segment.isSpiralICD()) {
                 assignSpiralICDCharacteristics(segment, usys, baseIndex, rSeg);
             }
 
-            if (isValve(segment)) {
+            if (segment.isValve()) {
                 assignValveCharacteristics(segment, usys, baseIndex, rSeg);
             }
         }
@@ -639,7 +639,9 @@ namespace {
                 const auto& wname     = well.name();
                 const auto wPKey = "WBHP:"  + wname;
                 const auto& wRatesIt =  wr.find(wname);
-                bool haveWellRes = wRatesIt != wr.end();
+                //
+                //Do not calculate well segment rates for shut wells
+                bool haveWellRes = (well.getStatus() != Ewoms::Well::Status::SHUT) ? (wRatesIt != wr.end()) : false;
                 const auto volFromLengthUnitConv = units.from_si(M::length, units.from_si(M::length, units.from_si(M::length, 1.)));
                 const auto areaFromLengthUnitConv =  units.from_si(M::length, units.from_si(M::length, 1.));
                 //
@@ -695,6 +697,8 @@ namespace {
                 rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[8] : 0.;
                 rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[8] : 0.;
 
+                rSeg[iS + Ix::item31] = rSeg[iS + Ix::WatFlowFract];
+
                 //  value is 1. based on tests on several data sets
                 rSeg[iS + Ix::item40] = 1.;
 
@@ -748,6 +752,8 @@ namespace {
                     rSeg[iS + Ix::WatFlowFract] = (std::abs(temp_w) > 0) ? temp_w / rSeg[iS + 8] : 0.;
                     rSeg[iS + Ix::GasFlowFract] = (std::abs(temp_g) > 0) ? temp_g / rSeg[iS + 8] : 0.;
 
+                    rSeg[iS + Ix::item31] = rSeg[iS + Ix::WatFlowFract];
+
                     rSeg[iS +  Ix::item40] = 1.;
 
                     rSeg[iS + Ix::item106] = 1.0;
@@ -757,7 +763,7 @@ namespace {
                     rSeg[iS + Ix::item110] = 1.0;
                     rSeg[iS + Ix::item111] = 1.0;
 
-                    if (! isRegular(segment)) {
+                    if (! segment.isRegular()) {
                         assignSegmentTypeCharacteristics(segment, units, iS, rSeg);
                     }
                 }

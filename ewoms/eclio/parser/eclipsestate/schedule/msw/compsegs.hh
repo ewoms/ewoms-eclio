@@ -34,7 +34,7 @@ namespace Ewoms {
     class ErrorGuard;
 
 namespace RestartIO {
-    class RstWell;
+    struct RstWell;
 }
 
 namespace Compsegs {

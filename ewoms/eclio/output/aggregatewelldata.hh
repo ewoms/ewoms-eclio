@@ -32,6 +32,9 @@ namespace Ewoms {
     class Schedule;
     class SummaryState;
     class UnitSystem;
+    namespace Action {
+        class State;
+    }
 } // namespace Ewoms
 
 namespace Ewoms { namespace data {
@@ -45,11 +48,12 @@ namespace Ewoms { namespace RestartIO { namespace Helpers {
     public:
         explicit AggregateWellData(const std::vector<int>& inteHead);
 
-	void captureDeclaredWellData(const Schedule&   	sched,
-                        const UnitSystem& 		units,
-                        const std::size_t 		sim_step,
-			const ::Ewoms::SummaryState&  	smry,
-			const std::vector<int>& 	inteHead);
+        void captureDeclaredWellData(const Schedule&   	sched,
+                                     const UnitSystem& 		units,
+                                     const std::size_t 		sim_step,
+                                     const ::Ewoms::Action::State& action_state,
+                                     const ::Ewoms::SummaryState&  	smry,
+                                     const std::vector<int>& 	inteHead);
 
         void captureDynamicWellData(const Ewoms::Schedule&        sched,
                                     const std::size_t           sim_step,

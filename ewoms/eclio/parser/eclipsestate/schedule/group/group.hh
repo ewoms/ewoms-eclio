@@ -22,10 +22,12 @@
 #include <map>
 #include <ewoms/common/optional.hh>
 #include <string>
+#include <algorithm>
 
 #include <ewoms/eclio/parser/deck/udavalue.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/iorderset.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/group/gpmaint.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
 namespace Ewoms {
@@ -107,7 +109,7 @@ struct GroupInjectionProperties {
     UDAValue target_void_fraction;
     std::string reinj_group;
     std::string voidage_group;
-    bool available_group_control;
+    bool available_group_control = true;
 
     static GroupInjectionProperties serializeObject();
 
@@ -252,6 +254,9 @@ struct ProductionControls {
     bool has_control(InjectionCMode control) const;
     bool productionGroupControlAvailable() const;
     bool injectionGroupControlAvailable(const Phase phase) const;
+    const std::optional<GPMaint>& gpmaint() const;
+    void set_gpmaint(GPMaint gpmaint);
+    void set_gpmaint();
 
     bool operator==(const Group& data) const;
     const Phase& topup_phase() const;
@@ -275,6 +280,7 @@ struct ProductionControls {
         serializer.map(injection_properties);
         production_properties.serializeOp(serializer);
         serializer(m_topup_phase);
+        serializer(m_gpmaint);
     }
 
 private:
@@ -298,6 +304,7 @@ private:
     std::map<Phase, GroupInjectionProperties> injection_properties;
     GroupProductionProperties production_properties;
     std::pair<Phase, bool> m_topup_phase{Phase::WATER, false};
+    std::optional<GPMaint> m_gpmaint;
 };
 
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);

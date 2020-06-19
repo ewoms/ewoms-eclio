@@ -3209,8 +3209,11 @@ BOOST_AUTO_TEST_CASE(RFT_CONFIG2) {
 
 BOOST_AUTO_TEST_CASE(nupcol) {
     std::string input =
+        "RUNSPEC\n"
         "START             -- 0 \n"
         "19 JUN 2007 / \n"
+        "NUPCOL\n"
+        "  20 /\n"
         "SCHEDULE\n"
         "DATES\n             -- 1\n"
         " 10  OKT 2008 / \n"
@@ -3231,7 +3234,7 @@ BOOST_AUTO_TEST_CASE(nupcol) {
     const auto& schedule = make_schedule(input);
     {
         // EFlow uses 12 as default
-        BOOST_CHECK_EQUAL(schedule.getNupcol(0),12);
+        BOOST_CHECK_EQUAL(schedule.getNupcol(0),20);
         BOOST_CHECK_EQUAL(schedule.getNupcol(1),12);
         BOOST_CHECK_EQUAL(schedule.getNupcol(2),10);
     }

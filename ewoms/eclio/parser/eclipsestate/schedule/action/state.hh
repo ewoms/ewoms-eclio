@@ -16,25 +16,41 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef EWOMS_PINCHMODE_H
-#define EWOMS_PINCHMODE_H
+#ifndef ACTION_STATE_H
+#define ACTION_STATE_H
 
-#include <string>
+#include <ctime>
+#include <map>
 
 namespace Ewoms {
+namespace Action {
 
-    namespace PinchMode {
-        enum ModeEnum {
-            ALL = 1,
-            TOPBOT = 2,
-            TOP = 3,
-            GAP = 4,
-            NOGAP = 5,
-        };
+class ActionX;
+class State {
 
-        const std::string PinchMode2String(const ModeEnum enumValue);
-        ModeEnum PinchModeFromString(const std::string& stringValue);
+struct RunState {
+    RunState(std::time_t sim_time) :
+        run_count(1),
+        last_run(sim_time)
+    {}
+
+    void add_run(std::time_t sim_time) {
+        this->last_run = sim_time;
+        this->run_count += 1;
     }
-}
 
-#endif // _PINCHMODE_
+    std::size_t run_count;
+    std::time_t last_run;
+};
+
+public:
+    void add_run(const ActionX& action, std::time_t sim_time);
+    std::size_t run_count(const ActionX& action) const;
+    std::time_t run_time(const ActionX& action) const;
+private:
+    std::map<std::pair<std::string, std::size_t>, RunState> run_state;
+};
+
+}
+}
+#endif

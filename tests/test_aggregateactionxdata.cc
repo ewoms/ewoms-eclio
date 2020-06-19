@@ -10,6 +10,7 @@
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
 #include <ewoms/eclio/output/aggregateudqdata.hh>
 #include <ewoms/eclio/output/aggregateactionxdata.hh>
 #include <ewoms/eclio/output/writerestarthelpers.hh>
@@ -99,6 +100,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     Ewoms::EclipseState es = simCase.es;
     Ewoms::Runspec rspec   = es.runspec();
     Ewoms::SummaryState st = sum_state_TEST1();
+    Ewoms::Action::State action_state;
     Ewoms::Schedule     sched = simCase.sched;
     Ewoms::EclipseGrid  grid = simCase.grid;
     const auto& ioConfig = es.getIOConfig();
@@ -131,7 +133,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
 
     const auto actDims = Ewoms::RestartIO::Helpers::createActionxDims(rspec, sched, rptStep);
     auto  actionxData = Ewoms::RestartIO::Helpers::AggregateActionxData(actDims);
-    actionxData.captureDeclaredActionxData(sched, st, actDims, rptStep);
+    actionxData.captureDeclaredActionxData(sched, action_state, st, actDims, rptStep);
 
     {
         /*

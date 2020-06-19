@@ -474,17 +474,18 @@ const std::map<cmp_enum, int> cmpToIndex = {
         }
 
         Ewoms::Action::Result
-        act_res(const Ewoms::Schedule& sched, const Ewoms::SummaryState&  smry, const std::size_t sim_step, std::vector<Ewoms::Action::ActionX>::const_iterator act_x) {
+        act_res(const Ewoms::Schedule& sched, const Ewoms::Action::State& action_state, const Ewoms::SummaryState&  smry, const std::size_t sim_step, std::vector<Ewoms::Action::ActionX>::const_iterator act_x) {
             auto sim_time = sched.simTime(sim_step);
-            if (act_x->ready(sim_time)) {
+            if (act_x->ready(action_state, sim_time)) {
                 Ewoms::Action::Context context(smry);
-                return act_x->eval(sim_time, context);
+                return act_x->eval(context);
             } else
                 return Ewoms::Action::Result(false);
         }
 
         template <class SACNArray>
         void staticContrib(std::vector<Ewoms::Action::ActionX>::const_iterator    actx_it,
+                           const Ewoms::Action::State&                            action_state,
                            const Ewoms::SummaryState&                             st,
                            const Ewoms::Schedule&                                 sched,
                            const std::size_t                                    simStep,
@@ -494,7 +495,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
             int noEPZacn = 16;
             double undef_high_val = 1.0E+20;
             const auto& wells = sched.getWells(simStep);
-            const auto ar = sACN::act_res(sched, st, simStep, actx_it);
+            const auto ar = sACN::act_res(sched, action_state, st, simStep, actx_it);
             // write out the schedule Actionx conditions
             const auto& actx_cond = actx_it->conditions();
             for (const auto&  z_data : actx_cond) {
@@ -618,10 +619,11 @@ AggregateActionxData(const std::vector<int>& actDims)
 
 void
 Ewoms::RestartIO::Helpers::AggregateActionxData::
-captureDeclaredActionxData( const Ewoms::Schedule&    sched,
-                            const Ewoms::SummaryState& st,
-                            const std::vector<int>& actDims,
-                            const std::size_t       simStep)
+captureDeclaredActionxData( const Ewoms::Schedule&      sched,
+                            const Ewoms::Action::State& action_state,
+                            const Ewoms::SummaryState&  st,
+                            const std::vector<int>&   actDims,
+                            const std::size_t         simStep)
 {
     const auto& acts = sched.actions(simStep);
     std::size_t act_ind = 0;
@@ -658,7 +660,7 @@ captureDeclaredActionxData( const Ewoms::Schedule&    sched,
 
         {
             auto s_acn = this->sACN_[act_ind];
-            sACN::staticContrib(actx_it, st, sched, simStep, s_acn);
+            sACN::staticContrib(actx_it, action_state, st, sched, simStep, s_acn);
         }
 
         act_ind +=1;

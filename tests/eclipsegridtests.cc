@@ -43,6 +43,7 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/griddims.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/nnc.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/pinchmode.hh>
 
 #include <ewoms/eclio/parser/parser.hh>
 
@@ -204,6 +205,28 @@ static Ewoms::Deck createPinchedCPDeck() {
         "  1000*1 / \n"
         "PINCH \n"
         "  0.2 / \n"
+        "EDIT\n"
+        "\n";
+
+    Ewoms::Parser parser;
+    return parser.parseString( deckData) ;
+}
+
+static Ewoms::Deck createPinchedNOGAPCPDeck() {
+    const char* deckData =
+        "RUNSPEC\n"
+        "\n"
+        "DIMENS\n"
+        " 10 10 10 /\n"
+        "GRID\n"
+        "COORD\n"
+        "  726*1 / \n"
+        "ZCORN \n"
+        "  8000*1 / \n"
+        "ACTNUM \n"
+        "  1000*1 / \n"
+        "PINCH \n"
+        "  0.2 NOGAP / \n"
         "EDIT\n"
         "\n";
 
@@ -783,9 +806,11 @@ BOOST_AUTO_TEST_CASE(ConstructorNoSections) {
 BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     auto deck1 = createCPDeck();
     auto deck2 = createPinchedCPDeck();
+    auto deck3 = createPinchedNOGAPCPDeck();
 
     Ewoms::EclipseGrid grid1(deck1);
     Ewoms::EclipseGrid grid2(deck2);
+    Ewoms::EclipseGrid grid3(deck3);
 
     BOOST_CHECK(!grid1.equal( grid2 ));
 
@@ -793,6 +818,8 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     BOOST_CHECK_THROW(grid1.getPinchThresholdThickness(), std::logic_error);
     BOOST_CHECK(grid2.isPinchActive());
     BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
+    BOOST_CHECK_EQUAL(grid2.getPinchGapMode(), Ewoms::PinchMode::ModeEnum::GAP);
+    BOOST_CHECK_EQUAL(grid3.getPinchGapMode(), Ewoms::PinchMode::ModeEnum::NOGAP);
 }
 
 BOOST_AUTO_TEST_CASE(ConstructorMINPV) {

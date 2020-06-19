@@ -18,6 +18,7 @@
 #ifndef FIELDPROPS_H
 #define FIELDPROPS_H
 
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -26,6 +27,7 @@
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/box.hh>
+#include <ewoms/eclio/parser/eclipsestate/grid/satfuncpropertyinitializers.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 namespace Ewoms {
@@ -322,12 +324,14 @@ private:
     const UnitSystem unit_system;
     std::size_t nx,ny,nz;
     Phases m_phases;
+    SatFuncControls m_satfuncctrl;
     std::vector<int> m_actnum;
     std::vector<double> cell_volume;
     std::vector<double> cell_depth;
     const std::string m_default_region;
     const EclipseGrid * grid_ptr;      // A bit undecided whether to properly use the grid or not ...
     const TableManager& tables;
+    std::shared_ptr<satfunc::RawTableEndPoints> m_rtep;
     std::vector<MultregpRecord> multregp;
     std::unordered_map<std::string, FieldData<int>> int_data;
     std::unordered_map<std::string, FieldData<double>> double_data;

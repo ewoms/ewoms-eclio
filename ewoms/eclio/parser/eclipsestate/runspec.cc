@@ -20,10 +20,13 @@
 #include <type_traits>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
+#include <ewoms/eclio/parser/deck/decksection.hh>
+#include <ewoms/eclio/parser/parserkeywords/n.hh>
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 
 namespace Ewoms {
 
@@ -311,8 +314,22 @@ Runspec::Runspec( const Deck& deck ) :
     udq_params( deck ),
     hystpar( deck ),
     m_actdims( deck ),
-    m_sfuncctrl( deck )
-{}
+    m_sfuncctrl( deck ),
+    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue )
+{
+    if (DeckSection::hasRUNSPEC(deck)) {
+        const RUNSPECSection runspecSection{deck};
+        if (runspecSection.hasKeyword("NUPCOL")) {
+            using NC = ParserKeywords::NUPCOL;
+            const auto& item = runspecSection.getKeyword<NC>().getRecord(0).getItem<NC::NUM_ITER>();
+            m_nupcol = item.get<int>(0);
+            if (item.defaultApplied(0)) {
+                std::string msg = "eflow uses 12 as default NUPCOL value";
+                OpmLog::note(msg);
+            }
+        }
+    }
+}
 
 Runspec Runspec::serializeObject()
 {
@@ -364,6 +381,11 @@ const EclHysterConfig& Runspec::hysterPar() const noexcept
 const SatFuncControls& Runspec::saturationFunctionControls() const noexcept
 {
     return this->m_sfuncctrl;
+}
+
+int Runspec::nupcol() const noexcept
+{
+    return this->m_nupcol;
 }
 
 /*

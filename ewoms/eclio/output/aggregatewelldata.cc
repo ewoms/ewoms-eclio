@@ -28,6 +28,7 @@
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/units/units.hh>
@@ -36,6 +37,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
 
 #include <algorithm>
 #include <cassert>
@@ -282,6 +284,29 @@ namespace {
         }
 
         template <class IWellArray>
+        void dynamicContribStop(const Ewoms::data::Well&  xw,
+                                IWellArray&             iWell)
+        {
+            using Ix = VI::IWell::index;
+
+            const auto any_flowing_conn =
+                std::any_of(std::begin(xw.connections),
+                            std::end  (xw.connections),
+                    [](const Ewoms::data::Connection& c)
+                {
+                    return c.rates.flowing();
+                });
+
+            iWell[Ix::item9] = any_flowing_conn
+                ? 0 : -1;
+
+            //item11 = 1 for an open well
+            iWell[Ix::item11] = any_flowing_conn
+                ? 0  : -1;
+
+        }
+
+        template <class IWellArray>
         void dynamicContribOpen(const Ewoms::Well&       well,
                                 const Ewoms::data::Well& xw,
                                 IWellArray&            iWell)
@@ -303,7 +328,9 @@ namespace {
             iWell[Ix::item9] = any_flowing_conn
                 ? iWell[Ix::ActWCtrl] : -1;
 
-            iWell[Ix::item11] = 1;
+            //item11 = 1 for an open well
+            iWell[Ix::item11] = any_flowing_conn
+                ? 1  : -1;
         }
     } // IWell
 
@@ -389,6 +416,18 @@ namespace {
             std::copy(b, e, std::begin(sWell));
         }
 
+        float getRateLimit(const Ewoms::UnitSystem& units, Ewoms::UnitSystem::measure u, const double& rate)
+        {
+            float rLimit = 1.0e+20f;
+            if (rate > 0.0) {
+                rLimit = static_cast<float>(units.from_si(u, rate));
+            }
+            else if (rate < 0.0) {
+                rLimit = 0.0;
+            }
+
+            return rLimit;
+        };
         template <class SWellArray>
         void staticContrib(const Ewoms::Well&      well,
                            const Ewoms::UnitSystem& units,
@@ -456,6 +495,21 @@ namespace {
                     ? swprop(M::pressure, pc.bhp_limit)
                     : swprop(M::pressure, 1.0*::Ewoms::unit::atm);
                 sWell[Ix::HistBHPTarget] = sWell[Ix::BHPTarget];
+
+                //alq_value - has no unit conversion according to parser code
+                if (pc.alq_value != 0.0) {
+                    sWell[Ix::Alq_value] = pc.alq_value;
+                }
+
+                if (predMode) {
+                    //if (well.getStatus() == Ewoms::Well::Status::OPEN) {
+                    sWell[Ix::OilRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.oil_rate);
+                    sWell[Ix::WatRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.water_rate);
+                    sWell[Ix::GasRateTarget]   = getRateLimit(units, M::gas_surface_rate,    pc.gas_rate);
+                    sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate);
+                    sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate, pc.resv_rate);
+                    //}
+                }
             }
             else if (well.isInjector()) {
                 const auto& ic = well.injectionControls(smry);
@@ -498,6 +552,7 @@ namespace {
             sWell[Ix::DatumDepth] = swprop(M::length, datumDepth(well));
             sWell[Ix::DrainageRadius] = swprop(M::length, well.getDrainageRadius());
             sWell[Ix::EfficiencyFactor1] = well.getEfficiencyFactor();
+            sWell[Ix::EfficiencyFactor2] = sWell[Ix::EfficiencyFactor1];
             /*
               Restart files from Eclipse indicate that the efficiency factor is
               found in two items in the restart file; since only one of the
@@ -751,13 +806,13 @@ namespace {
         }
 
         std::vector<std::pair<std::string, Ewoms::Action::Result>>
-        act_res_stat(const Ewoms::Schedule& sched, const Ewoms::SummaryState&  smry, const std::size_t sim_step) {
+        act_res_stat(const Ewoms::Schedule& sched, const Ewoms::Action::State& action_state, const Ewoms::SummaryState&  smry, const std::size_t sim_step) {
             std::vector<std::pair<std::string, Ewoms::Action::Result>> results;
             const auto& acts = sched.actions(sim_step);
             Ewoms::Action::Context context(smry);
             auto sim_time = sched.simTime(sim_step);
-            for (const auto& action : acts.pending(sim_time)) {
-                auto result = action->eval(sim_time, context);
+            for (const auto& action : acts.pending(action_state, sim_time)) {
+                auto result = action->eval(context);
                 if (result)
                     results.emplace_back( action->name(), std::move(result) );
             }
@@ -800,6 +855,7 @@ Ewoms::RestartIO::Helpers::AggregateWellData::
 captureDeclaredWellData(const Schedule&   sched,
                         const UnitSystem& units,
                         const std::size_t sim_step,
+                        const ::Ewoms::Action::State& action_state,
                         const ::Ewoms::SummaryState&  smry,
                         const std::vector<int>& inteHead)
 {
@@ -840,7 +896,7 @@ captureDeclaredWellData(const Schedule&   sched,
     });
 
     {
-        const auto actResStat = ZWell::act_res_stat(sched, smry, sim_step);
+        const auto actResStat = ZWell::act_res_stat(sched, action_state, smry, sim_step);
         // Static contributions to ZWEL array.
         wellLoop(wells,
             [&actResStat, this](const Well& well, const std::size_t wellID) -> void
@@ -855,7 +911,7 @@ captureDeclaredWellData(const Schedule&   sched,
 
 void
 Ewoms::RestartIO::Helpers::AggregateWellData::
-captureDynamicWellData(const Schedule&             sched,
+captureDynamicWellData(const Ewoms::Schedule&        sched,
                        const std::size_t           sim_step,
                        const Ewoms::data::WellRates& xw,
                        const ::Ewoms::SummaryState&  smry)
@@ -869,8 +925,13 @@ captureDynamicWellData(const Schedule&             sched,
         auto iWell = this->iWell_[wellID];
 
         auto i = xw.find(well.name());
-        if ((i == std::end(xw)) || !i->second.flowing()) {
-            IWell::dynamicContribShut(iWell);
+        if ((i == std::end(xw)) || (well.getStatus() != Ewoms::Well::Status::OPEN)) {
+            if ((i == std::end(xw)) || (well.getStatus() == Ewoms::Well::Status::SHUT))  {
+                IWell::dynamicContribShut(iWell);
+            }
+            else {
+                IWell::dynamicContribStop(i->second, iWell);
+            }
         }
         else {
             IWell::dynamicContribOpen(well, i->second, iWell);

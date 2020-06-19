@@ -64,7 +64,7 @@ namespace {
         return inteHead[163];
     }
 
-    // Categorize function in terms of which token-types are used in formula
+     // Categorize function in terms of which token-types are used in formula
     int define_type(const std::set<Ewoms::UDQTokenType> tokens) {
         int type = -4;
         std::vector <Ewoms::UDQTokenType> type_1 = {
@@ -132,7 +132,7 @@ namespace {
         }
 
         template <class IUADArray>
-        void staticContrib(const Ewoms::UDQActive::Record& udq_record, IUADArray& iUad)
+        void staticContrib(const Ewoms::UDQActive::Record& udq_record, IUADArray& iUad, int use_cnt_diff)
         {
             iUad[0] = udq_record.uad_code;
             iUad[1] = udq_record.input_index + 1;
@@ -141,7 +141,7 @@ namespace {
             iUad[2] = 1;
 
             iUad[3] = udq_record.use_count;
-            iUad[4] = udq_record.use_index + 1;
+            iUad[4] = udq_record.use_index + 1 - use_cnt_diff;
         }
     } // iUad
 
@@ -440,7 +440,9 @@ const std::vector<int> iuap_data(const Ewoms::Schedule& sched,
         }
         else if ((wg_key == Ewoms::UDAKeyword::GCONPROD) || (wg_key == Ewoms::UDAKeyword::GCONINJE)) {
             const auto& group = sched.getGroup(iuap[ind].wgname, simStep);
-            wg_no.push_back(group.insert_index() - 1);
+            if (iuap[ind].wgname != "FIELD") {
+                wg_no.push_back(group.insert_index() - 1);
+            }
         }
         else {
             std::cout << "Invalid Control keyword: " << static_cast<int>(ctrl) << std::endl;
@@ -505,9 +507,14 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
         int cnt_iuad = 0;
         for (std::size_t index = 0; index < udq_records.size(); index++) {
             const auto& record = udq_records[index];
-            auto i_uad = this->iUAD_[index];
-            iUad::staticContrib(record, i_uad);
-            cnt_iuad += 1;
+            auto i_uad = this->iUAD_[cnt_iuad];
+            const auto& ctrl = record.control;
+            const auto wg_key = Ewoms::UDQ::keyword(ctrl);
+            if (!(((wg_key == Ewoms::UDAKeyword::GCONPROD) || (wg_key == Ewoms::UDAKeyword::GCONINJE)) && (record.wg_name() == "FIELD"))) {
+                int use_count_diff = static_cast<int>(index) - cnt_iuad;
+                iUad::staticContrib(record, i_uad, use_count_diff);
+                cnt_iuad += 1;
+            }
         }
         if (cnt_iuad != inteHead[VI::intehead::NO_IUADS]) {
             std::stringstream str;

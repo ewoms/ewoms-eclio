@@ -22,6 +22,7 @@
 #include <ewoms/eclio/output/vectoritems/msw.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/segment.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd_convert.hh>
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
 namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;

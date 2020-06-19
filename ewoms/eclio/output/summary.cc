@@ -145,16 +145,21 @@ namespace {
             { "WBHP",  Ewoms::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Ewoms::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Ewoms::EclIO::SummaryNode::Type::Rate     },
+            { "WMCTL", Ewoms::EclIO::SummaryNode::Type::Mode     },
         };
         const std::vector<ParamCTorArgs> extra_group_vectors {
             { "GMCTG", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "GMCTP", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "GMCTW", Ewoms::EclIO::SummaryNode::Type::Mode },
+            { "GMWPR", Ewoms::EclIO::SummaryNode::Type::Mode },
+            { "GMWIN", Ewoms::EclIO::SummaryNode::Type::Mode },
         };
         const std::vector<ParamCTorArgs> extra_field_vectors {
             { "FMCTG", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "FMCTW", Ewoms::EclIO::SummaryNode::Type::Mode },
+            { "FMWPR", Ewoms::EclIO::SummaryNode::Type::Mode },
+            { "FMWIN", Ewoms::EclIO::SummaryNode::Type::Mode },
         };
 
         std::vector<Ewoms::EclIO::SummaryNode> entities {} ;
@@ -188,6 +193,7 @@ namespace {
             if (grp_name != "FIELD") {
                 makeEntities('G', Ewoms::EclIO::SummaryNode::Category::Group, grp_name);
                 makeExtraEntities(extra_group_vectors, Ewoms::EclIO::SummaryNode::Category::Group, grp_name);
+
             }
         }
 
@@ -1369,54 +1375,29 @@ void eval_udq(const Ewoms::Schedule& schedule, std::size_t sim_step, Ewoms::Summ
     const UDQConfig& udq = schedule.getUDQConfig(sim_step);
     const auto& func_table = udq.function_table();
     UDQContext context(func_table, st);
-    {
-        const std::vector<std::string> wells = st.wells();
-
-        for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
-            auto ws = assign.eval(wells);
-            for (const auto& well : wells) {
-                const auto& udq_value = ws[well];
-                if (udq_value)
-                    st.update_well_var(well, ws.name(), udq_value.value());
-            }
-        }
-
-        for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
-            auto ws = def.eval(context);
-            for (const auto& well : wells) {
-                const auto& udq_value = ws[well];
-                if (udq_value)
-                    st.update_well_var(well, def.keyword(), udq_value.value());
-            }
-        }
+    for (const auto& assign : udq.assignments(UDQVarType::WELL_VAR)) {
+        auto ws = assign.eval(st.wells());
+        st.update_udq(ws);
     }
 
-    {
-        const std::vector<std::string> groups = st.groups();
+    for (const auto& def : udq.definitions(UDQVarType::WELL_VAR)) {
+        auto ws = def.eval(context);
+        st.update_udq(ws);
+    }
 
-        for (const auto& assign : udq.assignments(UDQVarType::GROUP_VAR)) {
-            auto ws = assign.eval(groups);
-            for (const auto& group : groups) {
-                const auto& udq_value = ws[group];
-                if (udq_value)
-                    st.update_group_var(group, ws.name(), udq_value.value());
-            }
-        }
+    for (const auto& assign : udq.assignments(UDQVarType::GROUP_VAR)) {
+        auto ws = assign.eval(st.groups());
+        st.update_udq(ws);
+    }
 
-        for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
-            auto ws = def.eval(context);
-            for (const auto& group : groups) {
-                const auto& udq_value = ws[group];
-                if (udq_value)
-                    st.update_group_var(group, def.keyword(), udq_value.value());
-            }
-        }
+    for (const auto& def : udq.definitions(UDQVarType::GROUP_VAR)) {
+        auto ws = def.eval(context);
+        st.update_udq(ws);
     }
 
     for (const auto& def : udq.definitions(UDQVarType::FIELD_VAR)) {
         auto field_udq = def.eval(context);
-        if (field_udq[0])
-            st.update(def.keyword(), field_udq[0].value());
+        st.update_udq(field_udq);
     }
 }
 

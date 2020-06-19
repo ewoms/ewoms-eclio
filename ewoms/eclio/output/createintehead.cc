@@ -154,6 +154,38 @@ namespace {
         return std::count_if(input.begin(), input.end(), [](const Ewoms::UDQInput inp) { return (inp.var_type() == Ewoms::UDQVarType::GROUP_VAR); });
     }
 
+    int noIuads(const Ewoms::Schedule& sched,
+                    const std::size_t    rptStep,
+                    const std::size_t    simStep)
+    {
+        if (rptStep == std::size_t{0}) {
+            return 0;
+        }
+
+        const auto& udqAct = sched.udqActive(simStep);
+        const auto& iuad = udqAct.get_iuad();
+
+        return std::count_if(iuad.begin(), iuad.end(), [](const Ewoms::UDQActive::Record rec) {
+            return (!(((Ewoms::UDQ::keyword(rec.control) == Ewoms::UDAKeyword::GCONPROD) || (Ewoms::UDQ::keyword(rec.control) == Ewoms::UDAKeyword::GCONINJE))
+            && (rec.wg_name() == "FIELD"))); });
+    }
+
+    int noIuaps(const Ewoms::Schedule& sched,
+                    const std::size_t    rptStep,
+                    const std::size_t    simStep)
+    {
+        if (rptStep == std::size_t{0}) {
+            return 0;
+        }
+
+        const auto& udqAct = sched.udqActive(simStep);
+        const auto& iuap = udqAct.get_iuap();
+
+        return std::count_if(iuap.begin(), iuap.end(), [](const Ewoms::UDQActive::InputRecord rec) {
+            return (!(((Ewoms::UDQ::keyword(rec.control) == Ewoms::UDAKeyword::GCONPROD) || (Ewoms::UDQ::keyword(rec.control) == Ewoms::UDAKeyword::GCONINJE))
+            && (rec.wgname == "FIELD"))); });
+    }
+
     int noFieldUdqs(const Ewoms::Schedule& sched,
                     const std::size_t    rptStep,
                     const std::size_t    simStep)
@@ -282,13 +314,12 @@ namespace {
         }
 
         const auto& udq_par = rspec.udqParams();
-        const auto& udqActive = sched.udqActive(simStep);
         const auto r_seed   = udq_par.rand_seed();
         const auto no_wudq  = noWellUdqs(sched, rptStep, simStep);
         const auto no_gudq  = noGroupUdqs(sched, rptStep, simStep);
         const auto no_fudq  = noFieldUdqs(sched, rptStep, simStep);
-        const auto no_iuads = udqActive.IUAD_size();
-        const auto no_iuaps = udqActive.IUAP_size();
+        const auto no_iuads = noIuads(sched, rptStep, simStep);
+        const auto no_iuaps = noIuaps(sched, rptStep, simStep);
 
         return {
             r_seed,

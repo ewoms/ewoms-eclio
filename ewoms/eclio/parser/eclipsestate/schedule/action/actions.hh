@@ -28,6 +28,8 @@
 namespace Ewoms {
 namespace Action {
 
+class State;
+
 /*
   The Actions class is a container of ACTIONX keywords. The main functionality
   is to provide a list of ACTIONX keywords which are ready to be evaluated.
@@ -44,10 +46,10 @@ public:
     int max_input_lines() const;
     bool empty() const;
     void add(const ActionX& action);
-    bool ready(std::time_t sim_time) const;
+    bool ready(const State& state, std::time_t sim_time) const;
     const ActionX& get(const std::string& name) const;
     const ActionX& get(std::size_t index) const;
-    std::vector<const ActionX *> pending(std::time_t sim_time) const;
+    std::vector<const ActionX *> pending(const State& state, std::time_t sim_time) const;
 
     std::vector<ActionX>::const_iterator begin() const;
     std::vector<ActionX>::const_iterator end() const;

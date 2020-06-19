@@ -20,6 +20,8 @@
 #include <stdexcept>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/icd.hh>
 
+#include "icd_convert.hh"
+
 namespace Ewoms {
 
 template <>

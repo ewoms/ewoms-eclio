@@ -28,6 +28,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/swfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/swoftable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tabdims.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/tablecolumn.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablecontainer.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tablemanager.hh>
 
@@ -35,34 +36,32 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <exception>
+#include <functional>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 #include <stddef.h>
 
+// Note on deriving critical saturations: All table scanners are implemented
+// in terms of std::lower_bound(begin, end, tolcrit, predicate) which returns
+// the first position in [begin, end) for which
+//
+//     predicate(*iter, tolcrit)
+//
+// is false.  Using predicate = std::greater<>{} thus determines the first
+// position in the sequence for which the elements is less than or equal to
+// 'tolcrit'.  Similarly, a predicate equivalent to '<=' returns the first
+// position for which the elements is strictly greater than 'tolcrit'.
+
 namespace {
 
-    struct RawTableEndPoints
-    {
-        struct {
-            std::vector<double> gas;
-            std::vector<double> water;
-        } connate;
-
-        struct {
-            std::vector<double> oil_in_gas;
-            std::vector<double> oil_in_water;
-            std::vector<double> gas;
-            std::vector<double> water;
-        } critical;
-
-        struct {
-            std::vector<double> gas;
-            std::vector<double> water;
-        } maximum;
-    };
+    using ::Ewoms::satfunc::RawTableEndPoints;
 
     /*
      * See the "Saturation Functions" chapter in the Eclipse Technical
@@ -116,8 +115,6 @@ namespace {
         if( family2 ) return SatfuncFamily::II;
         return SatfuncFamily::none;
     }
-
-    // enum class limit { min, max };
 
     std::vector<double>
     findMinWaterSaturation(const Ewoms::TableManager& tm,
@@ -261,39 +258,67 @@ namespace {
         }
     }
 
-    /*
-     * These functions have been ported from an older implementation to instead
-     * use std::upper_bound and more from <algorithm> to make code -intent-
-     * clearer. This also made some (maybe intentional) details easier to spot.
-     * A short discussion:
-     *
-     * I don't know if not finding any element larger than 0.0 in the tables
-     * was ever supposed to happen (or even possible), in which case the vector
-     * elements remained at their initial value of 0.0. This behaviour has been
-     * preserved, but is now explicit. The original code was also not clear if
-     * it was possible to look up columns at index -1 (see critical_water for
-     * an example), but the new version is explicit about this. Unfortuately
-     * I'm not familiar enough with the maths or internal structure to make
-     * more than a guess here, but most of this behaviour should be preserved.
-     *
-     */
-
-    template <typename T>
-    double critical_water( const T& table )
+    template <typename Predicate>
+    auto crit_sat_index(const Ewoms::TableColumn& col,
+                        const double            tolcrit,
+                        Predicate&&             pred)
     {
-        const auto& col = table.getKrwColumn();
-        const auto end = col.begin() + table.numRows();
-        const auto critical = std::upper_bound( col.begin(), end, 0.0 );
-        const auto index = std::distance( col.begin(), critical );
+        using SizeT = std::remove_const_t<
+            std::remove_reference_t<decltype(col.size())>
+        >;
 
-        if( index == 0 || critical == end ) return 0.0;
+        auto begin = col.begin();
+        auto pos   = std::lower_bound(begin, col.end(), tolcrit,
+                                      std::forward<Predicate>(pred));
 
-        return table.getSwColumn()[ index - 1 ];
+        assert ((pos != col.end()) &&
+                "Detected relative permeability function "
+                "without immobile state");
+
+        return static_cast<SizeT>(std::distance(begin, pos));
     }
 
-    std::vector< double >
+    double crit_sat_increasing_KR(const Ewoms::TableColumn& sat,
+                                  const Ewoms::TableColumn& kr,
+                                  const double            tolcrit)
+    {
+        // First position for which Kr(S) > tolcrit.
+        const auto i = crit_sat_index(kr, tolcrit,
+            [](const double kr1, const double kr2)
+        {
+            // kr1 <= kr2.  Kr2 is 'tolcrit'.
+            return ! (kr2 < kr1);
+        });
+
+        return sat[i - 1]; // Last saturation for which Kr(S) <= tolcrit
+    }
+
+    double crit_sat_decreasing_KR(const Ewoms::TableColumn& sat,
+                                  const Ewoms::TableColumn& kr,
+                                  const double            tolcrit)
+    {
+        // First position for which Kr(S) <= tolcrit.
+        const auto i = crit_sat_index(kr, tolcrit, std::greater<>{});
+        return sat[i];
+    }
+
+    /// Maximum water saturation for which Krw(Sw) <= tolcrit.
+    ///
+    /// Expected Table Format:
+    ///    [Sw,  Krw(Sw), ...other...]
+    ///
+    ///    Krw increasing.
+    template <typename T>
+    double critical_water(const T& table, const double tolcrit)
+    {
+        return crit_sat_increasing_KR(table.getSwColumn(),
+                                      table.getKrwColumn(), tolcrit);
+    }
+
+    std::vector<double>
     findCriticalWater(const Ewoms::TableManager& tm,
-                      const Ewoms::Phases&       ph)
+                      const Ewoms::Phases&       ph,
+                      const double             tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -303,12 +328,14 @@ namespace {
         const auto& swofTables = tm.getSwofTables();
         const auto& swfnTables = tm.getSwfnTables();
 
-        const auto famI = [&swofTables]( int i ) {
-            return critical_water( swofTables.getTable<Ewoms::SwofTable>( i ) );
+        const auto famI = [&swofTables, tolcrit](const int i) -> double
+        {
+            return critical_water(swofTables.getTable<Ewoms::SwofTable>(i), tolcrit);
         };
 
-        const auto famII = [&swfnTables]( int i ) {
-            return critical_water( swfnTables.getTable<Ewoms::SwfnTable>( i ) );
+        const auto famII = [&swfnTables, tolcrit](const int i) -> double
+        {
+            return critical_water(swfnTables.getTable<Ewoms::SwfnTable>(i), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -318,31 +345,40 @@ namespace {
         }
     }
 
-    template< typename T >
-    double critical_gas( const T& table ) {
-        const auto& col = table.getKrgColumn();
-        const auto end = col.begin() + table.numRows();
-        const auto critical = std::upper_bound( col.begin(), end, 0.0 );
-        const auto index = std::distance( col.begin(), critical );
-
-        if( index == 0 || critical == end ) return 0.0;
-
-        return table.getSgColumn()[ index - 1 ];
+    /// Maximum gas saturation for which Krg(Sg) <= tolcrit.
+    ///
+    /// Expected Table Format:
+    ///    [Sg,  Krg(Sg), ...other...]
+    ///
+    ///    Krg increasing.
+    template <typename T>
+    double critical_gas(const T& table, const double tolcrit)
+    {
+        return crit_sat_increasing_KR(table.getSgColumn(),
+                                      table.getKrgColumn(), tolcrit);
     }
 
-    double critical_gas( const Ewoms::SlgofTable& slgofTable ) {
-        const auto& col = slgofTable.getKrgColumn();
-        const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
-        const auto index = std::distance( col.begin(), critical );
+    /// Maximum gas saturation for which Krg(Sg) <= tolcrit.
+    ///
+    /// Table Format (Sl = So + Swco):
+    ///    [Sl,  Krg(Sl),  Krog(Sl),  Pcgo(Sl)]
+    ///
+    ///    Krg decreasing,  Krog increasing,  Pcog not increasing.
+    double critical_gas(const Ewoms::SlgofTable& slgofTable,
+                        const double           tolcrit)
+    {
+        const auto sl_at_crit_gas =
+            crit_sat_decreasing_KR(slgofTable.getSlColumn(),
+                                   slgofTable.getKrgColumn(), tolcrit);
 
-        if( index == 0 || critical == col.end() ) return 0.0;
-
-        return slgofTable.getSlColumn()[ index - 1 ];
+        // Sg = 1 - Sl
+        return 1.0 - sl_at_crit_gas;
     }
 
     std::vector<double>
     findCriticalGas(const Ewoms::TableManager& tm,
-                    const Ewoms::Phases&       ph)
+                    const Ewoms::Phases&       ph,
+                    const double             tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -353,16 +389,19 @@ namespace {
         const auto& sgofTables = tm.getSgofTables();
         const auto& slgofTables = tm.getSlgofTables();
 
-        const auto famI_sgof = [&sgofTables]( int i ) {
-            return critical_gas( sgofTables.getTable<Ewoms::SgofTable>( i ) );
+        const auto famI_sgof = [&sgofTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(sgofTables.getTable<Ewoms::SgofTable>(i), tolcrit);
         };
 
-        const auto famI_slgof = [&slgofTables]( int i ) {
-            return critical_gas( slgofTables.getTable<Ewoms::SlgofTable>( i ) );
+        const auto famI_slgof = [&slgofTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(slgofTables.getTable<Ewoms::SlgofTable>(i), tolcrit);
         };
 
-        const auto famII = [&sgfnTables]( int i ) {
-            return critical_gas( sgfnTables.getTable<Ewoms::SgfnTable>( i ) );
+        const auto famII = [&sgfnTables, tolcrit](const int i) -> double
+        {
+            return critical_gas(sgfnTables.getTable<Ewoms::SgfnTable>(i), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -383,42 +422,53 @@ namespace {
         }
     }
 
-    double critical_oil_water( const Ewoms::SwofTable& swofTable ) {
-        const auto& col = swofTable.getKrowColumn();
+    /// Maximum oil saturation for which Krow(So) <= tolcrit.
+    ///
+    /// Table Format:
+    ///    [Sw,  Krw(Sw),  Krow(Sw),  Pcow(Sw)]
+    ///
+    ///    Krw increasing,  Krow decreasing,  Pcow not increasing.
+    double critical_oil_water(const Ewoms::SwofTable& swofTable,
+                              const double          tolcrit)
+    {
+        const auto sw_at_crit_oil =
+            crit_sat_decreasing_KR(swofTable.getSwColumn(),
+                                   swofTable.getKrowColumn(), tolcrit);
 
-        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-        auto rbegin = reverse( col.begin() + swofTable.numRows() );
-        auto rend = reverse( col.begin() );
-        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
-        const auto index = std::distance( col.begin(), critical.base() - 1 );
-
-        if( critical == rend ) return 0.0;
-
-        return 1 - swofTable.getSwColumn()[ index + 1 ];
+        // So = 1 - Sw
+        return 1.0 - sw_at_crit_oil;
     }
 
-    double critical_oil( const Ewoms::Sof2Table& sof2Table ) {
-        const auto& col = sof2Table.getKroColumn();
-        const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
-        const auto index = std::distance( col.begin(), critical );
-
-        if( index == 0 || critical == col.end() ) return 0.0;
-
-        return sof2Table.getSoColumn()[ index - 1 ];
+    /// Maximum oil saturation for which Kro(So) <= tolcrit.
+    ///
+    /// Table Format:
+    ///    [So,  Kro(So)]
+    ///
+    ///    Kro increasing.
+    double critical_oil(const Ewoms::Sof2Table& sof2Table,
+                        const double          tolcrit)
+    {
+        return crit_sat_increasing_KR(sof2Table.getSoColumn(),
+                                      sof2Table.getKroColumn(), tolcrit);
     }
 
-    double critical_oil( const Ewoms::Sof3Table& sof3Table, const Ewoms::TableColumn& col ) {
-        const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
-        const auto index = std::distance( col.begin(), critical );
-
-        if( index == 0 || critical == col.end() ) return 0.0;
-
-        return sof3Table.getSoColumn()[ index - 1 ];
+    /// Maximum oil saturation for which Kro(So) <= tolcrit.
+    ///
+    /// Table Format:
+    ///    [So,  Krow(So),  Krog(So)]
+    ///
+    ///    Krow increasing,  Krog increasing.
+    double critical_oil(const Ewoms::Sof3Table&   sof3Table,
+                        const Ewoms::TableColumn& col,
+                        const double            tolcrit)
+    {
+        return crit_sat_increasing_KR(sof3Table.getSoColumn(), col, tolcrit);
     }
 
     std::vector<double>
     findCriticalOilWater(const Ewoms::TableManager& tm,
-                         const Ewoms::Phases&       ph)
+                         const Ewoms::Phases&       ph,
+                         const double             tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -430,17 +480,20 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto famI = [&swofTables]( int i ) {
-            return critical_oil_water( swofTables.getTable<Ewoms::SwofTable>( i ) );
+        const auto famI = [&swofTables, tolcrit](const int i) -> double
+        {
+            return critical_oil_water(swofTables.getTable<Ewoms::SwofTable>(i), tolcrit);
         };
 
-        const auto famII_2p = [&sof2Tables]( int i ) {
-            return critical_oil( sof2Tables.getTable<Ewoms::Sof2Table>( i ) );
+        const auto famII_2p = [&sof2Tables, tolcrit](const int i) -> double
+        {
+            return critical_oil(sof2Tables.getTable<Ewoms::Sof2Table>(i), tolcrit);
         };
 
-        const auto famII_3p = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable<Ewoms::Sof3Table>( i );
-            return critical_oil( tb, tb.getKrowColumn() );
+        const auto famII_3p = [&sof3Tables, tolcrit](const int i) -> double
+        {
+            const auto& tb = sof3Tables.getTable<Ewoms::Sof3Table>(i);
+            return critical_oil(tb, tb.getKrowColumn(), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -454,36 +507,41 @@ namespace {
         }
     }
 
-    double critical_oil_gas( const Ewoms::SgofTable& sgofTable )
+    /// Maximum oil saturation for which Krog(So) <= tolcrit.
+    ///
+    /// Table Format:
+    ///    [Sg,  Krg(Sg),  Krog(Sg),  Pcgo(Sg)]
+    ///
+    ///    Krg increasing,  Krog decreasing,  Pcgo not decreasing.
+    double critical_oil_gas(const Ewoms::SgofTable& sgofTable,
+                            const double          tolcrit)
     {
-        const auto& col = sgofTable.getKrogColumn();
+        const auto sg_at_crit_oil =
+            crit_sat_decreasing_KR(sgofTable.getSgColumn(),
+                                   sgofTable.getKrogColumn(), tolcrit);
 
-        using reverse = std::reverse_iterator< decltype( col.begin() ) >;
-        auto rbegin = reverse( col.begin() + sgofTable.numRows() );
-        auto rend = reverse( col.begin() );
-        const auto critical = std::upper_bound( rbegin, rend, 0.0 );
-        if( critical == rend ) {
-            return 0.0;
-        }
-        const auto index = std::distance( col.begin(), critical.base() - 1 );
-        return 1.0 - sgofTable.getSgColumn()[ index + 1 ];
+        // So = 1 - Sg
+        return 1.0 - sg_at_crit_oil;
     }
 
-    double critical_oil_gas( const Ewoms::SlgofTable& sgofTable )
+    /// Maximum oil saturation for which Krog(So) <= tolcrit.
+    ///
+    /// Table Format (Sl = So + Swco):
+    ///    [Sl,  Krg(Sl),  Krog(Sl),  Pcgo(Sl)]
+    ///
+    ///    Krg decreasing,  Krog increasing,  Pcgo not increasing.
+    double critical_oil_gas(const Ewoms::SlgofTable& slgofTable,
+                            const double           tolcrit)
     {
-        const auto& col = sgofTable.getKrogColumn();
-        const auto critical = std::upper_bound( col.begin(), col.end(), 0.0 );
-        if (critical == col.end()) {
-            return 0.0;
-        }
-        const auto index = std::distance( col.begin(), critical - 1);
-        return sgofTable.getSlColumn()[ index ];
+        return crit_sat_increasing_KR(slgofTable.getSlColumn(),
+                                      slgofTable.getKrogColumn(), tolcrit);
     }
 
     std::vector<double>
     findCriticalOilGas(const Ewoms::TableManager&   tm,
                        const Ewoms::Phases&         ph,
-                       const std::vector<double>& swco)
+                       const std::vector<double>& swco,
+                       const double               tolcrit)
     {
         const auto num_tables = tm.getTabdims().getNumSatTables();
 
@@ -496,23 +554,25 @@ namespace {
         const auto& sof2Tables = tm.getSof2Tables();
         const auto& sof3Tables = tm.getSof3Tables();
 
-        const auto famI_sgof = [&sgofTables, &swco](const int i) -> double
+        const auto famI_sgof = [&sgofTables, &swco, tolcrit](const int i) -> double
         {
-            return critical_oil_gas(sgofTables.getTable<Ewoms::SgofTable>(i)) - swco[i];
+            return critical_oil_gas(sgofTables.getTable<Ewoms::SgofTable>(i), tolcrit) - swco[i];
         };
 
-        const auto famI_slgof = [&slgofTables, &swco](const int i) -> double
+        const auto famI_slgof = [&slgofTables, &swco, tolcrit](const int i) -> double
         {
-            return critical_oil_gas(slgofTables.getTable<Ewoms::SlgofTable>(i)) - swco[i];
+            return critical_oil_gas(slgofTables.getTable<Ewoms::SlgofTable>(i), tolcrit) - swco[i];
         };
 
-        const auto famII_2p = [&sof2Tables]( int i ) {
-            return critical_oil( sof2Tables.getTable<Ewoms::Sof2Table>( i ) );
+        const auto famII_2p = [&sof2Tables, tolcrit](const int i) -> double
+        {
+            return critical_oil(sof2Tables.getTable<Ewoms::Sof2Table>(i), tolcrit);
         };
 
-        const auto famII_3p = [&sof3Tables]( int i ) {
-            const auto& tb = sof3Tables.getTable<Ewoms::Sof3Table>( i );
-            return critical_oil( tb, tb.getKrogColumn() );
+        const auto famII_3p = [&sof3Tables, tolcrit](const int i) -> double
+        {
+            const auto& tb = sof3Tables.getTable<Ewoms::Sof3Table>(i);
+            return critical_oil(tb, tb.getKrogColumn(), tolcrit);
         };
 
         switch( getSaturationFunctionFamily( tm, ph ) ) {
@@ -972,26 +1032,6 @@ namespace {
             default:
                 throw std::domain_error("No valid saturation keyword family specified");
         }
-    }
-
-    RawTableEndPoints
-    getRawTableEndpoints(const Ewoms::TableManager& tm,
-                         const Ewoms::Phases&       phases)
-    {
-        auto ep = RawTableEndPoints{};
-
-        ep.connate.gas   = findMinGasSaturation(tm, phases);
-        ep.connate.water = findMinWaterSaturation(tm, phases);
-
-        ep.critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep.connate.water);
-        ep.critical.oil_in_water = findCriticalOilWater(tm, phases);
-        ep.critical.gas          = findCriticalGas(tm, phases);
-        ep.critical.water        = findCriticalWater(tm, phases);
-
-        ep.maximum.gas   = findMaxGasSaturation(tm, phases);
-        ep.maximum.water = findMaxWaterSaturation(tm, phases);
-
-        return ep;
     }
 
     double selectValue(const Ewoms::TableContainer& depthTables,
@@ -1534,10 +1574,32 @@ namespace {
     }
 } // namespace Anonymous
 
+std::shared_ptr<Ewoms::satfunc::RawTableEndPoints>
+Ewoms::satfunc::getRawTableEndpoints(const Ewoms::TableManager& tm,
+                                   const Ewoms::Phases&       phases,
+                                   const double             tolcrit)
+{
+    auto ep = std::make_shared<RawTableEndPoints>();
+
+    ep->connate.gas   = findMinGasSaturation(tm, phases);
+    ep->connate.water = findMinWaterSaturation(tm, phases);
+
+    ep->critical.oil_in_gas   = findCriticalOilGas(tm, phases, ep->connate.water, tolcrit);
+    ep->critical.oil_in_water = findCriticalOilWater(tm, phases, tolcrit);
+    ep->critical.gas          = findCriticalGas(tm, phases, tolcrit);
+    ep->critical.water        = findCriticalWater(tm, phases, tolcrit);
+
+    ep->maximum.gas   = findMaxGasSaturation(tm, phases);
+    ep->maximum.water = findMaxWaterSaturation(tm, phases);
+
+    return ep;
+}
+
 std::vector<double>
 Ewoms::satfunc::init(const std::string&         keyword,
                    const TableManager&        tables,
                    const Phases&              phases,
+                   const RawTableEndPoints&   ep,
                    const std::vector<double>& cell_depth,
                    const std::vector<int>&    num,
                    const std::vector<int>&    endnum)
@@ -1585,8 +1647,6 @@ Ewoms::satfunc::init(const std::string&         keyword,
             "Unsupported saturation function scaling '"
             + keyword + '\''
         };
-
-    const auto ep = getRawTableEndpoints(tables, phases);
 
     return func->second(tables, phases, ep, cell_depth, num, endnum);
 }

@@ -216,6 +216,7 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
         }
     }
 
+    res.name( this->m_keyword );
     return res;
 }
 

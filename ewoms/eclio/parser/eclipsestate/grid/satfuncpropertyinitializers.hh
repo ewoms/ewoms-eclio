@@ -18,6 +18,7 @@
 #ifndef ECLIPSE_SATFUNCPROPERTY_INITIALIZERS_H
 #define ECLIPSE_SATFUNCPROPERTY_INITIALIZERS_H
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -28,9 +29,35 @@ namespace Ewoms {
 
 namespace Ewoms { namespace satfunc {
 
+    struct RawTableEndPoints
+    {
+        struct {
+            std::vector<double> gas;
+            std::vector<double> water;
+        } connate;
+
+        struct {
+            std::vector<double> oil_in_gas;
+            std::vector<double> oil_in_water;
+            std::vector<double> gas;
+            std::vector<double> water;
+        } critical;
+
+        struct {
+            std::vector<double> gas;
+            std::vector<double> water;
+        } maximum;
+    };
+
+    std::shared_ptr<RawTableEndPoints>
+    getRawTableEndpoints(const Ewoms::TableManager& tm,
+                         const Ewoms::Phases&       phases,
+                         const double             tolcrit);
+
     std::vector<double> init(const std::string& kewyord,
                              const TableManager& tables,
                              const Phases& phases,
+                             const RawTableEndPoints& ep,
                              const std::vector<double>& cell_depth,
                              const std::vector<int>& num,
                              const std::vector<int>& endnum);
