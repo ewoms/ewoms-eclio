@@ -518,7 +518,7 @@ std::array<size_t,5> VFPProdTable::shape() const {
     size_t na = m_alq_data.size();
     size_t nf = m_flo_data.size();
 
-    return {nt, nw, ng, na, nf};
+    return {{nt, nw, ng, na, nf}};
 }
 
 } // namespace Ewoms

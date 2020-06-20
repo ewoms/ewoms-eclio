@@ -102,7 +102,9 @@ WSEGAICD
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::THROW_EXCEPTION);
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::THROW_EXCEPTION);
-    const auto& [new_connection_set, new_segment_set] = Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
+    const auto& tmp = Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
+    const auto& new_connection_set = tmp.first;
+    const auto& new_segment_set = tmp.second;
 
     // checking the ICD segment
     const Ewoms::DeckKeyword wsegaicd = deck.getKeyword("WSEGAICD");
@@ -145,7 +147,7 @@ WSEGAICD
     // only one connection attached to the outlet segment in this case
     const Ewoms::Connection& connection = new_connection_set.getFromIJK(15, 0, 1);
     const auto& perf_range = connection.perf_range();
-    const auto connection_length = perf_range->second - perf_range->first;
+    const auto connection_length = (*perf_range).second - (*perf_range).first;
     aicd.updateScalingFactor(outlet_segment_length, connection_length);
 
     BOOST_CHECK_EQUAL(7U, new_segment_set.size());
@@ -246,7 +248,9 @@ WSEGSICD
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::THROW_EXCEPTION);
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::THROW_EXCEPTION);
-    const auto& [new_connection_set, new_segment_set] = Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
+    const auto& tmp = Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard);
+    const auto& new_connection_set = tmp.first;
+    const auto& new_segment_set = tmp.second;
 
     // checking the ICD segment
     const Ewoms::DeckKeyword wsegsicd = deck.getKeyword("WSEGSICD");
@@ -298,7 +302,7 @@ WSEGSICD
     // only one connection attached to the outlet segment in this case
     const Ewoms::Connection& connection = new_connection_set.getFromIJK(15, 0, 1);
     const auto& perf_range = connection.perf_range();
-    const auto connection_length = perf_range->second - perf_range->first;
+    const auto connection_length = (*perf_range).second - (*perf_range).first;
     sicd.updateScalingFactor(outlet_segment_length, connection_length);
 
     // updated, so it should not throw

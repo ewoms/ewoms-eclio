@@ -407,20 +407,20 @@ void ECLRegressionTest::gridCompare()
 
         std::cout << "X, Y and Z coordinates " << " ... ";
 
-        std::array<double,8> X1 = {0.0};
-        std::array<double,8> Y1 = {0.0};
-        std::array<double,8> Z1 = {0.0};
+        std::array<double,8> X1 = {{0.0}};
+        std::array<double,8> Y1 = {{0.0}};
+        std::array<double,8> Z1 = {{0.0}};
 
-        std::array<double,8> X2 = {0.0};
-        std::array<double,8> Y2 = {0.0};
-        std::array<double,8> Z2 = {0.0};
+        std::array<double,8> X2 = {{0.0}};
+        std::array<double,8> Y2 = {{0.0}};
+        std::array<double,8> Z2 = {{0.0}};
 
         for (int k = 0; k < dim1[2]; k++) {
             for (int j = 0; j < dim1[1]; j++) {
                 for (int i = 0; i < dim1[0]; i++) {
                     if (grid1->active_index(i,j,k) > -1) {
-                        grid1->getCellCorners({i,j,k}, X1, Y1, Z1);
-                        grid2->getCellCorners({i,j,k}, X2, Y2, Z2);
+                      grid1->getCellCorners({{i,j,k}}, X1, Y1, Z1);
+                      grid2->getCellCorners({{i,j,k}}, X2, Y2, Z2);
 
                         for (int n = 0; n < 8; n++) {
                             Deviation devX = calculateDeviations(X1[n], X2[n]);

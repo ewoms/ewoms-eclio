@@ -263,7 +263,7 @@ namespace {
     }
 
     const SICD& Segment::spiralICD() const {
-        return std::get<SICD>(this->m_icd);
+        return Ewoms::get<SICD>(this->m_icd);
     }
 
     void Segment::updateAutoICD(const AutoICD& aicd) {
@@ -271,7 +271,7 @@ namespace {
     }
 
     const AutoICD& Segment::autoICD() const {
-        return std::get<AutoICD>(this->m_icd);
+        return Ewoms::get<AutoICD>(this->m_icd);
     }
 
     void Segment::updateValve(const Valve& input_valve) {
@@ -322,7 +322,7 @@ namespace {
    }
 
     const Valve& Segment::valve() const {
-        return std::get<Valve>(this->m_icd);
+        return Ewoms::get<Valve>(this->m_icd);
     }
 
     int Segment::ecl_type_id() const {

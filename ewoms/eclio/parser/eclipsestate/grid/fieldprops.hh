@@ -106,7 +106,7 @@ public:
             if (this->all_set)
                 return true;
 
-            static const std::array<value::status,2> invalid_value = {value::status::uninitialized, value::status::empty_default};
+            static const std::array<value::status,2> invalid_value = {{value::status::uninitialized, value::status::empty_default}};
             const auto& it = std::find_first_of(this->value_status.begin(), this->value_status.end(), invalid_value.begin(), invalid_value.end());
             this->all_set = (it == this->value_status.end());
 

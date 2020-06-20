@@ -58,7 +58,7 @@ GPMaint GPMaint::serializeObject() {
     return gpm;
 }
 
-std::optional<std::pair<std::string, int>> GPMaint::region() const {
+Ewoms::optional<std::pair<std::string, int>> GPMaint::region() const {
     if (this->m_region_number == 0)
         return {};
 

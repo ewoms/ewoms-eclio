@@ -57,7 +57,7 @@ RstWell::RstWell(const ::Ewoms::UnitSystem& unit_system,
                  const double * xcon) :
     name(rtrim_copy(zwel[0])),
     group(group_arg),
-    ij(                                                              {iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}),
+    ij(                                                              {{iwel[VI::IWell::IHead] - 1, iwel[VI::IWell::JHead] - 1}}),
     k1k2(                                                            std::make_pair(iwel[VI::IWell::FirstK] - 1, iwel[VI::IWell::LastK] - 1)),
     wtype(                                                           iwel[VI::IWell::WType], def_ecl_phase),
     active_control(                                                  iwel[VI::IWell::ActWCtrl]),

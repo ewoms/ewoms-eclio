@@ -349,19 +349,19 @@ namespace {
     };
 
     const table<WellWrapper, 3> well_specification_table {
-       {  8, { "WELL"       , "NAME"       ,               }, &WellWrapper::well_name        , left_align  },
-       {  8, { "GROUP"      , "NAME"       ,               }, &WellWrapper::group_name       , left_align  },
-       {  8, { "WELLHEAD"   , "LOCATION"   , "( I, J )"    }, &WellWrapper::wellhead_location, left_align  },
-       {  8, { "B.H.REF"    , "DEPTH"      , "METRES"      }, &WellWrapper::reference_depth  , right_align, Ewoms::UnitSystem::measure::length },
-       {  5, { "PREF-"      , "ERRED"      , "PHASE"       }, &WellWrapper::preferred_phase  ,             },
-       {  8, { "DRAINAGE"   , "RADIUS"     , "METRES"      }, &WellWrapper::drainage_radius  , right_align, Ewoms::UnitSystem::measure::length },
-       {  4, { "GAS"        , "INFL"       , "EQUN"        }, &WellWrapper::gas_inflow       ,             },
-       {  7, { "SHUT-IN"    , "INSTRCT"    ,               }, &WellWrapper::shut_status      ,             },
-       {  5, { "CROSS"      , "FLOW"       , "ABLTY"       }, &WellWrapper::cross_flow       ,             },
-       {  3, { "PVT"        , "TAB"        ,               }, &WellWrapper::pvt_tab          ,             },
-       {  4, { "WELL"       , "DENS"       , "CALC"        }, &WellWrapper::dens_calc        ,             },
-       {  3, { "FIP"        , "REG"        ,               }, &WellWrapper::region_number    ,             },
-       { 11, { "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }, &WellWrapper::D_factor         ,             }};
+       {  8, {{ "WELL"       , "NAME"       ,               }}, &WellWrapper::well_name        , left_align  },
+       {  8, {{ "GROUP"      , "NAME"       ,               }}, &WellWrapper::group_name       , left_align  },
+       {  8, {{ "WELLHEAD"   , "LOCATION"   , "( I, J )"    }}, &WellWrapper::wellhead_location, left_align  },
+       {  8, {{ "B.H.REF"    , "DEPTH"      , "METRES"      }}, &WellWrapper::reference_depth  , right_align, Ewoms::UnitSystem::measure::length },
+       {  5, {{ "PREF-"      , "ERRED"      , "PHASE"       }}, &WellWrapper::preferred_phase  ,             },
+       {  8, {{ "DRAINAGE"   , "RADIUS"     , "METRES"      }}, &WellWrapper::drainage_radius  , right_align, Ewoms::UnitSystem::measure::length },
+       {  4, {{ "GAS"        , "INFL"       , "EQUN"        }}, &WellWrapper::gas_inflow       ,             },
+       {  7, {{ "SHUT-IN"    , "INSTRCT"    ,               }}, &WellWrapper::shut_status      ,             },
+       {  5, {{ "CROSS"      , "FLOW"       , "ABLTY"       }}, &WellWrapper::cross_flow       ,             },
+       {  3, {{ "PVT"        , "TAB"        ,               }}, &WellWrapper::pvt_tab          ,             },
+       {  4, {{ "WELL"       , "DENS"       , "CALC"        }}, &WellWrapper::dens_calc        ,             },
+       {  3, {{ "FIP"        , "REG"        ,               }}, &WellWrapper::region_number    ,             },
+       { 11, {{ "WELL"       , "D-FACTOR 1" , "DAY/SM3"     }}, &WellWrapper::D_factor         ,             }};
 
 void report_well_specification_data(std::ostream& os, const std::vector<Ewoms::Well>& data, const context& ctx) {
     report<Ewoms::Well, WellWrapper, 3> well_specification { "WELL SPECIFICATION DATA", well_specification_table, ctx};
@@ -394,9 +394,9 @@ namespace {
     };
 
     const table<GroupWrapper, 2> group_levels_table {
-        { 8, { "GROUP"   , "NAME"     }, &GroupWrapper::group_name  , left_align },
-        { 5, { "LEVEL"   ,            }, &GroupWrapper::group_level ,            },
-        { 8, { "PARENT"  , "GROUP"    }, &GroupWrapper::group_parent, left_align },
+        { 8, {{ "GROUP"   , "NAME"     }}, &GroupWrapper::group_name  , left_align },
+        { 5, {{ "LEVEL"   ,            }}, &GroupWrapper::group_level ,            },
+        { 8, {{ "PARENT"  , "GROUP"    }}, &GroupWrapper::group_parent, left_align },
     };
 
     void report_group_levels_data(std::ostream& os, const context& ctx, std::size_t report_step) {
@@ -425,7 +425,7 @@ namespace {
         }
 
         std::string grid_block(const context&, std::size_t, std::size_t) const {
-            const std::array<int,3> ijk { connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 } ;
+            const std::array<int,3> ijk {{ connection.getI() + 1, connection.getJ() + 1, connection.getK() + 1 }} ;
 
             auto compose_coordinates { [](std::string& out, int in) -> std::string {
                 constexpr auto delimiter { ',' } ;
@@ -483,18 +483,18 @@ namespace {
     };
 
     const table<WellConnection, 3> connection_table {
-       {  7, {"WELL"                   ,"NAME"                     ,                         }, &WellConnection::well_name       , left_align  },
-       { 12, {"GRID"                   ,"BLOCK"                    ,                         }, &WellConnection::grid_block      ,             },
-       {  3, {"CMPL"                   ,"NO#"                      ,                         }, &WellConnection::cmpl_no         , right_align },
-       {  7, {"CENTRE"                 ,"DEPTH"                    ,"METRES"                 }, &WellConnection::centre_depth    , right_align, Ewoms::UnitSystem::measure::length           },
-       {  3, {"OPEN"                   ,"SHUT"                     ,                         }, &WellConnection::open_shut       ,             },
-       {  3, {"SAT"                    ,"TAB"                      ,                         }, &WellConnection::sat_tab         ,             },
-       { 11, {"CONNECTION"             ,"FACTOR*"                  ,"CPM3/D/B"               }, &WellConnection::conn_factor     , right_align, Ewoms::UnitSystem::measure::transmissibility },
-       {  6, {"INT"                    ,"DIAM"                     ,"METRES"                 }, &WellConnection::int_diam        , right_align, Ewoms::UnitSystem::measure::length           },
-       {  7, {"K  H"                   ,"VALUE"                    ,"MD.METRE"               }, &WellConnection::kh_value        , right_align },
-       {  6, {"SKIN"                   ,"FACTOR"                   ,                         }, &WellConnection::skin_factor     , right_align },
-       { 10, {"CONNECTION"             ,"D-FACTOR 1"               ,"DAY/SM3"                }, &WellConnection::dfactor         ,             },
-       { 23, {"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX 2",                         }, &WellConnection::sat_scaling     ,             }};
+       {  7, {{"WELL"                   ,"NAME"                     ,                         }}, &WellConnection::well_name       , left_align  },
+       { 12, {{"GRID"                   ,"BLOCK"                    ,                         }}, &WellConnection::grid_block      ,             },
+       {  3, {{"CMPL"                   ,"NO#"                      ,                         }}, &WellConnection::cmpl_no         , right_align },
+       {  7, {{"CENTRE"                 ,"DEPTH"                    ,"METRES"                 }}, &WellConnection::centre_depth    , right_align, Ewoms::UnitSystem::measure::length           },
+       {  3, {{"OPEN"                   ,"SHUT"                     ,                         }}, &WellConnection::open_shut       ,             },
+       {  3, {{"SAT"                    ,"TAB"                      ,                         }}, &WellConnection::sat_tab         ,             },
+       { 11, {{"CONNECTION"             ,"FACTOR*"                  ,"CPM3/D/B"               }}, &WellConnection::conn_factor     , right_align, Ewoms::UnitSystem::measure::transmissibility },
+       {  6, {{"INT"                    ,"DIAM"                     ,"METRES"                 }}, &WellConnection::int_diam        , right_align, Ewoms::UnitSystem::measure::length           },
+       {  7, {{"K  H"                   ,"VALUE"                    ,"MD.METRE"               }}, &WellConnection::kh_value        , right_align },
+       {  6, {{"SKIN"                   ,"FACTOR"                   ,                         }}, &WellConnection::skin_factor     , right_align },
+       { 10, {{"CONNECTION"             ,"D-FACTOR 1"               ,"DAY/SM3"                }}, &WellConnection::dfactor         ,             },
+       { 23, {{"SATURATION SCALING DATA","SWMIN SWMAX SGMIN SGMAX 2",                         }}, &WellConnection::sat_scaling     ,             }};
 
 }
 
@@ -679,34 +679,34 @@ namespace {
     };
 
     const table<SegmentConnection, 3> msw_connection_table {
-        {  8, {"WELL"       , "NAME"       ,              }, &SegmentConnection::well_name        , left_header },
-        {  9, {"CONNECTION" , ""           ,              }, &SegmentConnection::connection_grid  ,             },
-        {  5, {"SEGMENT"    , "NUMBER"     ,              }, &SegmentConnection::segment_number   , right_align },
-        {  8, {"BRANCH"     , "ID"         ,              }, &SegmentConnection::branch_id        ,             },
-        {  9, {"TUB LENGTH" , "START PERFS", "METRES"     }, &SegmentConnection::perf_start_length, right_align, Ewoms::UnitSystem::measure::length },
-        {  9, {"TUB LENGTH" , "END PERFS"  , "METRES"     }, &SegmentConnection::perf_end_length  , right_align, Ewoms::UnitSystem::measure::length },
-        {  9, {"TUB LENGTH" , "CENTR PERFS", "METRES"     }, &SegmentConnection::perf_mid_length  , right_align, Ewoms::UnitSystem::measure::length },
-        {  9, {"TUB LENGTH" , "END SEGMT"  , "METRES"     }, &SegmentConnection::length_end_segmt , right_align, Ewoms::UnitSystem::measure::length },
-        {  8, {"CONNECTION" , "DEPTH"      , "METRES"     }, &SegmentConnection::connection_depth , right_align, Ewoms::UnitSystem::measure::length },
-        {  8, {"SEGMENT"    , "DEPTH"      , "METRES"     }, &SegmentConnection::segment_depth    , right_align, Ewoms::UnitSystem::measure::length },
-        {  9, {"GRID BLOCK" , "DEPTH"      , "METRES"     }, &SegmentConnection::grid_block_depth , right_align, Ewoms::UnitSystem::measure::length },
+        {  8, {{"WELL"       , "NAME"       ,              }}, &SegmentConnection::well_name        , left_header },
+        {  9, {{"CONNECTION" , ""           ,              }}, &SegmentConnection::connection_grid  ,             },
+        {  5, {{"SEGMENT"    , "NUMBER"     ,              }}, &SegmentConnection::segment_number   , right_align },
+        {  8, {{"BRANCH"     , "ID"         ,              }}, &SegmentConnection::branch_id        ,             },
+        {  9, {{"TUB LENGTH" , "START PERFS", "METRES"     }}, &SegmentConnection::perf_start_length, right_align, Ewoms::UnitSystem::measure::length },
+        {  9, {{"TUB LENGTH" , "END PERFS"  , "METRES"     }}, &SegmentConnection::perf_end_length  , right_align, Ewoms::UnitSystem::measure::length },
+        {  9, {{"TUB LENGTH" , "CENTR PERFS", "METRES"     }}, &SegmentConnection::perf_mid_length  , right_align, Ewoms::UnitSystem::measure::length },
+        {  9, {{"TUB LENGTH" , "END SEGMT"  , "METRES"     }}, &SegmentConnection::length_end_segmt , right_align, Ewoms::UnitSystem::measure::length },
+        {  8, {{"CONNECTION" , "DEPTH"      , "METRES"     }}, &SegmentConnection::connection_depth , right_align, Ewoms::UnitSystem::measure::length },
+        {  8, {{"SEGMENT"    , "DEPTH"      , "METRES"     }}, &SegmentConnection::segment_depth    , right_align, Ewoms::UnitSystem::measure::length },
+        {  9, {{"GRID BLOCK" , "DEPTH"      , "METRES"     }}, &SegmentConnection::grid_block_depth , right_align, Ewoms::UnitSystem::measure::length },
     };
 
     const table<WellSegment, 3> msw_well_table {
-        {  6, { "WELLNAME"  , "AND"        , "SEG TYPE"   }, &WellSegment::well_name_seg       , &WellSegment::ws_format },
-        {  3, { "SEG"       , "NO"         , ""           }, &WellSegment::segment_number      , right_align             },
-        {  3, { "BRN"       , "NO"         , ""           }, &WellSegment::branch_number       , right_align             },
-        {  5, { "MAIN"      , "INLET"      , "SEGMENT"    }, &WellSegment::main_inlet          , right_align             },
-        {  5, { ""          , "OUTLET"     , "SEGMENT"    }, &WellSegment::outlet              , right_align             },
-        {  7, { "SEGMENT"   , "LENGTH"     , "METRES"     }, &WellSegment::length              , right_align            , Ewoms::UnitSystem::measure::length },
-        {  8, { "TOT LENGTH", "TO END"     , "METRES"     }, &WellSegment::total_length        , right_align            , Ewoms::UnitSystem::measure::length },
-        {  8, { "DEPTH"     , "CHANGE"     , "METRES"     }, &WellSegment::depth_change        , right_align            , Ewoms::UnitSystem::measure::length },
-        {  8, { "T.V. DEPTH", "AT END"     , "METRES"     }, &WellSegment::t_v_depth           , right_align            , Ewoms::UnitSystem::measure::length },
-        {  6, { "DIA OR F"  , "SCALING"    , "METRES"     }, &WellSegment::internal_diameter   , right_align            , Ewoms::UnitSystem::measure::length },
-        {  8, { "VFP TAB OR", "ABS ROUGHN" , "METRES"     }, &WellSegment::roughness           , right_align            , Ewoms::UnitSystem::measure::length },
-        {  7, { "AREA"      , "X-SECTN"    , "M**2"       }, &WellSegment::cross_section       , right_align            },
-        {  7, { "VOLUME"    , ""           , "M3"         }, &WellSegment::volume              , right_align            , Ewoms::UnitSystem::measure::volume },
-        {  8, { "P DROP"    , "MULT"       , "FACTOR 1"   }, &WellSegment::pressure_drop_mult  , right_align             },
+        {  6, {{ "WELLNAME"  , "AND"        , "SEG TYPE"   }}, &WellSegment::well_name_seg       , &WellSegment::ws_format },
+        {  3, {{ "SEG"       , "NO"         , ""           }}, &WellSegment::segment_number      , right_align             },
+        {  3, {{ "BRN"       , "NO"         , ""           }}, &WellSegment::branch_number       , right_align             },
+        {  5, {{ "MAIN"      , "INLET"      , "SEGMENT"    }}, &WellSegment::main_inlet          , right_align             },
+        {  5, {{ ""          , "OUTLET"     , "SEGMENT"    }}, &WellSegment::outlet              , right_align             },
+        {  7, {{ "SEGMENT"   , "LENGTH"     , "METRES"     }}, &WellSegment::length              , right_align            , Ewoms::UnitSystem::measure::length },
+        {  8, {{ "TOT LENGTH", "TO END"     , "METRES"     }}, &WellSegment::total_length        , right_align            , Ewoms::UnitSystem::measure::length },
+        {  8, {{ "DEPTH"     , "CHANGE"     , "METRES"     }}, &WellSegment::depth_change        , right_align            , Ewoms::UnitSystem::measure::length },
+        {  8, {{ "T.V. DEPTH", "AT END"     , "METRES"     }}, &WellSegment::t_v_depth           , right_align            , Ewoms::UnitSystem::measure::length },
+        {  6, {{ "DIA OR F"  , "SCALING"    , "METRES"     }}, &WellSegment::internal_diameter   , right_align            , Ewoms::UnitSystem::measure::length },
+        {  8, {{ "VFP TAB OR", "ABS ROUGHN" , "METRES"     }}, &WellSegment::roughness           , right_align            , Ewoms::UnitSystem::measure::length },
+        {  7, {{ "AREA"      , "X-SECTN"    , "M**2"       }}, &WellSegment::cross_section       , right_align            },
+        {  7, {{ "VOLUME"    , ""           , "M3"         }}, &WellSegment::volume              , right_align            , Ewoms::UnitSystem::measure::volume },
+        {  8, {{ "P DROP"    , "MULT"       , "FACTOR 1"   }}, &WellSegment::pressure_drop_mult  , right_align             },
     };
 }
 

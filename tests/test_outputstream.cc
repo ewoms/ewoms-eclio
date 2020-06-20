@@ -1830,7 +1830,7 @@ BOOST_AUTO_TEST_CASE(Unformatted_Base)
 
     const auto rset = RSet("CASE");
     const auto fmt  = ::Ewoms::EclIO::OutputStream::Formatted{ false };
-    const auto cartDims = std::array<int,3>{ 46, 112, 22 }; // Norne dimensions
+    const auto cartDims = std::array<int,3>{{ 46, 112, 22 }}; // Norne dimensions
 
     {
         using UConv = SMSpec::UnitConvention;
@@ -2276,7 +2276,7 @@ BOOST_AUTO_TEST_CASE(Formatted_Restarted)
 
     const auto rset = RSet("CASE");
     const auto fmt  = ::Ewoms::EclIO::OutputStream::Formatted{ true };
-    const auto cartDims = std::array<int,3>{ 46, 112, 22 }; // Norne dimensions
+    const auto cartDims = std::array<int,3>{{ 46, 112, 22 }}; // Norne dimensions
 
     // === Restart root name too long =========================
     {

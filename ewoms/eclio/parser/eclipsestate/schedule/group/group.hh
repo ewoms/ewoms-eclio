@@ -254,7 +254,7 @@ struct ProductionControls {
     bool has_control(InjectionCMode control) const;
     bool productionGroupControlAvailable() const;
     bool injectionGroupControlAvailable(const Phase phase) const;
-    const std::optional<GPMaint>& gpmaint() const;
+    const Ewoms::optional<GPMaint>& gpmaint() const;
     void set_gpmaint(GPMaint gpmaint);
     void set_gpmaint();
 
@@ -304,7 +304,7 @@ private:
     std::map<Phase, GroupInjectionProperties> injection_properties;
     GroupProductionProperties production_properties;
     std::pair<Phase, bool> m_topup_phase{Phase::WATER, false};
-    std::optional<GPMaint> m_gpmaint;
+    Ewoms::optional<GPMaint> m_gpmaint;
 };
 
 Group::GroupType operator |(Group::GroupType lhs, Group::GroupType rhs);

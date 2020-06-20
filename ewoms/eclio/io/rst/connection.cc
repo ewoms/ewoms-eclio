@@ -76,7 +76,7 @@ using M  = ::Ewoms::UnitSystem::measure;
 
 RstConnection::RstConnection(const ::Ewoms::UnitSystem& unit_system, std::size_t rst_index_, int nsconz, const int* icon, const float* scon, const double* xcon) :
     rst_index(                                               rst_index_),
-    ijk(                                                    {icon[VI::IConn::CellI] - 1, icon[VI::IConn::CellJ] - 1, icon[VI::IConn::CellK] - 1}),
+    ijk(                                                    {{icon[VI::IConn::CellI] - 1, icon[VI::IConn::CellJ] - 1, icon[VI::IConn::CellK] - 1}}),
     state(                                                   from_int<Connection::State>(icon[VI::IConn::ConnStat])),
     drain_sat_table(                                         icon[VI::IConn::Drainage]),
     imb_sat_table(                                           icon[VI::IConn::Imbibition]),

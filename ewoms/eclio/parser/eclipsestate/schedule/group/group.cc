@@ -464,7 +464,7 @@ bool Group::has_control(Group::ProductionCMode control) const {
     return detail::has_control(production_properties.production_controls, control);
 }
 
-const std::optional<GPMaint>& Group::gpmaint() const {
+const Ewoms::optional<GPMaint>& Group::gpmaint() const {
     return this->m_gpmaint;
 }
 
@@ -473,7 +473,7 @@ void Group::set_gpmaint(GPMaint gpmaint) {
 }
 
 void Group::set_gpmaint() {
-    this->m_gpmaint = std::nullopt;
+    this->m_gpmaint = Ewoms::nullopt;
 }
 
 const std::string Group::ExceedAction2String( ExceedAction enumValue ) {

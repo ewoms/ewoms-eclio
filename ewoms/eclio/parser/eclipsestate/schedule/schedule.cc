@@ -2012,7 +2012,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
 
                 const auto& connections = well_ptr->getConnections();
                 const auto& segments = well_ptr->getSegments();
-                for (auto& [segment_nr, sicd] : sicd_pairs) {
+                for (auto& sicd_pair : sicd_pairs) {
+                    auto segment_nr = sicd_pair.first;
+                    auto sicd = sicd_pair.second;
                     const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
                     sicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
                 }
@@ -3016,7 +3018,9 @@ void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid&
                 rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
             }
 
-            auto [connections, segments] = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+            const auto& cs = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+            auto connections = cs.first;
+            auto segments = cs.second;
             well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
             well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
         }

@@ -19,8 +19,9 @@
 #ifndef SEGMENT_HH_H
 #define SEGMENT_HH_H
 
-#include <optional>
-#include <variant>
+#include <ewoms/common/optional.hh>
+#include <ewoms/common/variant.hh>
+
 #include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/valve.hh>
@@ -41,7 +42,7 @@ namespace Ewoms {
       type is introduced, ideally the icd variant should just have
       std::monostate to represent the regular non ICD segment.
     */
-    struct RegularSegment : std::monostate {
+    struct RegularSegment {
 
         template<class Serializer>
         void serializeOp(Serializer&) {
@@ -51,7 +52,7 @@ namespace Ewoms {
             return RegularSegment();
         }
 
-        bool operator==(const RegularSegment& ) {
+        bool operator==(const RegularSegment& ) const {
             return true;
         }
     };
@@ -113,22 +114,22 @@ namespace Ewoms {
 
         bool isRegular() const
         {
-            return std::holds_alternative<RegularSegment>(this->m_icd);
+            return Ewoms::holds_alternative<RegularSegment>(this->m_icd);
         }
 
         inline bool isSpiralICD() const
         {
-            return std::holds_alternative<SICD>(this->m_icd);
+            return Ewoms::holds_alternative<SICD>(this->m_icd);
         }
 
         inline bool isAICD() const
         {
-            return std::holds_alternative<AutoICD>(this->m_icd);
+            return Ewoms::holds_alternative<AutoICD>(this->m_icd);
         }
 
         inline bool isValve() const
         {
-            return std::holds_alternative<Valve>(this->m_icd);
+            return Ewoms::holds_alternative<Valve>(this->m_icd);
         }
 
         template<class Serializer>
@@ -196,8 +197,8 @@ namespace Ewoms {
         // the volume will be updated at a final step.
         bool m_data_ready;
 
-        std::optional<double> m_perf_length;
-        std::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
+        Ewoms::optional<double> m_perf_length;
+        Ewoms::variant<RegularSegment, SICD, AutoICD, Valve> m_icd;
 
         // We are not handling the length of segment projected onto the X-axis and Y-axis.
         // They are not used in the simulations and we are not supporting the plotting.

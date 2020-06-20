@@ -629,9 +629,11 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
                            const ParseContext& parseContext, ErrorGuard& errors) {
-    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
-                                                                     parseContext, errors);
+    const auto& cs = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
+                                         parseContext, errors);
 
+    auto new_connections = cs.first;
+    auto new_segments = cs.second;
     this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)) );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
     return true;

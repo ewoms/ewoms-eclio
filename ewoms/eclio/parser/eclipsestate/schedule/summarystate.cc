@@ -128,7 +128,7 @@ namespace {
         }
         if (this->m_groups.count(group) == 0) {
             this->m_groups.insert(group);
-            this->group_names.reset();
+            this->group_names = Ewoms::nullopt;
         }
     }
 
@@ -143,7 +143,7 @@ namespace {
         }
         if (this->m_wells.count(well) == 0) {
             this->m_wells.insert(well);
-            this->well_names.reset();
+            this->well_names = Ewoms::nullopt;
         }
     }
 
@@ -188,7 +188,7 @@ namespace {
             return false;
 
         erase_var(this->well_values, var, well);
-        this->well_names.reset();
+        this->well_names  = Ewoms::nullopt;
         return true;
     }
 
@@ -198,7 +198,7 @@ namespace {
             return false;
 
         erase_var(this->group_values, var, group);
-        this->group_names.reset();
+        this->group_names = Ewoms::nullopt;
         return true;
     }
 

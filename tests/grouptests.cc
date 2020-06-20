@@ -541,14 +541,14 @@ GPMAINT
 
         const auto& gpm_prod = prod_group.gpmaint();
         BOOST_CHECK( gpm_prod );
-        BOOST_CHECK(gpm_prod->flow_target() == GPMaint::EFlowTarget::RESV_WINJ);
+        BOOST_CHECK((*gpm_prod).flow_target() == GPMaint::EFlowTarget::RESV_WINJ);
 
-        auto [name, number] = *gpm_prod->region();
-        BOOST_CHECK_EQUAL(number, 2);
-        BOOST_CHECK_EQUAL(name, "FIPNUM");
+        const auto& tmp = *((*gpm_prod).region());
+        BOOST_CHECK_EQUAL(tmp.first, "FIPNUM");
+        BOOST_CHECK_EQUAL(tmp.second, 2);
 
         const auto& gpm_c1 = c1_group.gpmaint();
-        BOOST_CHECK(!gpm_c1->region());
+        BOOST_CHECK(!(*gpm_c1).region());
 
         const auto& plat_prod = plat_group.gpmaint();
         BOOST_CHECK( !plat_prod );

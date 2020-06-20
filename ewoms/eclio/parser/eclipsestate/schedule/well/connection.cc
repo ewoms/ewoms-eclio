@@ -63,7 +63,7 @@ namespace Ewoms {
           m_rw(rw),
           m_r0(r0),
           m_skin_factor(skin_factor),
-          ijk({i,j,k}),
+          ijk({ {i,j,k} }),
           m_ctfkind(ctf_kind),
           m_global_index(global_index),
           m_sort_value(sort_value),
@@ -120,7 +120,7 @@ Connection::Connection(const RestartIO::RstConnection& rst_connection, const Ecl
         result.m_rw = 6.0;
         result.m_r0 = 7.0;
         result.m_skin_factor = 8.0;
-        result.ijk = {9, 10, 11};
+        result.ijk = {{9, 10, 11}};
         result.m_ctfkind = CTFKind::Defaulted;
         result.m_global_index = 12;
         result.m_perf_range = std::make_pair((double) 14, (double) 15);

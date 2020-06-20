@@ -556,7 +556,9 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         double perf_length = 0;
         for (const auto& conn : this->m_connections) {
             if (conn.segment() == segment) {
-                const auto& [start, end] = *conn.perf_range();
+                const auto& range = *conn.perf_range();
+                const auto& start = range.first;
+                const auto& end = range.second;
                 perf_length += end - start;
             }
         }

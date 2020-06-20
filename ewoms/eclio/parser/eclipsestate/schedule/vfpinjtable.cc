@@ -283,7 +283,7 @@ double& VFPInjTable::operator()(size_t thp_idx, size_t flo_idx) {
 }
 
 std::array<size_t,2> VFPInjTable::shape() const {
-    return {m_thp_data.size(), m_flo_data.size()};
+  return {{m_thp_data.size(), m_flo_data.size()}};
 }
 
 } //Namespace

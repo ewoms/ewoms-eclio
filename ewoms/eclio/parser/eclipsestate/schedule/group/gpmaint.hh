@@ -19,7 +19,8 @@
 #ifndef GPMAINT_H
 #define GPMAINT_H
 
-#include <optional>
+#include <ewoms/common/optional.hh>
+
 #include <string>
 
 namespace Ewoms {
@@ -46,7 +47,7 @@ enum class EFlowTarget {
     double pressure_target() const;
     double prop_constant() const;
     double time_constant() const;
-    std::optional<std::pair<std::string, int>> region() const;
+    Ewoms::optional<std::pair<std::string, int>> region() const;
     EFlowTarget flow_target() const;
     bool operator==(const GPMaint& other) const;
     template<class Serializer>

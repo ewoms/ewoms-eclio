@@ -151,26 +151,26 @@ BOOST_AUTO_TEST_CASE(getCellCorners) {
 
     std::string testFile="SPE1CASE1.EGRID";
 
-    std::array<double,8> ref_X = {3000,4000,3000,4000,3000,4000,3000,4000};
-    std::array<double,8> ref_Y = {2000,2000,3000,3000,2000,2000,3000,3000};
-    std::array<double,8> ref_Z = {8345,8345,8345,8345,8375,8375,8375,8375};
+    std::array<double,8> ref_X = {{3000,4000,3000,4000,3000,4000,3000,4000}};
+    std::array<double,8> ref_Y = {{2000,2000,3000,3000,2000,2000,3000,3000}};
+    std::array<double,8> ref_Z = {{8345,8345,8345,8345,8375,8375,8375,8375}};
 
     EGrid grid1(testFile);
 
-    std::array<double,8> X = {0.0};
-    std::array<double,8> Y = {0.0};
-    std::array<double,8> Z = {0.0};
+    std::array<double,8> X = {{0.0}};
+    std::array<double,8> Y = {{0.0}};
+    std::array<double,8> Z = {{0.0}};
 
     // cell 4,3,2 => zero based 3,2,1
-    grid1.getCellCorners({3, 2, 1}, X, Y, Z);
+    grid1.getCellCorners({{3, 2, 1}}, X, Y, Z);
 
     BOOST_CHECK_EQUAL(X == ref_X, true);
     BOOST_CHECK_EQUAL(Y == ref_Y, true);
     BOOST_CHECK_EQUAL(Z == ref_Z, true);
 
-    X = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    Y = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    Z = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    X = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+    Y = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+    Z = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
 
     int globInd=grid1.global_index(3,2,1);
 

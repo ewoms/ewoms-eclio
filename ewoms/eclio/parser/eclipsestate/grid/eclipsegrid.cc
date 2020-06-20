@@ -350,7 +350,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const std::vector<std::string>& gridunit = egridfile.get<std::string>("GRIDUNIT");
 
         const std::vector<int>& gridhead = egridfile.get<int>("GRIDHEAD");
-        const std::array<int, 3> dims = {gridhead[1], gridhead[2], gridhead[3]};
+        const std::array<int, 3> dims = {{gridhead[1], gridhead[2], gridhead[3]}};
 
         m_nx=dims[0];
         m_ny=dims[1];
@@ -1465,9 +1465,9 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         {
             const std::array<int, 3> dims = getNXYZ();
 
-            std::array<double,8> X = {0.0};
-            std::array<double,8> Y = {0.0};
-            std::array<double,8> Z = {0.0};
+            std::array<double,8> X = {{0.0}};
+            std::array<double,8> Y = {{0.0}};
+            std::array<double,8> Z = {{0.0}};
 
             std::array<int, 3> ijk;
 

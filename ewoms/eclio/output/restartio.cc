@@ -461,7 +461,9 @@ namespace {
         auto vectors = std::vector<std::string>{};
         vectors.reserve(value.solution.size());
 
-        for (const auto& [name, vector] : value.solution) {
+        for (const auto& vs : value.solution) {
+            const auto& name = vs.first;
+            const auto& vector = vs.second;
             if (vector.target == data::TargetType::RESTART_SOLUTION) {
                 vectors.push_back(name);
             }
@@ -476,7 +478,9 @@ namespace {
         auto vectors = std::vector<std::string>{};
         vectors.reserve(value.solution.size());
 
-        for (const auto& [name, vector] : value.solution) {
+        for (const auto& vs : value.solution) {
+            const auto& name = vs.first;
+            const auto& vector = vs.second;
             if ((vector.target == data::TargetType::RESTART_AUXILIARY) ||
                 (vector.target == data::TargetType::RESTART_EWOMS_EXTENDED))
             {

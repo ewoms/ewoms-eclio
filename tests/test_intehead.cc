@@ -467,26 +467,26 @@ TSTEP
     };
 
     // START
-    checkDate(0, { 2000, 1, 1 });  // Start   == 2000-01-01
+    checkDate(0, {{ 2000, 1, 1 }});  // Start   == 2000-01-01
 
     // DATES (2000 being leap year is immaterial)
-    checkDate(1, { 2001, 1, 1 });  // RStep 1 == 2000-01-01 -> 2001-01-01
+    checkDate(1, {{ 2001, 1, 1 }});  // RStep 1 == 2000-01-01 -> 2001-01-01
 
     // TSTEP
-    checkDate(2, { 2002, 1, 1 });  // RStep 2 == 2001-01-01 -> 2002-01-01
-    checkDate(3, { 2003, 1, 1 });  // RStep 3 == 2002-01-01 -> 2003-01-01
-    checkDate(4, { 2004, 1, 1 });  // RStep 4 == 2003-01-01 -> 2004-01-01
+    checkDate(2, {{ 2002, 1, 1 }});  // RStep 2 == 2001-01-01 -> 2002-01-01
+    checkDate(3, {{ 2003, 1, 1 }});  // RStep 3 == 2002-01-01 -> 2003-01-01
+    checkDate(4, {{ 2004, 1, 1 }});  // RStep 4 == 2003-01-01 -> 2004-01-01
 
     // Leap year: 2004
-    checkDate(5, { 2004, 12, 31 }); // RStep 5 == 2004-01-01 -> 2004-12-31
-    checkDate(6, { 2005, 12, 31 }); // RStep 6 == 2004-12-31 -> 2005-12-31
-    checkDate(7, { 2006, 12, 31 }); // RStep 7 == 2005-12-31 -> 2006-12-31
-    checkDate(8, { 2007, 12, 31 }); // RStep 8 == 2006-12-31 -> 2007-12-31
+    checkDate(5, {{ 2004, 12, 31 }}); // RStep 5 == 2004-01-01 -> 2004-12-31
+    checkDate(6, {{ 2005, 12, 31 }}); // RStep 6 == 2004-12-31 -> 2005-12-31
+    checkDate(7, {{ 2006, 12, 31 }}); // RStep 7 == 2005-12-31 -> 2006-12-31
+    checkDate(8, {{ 2007, 12, 31 }}); // RStep 8 == 2006-12-31 -> 2007-12-31
 
     // Leap year: 2008
-    checkDate( 9, { 2008, 12, 30 }); // RStep  9 == 2007-12-31 -> 2008-12-30
-    checkDate(10, { 2009, 12, 30 }); // RStep 10 == 2008-12-30 -> 2009-12-30
-    checkDate(11, { 2010, 12, 30 }); // RStep 11 == 2009-12-30 -> 2010-12-30
+    checkDate( 9, {{ 2008, 12, 30 }}); // RStep  9 == 2007-12-31 -> 2008-12-30
+    checkDate(10, {{ 2009, 12, 30 }}); // RStep 10 == 2008-12-30 -> 2009-12-30
+    checkDate(11, {{ 2010, 12, 30 }}); // RStep 11 == 2009-12-30 -> 2010-12-30
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Member_Functions
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(TestHeader) {
          .activePhases(Ph{1,1,1})
          .params_NWELZ(niwelz, nswelz, nxwelz, nzwelz)
          .params_NCON(niconz, nsconz, nxconz)
-         .params_GRPZ({nigrpz, nsgrpz, nxgrpz, nzgrpz})
+         .params_GRPZ({{nigrpz, nsgrpz, nxgrpz, nzgrpz}})
          .params_NAAQZ(ncamax, niaaqz, nsaaqz, nxaaqz, nicaqz, nscaqz, nacaqz)
          .stepParam(tstep, report_step)
          .tuningParam({newtmx, newtmn, litmax, litmin, mxwsit, mxwpit})
