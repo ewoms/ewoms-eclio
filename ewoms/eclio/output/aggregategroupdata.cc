@@ -226,7 +226,7 @@ int higherLevelProdControlGroupSeqIndex(const Ewoms::Schedule& sched,
                 cur_prod_ctrl = sumState.get(group_key);
             }
             else {
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
+                //std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
                 cur_prod_ctrl = 0.;
             }
             if (cur_prod_ctrl > 0. && ctrl_grup_seq_no < 0) {
@@ -262,7 +262,7 @@ int higherLevelProdControlMode(const Ewoms::Schedule& sched,
                 cur_prod_ctrl = sumState.get(group_key);
             }
             else {
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
+                //std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
                 cur_prod_ctrl = 0.;
             }
             if (cur_prod_ctrl > 0. && ctrl_mode < 0) {
@@ -299,7 +299,7 @@ int higherLevelInjControlGroupSeqIndex(const Ewoms::Schedule& sched,
                 cur_inj_ctrl = sumState.get(group_key);
             }
             else {
-                std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
+                //std::cout << "Current injection group control: " << curInjCtrlKey << " is not defined for group: " << current.name() << " at timestep: " << simStep << std::endl;
                 cur_inj_ctrl = 0.;
             }
             if (cur_inj_ctrl > 0. && ctrl_grup_seq_no < 0) {
@@ -503,7 +503,7 @@ void staticContrib(const Ewoms::Schedule&     sched,
         else {
             //std::stringstream str;
             //str << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep;
-            std::cout << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
+            //std::cout << "Current group production control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
             //throw std::invalid_argument(str.str());
         }
 
@@ -721,7 +721,7 @@ void staticContrib(const Ewoms::Schedule&     sched,
                     cur_winj_ctrl = sumState.get(group_key_w);
                     }
                 else {
-                    std::cout << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
+                    //std::cout << "Current group water injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
                 }
                 if (group.name() != "FIELD") {
                     int higher_lev_winj_ctrl = higherLevelInjControlGroupSeqIndex(sched, sumState, group, "GMCTW", simStep);
@@ -813,7 +813,7 @@ void staticContrib(const Ewoms::Schedule&     sched,
                     cur_ginj_ctrl = sumState.get(group_key_g);
                 }
                 else {
-                    std::cout << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
+                    //std::cout << "Current group gas injection control is not defined for group: " << group.name() << " at timestep: " << simStep << std::endl;
                 }
 
                 if (group.name() != "FIELD") {
