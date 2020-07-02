@@ -75,6 +75,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -112,6 +113,7 @@ namespace {
         1 / (Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / Metric::Energy,
         1 / (Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time)),
+        1 / Metric::PolymerDensity,
     };
 
     static const double from_metric[] = {
@@ -149,6 +151,7 @@ namespace {
         Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::Energy,
         Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time),
+        Metric::PolymerDensity,
     };
 
     static constexpr const char* metric_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -186,6 +189,7 @@ namespace {
         "SM3/DAY/BARS",
         "KJ", /* energy */
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
+        "KG / SM3", /*polymer density */
     };
 
     static_assert(
@@ -204,6 +208,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -268,6 +273,7 @@ namespace {
         1 / (Field::GasSurfaceVolume / Field::Time / Field::Pressure),
         1 / Field::Energy,
         1 / (Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time)),
+        1 / Field::PolymerDensity,
     };
 
     static const double from_field[] = {
@@ -305,6 +311,7 @@ namespace {
          Field::GasSurfaceVolume / Field::Time / Field::Pressure,
          Field::Energy,
          Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time),
+         Field::PolymerDensity,
     };
 
     static constexpr const char* field_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -342,6 +349,7 @@ namespace {
         "MSCF/DAY/PSIA",
         "BTU", /* energy */
         "PSI/(RFT3/DAY)2", /* ICD strength parameter */
+        "LB/STB", /*polymer density */
     };
 
     static_assert(
@@ -360,6 +368,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -424,6 +433,7 @@ namespace {
         1 / (Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / Lab::Energy,
         1 / (Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time)),
+        1 / Lab::PolymerDensity,
     };
 
     static const double from_lab[] = {
@@ -461,6 +471,7 @@ namespace {
         Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::Energy,
         Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time),
+        Lab::PolymerDensity,
     };
 
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -498,6 +509,7 @@ namespace {
         "SCC/HR/ATM",
         "J", /* energy */
         "ATM/(RCC/H)2", /* ICD strength parameter */
+        "G/SCC", /*polymer density */
     };
 
     static_assert(
@@ -516,6 +528,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -580,6 +593,7 @@ namespace {
         1 / (PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / PVT_M::Energy,
         1 / (PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
+        1 / PVT_M::PolymerDensity,
     };
 
     static const double from_pvt_m[] = {
@@ -617,6 +631,7 @@ namespace {
         PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::Energy,
         PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time),
+        PVT_M::PolymerDensity,
     };
 
     static constexpr const char* pvt_m_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -653,7 +668,8 @@ namespace {
         "SM3/DAY/ATM",
         "SM3/DAY/ATM",
         "KJ" /* energy */,
-        "ATM/(RM3/DAY)2" /* ICD strength parameter */,
+        "ATM/(RM3/DAY)2", /* ICD strength parameter */
+        "KG/SM3", /*polymer density */
     };
 
     static_assert(
@@ -665,6 +681,7 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -736,9 +753,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -810,6 +829,7 @@ namespace {
         "SM3/DAY/BARS",
         "KJ", /* energy */
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
+        "KG/SM3", /*polymer density */
     };
 
     static_assert(

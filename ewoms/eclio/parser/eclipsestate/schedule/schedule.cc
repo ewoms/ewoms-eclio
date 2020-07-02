@@ -2592,6 +2592,20 @@ void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t 
         return names;
     }
 
+    std::vector<const Group*> Schedule::restart_groups(std::size_t timeStep) const {
+        std::size_t wdmax = this->m_runspec.wellDimensions().maxGroupsInField();
+        std::vector<const Group*> rst_groups(wdmax + 1 , nullptr );
+        for (const auto& group_name : this->groupNames(timeStep)) {
+            const auto& group = this->getGroup(group_name, timeStep);
+
+            if (group.name() == "FIELD")
+                rst_groups.back() = &group;
+            else
+                rst_groups[group.insert_index() - 1] = &group;
+        }
+        return rst_groups;
+    }
+
     void Schedule::addGroup(const std::string& groupName, size_t timeStep, const UnitSystem& unit_system) {
         const size_t gseqIndex = this->groups.size();
 

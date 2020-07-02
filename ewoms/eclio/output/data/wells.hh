@@ -65,6 +65,7 @@ namespace Ewoms {
                 well_potential_water   = (1 << 14),
                 well_potential_oil     = (1 << 15),
                 well_potential_gas     = (1 << 16),
+                brine            = (1 << 17),
             };
 
             using enum_size = std::underlying_type< opt >::type;
@@ -116,6 +117,7 @@ namespace Ewoms {
             double well_potential_water = 0.0;
             double well_potential_oil = 0.0;
             double well_potential_gas = 0.0;
+            double brine = 0.0;
     };
 
     struct Connection {
@@ -400,7 +402,8 @@ namespace Ewoms {
              productivity_index_oil == rate.productivity_index_oil &&
              well_potential_water == rate.well_potential_water &&
              well_potential_oil == rate.well_potential_oil &&
-             well_potential_gas == rate.well_potential_gas;
+             well_potential_gas == rate.well_potential_gas &&
+             brine == rate.brine;
     }
 
     /*
@@ -431,6 +434,7 @@ namespace Ewoms {
             case opt::well_potential_water: return this->well_potential_water;
             case opt::well_potential_oil: return this->well_potential_oil;
             case opt::well_potential_gas: return this->well_potential_gas;
+            case opt::brine: return this->brine;
         }
 
         throw std::invalid_argument(
@@ -476,6 +480,7 @@ namespace Ewoms {
             buffer.write(this->well_potential_water);
             buffer.write(this->well_potential_oil);
             buffer.write(this->well_potential_gas);
+            buffer.write(this->brine);
     }
 
     template <class MessageBufferType>
@@ -554,6 +559,7 @@ namespace Ewoms {
             buffer.read(this->well_potential_water);
             buffer.read(this->well_potential_oil);
             buffer.read(this->well_potential_gas);
+            buffer.read(this->brine);
     }
 
   template <class MessageBufferType>

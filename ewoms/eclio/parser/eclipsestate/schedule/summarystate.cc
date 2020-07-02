@@ -33,7 +33,7 @@ namespace {
         static const std::vector<std::string> totals = {"OPT"  , "GPT"  , "WPT" , "GIT", "WIT", "OPTF" , "OPTS" , "OIT"  , "OVPT" , "OVIT" , "MWT" ,
                                                         "WVPT" , "WVIT" , "GMT"  , "GPTF" , "SGT"  , "GST" , "FGT" , "GCT" , "GIMT" ,
                                                         "WGPT" , "WGIT" , "EGT"  , "EXGT" , "GVPT" , "GVIT" , "LPT" , "VPT" , "VIT" , "NPT" , "NIT",
-                                                        "CPT", "CIT"};
+                                                        "CPT", "CIT", "SPT", "SIT"};
 
         auto sep_pos = key.find(':');
 
@@ -206,6 +206,14 @@ namespace {
         return (this->values.find(key) != this->values.end());
     }
 
+    double SummaryState::get(const std::string& key, double default_value) const {
+        const auto iter = this->values.find(key);
+        if (iter == this->values.end())
+            return default_value;
+
+        return iter->second;
+    }
+
     double SummaryState::get(const std::string& key) const {
         const auto iter = this->values.find(key);
         if (iter == this->values.end())
@@ -222,12 +230,26 @@ namespace {
         return this->well_values.at(var).at(well);
     }
 
+    double SummaryState::get_well_var(const std::string& well, const std::string& var, double default_value) const {
+        if (this->has_well_var(well, var))
+            return this->get_well_var(well, var);
+
+        return default_value;
+    }
+
     bool SummaryState::has_group_var(const std::string& group, const std::string& var) const {
         return has_var(this->group_values, var, group);
     }
 
     double SummaryState::get_group_var(const std::string& group, const std::string& var) const {
         return this->group_values.at(var).at(group);
+    }
+
+    double SummaryState::get_group_var(const std::string& group, const std::string& var, double default_value) const {
+        if (this->has_group_var(group, var))
+            return this->get_group_var(group, var);
+
+        return default_value;
     }
 
     SummaryState::const_iterator SummaryState::begin() const {

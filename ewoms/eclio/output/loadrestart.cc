@@ -45,6 +45,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
 #include <algorithm>
 #include <cmath>
@@ -89,9 +90,16 @@ namespace {
         static Ewoms::EclIO::eclArrType T;
     };
 
-    Ewoms::EclIO::eclArrType ArrayType<int>::T    = ::Ewoms::EclIO::eclArrType::INTE;
-    Ewoms::EclIO::eclArrType ArrayType<float>::T  = ::Ewoms::EclIO::eclArrType::REAL;
-    Ewoms::EclIO::eclArrType ArrayType<double>::T = ::Ewoms::EclIO::eclArrType::DOUB;
+    template<>
+    struct ArrayType<std::string>
+    {
+        static Ewoms::EclIO::eclArrType T;
+    };
+
+    Ewoms::EclIO::eclArrType ArrayType<int>::T         = ::Ewoms::EclIO::eclArrType::INTE;
+    Ewoms::EclIO::eclArrType ArrayType<float>::T       = ::Ewoms::EclIO::eclArrType::REAL;
+    Ewoms::EclIO::eclArrType ArrayType<double>::T      = ::Ewoms::EclIO::eclArrType::DOUB;
+    Ewoms::EclIO::eclArrType ArrayType<std::string>::T = ::Ewoms::EclIO::eclArrType::CHAR;
 }
 
 class RestartFileView
@@ -123,8 +131,8 @@ public:
     {
         if (this->rst_file_ == nullptr) { return false; }
 
-        return this->vectors_
-            .at(ArrayType<ElmType>::T).count(vector) > 0;
+        const auto& coll_iter = this->vectors_.find(ArrayType<ElmType>::T);
+        return (coll_iter != this->vectors_.end() && this->collectionContains(coll_iter->second, vector));
     }
 
     template <typename ElmType>
@@ -159,6 +167,13 @@ private:
     int         report_step_;
     std::size_t sim_step_;
     TypedColl   vectors_;
+
+    bool collectionContains(const VectorColl&  coll,
+                            const std::string& vector) const
+    {
+        return coll.find(vector) != coll.end();
+    }
+
 };
 
 RestartFileView::RestartFileView(const std::string& filename,
@@ -178,7 +193,6 @@ RestartFileView::RestartFileView(const std::string& filename,
         const auto& type = std::get<1>(vector);
 
         switch (type) {
-        case ::Ewoms::EclIO::eclArrType::CHAR:
         case ::Ewoms::EclIO::eclArrType::LOGI:
         case ::Ewoms::EclIO::eclArrType::MESS:
             // Currently ignored
@@ -228,6 +242,48 @@ namespace {
         return { begin, end };
     }
 }
+// ---------------------------------------------------------------------
+class UDQVectors
+{
+public:
+    template <typename T>
+    using Window = boost::iterator_range<typename std::vector<T>::const_iterator>;
+
+    UDQVectors(std::shared_ptr<RestartFileView> rst_view) :
+        rstView_(rst_view)
+    {
+        const auto& intehead = rst_view->getKeyword<int>("INTEHEAD");
+        this->num_wells = intehead[VI::intehead::NWMAXZ];
+        this->num_groups = intehead[VI::intehead::NGMAXZ];
+    }
+
+    Window<double> next_dudw() {
+        return getDataWindow(this->rstView_->getKeyword<double>("DUDW"),
+                             this->num_wells, this->udq_well_index++);
+    }
+
+    Window<double> next_dudg() {
+        return getDataWindow(this->rstView_->getKeyword<double>("DUDG"),
+                             this->num_groups, this->udq_group_index++);
+    }
+
+    double next_dudf() {
+        return this->rstView_->getKeyword<double>("DUDF")[ this->udq_field_index++ ];
+    }
+
+    const std::vector<std::string>& zudn() {
+        return this->rstView_->getKeyword<std::string>("ZUDN");
+    }
+
+private:
+    std::size_t num_wells;
+    std::size_t num_groups;
+    std::shared_ptr<RestartFileView> rstView_;
+
+    std::size_t udq_well_index  = 0;
+    std::size_t udq_group_index = 0;
+    std::size_t udq_field_index = 0;
+};
 
 // ---------------------------------------------------------------------
 
@@ -1382,6 +1438,47 @@ namespace {
         smry.update(key("GITH"), xgrp[VI::XGroup::index::HistGasInjTotal]);
     }
 
+    void restore_udq(::Ewoms::SummaryState&             smry,
+                     const ::Ewoms::Schedule&           schedule,
+                     std::shared_ptr<RestartFileView>& rst_view)
+    {
+        if (!rst_view->hasKeyword<std::string>(std::string("ZUDN")))
+            return;
+
+        const auto sim_step = rst_view->simStep();
+        const auto& wnames = schedule.wellNames(sim_step);
+        const auto& groups = schedule.restart_groups(sim_step);
+        UDQVectors udq_vectors(rst_view);
+
+        for (const auto& udq : udq_vectors.zudn()) {
+            if (udq[0] == 'W') {
+                const auto& dudw = udq_vectors.next_dudw();
+                for (std::size_t well_index = 0; well_index < wnames.size(); well_index++) {
+                    const auto& value = dudw[well_index];
+                    if (value != ::Ewoms::UDQ::restart_default)
+                        smry.update_well_var(wnames[well_index], udq, value);
+                }
+            }
+
+            if (udq[0] == 'G')  {
+                const auto& dudg = udq_vectors.next_dudg();
+                for (std::size_t group_index = 0; group_index < groups.size(); group_index++) {
+                    const auto& value = dudg[group_index];
+                    if (value != ::Ewoms::UDQ::restart_default) {
+                        const auto& group_name = groups[group_index]->name();
+                        smry.update_group_var(group_name, udq, value);
+                    }
+                }
+            }
+
+            if (udq[0] == 'F')  {
+                const auto& value = udq_vectors.next_dudf();
+                if (value != ::Ewoms::UDQ::restart_default)
+                    smry.update(udq, value);
+            }
+        }
+    }
+
     void restore_cumulative(::Ewoms::SummaryState&             smry,
                             const ::Ewoms::Schedule&           schedule,
                             std::shared_ptr<RestartFileView> rst_view)
@@ -1466,8 +1563,8 @@ namespace Ewoms { namespace RestartIO  {
             restore_aquifers(es, rst_view, rst_value);
         }
 
+        restore_udq(summary_state, schedule, rst_view);
         restore_cumulative(summary_state, schedule, std::move(rst_view));
-
         return rst_value;
     }
 

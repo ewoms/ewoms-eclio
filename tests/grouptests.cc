@@ -543,7 +543,7 @@ GPMAINT
         BOOST_CHECK( gpm_prod );
         BOOST_CHECK((*gpm_prod).flow_target() == GPMaint::EFlowTarget::RESV_WINJ);
 
-        const auto& tmp = *((*gpm_prod).region());
+        const auto tmp = *((*gpm_prod).region());
         BOOST_CHECK_EQUAL(tmp.first, "FIPNUM");
         BOOST_CHECK_EQUAL(tmp.second, 2);
 

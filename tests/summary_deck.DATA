@@ -96,6 +96,8 @@ FGPRF
 FGPRS
 FOPRF
 FOPRS
+FCPR
+FSPR
 --FTPRSEA
 -- Injection Rates
 FVIR
@@ -105,6 +107,7 @@ FGIR
 FNIR -- solvent
 FGIRH
 FCIR
+FSIR
 -- Production Cummulatives
 FVPT
 FWPT
@@ -123,6 +126,8 @@ FGPTF
 FOPTF
 FOPTS
 FVPRT
+FCPT
+FSPT
 -- Injection Cummulatives
 FVIT
 FWIT
@@ -131,6 +136,7 @@ FGIT
 FNIT
 FGITH
 FCIT
+FSIT
 -- In place
 FWIP
 FOIP
@@ -339,6 +345,10 @@ GCIR
 /
 GCIT
 /
+GSIR
+/
+GSIT
+/
 GWIRH
 /
 GWITH
@@ -421,6 +431,16 @@ GMWPR
 /
 GMWIN
 /
+
+GCPR
+/
+GCPT
+/
+
+GSPR
+/
+GSPT
+/
 -- Well Data
 -- Production Rates
 WWPR
@@ -494,7 +514,13 @@ WNIR
 WCIR
  W_3
 /
+WSIR
+ W_3
+/
 WCIT
+ W_3
+/
+WSIT
  W_3
 /
 WNIT
@@ -608,6 +634,17 @@ WVIT
 WMCTL
 /
 
+WCPR
+/
+
+WCPT
+/
+
+WSPR
+/
+
+WSPT
+/
 -- Water injection per connection
 CWIR
   * /
@@ -660,6 +697,14 @@ CCIR
 /
 
 CCIT
+ '*' /
+/
+
+CSIR
+ '*' /
+/
+
+CSIT
  '*' /
 /
 

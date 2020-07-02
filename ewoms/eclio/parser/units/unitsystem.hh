@@ -73,6 +73,7 @@ namespace Ewoms {
             gas_productivity_index,
             energy,
             icd_strength,
+            polymer_density,
             _count // New entries must be added *before* this
         };
 

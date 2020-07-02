@@ -82,6 +82,7 @@ FLPRH
 FGSR
 FGCR
 FNPR -- solvent
+FCPR
 --FTPRSEA
 -- Injection Rates
 FVIR
@@ -103,6 +104,7 @@ FGPTH
 FWPTH
 FGST
 FGCT
+FCPT
 -- Injection Cummulatives
 FVIT
 FWIT
@@ -316,6 +318,12 @@ GMWPR
 /
 GMWIN
 /
+
+GVPR
+/
+
+GVPT
+/
 -- Well Data
 -- Production Rates
 WWPR
@@ -343,6 +351,9 @@ WLPT
 WLPTH
 /
 
+WCPR
+/
+
 -- Production Cummulatives
 WWPT
 /
@@ -357,6 +368,9 @@ WGPT
 WGPTH
 /
 WNPT
+/
+
+WCPT
 /
 
 -- Tracers

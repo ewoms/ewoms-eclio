@@ -276,7 +276,7 @@ namespace {
         {
             //initialize array to the default value for the array
             for (std::size_t ind = 0; ind < nwmaxz; ind++) {
-                dUdw[ind] = -0.3E+21;
+                dUdw[ind] = Ewoms::UDQ::restart_default;
             }
             for (std::size_t ind = 0; ind < wnames.size(); ind++) {
                 if (st.has_well_var(wnames[ind], udq)) {
@@ -309,14 +309,14 @@ namespace {
             //initialize array to the default value for the array
             for (std::size_t ind = 0; ind < groups.size(); ind++) {
                 if ((groups[ind] == nullptr) || (ind == ngmaxz-1)) {
-                    dUdg[ind] = -0.3E+21;
+                    dUdg[ind] = Ewoms::UDQ::restart_default;
                 }
                 else {
                     if (st.has_group_var((*groups[ind]).name(), udq)) {
                         dUdg[ind] = st.get_group_var((*groups[ind]).name(), udq);
                     }
                     else {
-                        dUdg[ind] = -0.3E+21;
+                        dUdg[ind] = Ewoms::UDQ::restart_default;
                     }
                 }
             }
@@ -346,7 +346,7 @@ namespace {
                 dUdf[0] = st.get(udq);
             }
             else {
-                dUdf[0] = -0.3E+21;
+                dUdf[0] = Ewoms::UDQ::restart_default;
             }
         }
     } // dUdf
@@ -375,30 +375,11 @@ std::pair<bool, int > findInVector(const std::vector<T>  & vecOfElements, const 
     return result;
 }
 
-// Make ordered list of current groups
-const std::vector<const Ewoms::Group*> currentGroups(const Ewoms::Schedule& sched,
-                                                    const std::size_t simStep,
-                                                    const std::vector<int>& inteHead )
-{
-    std::vector<const Ewoms::Group*> curGroups(ngmaxz(inteHead), nullptr);
-    for (const auto& group_name : sched.groupNames(simStep)) {
-        const auto& group = sched.getGroup(group_name, simStep);
-
-        //The FIELD group is the first group according to the insert_index()
-        //In the Eclipse compatible restart file, the FILED group is put at the end of the list of groups (ngmaxz(inteHead)-1)
-        int ind = (group.name() == "FIELD")
-            ? ngmaxz(inteHead)-1 : group.insert_index()-1;
-        curGroups[ind] = std::addressof(group);
-
-    }
-    return curGroups;
-}
-
 const std::vector<int> Ewoms::RestartIO::Helpers::igphData::ig_phase(const Ewoms::Schedule& sched,
                                                                    const std::size_t simStep,
                                                                    const std::vector<int>& inteHead )
 {
-    const auto curGroups = currentGroups(sched, simStep, inteHead);
+    const auto curGroups = sched.restart_groups(simStep);
     std::vector<int> inj_phase(ngmaxz(inteHead), 0);
     for (std::size_t ind = 0; ind < curGroups.size(); ind++) {
         if (curGroups[ind] != nullptr) {
@@ -574,7 +555,7 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
     }
 
     std::size_t i_gudq = 0;
-    const auto curGroups = currentGroups(sched, simStep, inteHead);
+    const auto curGroups = sched.restart_groups(simStep);
     const auto ngmax = ngmaxz(inteHead);
     int cnt_dudg = 0;
     for (const auto& udq_input : udqCfg.input()) {
