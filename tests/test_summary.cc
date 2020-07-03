@@ -30,8 +30,8 @@
 #include <cctype>
 #include <ctime>
 
-#include <ewoms/eclio/output/data/wells.hh>
 #include <ewoms/eclio/output/data/groups.hh>
+#include <ewoms/eclio/output/data/wells.hh>
 #include <ewoms/eclio/output/summary.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
@@ -290,22 +290,22 @@ static data::Wells result_wells(const bool w3_injector = true) {
     return wellrates;
 }
 
-static data::Group result_groups() {
+static data::GroupValues result_groups() {
 
-    data::Group groups;
-    data::currentGroupConstraints cgc_group;
+    data::GroupValues groups;
+    data::GroupConstraints cgc_group;
 
     cgc_group.set(p_cmode::NONE, i_cmode::VREP, i_cmode::RATE);
-    groups.emplace("G_1", cgc_group);
+    groups["G_1"].currentControl = cgc_group;
 
     cgc_group.set(p_cmode::ORAT, i_cmode::RESV, i_cmode::FLD);
-    groups.emplace("G_2", cgc_group);
+    groups["G_2"].currentControl = cgc_group;
 
     cgc_group.set(p_cmode::GRAT, i_cmode::REIN, i_cmode::VREP);
-    groups.emplace("G_3", cgc_group);
+    groups["G_3"].currentControl = cgc_group;
 
     cgc_group.set(p_cmode::NONE, i_cmode::NONE, i_cmode::NONE);
-    groups.emplace("FIELD", cgc_group);
+    groups["FIELD"].currentControl = cgc_group;
 
     return groups;
 
@@ -389,7 +389,7 @@ struct setup {
     Schedule schedule;
     SummaryConfig config;
     data::Wells wells;
-    data::Group groups;
+    data::GroupValues groups;
     std::string name;
     WorkArea ta;
 

@@ -37,7 +37,7 @@ namespace Ewoms {
 
 namespace Ewoms { namespace data {
     class WellRates;
-    class Group;
+    class GroupValues;
 }} // namespace Ewoms::data
 
 namespace Ewoms { namespace out {
@@ -64,7 +64,7 @@ public:
               const EclipseState&            es,
               const Schedule&                schedule,
               const data::WellRates&         well_solution,
-              const data::Group&             group_solution,
+              const data::GroupValues&       group_solution,
               const GlobalProcessParameters& single_values,
               const RegionParameters&        region_values = {},
               const BlockValues&             block_values  = {}) const;

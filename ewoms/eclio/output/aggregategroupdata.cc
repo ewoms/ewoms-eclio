@@ -21,6 +21,7 @@
 #include <ewoms/eclio/output/writerestarthelpers.hh>
 #include <ewoms/eclio/output/vectoritems/group.hh>
 #include <ewoms/eclio/output/vectoritems/well.hh>
+#include <ewoms/eclio/output/vectoritems/intehead.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -51,13 +52,13 @@ namespace {
 // maximum number of groups
 std::size_t ngmaxz(const std::vector<int>& inteHead)
 {
-    return inteHead[20];
+    return inteHead[Ewoms::RestartIO::Helpers::VectorItems::NGMAXZ];
 }
 
 // maximum number of wells in any group
 int nwgmax(const std::vector<int>& inteHead)
 {
-    return inteHead[19];
+    return inteHead[Ewoms::RestartIO::Helpers::VectorItems::NWGMAX];
 }
 
 template <typename GroupOp>
@@ -401,8 +402,7 @@ std::size_t groupSize(const Ewoms::Group& group) {
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[36] = NIGRPZ
-    return inteHead[36];
+    return inteHead[Ewoms::RestartIO::Helpers::VectorItems::NIGRPZ];
 }
 
 Ewoms::RestartIO::Helpers::WindowedArray<int>
@@ -897,8 +897,7 @@ void staticContrib(const Ewoms::Schedule&     sched,
 namespace SGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[37] = NSGRPZ
-    return inteHead[37];
+    return inteHead[Ewoms::RestartIO::Helpers::VectorItems::NSGRPZ];
 }
 
 Ewoms::RestartIO::Helpers::WindowedArray<float>
@@ -1064,8 +1063,7 @@ void staticContrib(const Ewoms::Group&        group,
 namespace XGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[38] = NXGRPZ
-    return inteHead[38];
+    return inteHead[Ewoms::RestartIO::Helpers::VectorItems::NXGRPZ];
 }
 
 Ewoms::RestartIO::Helpers::WindowedArray<double>
@@ -1120,8 +1118,7 @@ void dynamicContrib(const std::vector<std::string>&      restart_group_keys,
 namespace ZGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
-    // INTEHEAD[39] = NZGRPZ
-    return inteHead[39];
+    return inteHead[Ewoms::RestartIO::Helpers::VectorItems::NZGRPZ];
 }
 
 Ewoms::RestartIO::Helpers::WindowedArray<
