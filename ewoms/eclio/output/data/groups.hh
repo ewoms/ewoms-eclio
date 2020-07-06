@@ -69,7 +69,9 @@ namespace Ewoms { namespace data {
             unsigned int size = this->size();
             buffer.write(size);
 
-            for (const auto& [gname, gdata] : *this) {
+            for (const auto& it : *this) {
+                const auto& gname = it.first;
+                const auto& gdata = it.second;
                 buffer.write(gname);
                 gdata .write(buffer);
             }

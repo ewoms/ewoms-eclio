@@ -30,6 +30,8 @@
 #include <ewoms/eclio/parser/rawdeck/rawconsts.hh>
 #include "udqparser.hh"
 
+#include <ewoms/common/optional.hh>
+
 namespace Ewoms {
 
 namespace {
@@ -80,7 +82,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
 {}
 
 namespace {
-std::optional<std::string> next_token(const std::string& item, std::size_t offset, const std::vector<std::string>& splitters) {
+Ewoms::optional<std::string> next_token(const std::string& item, std::size_t offset, const std::vector<std::string>& splitters) {
     if (offset == item.size())
         return {};
 
@@ -95,7 +97,7 @@ std::optional<std::string> next_token(const std::string& item, std::size_t offse
             return item.substr(offset, token_size);
     }
 
-    std::optional<std::string> token = item.substr(offset);
+    Ewoms::optional<std::string> token = item.substr(offset);
     std::size_t min_pos = std::string::npos;
     for (const auto& splitter : splitters) {
         auto pos = item.find(splitter, offset);
