@@ -809,7 +809,7 @@ namespace {
         act_res_stat(const Ewoms::Schedule& sched, const Ewoms::Action::State& action_state, const Ewoms::SummaryState&  smry, const std::size_t sim_step) {
             std::vector<std::pair<std::string, Ewoms::Action::Result>> results;
             const auto& acts = sched.actions(sim_step);
-            Ewoms::Action::Context context(smry);
+            Ewoms::Action::Context context(smry, sched.getWListManager(sim_step));
             auto sim_time = sched.simTime(sim_step);
             for (const auto& action : acts.pending(action_state, sim_time)) {
                 auto result = action->eval(context);

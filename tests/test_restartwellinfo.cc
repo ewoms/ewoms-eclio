@@ -206,6 +206,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     solution.insert( "SWAT"    , Ewoms::UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , Ewoms::data::TargetType::RESTART_SOLUTION);
     solution.insert( "SGAS"    , Ewoms::UnitSystem::measure::identity , std::vector< double >( num_cells, 1 ) , Ewoms::data::TargetType::RESTART_SOLUTION);
     Ewoms::data::Wells wells;
+    Ewoms::data::GroupValues groups;
 
     for(int timestep = 0; timestep <= countTimeStep; ++timestep) {
 
@@ -214,7 +215,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
                                      timestep,
                                      false,
                                      schedule.seconds(timestep),
-                                     Ewoms::RestartValue(solution, wells));
+                                     Ewoms::RestartValue(solution, wells, groups));
     }
 
     for (int i=1; i <=4; i++) {

@@ -477,7 +477,7 @@ const std::map<cmp_enum, int> cmpToIndex = {
         act_res(const Ewoms::Schedule& sched, const Ewoms::Action::State& action_state, const Ewoms::SummaryState&  smry, const std::size_t sim_step, std::vector<Ewoms::Action::ActionX>::const_iterator act_x) {
             auto sim_time = sched.simTime(sim_step);
             if (act_x->ready(action_state, sim_time)) {
-                Ewoms::Action::Context context(smry);
+                Ewoms::Action::Context context(smry, sched.getWListManager(sim_step));
                 return act_x->eval(context);
             } else
                 return Ewoms::Action::Result(false);

@@ -40,6 +40,13 @@ namespace Ewoms { namespace data {
         template <class MessageBufferType>
         void read(MessageBufferType& buffer);
 
+        bool operator==(const GroupConstraints& other) const
+        {
+            return this->currentProdConstraint == other.currentProdConstraint &&
+                   this->currentGasInjectionConstraint == other.currentGasInjectionConstraint &&
+                   this->currentWaterInjectionConstraint == other.currentWaterInjectionConstraint;
+        }
+
         inline GroupConstraints& set(Ewoms::Group::ProductionCMode cpc,
                                      Ewoms::Group::InjectionCMode  cgic,
                                      Ewoms::Group::InjectionCMode  cwic);
@@ -58,6 +65,11 @@ namespace Ewoms { namespace data {
         void read(MessageBufferType& buffer)
         {
             this->currentControl.read(buffer);
+        }
+
+        bool operator==(const GroupData& other) const
+        {
+            return this->currentControl == other.currentControl;
         }
     };
 

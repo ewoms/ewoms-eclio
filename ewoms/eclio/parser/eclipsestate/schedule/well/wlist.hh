@@ -15,6 +15,9 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef WLIST_H
+#define WLIST_H
+
 #include <cstddef>
 #include <unordered_set>
 #include <vector>
@@ -50,3 +53,5 @@ private:
 };
 
 }
+
+#endif

@@ -19,7 +19,6 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 
 namespace Ewoms {
 namespace Action {
@@ -28,8 +27,9 @@ namespace Action {
         this->values[func + ":" + arg] = value;
     }
 
-    Context::Context(const SummaryState& summary_state_arg) :
-        summary_state(summary_state_arg)
+    Context::Context(const SummaryState& summary_state_arg, const WListManager& wlm_) :
+        summary_state(summary_state_arg),
+        wlm(wlm_)
     {
         for (const auto& pair : TimeMap::eclipseMonthIndices())
             this->add(pair.first, pair.second);
@@ -55,5 +55,8 @@ namespace Action {
         return this->summary_state.wells(key);
     }
 
+    const WListManager& Context::wlist_manager() const {
+        return this->wlm;
+    }
 }
 }

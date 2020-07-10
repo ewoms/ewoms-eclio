@@ -26,6 +26,7 @@
 #include <ewoms/eclio/output/data/cells.hh>
 #include <ewoms/eclio/output/data/solution.hh>
 #include <ewoms/eclio/output/data/wells.hh>
+#include <ewoms/eclio/output/data/groups.hh>
 
 #include <ewoms/eclio/output/vectoritems/aquifer.hh>
 #include <ewoms/eclio/output/vectoritems/connection.hh>
@@ -1552,8 +1553,9 @@ namespace Ewoms { namespace RestartIO  {
         auto xw = rst_view->hasKeyword<double>("OPM_XWEL")
             ? restore_wells_ewoms(es, grid, schedule, *rst_view)
             : restore_wells_ecl(es, grid, schedule,  rst_view);
+        data::GroupValues xg;
 
-        auto rst_value = RestartValue{ std::move(xr), std::move(xw) };
+        auto rst_value = RestartValue{ std::move(xr), std::move(xw) , std::move(xg)};
 
         if (! extra_keys.empty()) {
             restoreExtra(extra_keys, es.getUnits(), *rst_view, rst_value);

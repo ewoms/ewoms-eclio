@@ -15,6 +15,9 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef WLISTMANAGER_H
+#define WLISTMANAGER_H
+
 #include <cstddef>
 #include <map>
 #include <vector>
@@ -37,7 +40,7 @@ public:
     void delWell(const std::string& well);
 
     bool operator==(const WListManager& data) const;
-
+    std::vector<std::string> wells(const std::string& wlist_pattern) const;
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
@@ -49,3 +52,4 @@ private:
 };
 
 }
+#endif

@@ -18,11 +18,13 @@
 #include "config.h"
 
 #include <fnmatch.h>
-#include <stdexcept>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionvalue.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/astnode.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wlist.hh>
+
+#include <stdexcept>
 
 namespace {
     std::string strip_quotes(const std::string& s) {
@@ -101,16 +103,27 @@ Action::Value ASTNode::value(const Action::Context& context) const {
           The matching code is special case to handle one-argument cases with
           well patterns like 'P*'.
         */
-        if ((this->arg_list.size() == 1) && (arg_list[0].find("*") != std::string::npos)) {
+        if ((this->arg_list.size() == 1) && (this->arg_list[0].find("*") != std::string::npos)) {
             if (this->func_type != FuncType::well)
                 throw std::logic_error(": attempted to action-evaluate list not of type well.");
 
+            const auto& well_arg = this->arg_list[0];
             Action::Value well_values;
-            int fnmatch_flags = 0;
-            for (const auto& well : context.wells(this->func)) {
-                if (fnmatch(this->arg_list[0].c_str(), well.c_str(), fnmatch_flags) == 0)
-                    well_values.add_well(well, context.get(this->func, well));
+            std::vector<std::string> wnames;
+
+            if (well_arg[0] == '*' && well_arg.size() > 1) {
+                const auto& wlm = context.wlist_manager();
+                wnames = wlm.wells(well_arg);
+            } else {
+                int fnmatch_flags = 0;
+                for (const auto& well : context.wells(this->func)) {
+                    if (fnmatch(well_arg.c_str(), well.c_str(), fnmatch_flags) == 0)
+                        wnames.push_back(well);
+                }
             }
+            for (const auto& wname : wnames)
+                well_values.add_well(wname, context.get(this->func, wname));
+
             return well_values;
         } else {
             std::string arg_key = this->arg_list[0];

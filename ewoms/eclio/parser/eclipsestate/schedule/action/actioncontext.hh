@@ -23,6 +23,7 @@
 #include <map>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wlistmanager.hh>
 
 namespace Ewoms {
 namespace Action {
@@ -35,7 +36,7 @@ namespace Action {
 
 class Context {
 public:
-    explicit Context(const SummaryState& summary_state);
+    explicit Context(const SummaryState& summary_state, const WListManager& wlm);
 
     /*
       The get methods will first check the internal storage in the 'values' map
@@ -48,9 +49,11 @@ public:
     void   add(const std::string& func, double value);
 
     std::vector<std::string> wells(const std::string& func) const;
+    const WListManager& wlist_manager() const;
 
 private:
     const SummaryState& summary_state;
+    const WListManager& wlm;
     std::map<std::string, double> values;
 };
 }
