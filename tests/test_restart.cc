@@ -27,7 +27,6 @@
 #include <ewoms/eclio/output/data/cells.hh>
 #include <ewoms/eclio/output/data/wells.hh>
 #include <ewoms/eclio/output/data/groups.hh>
-#include <ewoms/eclio/parser/python/python.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/tables/eqldims.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>

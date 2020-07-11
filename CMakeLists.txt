@@ -162,6 +162,9 @@ ewoms_add_test(Tables SOURCES tests/test_tables.cc CONDITION Boost_UNIT_TEST_FRA
 ewoms_add_test(Wells SOURCES tests/test_wells.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(WindowedArray SOURCES tests/test_windowedarray.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(restartwellinfo SOURCES tests/test_restartwellinfo.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(data_GuideRateValue SOURCES tests/test_data_guideratevalue.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(NetworkTests SOURCES tests/networktests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(param SOURCES tests/test_param.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 
 # "extra" tests
 set(_testdir ${PROJECT_SOURCE_DIR}/tests/data)
@@ -235,7 +238,7 @@ ewoms_add_test(EclRegressionTest
   CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND
 LIBRARIES "${Boost_LIBRARIES}")
 
-foreach(TEST_NAME EclIO EGrid ERft ERst ESmry)
+foreach(TEST_NAME EclIO EGrid ERft ERsm ERst ESmry)
   string(TOLOWER "test_${TEST_NAME}.cc" "TEST_SOURCE_FILE")
   ewoms_add_test(${TEST_NAME}
     SOURCES "tests/${TEST_SOURCE_FILE}"
@@ -249,13 +252,12 @@ ewoms_add_test(RootFinders
   LIBRARIES "${Boost_LIBRARIES}")
 
 # deal with the data required by the unit tests
-ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/ECLFILE*" "tests/*.json" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA")
+ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/ECLFILE*" "tests/*.json" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA" "tests/*.param")
 
 # link the UNRST files for the restart test to the build directory
 set(FROMDIR "${PROJECT_BINARY_DIR}/restart")
 set(TODIR "${PROJECT_SOURCE_DIR}/tests/restart")
 execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink "${TODIR}" "${FROMDIR}")
-message("-- Created symlink: ${FROMFILE} -> ${TOFILE}")
 
 # finalize the project, e.g. generate the config.h etc.
 finalize_ewoms_project()

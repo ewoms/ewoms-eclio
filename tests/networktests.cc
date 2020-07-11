@@ -28,19 +28,17 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/parser.hh>
-#include <ewoms/eclio/parser/python/python.hh>
 
 using namespace Ewoms;
 
 Schedule make_schedule(const std::string& schedule_string) {
     Parser parser;
-    auto python = std::make_shared<Python>();
     Deck deck = parser.parseString(schedule_string);
     EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec (deck);
-    Schedule schedule(deck, grid , fp, runspec, python);
+    Schedule schedule(deck, grid , fp, runspec);
     return schedule;
 }
 
