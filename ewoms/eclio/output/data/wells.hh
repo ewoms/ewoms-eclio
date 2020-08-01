@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <ewoms/eclio/output/data/guideratevalue.hh>
+
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 
 namespace Ewoms {
@@ -252,6 +254,7 @@ namespace Ewoms {
         std::vector< Connection > connections;
         std::unordered_map<std::size_t, Segment> segments;
         CurrentControl current_control;
+        GuideRateValue guide_rates{};
 
         inline bool flowing() const noexcept;
         template <class MessageBufferType>
@@ -292,7 +295,8 @@ namespace Ewoms {
                  control == well2.control &&
                  connections == well2.connections &&
                  segments == well2.segments &&
-                 current_control == well2.current_control;
+                 current_control == well2.current_control &&
+                 guide_rates == well2.guide_rates;
         }
     };
 
@@ -537,6 +541,7 @@ namespace Ewoms {
         }
 
         this->current_control.write(buffer);
+        this->guide_rates.write(buffer);
     }
 
     template <class MessageBufferType>
@@ -629,6 +634,7 @@ namespace Ewoms {
         }
 
         this->current_control.read(buffer);
+        this->guide_rates.read(buffer);
     }
 
 }} // Ewoms::data

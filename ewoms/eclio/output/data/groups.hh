@@ -25,6 +25,8 @@
 #include <string>
 #include <vector>
 
+#include <ewoms/eclio/output/data/guideratevalue.hh>
+
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
 
 namespace Ewoms { namespace data {
@@ -52,24 +54,53 @@ namespace Ewoms { namespace data {
                                      Ewoms::Group::InjectionCMode  cwic);
     };
 
+    struct GroupGuideRates {
+        GuideRateValue production{};
+        GuideRateValue injection{};
+
+        template <class MessageBufferType>
+        void write(MessageBufferType& buffer) const
+        {
+            this->production.write(buffer);
+            this->injection .write(buffer);
+        }
+
+        template <class MessageBufferType>
+        void read(MessageBufferType& buffer)
+        {
+            this->production.read(buffer);
+            this->injection .read(buffer);
+        }
+
+        bool operator==(const GroupGuideRates& other) const
+        {
+            return this->production == other.production
+                && this->injection  == other.injection;
+        }
+    };
+
     struct GroupData {
         GroupConstraints currentControl;
+        GroupGuideRates  guideRates{};
 
         template <class MessageBufferType>
         void write(MessageBufferType& buffer) const
         {
             this->currentControl.write(buffer);
+            this->guideRates    .write(buffer);
         }
 
         template <class MessageBufferType>
         void read(MessageBufferType& buffer)
         {
             this->currentControl.read(buffer);
+            this->guideRates    .read(buffer);
         }
 
         bool operator==(const GroupData& other) const
         {
-            return this->currentControl == other.currentControl;
+            return this->currentControl == other.currentControl
+                && this->guideRates     == other.guideRates;
         }
     };
 
