@@ -240,7 +240,7 @@ namespace Ewoms {
         }
     }
 
-    bool ParserKeyword::validNameStart( const string_view& name) {
+    bool ParserKeyword::validNameStart( const Ewoms::string_view& name) {
         if (!isalpha(name[0]))
             return false;
 
@@ -256,7 +256,7 @@ namespace Ewoms {
         return std::all_of( name.begin() + 1, name.end(), ok );
     }
 
-    bool ParserKeyword::validDeckName( const string_view& name) {
+    bool ParserKeyword::validDeckName( const Ewoms::string_view& name) {
 
         if( !validNameStart( name ) )
             return false;
@@ -634,11 +634,11 @@ void set_dimensions( ParserItem& item,
         }
     }
 
-    bool ParserKeyword::matches(const string_view& name ) const {
+    bool ParserKeyword::matches(const Ewoms::string_view& name ) const {
         if (!validDeckName(name ))
             return false;
 
-        else if( m_deckNames.count( name.string() ) )
+        else if( m_deckNames.count( std::string(name) ) )
             return true;
 
         else if (hasMatchRegex())

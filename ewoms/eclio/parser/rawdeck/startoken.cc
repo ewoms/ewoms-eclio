@@ -26,7 +26,6 @@
 
 #include <boost/spirit/include/qi.hpp>
 
-#include <ewoms/eclio/parser/utility/stringview.hh>
 #include <ewoms/eclio/parser/deck/udavalue.hh>
 
 #include <ewoms/eclio/parser/rawdeck/startoken.hh>
@@ -35,7 +34,7 @@ namespace qi = boost::spirit::qi;
 
 namespace Ewoms {
 
-    bool isStarToken(const string_view& token,
+    bool isStarToken(const Ewoms::string_view& token,
                            std::string& countString,
                            std::string& valueString) {
         // find first character which is not a digit
@@ -60,25 +59,25 @@ namespace Ewoms {
         // possible.)
         else if (pos == 0) {
             countString = "";
-            valueString = token.substr(pos + 1);
+            valueString = std::string(token.substr(pos + 1));
             return true;
         }
 
         // if a star is prefixed by an unsigned integer N, then this should be
         // interpreted as "repeat value after star N times"
-        countString = token.substr(0, pos);
-        valueString = token.substr(pos + 1);
+        countString = std::string(token.substr(0, pos));
+        valueString = std::string(token.substr(pos + 1));
         return true;
     }
 
     template<>
-    int readValueToken< int >( string_view view ) {
+    int readValueToken< int >( Ewoms::string_view view ) {
         int n = 0;
         auto cursor = view.begin();
         const bool ok = qi::parse( cursor, view.end(), qi::int_, n );
 
         if( ok && cursor == view.end() ) return n;
-        throw std::invalid_argument( "Malformed integer '" + view + "'" );
+        throw std::invalid_argument( "Malformed integer '" + std::string(view) + "'" );
     }
 
     template< typename T >
@@ -97,34 +96,34 @@ namespace Ewoms {
     };
 
     template<>
-    double readValueToken< double >( string_view view ) {
+    double readValueToken< double >( Ewoms::string_view view ) {
         double n = 0;
         qi::real_parser< double, fortran_double< double > > double_;
         auto cursor = view.begin();
         const auto ok = qi::parse( cursor, view.end(), double_, n );
 
         if( ok && cursor == view.end() ) return n;
-        throw std::invalid_argument( "Malformed floating point number '" + view + "'" );
+        throw std::invalid_argument( "Malformed floating point number '" + std::string(view) + "'" );
     }
 
     template <>
-    std::string readValueToken< std::string >( string_view view ) {
+    std::string readValueToken< std::string >( Ewoms::string_view view ) {
         if( view.size() == 0 || view[ 0 ] != '\'' )
-            return view.string();
+            return std::string(view);
 
         if( view.size() < 2 || view[ view.size() - 1 ] != '\'')
-            throw std::invalid_argument("Unable to parse string '" + view + "' as a string token");
+            throw std::invalid_argument("Unable to parse string '" + std::string(view) + "' as a string token");
 
-        return view.substr( 1, view.size() - 2 );
+        return std::string(view.substr(1, view.size() - 2 ));
     }
 
     template <>
-    RawString readValueToken<RawString>( string_view view ) {
-        return RawString(view.string().c_str());
+    RawString readValueToken<RawString>( Ewoms::string_view view ) {
+        return { std::string( view ) };
     }
 
     template<>
-    UDAValue readValueToken< UDAValue >( string_view view ) {
+    UDAValue readValueToken< UDAValue >( Ewoms::string_view view ) {
         double n = 0;
         qi::real_parser< double, fortran_double< double > > double_;
         auto cursor = view.begin();
@@ -134,13 +133,13 @@ namespace Ewoms {
         return UDAValue( readValueToken<std::string>(view) );
     }
 
-    void StarToken::init_( const string_view& token ) {
+    void StarToken::init_( const Ewoms::string_view& token ) {
         // special-case the interpretation of a lone star as "1*" but do not
         // allow constructs like "*123"...
         if (m_countString == "") {
             if (m_valueString != "")
                 // TODO: decorate the deck with a warning instead?
-                throw std::invalid_argument("Not specifying a count also implies not specifying a value. Token: \'" + token + "\'.");
+                throw std::invalid_argument("Not specifying a count also implies not specifying a value. Token: \'" + std::string(token) + "\'.");
 
             // TODO: since this is explicitly forbidden by the documentation it might
             // be a good idea to decorate the deck with a warning?
@@ -151,7 +150,7 @@ namespace Ewoms {
 
             if (cnt < 1)
                 // TODO: decorate the deck with a warning instead?
-                throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + token + "\'.");
+                throw std::invalid_argument("Specifing zero repetitions is not allowed. Token: \'" + std::string(token) + "\'.");
 
             m_count = static_cast<std::size_t>(cnt);
         }

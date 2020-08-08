@@ -5,6 +5,8 @@
 
 #include <ewoms/eclio/parser/deck/udavalue.hh>
 
+#include <ewoms/common/string_view.hh>
+
 namespace Ewoms {
 
 enum class type_tag {
@@ -37,6 +39,10 @@ class RawString : public std::string
 {
 public:
     using std::string::string; // inherit std::string's constructors
+
+    RawString(const Ewoms::string_view& s)
+        : std::string(s.data(), s.size())
+    {}
 
     static std::vector<std::string> strings(const std::vector<RawString>& raw_strings) {
         std::vector<std::string> std_strings;

@@ -18,6 +18,9 @@ if(STD_FILESYSTEM_LIBRARIES)
     LIBRARIES "${STD_FILESYSTEM_LIBRARIES}")
 endif()
 
+# either std::string_view or std::experimental::string_view needs to be supported
+find_package(StdStringView REQUIRED)
+
 # either std::optional or std::experimental::optional needs to be supported
 find_package(StdOptional REQUIRED)
 

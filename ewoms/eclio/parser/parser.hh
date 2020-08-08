@@ -33,7 +33,6 @@
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
-#include <ewoms/eclio/parser/utility/stringview.hh>
 
 namespace Json {
     class JsonObject;
@@ -84,8 +83,8 @@ namespace Ewoms {
         bool hasKeyword( const std::string& ) const;
         const ParserKeyword& getKeyword(const std::string& name) const;
 
-        bool isRecognizedKeyword( const string_view& deckKeywordName) const;
-        const ParserKeyword& getParserKeywordFromDeckName(const string_view& deckKeywordName) const;
+        bool isRecognizedKeyword( const Ewoms::string_view& deckKeywordName) const;
+        const ParserKeyword& getParserKeywordFromDeckName(const Ewoms::string_view& deckKeywordName) const;
         std::vector<std::string> getAllDeckNames () const;
 
         void loadKeywords(const Json::JsonObject& jsonKeywords);
@@ -134,18 +133,18 @@ namespace Ewoms {
 
     private:
         bool hasWildCardKeyword(const std::string& keyword) const;
-        const ParserKeyword* matchingKeyword(const string_view& keyword) const;
+        const ParserKeyword* matchingKeyword(const Ewoms::string_view& keyword) const;
         void addDefaultKeywords();
 
         // std::vector< std::unique_ptr< const ParserKeyword > > keyword_storage;
         std::list<ParserKeyword> keyword_storage;
 
         // associative map of deck names and the corresponding ParserKeyword object
-        std::map< string_view, const ParserKeyword* > m_deckParserKeywords;
+        std::map< Ewoms::string_view, const ParserKeyword* > m_deckParserKeywords;
 
         // associative map of the parser internal names and the corresponding
         // ParserKeyword object for keywords which match a regular expression
-        std::map< string_view, const ParserKeyword* > m_wildCardKeywords;
+        std::map< Ewoms::string_view, const ParserKeyword* > m_wildCardKeywords;
 
         std::vector<std::pair<std::string,std::string>> code_keywords;
     };

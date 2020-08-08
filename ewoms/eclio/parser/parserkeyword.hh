@@ -27,6 +27,8 @@
 #include <ewoms/eclio/parser/parserenums.hh>
 #include <ewoms/eclio/parser/parserrecord.hh>
 
+#include <ewoms/common/string_view.hh>
+
 namespace Json {
     class JsonObject;
 }
@@ -38,7 +40,6 @@ namespace Ewoms {
     class ErrorGuard;
     class ParserDoubleItem;
     class RawKeyword;
-    class string_view;
     class ErrorGuard;
 
     /*
@@ -88,10 +89,10 @@ namespace Ewoms {
         typedef std::set<std::string> SectionNameSet;
 
         static bool validInternalName(const std::string& name);
-        static bool validDeckName(const string_view& name);
+        static bool validDeckName(const Ewoms::string_view& name);
         bool hasMatchRegex() const;
         void setMatchRegex(const std::string& deckNameRegexp);
-        bool matches(const string_view& ) const;
+        bool matches(const Ewoms::string_view& ) const;
         bool hasDimension() const;
         void addRecord( ParserRecord );
         void addDataRecord( ParserRecord );
@@ -156,7 +157,7 @@ namespace Ewoms {
         bool double_records = false;
         std::string code_end;
 
-        static bool validNameStart(const string_view& name);
+        static bool validNameStart(const Ewoms::string_view& name);
         void initDeckNames( const Json::JsonObject& jsonConfig );
         void initSectionNames( const Json::JsonObject& jsonConfig );
         void initMatchRegex( const Json::JsonObject& jsonObject );

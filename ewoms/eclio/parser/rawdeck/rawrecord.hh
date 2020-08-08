@@ -22,9 +22,8 @@
 #include <deque>
 #include <memory>
 #include <string>
+#include <ewoms/common/string_view.hh>
 #include <list>
-
-#include <ewoms/eclio/parser/utility/stringview.hh>
 
 namespace Ewoms {
 
@@ -34,36 +33,34 @@ namespace Ewoms {
 
     class RawRecord {
     public:
-        RawRecord( const string_view&, bool text);
-        explicit RawRecord( const string_view&);
+        RawRecord( const Ewoms::string_view&, bool text);
+        explicit RawRecord( const Ewoms::string_view&);
 
-        inline string_view pop_front();
-        inline string_view front() const;
-        void push_front( string_view token );
-        void prepend( size_t count, string_view token );
+        inline Ewoms::string_view pop_front();
+        inline Ewoms::string_view front() const;
+        void push_front( Ewoms::string_view token );
+        void prepend( size_t count, Ewoms::string_view token );
         inline size_t size() const;
 
         std::string getRecordString() const;
-        inline string_view getItem(size_t index) const;
-
-        void dump() const;
+        inline Ewoms::string_view getItem(size_t index) const;
 
     private:
-        string_view m_sanitizedRecordString;
-        std::deque< string_view > m_recordItems;
+        Ewoms::string_view m_sanitizedRecordString;
+        std::deque< Ewoms::string_view > m_recordItems;
     };
 
     /*
      * These are frequently called, but fairly trivial in implementation, and
      * inlining the calls gives a decent low-effort performance benefit.
      */
-    string_view RawRecord::pop_front() {
+    Ewoms::string_view RawRecord::pop_front() {
         auto front = m_recordItems.front();
         this->m_recordItems.pop_front();
         return front;
     }
 
-    string_view RawRecord::front() const {
+    Ewoms::string_view RawRecord::front() const {
         return this->m_recordItems.front();
     }
 
@@ -71,7 +68,7 @@ namespace Ewoms {
         return m_recordItems.size();
     }
 
-    string_view RawRecord::getItem(size_t index) const {
+    Ewoms::string_view RawRecord::getItem(size_t index) const {
         return this->m_recordItems.at( index );
     }
 }
