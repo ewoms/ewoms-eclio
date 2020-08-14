@@ -65,7 +65,9 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/pdvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rtempvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rvvdtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/permfacttable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/saltvdtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/saltpvdtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgcwmistable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgfntable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/sgoftable.hh>
@@ -98,6 +100,7 @@ namespace Ewoms {
         :
         m_tabdims( Tabdims(deck)),
         m_aqudims( Aqudims(deck)),
+        m_tlmixpar( deck ),
         hasImptvd (deck.hasKeyword("IMPTVD")),
         hasEnptvd (deck.hasKeyword("ENPTVD")),
         hasEqlnum (deck.hasKeyword("EQLNUM"))
@@ -112,6 +115,8 @@ namespace Ewoms {
         initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
+        initFullTables(deck, "PVTGW", m_pvtgwTables);
+        initFullTables(deck, "PVTGWO", m_pvtgwoTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
 
         if( deck.hasKeyword( "PVTW" ) )
@@ -174,6 +179,9 @@ namespace Ewoms {
         if ( deck.hasKeyword( "PVTWSALT") )
             initPvtwsaltTables(deck, m_pvtwsaltTables );
 
+        if ( deck.hasKeyword( "RWGSALT") )
+            initRwgsaltTables(deck, m_rwgsaltTables );
+
         if ( deck.hasKeyword( "BDENSITY") )
             initBrineTables(deck, m_bdensityTables );
 
@@ -209,10 +217,6 @@ namespace Ewoms {
             hasShrate = true;
         }
 
-        if (deck.hasKeyword<ParserKeywords::TLMIXPAR>()) {
-            this->m_tlmixparTable = TlmixparTable(deck.getKeyword("TLMIXPAR"));
-        }
-
         if (deck.hasKeyword<ParserKeywords::PLYVMH>()) {
             this->m_plyvmhTable = PlyvmhTable(deck.getKeyword("PLYVMH"));
         }
@@ -225,6 +229,8 @@ namespace Ewoms {
     TableManager& TableManager::operator=(const TableManager& data) {
         m_simpleTables = data.m_simpleTables;
         m_pvtgTables = data.m_pvtgTables;
+        m_pvtgwTables = data.m_pvtgwTables;
+        m_pvtgwoTables = data.m_pvtgwoTables;
         m_pvtoTables = data.m_pvtoTables;
         m_rock2dTables = data.m_rock2dTables;
         m_rock2dtrTables = data.m_rock2dtrTables;
@@ -235,10 +241,10 @@ namespace Ewoms {
         m_plmixparTable = data.m_plmixparTable;
         m_shrateTable = data.m_shrateTable;
         m_stone1exTable = data.m_stone1exTable;
-        m_tlmixparTable = data.m_tlmixparTable;
         m_viscrefTable = data.m_viscrefTable;
         m_watdentTable = data.m_watdentTable;
         m_pvtwsaltTables = data.m_pvtwsaltTables;
+        m_rwgsaltTables = data.m_rwgsaltTables;
         m_bdensityTables = data.m_bdensityTables;
         m_sdensityTables = data.m_sdensityTables;
         m_plymwinjTables = data.m_plymwinjTables;
@@ -260,6 +266,7 @@ namespace Ewoms {
         watDenT = data.watDenT;
         stcond = data.stcond;
         m_gas_comp_index = data.m_gas_comp_index;
+        m_tlmixpar = data.m_tlmixpar;
 
         return *this;
     }
@@ -269,6 +276,8 @@ namespace Ewoms {
         TableManager result;
         result.m_simpleTables = {{"test", TableContainer::serializeObject()}};
         result.m_pvtgTables = {PvtgTable::serializeObject()};
+        result.m_pvtgwTables = {PvtgwTable::serializeObject()};
+        result.m_pvtgwoTables = {PvtgwoTable::serializeObject()};
         result.m_pvtoTables = {PvtoTable::serializeObject()};
         result.m_rock2dTables = {Rock2dTable::serializeObject()};
         result.m_rock2dtrTables = {Rock2dtrTable::serializeObject()};
@@ -280,10 +289,10 @@ namespace Ewoms {
         result.m_plmixparTable = PlmixparTable::serializeObject();
         result.m_shrateTable = ShrateTable::serializeObject();
         result.m_stone1exTable = Stone1exTable::serializeObject();
-        result.m_tlmixparTable = TlmixparTable::serializeObject();
         result.m_viscrefTable = ViscrefTable::serializeObject();
         result.m_watdentTable = WatdentTable::serializeObject();
         result.m_pvtwsaltTables = {PvtwsaltTable::serializeObject()};
+        result.m_rwgsaltTables = {RwgsaltTable::serializeObject()};
         result.m_bdensityTables = {BrineDensityTable::serializeObject()};
         result.m_sdensityTables = {SolventDensityTable::serializeObject()};
         result.m_plymwinjTables = {{1, Ewoms::PlymwinjTable::serializeObject()}};
@@ -303,7 +312,7 @@ namespace Ewoms {
         result.stcond = StandardCond::serializeObject();
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
-
+        result.m_tlmixpar = TLMixpar::serializeObject();
         return result;
     }
 
@@ -423,6 +432,8 @@ namespace Ewoms {
         addTables( "PBVD", m_eqldims.getNumEquilRegions());
         addTables( "PDVD", m_eqldims.getNumEquilRegions());
         addTables( "SALTVD", m_eqldims.getNumEquilRegions());
+        addTables( "SALTPVD", m_eqldims.getNumEquilRegions());
+        addTables( "PERMFACT", m_eqldims.getNumEquilRegions());
 
         addTables( "AQUTAB", m_aqudims.getNumInfluenceTablesCT());
         {
@@ -484,7 +495,9 @@ namespace Ewoms {
         initSimpleTableContainer<RvvdTable>(deck, "RVVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<PbvdTable>(deck, "PBVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<PdvdTable>(deck, "PDVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<SaltpvdTable>(deck, "SALTPVD" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<SaltvdTable>(deck, "SALTVD" , m_eqldims.getNumEquilRegions());
+        initSimpleTableContainer<SaltvdTable>(deck, "PERMFACT" , m_eqldims.getNumEquilRegions());
         initSimpleTableContainer<AqutabTable>(deck, "AQUTAB" , m_aqudims.getNumInfluenceTablesCT());
         {
             size_t numEndScaleTables = ParserKeywords::ENDSCALE::NUM_TABLES::defaultValue;
@@ -862,6 +875,14 @@ namespace Ewoms {
         return getTables("SALTVD");
     }
 
+    const TableContainer& TableManager::getSaltpvdTables() const {
+        return getTables("SALTPVD");
+    }
+
+    const TableContainer& TableManager::getPermfactTables() const {
+        return getTables("PERMFACT");
+    }
+
     const TableContainer& TableManager::getEnkrvdTables() const {
         return getTables("ENKRVD");
     }
@@ -958,6 +979,14 @@ namespace Ewoms {
         return m_pvtgTables;
     }
 
+    const std::vector<PvtgwTable>& TableManager::getPvtgwTables() const {
+        return m_pvtgwTables;
+    }
+
+    const std::vector<PvtgwoTable>& TableManager::getPvtgwoTables() const {
+        return m_pvtgwoTables;
+    }
+
     const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;
     }
@@ -984,6 +1013,10 @@ namespace Ewoms {
 
     const std::vector<PvtwsaltTable>& TableManager::getPvtwSaltTables() const {
         return this->m_pvtwsaltTables;
+    }
+
+    const std::vector<RwgsaltTable>& TableManager::getRwgSaltTables() const {
+        return this->m_rwgsaltTables;
     }
 
     const std::vector<BrineDensityTable>& TableManager::getBrineDensityTables() const {
@@ -1045,8 +1078,8 @@ namespace Ewoms {
         return m_stone1exTable;
     }
 
-    const TlmixparTable& TableManager::getTlmixparTable() const {
-        return m_tlmixparTable;
+    const TLMixpar& TableManager::getTLMixpar() const {
+        return m_tlmixpar;
     }
 
     const JFunc& TableManager::getJFunc() const {
@@ -1124,6 +1157,8 @@ namespace Ewoms {
 
         return m_simpleTables == data.m_simpleTables &&
                m_pvtgTables == data.m_pvtgTables &&
+               m_pvtgwTables == data.m_pvtgwTables &&
+               m_pvtgwoTables == data.m_pvtgwoTables &&
                m_pvtoTables == data.m_pvtoTables &&
                m_rock2dTables == data.m_rock2dTables &&
                m_rock2dtrTables == data.m_rock2dtrTables &&
@@ -1134,15 +1169,16 @@ namespace Ewoms {
                m_plyvmhTable == data.m_plyvmhTable &&
                m_shrateTable == data.m_shrateTable &&
                m_stone1exTable == data.m_stone1exTable &&
-               m_tlmixparTable == data.m_tlmixparTable &&
                m_viscrefTable == data.m_viscrefTable &&
                m_watdentTable == data.m_watdentTable &&
                m_pvtwsaltTables == data.m_pvtwsaltTables &&
+               m_rwgsaltTables == data.m_rwgsaltTables &&
                m_bdensityTables == data.m_bdensityTables &&
                m_sdensityTables == data.m_sdensityTables &&
                m_plymwinjTables == data.m_plymwinjTables &&
                m_skprwatTables == data.m_skprwatTables &&
                m_skprpolyTables == data.m_skprpolyTables &&
+               m_tlmixpar == data.m_tlmixpar &&
                m_tabdims == data.m_tabdims &&
                m_regdims == data.m_regdims &&
                m_eqldims == data.m_eqldims &&

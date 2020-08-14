@@ -46,6 +46,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpinjtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/tlmixpar.hh>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 
@@ -1737,4 +1738,34 @@ OILDENT
     BOOST_CHECK_EQUAL(gd.size(), 3);
     BOOST_CHECK( gd == od );
     BOOST_CHECK( wd.size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(TLMIXPAR) {
+    const auto deck_string = R"(
+RUNSPEC
+
+MISCIBLE
+ 2 /
+
+PROPS
+
+TLMIXPAR
+  0  0.25 /
+  0.25    /
+
+)";
+    Ewoms::Parser parser;
+    const auto& deck = parser.parseString(deck_string);
+    Ewoms::TLMixpar tlm(deck);
+    BOOST_CHECK_EQUAL(tlm.size(), 2);
+
+    const auto& r0 = tlm[0];
+    const auto& r1 = tlm[1];
+
+    BOOST_CHECK_EQUAL( r0.viscosity_parameter, 0);
+    BOOST_CHECK_EQUAL( r0.density_parameter, 0.25);
+    BOOST_CHECK_EQUAL( r1.viscosity_parameter, 0.25);
+    BOOST_CHECK_EQUAL( r1.density_parameter, 0.25);
+
+    BOOST_CHECK_THROW(tlm[2], std::out_of_range);
 }

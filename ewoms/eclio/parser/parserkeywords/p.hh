@@ -417,12 +417,7 @@ namespace ParserKeywords {
        PERMFACT();
        static const std::string keywordName;
 
-       class POROSITY {
-       public:
-           static const std::string itemName;
-       };
-
-       class PERMFACTMULT {
+       class DATA {
        public:
            static const std::string itemName;
        };

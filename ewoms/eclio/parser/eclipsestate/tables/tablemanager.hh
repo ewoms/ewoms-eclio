@@ -31,12 +31,15 @@
 
 #include <ewoms/eclio/parser/eclipsestate/tables/dent.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtgtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/pvtgwtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/pvtgwotable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtotable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rocktabtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rock2dtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rock2dtrtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/plyshlogtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtwsalttable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/rwgsalttable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/brinedensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/solventdensitytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/standardcond.hh>
@@ -55,6 +58,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/skprpolytable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/eqldims.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/regdims.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/tlmixpar.hh>
 
 namespace Ewoms {
 
@@ -75,7 +79,7 @@ namespace Ewoms {
         const Eqldims& getEqldims() const;
         const Aqudims& getAqudims() const;
         const Regdims& getRegdims() const;
-
+        const TLMixpar& getTLMixpar() const;
         /*
           WIll return max{ Tabdims::NTFIP , Regdims::NTFIP }.
         */
@@ -95,6 +99,8 @@ namespace Ewoms {
         const TableContainer& getPbvdTables() const;
         const TableContainer& getPdvdTables() const;
         const TableContainer& getSaltvdTables() const;
+        const TableContainer& getSaltpvdTables() const;
+        const TableContainer& getPermfactTables() const;
         const TableContainer& getEnkrvdTables() const;
         const TableContainer& getEnptvdTables() const;
         const TableContainer& getImkrvdTables() const;
@@ -129,6 +135,8 @@ namespace Ewoms {
         const JFunc& getJFunc() const;
 
         const std::vector<PvtgTable>& getPvtgTables() const;
+        const std::vector<PvtgwTable>& getPvtgwTables() const;
+        const std::vector<PvtgwoTable>& getPvtgwoTables() const;
         const std::vector<PvtoTable>& getPvtoTables() const;
         const std::vector<Rock2dTable>& getRock2dTables() const;
         const std::vector<Rock2dtrTable>& getRock2dtrTables() const;
@@ -142,6 +150,7 @@ namespace Ewoms {
         std::size_t gas_comp_index() const;
         const PvtwTable& getPvtwTable() const;
         const std::vector<PvtwsaltTable>& getPvtwSaltTables() const;
+        const std::vector<RwgsaltTable>& getRwgSaltTables() const;
         const std::vector<BrineDensityTable>& getBrineDensityTables() const;
         const std::vector<SolventDensityTable>& getSolventDensityTables() const;
 
@@ -153,7 +162,6 @@ namespace Ewoms {
         const PlmixparTable& getPlmixparTable() const;
         const ShrateTable& getShrateTable() const;
         const Stone1exTable& getStone1exTable() const;
-        const TlmixparTable& getTlmixparTable() const;
         const WatdentTable& getWatdentTable() const;
         const std::map<int, PlymwinjTable>& getPlymwinjTables() const;
         const std::map<int, SkprwatTable>& getSkprwatTables() const;
@@ -190,6 +198,8 @@ namespace Ewoms {
             serializer(split.rockMax);
             serializer.map(split.rockMap);
             serializer.vector(m_pvtgTables);
+            serializer.vector(m_pvtgwTables);
+            serializer.vector(m_pvtgwoTables);
             serializer.vector(m_pvtoTables);
             serializer.vector(m_rock2dTables);
             serializer.vector(m_rock2dtrTables);
@@ -201,10 +211,10 @@ namespace Ewoms {
             m_plmixparTable.serializeOp(serializer);
             m_shrateTable.serializeOp(serializer);
             m_stone1exTable.serializeOp(serializer);
-            m_tlmixparTable.serializeOp(serializer);
             m_viscrefTable.serializeOp(serializer);
             m_watdentTable.serializeOp(serializer);
             serializer.vector(m_pvtwsaltTables);
+            serializer.vector(m_rwgsaltTables);
             serializer.vector(m_bdensityTables);
             serializer.vector(m_sdensityTables);
             serializer.map(m_plymwinjTables);
@@ -225,6 +235,7 @@ namespace Ewoms {
             stcond.serializeOp(serializer);
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
+            m_tlmixpar.serializeOp(serializer);
             if (!serializer.isSerializing()) {
                 m_simpleTables = simpleTables;
                 if (split.plyshMax > 0) {
@@ -312,6 +323,21 @@ namespace Ewoms {
             size_t regionIdx = 0;
             for (unsigned lineIdx = 0; lineIdx < numEntries; lineIdx += 2) {
                 pvtwtables[regionIdx].init(keyword.getRecord(lineIdx), keyword.getRecord(lineIdx+1));
+                ++regionIdx;
+            }
+            assert(regionIdx == numTables);
+        }
+
+        template <class TableType>
+        void initRwgsaltTables(const Deck& deck,  std::vector<TableType>& rwgtables ) {
+
+            size_t numTables = m_tabdims.getNumPVTTables();
+            rwgtables.resize(numTables);
+
+            const auto& keyword = deck.getKeyword("RWGSALT");
+            size_t regionIdx = 0;
+            for (const auto& record : keyword) {
+                rwgtables[regionIdx].init(record);
                 ++regionIdx;
             }
             assert(regionIdx == numTables);
@@ -454,6 +480,8 @@ namespace Ewoms {
 
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
+        std::vector<PvtgwTable> m_pvtgwTables;
+        std::vector<PvtgwoTable> m_pvtgwoTables;
         std::vector<PvtoTable> m_pvtoTables;
         std::vector<Rock2dTable> m_rock2dTables;
         std::vector<Rock2dtrTable> m_rock2dtrTables;
@@ -465,10 +493,10 @@ namespace Ewoms {
         PlmixparTable m_plmixparTable;
         ShrateTable m_shrateTable;
         Stone1exTable m_stone1exTable;
-        TlmixparTable m_tlmixparTable;
         ViscrefTable m_viscrefTable;
         WatdentTable m_watdentTable;
         std::vector<PvtwsaltTable> m_pvtwsaltTables;
+        std::vector<RwgsaltTable> m_rwgsaltTables;
         std::vector<BrineDensityTable> m_bdensityTables;
         std::vector<SolventDensityTable> m_sdensityTables;
         std::map<int, PlymwinjTable> m_plymwinjTables;
@@ -479,6 +507,7 @@ namespace Ewoms {
         Regdims m_regdims;
         Eqldims m_eqldims;
         Aqudims m_aqudims;
+        TLMixpar m_tlmixpar;
 
         bool hasImptvd = false;// if deck has keyword IMPTVD
         bool hasEnptvd = false;// if deck has keyword ENPTVD
