@@ -44,6 +44,9 @@ public:
         : std::string(s.data(), s.size())
     {}
 
+    RawString()
+    {}
+
     static std::vector<std::string> strings(const std::vector<RawString>& raw_strings) {
         std::vector<std::string> std_strings;
         for (const auto& rstring : raw_strings)

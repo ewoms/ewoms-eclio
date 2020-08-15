@@ -69,7 +69,9 @@ namespace Ewoms {
         } else {
             std::unordered_set<std::string> well_set;
             auto pattern = wlist_pattern.substr(1);
-            for (const auto& [name, wlist] : this->wlists) {
+            for (const auto& wlistItem : this->wlists) {
+                const auto& name = wlistItem.first;
+                const auto& wlist = wlistItem.second;
                 auto wlist_name = name.substr(1);
                 int flags = 0;
                 if (fnmatch(pattern.c_str(), wlist_name.c_str(), flags) == 0)
