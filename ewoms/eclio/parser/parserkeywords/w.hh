@@ -746,6 +746,11 @@ namespace ParserKeywords {
            static const std::string itemName;
        };
 
+       class GLR_LIMIT {
+       public:
+           static const std::string itemName;
+       };
+
        class WGR_LIMIT {
        public:
            static const std::string itemName;
@@ -1087,6 +1092,41 @@ namespace ParserKeywords {
        public:
            static const std::string itemName;
            static const double defaultValue;
+       };
+   };
+
+
+
+   class WECONCMF : public ParserKeyword {
+   public:
+       WECONCMF();
+       static const std::string keywordName;
+
+       class WELL {
+       public:
+           static const std::string itemName;
+       };
+
+       class COMPONENT_INDEX {
+       public:
+           static const std::string itemName;
+       };
+
+       class MAXIMUM_MOLE_FRACTION {
+       public:
+           static const std::string itemName;
+       };
+
+       class WORKOVER_PROCEDURE {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
+       };
+
+       class END_RUN_FLAG {
+       public:
+           static const std::string itemName;
+           static const std::string defaultValue;
        };
    };
 

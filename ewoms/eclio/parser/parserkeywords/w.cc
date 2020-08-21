@@ -953,14 +953,22 @@ WCUTBACK::WCUTBACK( ) : ParserKeyword("WCUTBACK")
      }
      {
         ParserItem item("WCT_LIMIT", ParserItem::itype::DOUBLE);
+        item.push_backDimension("LiquidSurfaceVolume/LiquidSurfaceVolume");
         record.addItem(item);
      }
      {
         ParserItem item("GOR_LIMIT", ParserItem::itype::DOUBLE);
+        item.push_backDimension("GasDissolutionFactor");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("GLR_LIMIT", ParserItem::itype::DOUBLE);
+        item.push_backDimension("GasDissolutionFactor");
         record.addItem(item);
      }
      {
         ParserItem item("WGR_LIMIT", ParserItem::itype::DOUBLE);
+        item.push_backDimension("OilDissolutionFactor");
         record.addItem(item);
      }
      {
@@ -987,21 +995,25 @@ WCUTBACK::WCUTBACK( ) : ParserKeyword("WCUTBACK")
      {
         ParserItem item("WCT_LIMIT_REVERSE", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
+        item.push_backDimension("LiquidSurfaceVolume/LiquidSurfaceVolume");
         record.addItem(item);
      }
      {
         ParserItem item("GOR_LIMIT_REVERSE", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
+        item.push_backDimension("GasDissolutionFactor");
         record.addItem(item);
      }
      {
         ParserItem item("GLR_LIMIT_REVERSE", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
+        item.push_backDimension("GasDissolutionFactor");
         record.addItem(item);
      }
      {
         ParserItem item("WGR_LIMIT_REVERSE", ParserItem::itype::DOUBLE);
         item.setDefault( double(0) );
+        item.push_backDimension("OilDissolutionFactor");
         record.addItem(item);
      }
      {
@@ -1016,6 +1028,7 @@ const std::string WCUTBACK::keywordName = "WCUTBACK";
 const std::string WCUTBACK::WELL::itemName = "WELL";
 const std::string WCUTBACK::WCT_LIMIT::itemName = "WCT_LIMIT";
 const std::string WCUTBACK::GOR_LIMIT::itemName = "GOR_LIMIT";
+const std::string WCUTBACK::GLR_LIMIT::itemName = "GLR_LIMIT";
 const std::string WCUTBACK::WGR_LIMIT::itemName = "WGR_LIMIT";
 const std::string WCUTBACK::RATE_CUTBACK::itemName = "RATE_CUTBACK";
 const double WCUTBACK::RATE_CUTBACK::defaultValue = 1.000000;
@@ -1400,6 +1413,49 @@ const double WECON::MIN_LIQUID_PRODCUTION_RATE::defaultValue = 0.000000;
 const std::string WECON::MAX_TEMP::itemName = "MAX_TEMP";
 const std::string WECON::MIN_RES_FLUID_RATE::itemName = "MIN_RES_FLUID_RATE";
 const double WECON::MIN_RES_FLUID_RATE::defaultValue = 0.000000;
+
+
+WECONCMF::WECONCMF( ) : ParserKeyword("WECONCMF")
+{
+  setSizeType(SLASH_TERMINATED);
+  addValidSectionName("SCHEDULE");
+  clearDeckNames();
+  addDeckName("WECONCMF");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("WELL", ParserItem::itype::STRING);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("COMPONENT_INDEX", ParserItem::itype::INT);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("MAXIMUM_MOLE_FRACTION", ParserItem::itype::UDA);
+        record.addItem(item);
+     }
+     {
+        ParserItem item("WORKOVER_PROCEDURE", ParserItem::itype::STRING);
+        item.setDefault( std::string("NONE") );
+        record.addItem(item);
+     }
+     {
+        ParserItem item("END_RUN_FLAG", ParserItem::itype::STRING);
+        item.setDefault( std::string("NO") );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string WECONCMF::keywordName = "WECONCMF";
+const std::string WECONCMF::WELL::itemName = "WELL";
+const std::string WECONCMF::COMPONENT_INDEX::itemName = "COMPONENT_INDEX";
+const std::string WECONCMF::MAXIMUM_MOLE_FRACTION::itemName = "MAXIMUM_MOLE_FRACTION";
+const std::string WECONCMF::WORKOVER_PROCEDURE::itemName = "WORKOVER_PROCEDURE";
+const std::string WECONCMF::WORKOVER_PROCEDURE::defaultValue = "NONE";
+const std::string WECONCMF::END_RUN_FLAG::itemName = "END_RUN_FLAG";
+const std::string WECONCMF::END_RUN_FLAG::defaultValue = "NO";
 
 
 WECONINJ::WECONINJ( ) : ParserKeyword("WECONINJ")

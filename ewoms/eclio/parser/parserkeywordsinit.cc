@@ -1017,6 +1017,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::WDRILRES >();
    p.addKeyword< ParserKeywords::WDRILTIM >();
    p.addKeyword< ParserKeywords::WECON >();
+   p.addKeyword< ParserKeywords::WECONCMF >();
    p.addKeyword< ParserKeywords::WECONINJ >();
    p.addKeyword< ParserKeywords::WECONT >();
    p.addKeyword< ParserKeywords::WEFAC >();
