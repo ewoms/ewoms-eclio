@@ -19,10 +19,11 @@
 #ifndef UDQSET_H
 #define UDQSET_H
 
+#include <optional>
 #include <stdexcept>
-#include <vector>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
@@ -50,9 +51,8 @@ public:
     double value() const;
     const std::string& wgname() const;
 public:
-    double m_value;
+    std::optional<double> m_value;
     std::string m_wgname;
-    bool m_defined = false;
 };
 
 class UDQSet {

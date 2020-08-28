@@ -173,7 +173,6 @@ namespace Ewoms {
               is required to calculate the summary variables.
             */
             bool require3DField( const std::string& keyword) const;
-            bool requireFIPNUM( ) const;
 
             bool operator==(const SummaryConfig& data) const;
 

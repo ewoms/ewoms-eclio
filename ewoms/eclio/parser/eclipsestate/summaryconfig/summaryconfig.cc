@@ -1126,16 +1126,6 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
     return false;
 }
 
-bool SummaryConfig::requireFIPNUM( ) const {
-    return this->hasKeyword("ROIP")  ||
-           this->hasKeyword("ROIPL") ||
-           this->hasKeyword("RGIP")  ||
-           this->hasKeyword("RGIPL") ||
-           this->hasKeyword("RGIPG") ||
-           this->hasKeyword("RWIP")  ||
-           this->hasKeyword("RPR");
-}
-
 bool SummaryConfig::operator==(const Ewoms::SummaryConfig& data) const {
     return this->keywords == data.keywords &&
            this->short_keywords == data.short_keywords &&

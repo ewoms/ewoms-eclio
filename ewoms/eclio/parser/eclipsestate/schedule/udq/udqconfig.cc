@@ -90,6 +90,7 @@ namespace Ewoms {
             this->m_definitions.erase( defined_iter );
 
         this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, expression)));
+        this->define_order.insert(quantity);
     }
 
     void UDQConfig::add_unit(const std::string& keyword, const std::string& quoted_unit) {
@@ -135,26 +136,25 @@ namespace Ewoms {
         }
     }
 
+    const UDQDefine& UDQConfig::define(const std::string& key) const {
+        return this->m_definitions.at(key);
+    }
+
     std::vector<UDQDefine> UDQConfig::definitions() const {
         std::vector<UDQDefine> ret;
-        for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE) {
-                const std::string& key = index_pair.first;
-                ret.push_back(this->m_definitions.at(key));
-            }
-        }
+
+        for (const auto& key : this->define_order)
+            ret.push_back(this->m_definitions.at(key));
+
         return ret;
     }
 
     std::vector<UDQDefine> UDQConfig::definitions(UDQVarType var_type) const {
         std::vector<UDQDefine> filtered_defines;
-        for (const auto& index_pair : this->input_index) {
-            if (index_pair.second.action == UDQAction::DEFINE) {
-                const std::string& key = index_pair.first;
-                const auto& udq_define = this->m_definitions.at(key);
-                if (udq_define.var_type() == var_type)
-                    filtered_defines.push_back(udq_define);
-            }
+        for (const auto& key : this->define_order) {
+            const auto& udq_define = this->m_definitions.at(key);
+            if (udq_define.var_type() == var_type)
+                filtered_defines.push_back(udq_define);
         }
         return filtered_defines;
     }
@@ -294,6 +294,11 @@ namespace Ewoms {
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
             auto ws = def.eval(context);
+            st.update_udq(ws);
+        }
+
+        for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
+            auto ws = assign.eval();
             st.update_udq(ws);
         }
 

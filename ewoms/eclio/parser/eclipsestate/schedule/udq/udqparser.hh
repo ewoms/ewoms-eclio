@@ -19,6 +19,7 @@
 #define UDQPARSER_H
 
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqastnode.hh>
@@ -26,22 +27,24 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
+#include "udqtoken.hh"
+
 namespace Ewoms {
 
 class ParseContext;
 class ErrorGuard;
 
 struct UDQParseNode {
-    UDQParseNode(UDQTokenType type_arg, const std::string& value_arg, const std::vector<std::string>& selector_arg) :
+    UDQParseNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector_arg) :
         type(type_arg),
         value(value_arg),
         selector(selector_arg)
     {
         if (type_arg == UDQTokenType::ecl_expr)
-            this->var_type = UDQ::targetType(value_arg, selector_arg);
+            this->var_type = UDQ::targetType(std::get<std::string>(value_arg), selector_arg);
     }
 
-    UDQParseNode(UDQTokenType type_arg, const std::string& value_arg) :
+    UDQParseNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg) :
         UDQParseNode(type_arg, value_arg, {})
     {}
 
@@ -49,23 +52,31 @@ struct UDQParseNode {
     UDQParseNode(UDQTokenType type_arg) : UDQParseNode(type_arg, "")
     {}
 
+    std::string string() const {
+        if (std::holds_alternative<std::string>(this->value))
+            return std::get<std::string>(this->value);
+        else
+            return std::to_string( std::get<double>(this->value));
+    }
+
     UDQTokenType type;
-    std::string value;
+    std::variant<std::string, double> value;
     std::vector<std::string> selector;
     UDQVarType var_type = UDQVarType::NONE;
 };
 
 class UDQParser {
 public:
-  static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors);
+    static UDQASTNode parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<UDQToken>& tokens_, const ParseContext& parseContext, ErrorGuard& errors);
 
 private:
-    UDQParser(const UDQParams& udq_params1, const std::vector<std::string>& tokens1) :
+    UDQParser(const UDQParams& udq_params1, const std::vector<UDQToken>& tokens_) :
         udq_params(udq_params1),
         udqft(UDQFunctionTable(udq_params)),
-        tokens(tokens1)
+        tokens(tokens_)
     {}
 
+    UDQASTNode parse_set();
     UDQASTNode parse_cmp();
     UDQASTNode parse_add();
     UDQASTNode parse_factor();
@@ -80,7 +91,7 @@ private:
 
     const UDQParams& udq_params;
     UDQFunctionTable udqft;
-    std::vector<std::string> tokens;
+    std::vector<UDQToken> tokens;
     ssize_t current_pos = -1;
 };
 

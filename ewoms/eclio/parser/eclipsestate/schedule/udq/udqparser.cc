@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <cassert>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include "udqparser.hh"
@@ -49,57 +50,27 @@ UDQTokenType UDQParser::get_type(const std::string& arg) const {
     return UDQTokenType::ecl_expr;
 }
 
-std::size_t UDQParser::current_size() const {
-    if (this->tokens.size() == static_cast<std::size_t>(this->current_pos))
-        return 0;
-
-    if (this->current_pos < 0)
-        return 1;
-
-    const std::string& first_arg = this->tokens[this->current_pos];
-    if (this->get_type(first_arg) != UDQTokenType::ecl_expr)
-        return 1;
-
-    std::size_t offset = this->current_pos;
-    while (true) {
-        const std::string& arg = this->tokens[offset];
-        if (this->get_type(arg) != UDQTokenType::ecl_expr)
-            break;
-
-        offset += 1;
-
-        if (offset == this->tokens.size())
-            break;
-    }
-
-    return offset - this->current_pos;
+bool UDQParser::empty() const {
+    return (static_cast<size_t>(this->current_pos) == this->tokens.size());
 }
 
 UDQParseNode UDQParser::next() {
-    this->current_pos += this->current_size();
+    this->current_pos += 1;
     return this->current();
-}
-
-bool UDQParser::empty() const {
-    return (static_cast<size_t>(this->current_pos) == this->tokens.size());
 }
 
 UDQParseNode UDQParser::current() const {
     if (this->empty())
         return UDQTokenType::end;
 
-    const std::string& arg = this->tokens[this->current_pos];
-    auto type = this->get_type(arg);
-    if (type != UDQTokenType::ecl_expr)
-        return UDQParseNode(type, arg);
+    const auto& token = this->tokens[current_pos];
+    if (token.type() == UDQTokenType::number)
+        return UDQParseNode(UDQTokenType::number, token.value());
 
-    std::size_t selector_size = this->current_size() - 1;
-    std::vector<std::string> selector;
-    if (selector_size > 0) {
-        const auto * token_ptr = std::addressof(this->tokens[this->current_pos + 1]);
-        selector.assign( token_ptr, token_ptr + selector_size);
-    }
-    return UDQParseNode(type, arg, selector);
+    if (token.type() == UDQTokenType::ecl_expr)
+        return UDQParseNode(UDQTokenType::ecl_expr, token.value(), token.selector());
+
+    return UDQParseNode(this->get_type(std::get<std::string>(token.value())), token.value());
 }
 
 UDQASTNode UDQParser::parse_factor() {
@@ -107,7 +78,7 @@ UDQASTNode UDQParser::parse_factor() {
 
     if (current.type == UDQTokenType::open_paren) {
         this->next();
-        auto inner_expr = this->parse_cmp();
+        auto inner_expr = this->parse_set();
 
         current = this->current();
         if (current.type != UDQTokenType::close_paren)
@@ -122,7 +93,7 @@ UDQASTNode UDQParser::parse_factor() {
         auto next = this->next();
         if (next.type == UDQTokenType::open_paren) {
             this->next();
-            auto arg_expr = this->parse_cmp();
+            auto arg_expr = this->parse_set();
 
             current = this->current();
             if (current.type != UDQTokenType::close_paren)
@@ -196,7 +167,7 @@ UDQASTNode UDQParser::parse_add() {
                 this->next();
                 if (this->empty())
                     return UDQASTNode( UDQTokenType::error );
-            } else if (current_token.type == UDQTokenType::close_paren || UDQ::cmpFunc(current_token.type))
+            } else if (current_token.type == UDQTokenType::close_paren || UDQ::cmpFunc(current_token.type) || UDQ::setFunc(current_token.type))
                 break;
             else
                 return UDQASTNode( UDQTokenType::error );
@@ -245,11 +216,37 @@ UDQASTNode UDQParser::parse_cmp() {
     return left;
 }
 
+UDQASTNode UDQParser::parse_set() {
+    auto left = this->parse_cmp();
+    if (this->empty())
+        return left;
+
+    auto current = this->current();
+    if (UDQ::setFunc(current.type)) {
+        auto func_node = current;
+        this->next();
+        if (this->empty())
+            return UDQASTNode(UDQTokenType::error);
+
+        auto right = this->parse_set();
+        return UDQASTNode(current.type, current.value, left, right);
+    }
+    return left;
+}
+
 namespace {
-    void dump_tokens(const std::string& target_var, const std::vector<std::string>& tokens) {
+    void dump_tokens(const std::string& target_var, const std::vector<UDQToken>& tokens) {
         std::cout << target_var << " = ";
-        for (const auto& token : tokens)
-            std::cout << token << " ";
+        for (const auto& token : tokens) {
+            const auto& value = token.value();
+            if (std::holds_alternative<double>(value))
+                std::cout << std::get<double>(token.value()) << " ";
+            else {
+                std::cout << std::get<std::string>(token.value()) << " ";
+                for (const auto& s : token.selector())
+                    std::cout << s << " ";
+            }
+        }
         std::cout << std::endl;
     }
 
@@ -274,16 +271,16 @@ bool static_type_check(UDQVarType lhs, UDQVarType rhs) {
 }
 }
 
-UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<std::string>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
+UDQASTNode UDQParser::parse(const UDQParams& udq_params, UDQVarType target_type, const std::string& target_var, const std::vector<UDQToken>& tokens, const ParseContext& parseContext, ErrorGuard& errors)
 {
     UDQParser parser(udq_params, tokens);
     parser.next();
-    auto tree = parser.parse_cmp();
+    auto tree = parser.parse_set();
 
     if (!parser.empty()) {
         size_t index = parser.current_pos;
         auto current = parser.current();
-        std::string msg = "Extra unhandled data starting with token[" + std::to_string(index) + "] = '" + current.value + "'";
+        std::string msg = "Extra unhandled data starting with token[" + std::to_string(index) + "] = '" + current.string() + "'";
         parseContext.handleError(ParseContext::UDQ_PARSE_ERROR, msg, errors);
         return UDQASTNode( udq_params.undefinedValue() );
     }

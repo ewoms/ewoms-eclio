@@ -28,6 +28,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
 #include <ewoms/eclio/parser/rawdeck/rawconsts.hh>
+#include "udqtoken.hh"
 #include "udqparser.hh"
 
 #include <ewoms/common/optional.hh>
@@ -58,6 +59,44 @@ std::vector<std::string> quote_split(const std::string& item) {
         offset = quote_pos2 + 1;
     }
     return items;
+}
+
+std::vector<UDQToken> make_tokens(const std::vector<std::string>& string_tokens) {
+    if (string_tokens.empty())
+        return {};
+
+    std::vector<UDQToken> tokens;
+    std::size_t token_index = 0;
+    while (true) {
+        const auto& string_token = string_tokens[token_index];
+        auto token_type = UDQ::tokenType(string_tokens[token_index]);
+        token_index += 1;
+
+        if (token_type == UDQTokenType::ecl_expr) {
+            std::vector<std::string> selector;
+            while (true) {
+                if (token_index == string_tokens.size())
+                    break;
+
+                auto next_type = UDQ::tokenType(string_tokens[token_index]);
+                if (next_type == UDQTokenType::ecl_expr) {
+                    const auto& select_token = string_tokens[token_index];
+                    if (RawConsts::is_quote()(select_token[0]))
+                        selector.push_back(select_token.substr(1, select_token.size() - 2));
+                    else
+                        selector.push_back(select_token);
+                    token_index += 1;
+                } else
+                    break;
+            }
+            tokens.emplace_back( string_token, selector );
+        } else
+            tokens.emplace_back( string_token, token_type );
+
+        if (token_index == string_tokens.size())
+            break;
+    }
+    return tokens;
 }
 
 }
@@ -121,11 +160,11 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword))
 {
-    std::vector<std::string> tokens;
+    std::vector<std::string> string_tokens;
     for (const std::string& deck_item : deck_data) {
         for (const std::string& item : quote_split(deck_item)) {
             if (RawConsts::is_quote()(item[0])) {
-                tokens.push_back(item.substr(1, item.size() - 2));
+                string_tokens.push_back(item);
                 continue;
             }
 
@@ -134,7 +173,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
             while (true) {
                 auto token = next_token(item, offset, splitters);
                 if (token) {
-                    tokens.push_back( *token );
+                    string_tokens.push_back( *token );
                     offset += token->size();
                 } else
                     break;
@@ -146,8 +185,9 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
       leading '-' to change sign; we just hack it up by adding a fictious '0'
       token in front.
     */
-    if (tokens[0] == "-")
-        tokens.insert( tokens.begin(), "0" );
+    if (string_tokens[0] == "-")
+        string_tokens.insert( string_tokens.begin(), "0" );
+    std::vector<UDQToken> tokens = make_tokens(string_tokens);
 
     this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
     this->string_data = "";

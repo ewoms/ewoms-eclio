@@ -162,11 +162,13 @@ namespace UDQ {
     UDQVarType varType(const std::string& keyword);
     UDQVarType coerce(UDQVarType t1, UDQVarType t2);
     UDQAction actionType(const std::string& action_string);
+    UDQTokenType tokenType(const std::string& func_name);
     UDQTokenType funcType(const std::string& func_name);
     bool binaryFunc(UDQTokenType token_type);
     bool elementalUnaryFunc(UDQTokenType token_type);
     bool scalarFunc(UDQTokenType token_type);
     bool cmpFunc(UDQTokenType token_type);
+    bool setFunc(UDQTokenType token_type);
 
     std::string typeName(UDQVarType var_type);
     UDAKeyword keyword(UDAControl control);

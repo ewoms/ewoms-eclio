@@ -53,6 +53,11 @@ namespace {
                                                  UDQTokenType::binary_cmp_lt,
                                                  UDQTokenType::binary_cmp_gt};
 
+    const std::set<UDQTokenType> set_func = {UDQTokenType::binary_op_uadd,
+                                             UDQTokenType::binary_op_umul,
+                                             UDQTokenType::binary_op_umin,
+                                             UDQTokenType::binary_op_umax};
+
     const std::set<UDQTokenType> scalar_func = {UDQTokenType::scalar_func_sum,
                                                 UDQTokenType::scalar_func_avea,
                                                 UDQTokenType::scalar_func_aveg,
@@ -229,6 +234,10 @@ bool cmpFunc(UDQTokenType token_type) {
     return (cmp_func.count(token_type) > 0);
 }
 
+bool setFunc(UDQTokenType token_type) {
+    return (set_func.count(token_type) > 0);
+}
+
 UDQTokenType funcType(const std::string& func_name) {
     if (func_type.count(func_name) > 0)
         return func_type.at(func_name);
@@ -238,6 +247,25 @@ UDQTokenType funcType(const std::string& func_name) {
     }
 
     return UDQTokenType::error;
+}
+
+UDQTokenType tokenType(const std::string& token) {
+    auto token_type = funcType(token);
+    if (token_type == UDQTokenType::error) {
+        if (token == "(")
+            token_type = UDQTokenType::open_paren;
+        else if (token == ")")
+            token_type = UDQTokenType::close_paren;
+        else {
+            try {
+                std::stod(token);
+                token_type = UDQTokenType::number;
+            } catch(const std::invalid_argument& exc) {
+                token_type = UDQTokenType::ecl_expr;
+            }
+        }
+    }
+    return token_type;
 }
 
 UDQVarType coerce(UDQVarType t1, UDQVarType t2) {

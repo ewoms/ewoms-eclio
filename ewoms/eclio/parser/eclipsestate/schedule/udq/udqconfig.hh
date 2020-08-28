@@ -31,6 +31,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/orderedmap.hh>
+#include <ewoms/eclio/parser/eclipsestate/util/iorderset.hh>
 
 namespace Ewoms {
 
@@ -55,6 +56,7 @@ namespace Ewoms {
         void add_define(const std::string& quantity, const std::vector<std::string>& expression);
 
         void eval(SummaryState& st) const;
+        const UDQDefine& define(const std::string& key) const;
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;
@@ -107,6 +109,7 @@ namespace Ewoms {
         std::unordered_map<std::string, UDQAssign> m_assignments;
         std::unordered_map<std::string, std::string> units;
 
+        IOrderSet<std::string> define_order;
         OrderedMap<std::string, UDQIndex> input_index;
         std::map<UDQVarType, std::size_t> type_count;
     };

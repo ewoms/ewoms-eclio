@@ -626,7 +626,6 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
 
         const auto summary = createSummary( input );
         BOOST_CHECK( summary.require3DField( "PRESSURE"));
-        BOOST_CHECK( !summary.requireFIPNUM( ));
     }
 
     {
@@ -660,7 +659,6 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
         const auto input = "RPR\n/\n";
         const auto summary = createSummary( input );
         BOOST_CHECK( summary.require3DField( "PRESSURE"));
-        BOOST_CHECK( summary.requireFIPNUM( ));
         BOOST_CHECK( summary.hasKeyword( "RPR" ) );
         BOOST_CHECK( summary.hasSummaryKey( "RPR:1" ) );
         BOOST_CHECK( summary.hasSummaryKey( "RPR:3" ) );
@@ -676,7 +674,6 @@ BOOST_AUTO_TEST_CASE( summary_require3DField ) {
         const auto input = "RGIPL\n/\n";
         const auto summary = createSummary( input );
         BOOST_CHECK( summary.require3DField( "GIPL"));
-        BOOST_CHECK( summary.requireFIPNUM( ));
     }
 }
 
