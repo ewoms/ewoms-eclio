@@ -69,12 +69,12 @@ bool is_udq(const std::string& key) {
         this->values[key] = value;
     }
 
-    std::optional<double> UDQContext::get(const std::string& key) const {
+    Ewoms::optional<double> UDQContext::get(const std::string& key) const {
         if (is_udq(key)) {
             if (this->udq_state.has(key))
                 return this->udq_state.get(key);
 
-            return std::nullopt;
+            return Ewoms::nullopt;
         }
 
         const auto& pair_ptr = this->values.find(key);
@@ -84,22 +84,22 @@ bool is_udq(const std::string& key) {
         return this->summary_state.get(key);
     }
 
-    std::optional<double> UDQContext::get_well_var(const std::string& well, const std::string& var) const {
+    Ewoms::optional<double> UDQContext::get_well_var(const std::string& well, const std::string& var) const {
         if (is_udq(var)) {
             if (this->udq_state.has_well_var(well, var))
                 return this->udq_state.get_well_var(well, var);
 
-            return std::nullopt;
+            return Ewoms::nullopt;
         }
         return this->summary_state.get_well_var(well, var);
     }
 
-    std::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
+    Ewoms::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
         if (is_udq(var)) {
             if (this->udq_state.has_group_var(group, var))
                 return this->udq_state.get_group_var(group, var);
 
-            return std::nullopt;
+            return Ewoms::nullopt;
         }
         return this->summary_state.get_group_var(group, var);
     }

@@ -70,7 +70,7 @@ UDQParseNode UDQParser::current() const {
     if (token.type() == UDQTokenType::ecl_expr)
         return UDQParseNode(UDQTokenType::ecl_expr, token.value(), token.selector());
 
-    return UDQParseNode(this->get_type(std::get<std::string>(token.value())), token.value());
+    return UDQParseNode(this->get_type(Ewoms::get<std::string>(token.value())), token.value());
 }
 
 UDQASTNode UDQParser::parse_factor() {
@@ -239,10 +239,10 @@ namespace {
         std::cout << target_var << " = ";
         for (const auto& token : tokens) {
             const auto& value = token.value();
-            if (std::holds_alternative<double>(value))
-                std::cout << std::get<double>(token.value()) << " ";
+            if (Ewoms::holds_alternative<double>(value))
+                std::cout << Ewoms::get<double>(token.value()) << " ";
             else {
-                std::cout << std::get<std::string>(token.value()) << " ";
+                std::cout << Ewoms::get<std::string>(token.value()) << " ";
                 for (const auto& s : token.selector())
                     std::cout << s << " ";
             }

@@ -40,7 +40,7 @@ UDQScalar UDQScalar::deserialize(Serializer& ser) {
 
 void UDQScalar::serialize(Serializer& ser) const {
     ser.put<std::string>(this->m_wgname);
-    if (this->m_value.has_value()) {
+    if (static_cast<bool>(this->m_value)) {
         ser.put<bool>(true);
         ser.put<double>(*this->m_value);
     } else
@@ -57,15 +57,14 @@ UDQScalar::UDQScalar(const std::string& wgname) :
 {}
 
 bool UDQScalar::defined() const {
-    return this->m_value.has_value();
+    return static_cast<bool>(this->m_value);
 }
 
-const std::optional<double>& UDQScalar::value() const {
+const Ewoms::optional<double>& UDQScalar::value() const {
     return this->m_value;
 }
 
 double UDQScalar::get() const {
-    if (!this->m_value.has_value())
         throw std::invalid_argument("UDQSCalar: Value not defined  wgname: " + this->m_wgname);
 
     return *this->m_value;
@@ -75,28 +74,28 @@ const std::string& UDQScalar::wgname() const {
     return this->m_wgname;
 }
 
-void UDQScalar::assign(const std::optional<double>& value) {
-    if (value.has_value()) {
+void UDQScalar::assign(const Ewoms::optional<double>& value) {
+    if (static_cast<bool>(value)) {
         if (std::isfinite(*value))
             this->m_value = value;
         else
-            this->m_value = std::nullopt;
+            this->m_value = Ewoms::nullopt;
     } else
-        this->m_value = std::nullopt;
+        this->m_value = Ewoms::nullopt;
 }
 
 void UDQScalar::assign(double value) {
     if (std::isfinite(value))
         this->m_value = value;
     else
-        this->m_value = std::nullopt;
+        this->m_value = Ewoms::nullopt;
 }
 
 void UDQScalar::operator-=(const UDQScalar& rhs) {
     if (this->defined() && rhs.defined())
         this->assign(*this->m_value - *rhs.m_value);
     else
-        this->m_value = std::nullopt;
+        this->m_value = Ewoms::nullopt;
 }
 
 void UDQScalar::operator-=(double rhs) {
@@ -108,7 +107,7 @@ void UDQScalar::operator/=(const UDQScalar& rhs) {
     if (this->defined() && rhs.defined())
         this->assign(*this->m_value / *rhs.m_value);
     else
-        this->m_value = std::nullopt;
+        this->m_value = Ewoms::nullopt;
 }
 
 void UDQScalar::operator/=(double rhs) {
@@ -120,7 +119,7 @@ void UDQScalar::operator+=(const UDQScalar& rhs) {
     if (this->defined() && rhs.defined())
         this->assign(*this->m_value + *rhs.m_value);
     else
-        this->m_value = std::nullopt;
+        this->m_value = Ewoms::nullopt;
 }
 
 void UDQScalar::operator+=(double rhs) {
@@ -132,7 +131,7 @@ void UDQScalar::operator*=(const UDQScalar& rhs) {
     if (this->defined() && rhs.defined())
         this->assign(*this->m_value * *rhs.m_value);
     else
-        this->m_value = std::nullopt;
+        this->m_value = Ewoms::nullopt;
 }
 
 void UDQScalar::operator*=(double rhs) {
@@ -192,7 +191,7 @@ UDQSet UDQSet::scalar(const std::string& name, double scalar_value)
     return us;
 }
 
-UDQSet UDQSet::scalar(const std::string& name, const std::optional<double>& scalar_value)
+UDQSet UDQSet::scalar(const std::string& name, const Ewoms::optional<double>& scalar_value)
 {
     UDQSet us(name, UDQVarType::SCALAR);
     us.assign(scalar_value);
@@ -256,7 +255,7 @@ void UDQSet::assign(const std::string& wgname, double value) {
         throw std::out_of_range("No well/group matching: " + wgname);
 }
 
-void UDQSet::assign(const std::string& wgname, const std::optional<double>& value) {
+void UDQSet::assign(const std::string& wgname, const Ewoms::optional<double>& value) {
     bool assigned = false;
     for (auto& udq_value : this->values) {
         int flags = 0;
@@ -274,7 +273,7 @@ void UDQSet::assign(double value) {
         v.assign(value);
 }
 
-void UDQSet::assign(const std::optional<double>& value) {
+void UDQSet::assign(const Ewoms::optional<double>& value) {
     for (auto& v : this->values)
         v.assign(value);
 }

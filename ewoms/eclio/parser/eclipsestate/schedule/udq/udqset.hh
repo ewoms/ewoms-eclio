@@ -19,13 +19,13 @@
 #ifndef UDQSET_H
 #define UDQSET_H
 
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <ewoms/eclio/utility/serializer.hh>
+#include <ewoms/common/optional.hh>
+
 #include <ewoms/eclio/utility/serializer.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
@@ -47,17 +47,17 @@ public:
     void operator-=(double rhs);
 
     operator bool() const;
-    void assign(const std::optional<double>& value);
+    void assign(const Ewoms::optional<double>& value);
     void assign(double value);
     bool defined() const;
     double get() const;
-    const std::optional<double>& value() const;
+    const Ewoms::optional<double>& value() const;
     const std::string& wgname() const;
     bool operator==(const UDQScalar& other) const;
     static UDQScalar deserialize(Serializer& ser);
     void serialize(Serializer& ser) const;
 public:
-    std::optional<double> m_value;
+    Ewoms::optional<double> m_value;
     std::string m_wgname;
 };
 
@@ -70,7 +70,7 @@ public:
     UDQSet(const std::string& name, std::size_t size);
     void   serialize(Serializer& ser) const;
     static UDQSet deserialize(Serializer& ser);
-    static UDQSet scalar(const std::string& name, const std::optional<double>& scalar_value);
+    static UDQSet scalar(const std::string& name, const Ewoms::optional<double>& scalar_value);
     static UDQSet scalar(const std::string& name, double value);
     static UDQSet empty(const std::string& name);
     static UDQSet wells(const std::string& name, const std::vector<std::string>& wells);
@@ -79,8 +79,8 @@ public:
     static UDQSet groups(const std::string& name, const std::vector<std::string>& groups, double scalar_value);
     static UDQSet field(const std::string& name, double scalar_value);
 
-    void assign(const std::optional<double>& value);
-    void assign(const std::string& wgname, const std::optional<double>& value);
+    void assign(const Ewoms::optional<double>& value);
+    void assign(const std::string& wgname, const Ewoms::optional<double>& value);
 
     void assign(double value);
     void assign(std::size_t index, double value);

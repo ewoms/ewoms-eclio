@@ -21,7 +21,7 @@
 
 #include <string>
 #include <vector>
-#include <variant>
+#include <ewoms/common/variant.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
 namespace Ewoms {
@@ -32,11 +32,11 @@ public:
     UDQToken(const std::string& string_token, const std::vector<std::string>& selector);
 
     const std::vector<std::string>& selector() const;
-    const std::variant<std::string, double>& value() const;
+    const Ewoms::variant<std::string, double>& value() const;
     UDQTokenType type() const;
 private:
     UDQTokenType token_type;
-    std::variant<std::string,double> m_value;
+    Ewoms::variant<std::string,double> m_value;
     std::vector<std::string> m_selector;
 };
 

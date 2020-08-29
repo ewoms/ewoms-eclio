@@ -66,7 +66,7 @@ UDQASTNode::UDQASTNode(double numeric_value) :
     value(numeric_value)
 {}
 
-UDQASTNode::UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg) :
+UDQASTNode::UDQASTNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg) :
     var_type(init_type(type_arg)),
     type(type_arg),
     value(value_arg)
@@ -74,7 +74,7 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, do
 }
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::variant<std::string, double>& value_arg,
+                       const Ewoms::variant<std::string, double>& value_arg,
                        const UDQASTNode& left_arg)
     : UDQASTNode(type_arg, value_arg)
 {
@@ -86,7 +86,7 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 }
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::variant<std::string, double>& value_arg,
+                       const Ewoms::variant<std::string, double>& value_arg,
                        const UDQASTNode& left_arg,
                        const UDQASTNode& right_arg) :
     var_type(init_type(type_arg)),
@@ -111,7 +111,7 @@ UDQASTNode UDQASTNode::serializeObject()
 }
 
 UDQASTNode::UDQASTNode(UDQTokenType type_arg,
-                       const std::variant<std::string, double>& value_arg,
+                       const Ewoms::variant<std::string, double>& value_arg,
                        const std::vector<std::string>& selector_arg) :
     var_type(init_type(type_arg)),
     type(type_arg),
@@ -119,7 +119,7 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
     selector(selector_arg)
 {
     if (type_arg == UDQTokenType::ecl_expr)
-        this->var_type = UDQ::targetType(std::get<std::string>(this->value), this->selector);
+        this->var_type = UDQ::targetType(Ewoms::get<std::string>(this->value), this->selector);
 
     if (this->var_type == UDQVarType::CONNECTION_VAR ||
         this->var_type == UDQVarType::REGION_VAR ||
@@ -131,7 +131,7 @@ UDQASTNode::UDQASTNode(UDQTokenType type_arg,
 
 UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const {
     if (this->type == UDQTokenType::ecl_expr) {
-        const auto& string_value = std::get<std::string>( this->value );
+        const auto& string_value = Ewoms::get<std::string>( this->value );
         auto data_type = UDQ::targetType(string_value);
         if (data_type == UDQVarType::WELL_VAR) {
             const auto& wells = context.wells();
@@ -178,21 +178,21 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
             return UDQSet::scalar(string_value, context.get(string_value));
 
         auto scalar = context.get(string_value);
-        if (scalar.has_value())
+        if (static_cast<bool>(scalar))
             return UDQSet::scalar(string_value, scalar.value());
 
         throw std::logic_error("Should not be here: var_type: " + UDQ::typeName(data_type) + " stringvalue:" + string_value);
     }
 
     if (UDQ::scalarFunc(this->type)) {
-        const auto& string_value = std::get<std::string>( this->value );
+        const auto& string_value = Ewoms::get<std::string>( this->value );
         const auto& udqft = context.function_table();
         const UDQScalarFunction& func = dynamic_cast<const UDQScalarFunction&>(udqft.get(string_value));
         return func.eval( this->left->eval(target_type, context) );
     }
 
     if (UDQ::elementalUnaryFunc(this->type)) {
-        const auto& string_value = std::get<std::string>( this->value );
+        const auto& string_value = Ewoms::get<std::string>( this->value );
         auto func_arg = this->left->eval(target_type, context);
 
         const auto& udqft = context.function_table();
@@ -203,7 +203,7 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
     if (UDQ::binaryFunc(this->type)) {
         auto left_arg = this->left->eval(target_type, context);
         auto right_arg = this->right->eval(target_type, context);
-        const auto& string_value = std::get<std::string>( this->value );
+        const auto& string_value = Ewoms::get<std::string>( this->value );
 
         const auto& udqft = context.function_table();
         const UDQBinaryFunction& func = dynamic_cast<const UDQBinaryFunction&>(udqft.get(string_value));
@@ -213,7 +213,7 @@ UDQSet UDQASTNode::eval(UDQVarType target_type, const UDQContext& context) const
 
     if (this->type == UDQTokenType::number) {
         const std::string dummy_name = "DUMMY";
-        double numeric_value = std::get<double>(this->value);
+        double numeric_value = Ewoms::get<double>(this->value);
         switch(target_type) {
         case UDQVarType::WELL_VAR:
             return UDQSet::wells(dummy_name, context.wells(), numeric_value);

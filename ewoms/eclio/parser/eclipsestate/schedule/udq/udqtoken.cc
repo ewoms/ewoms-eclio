@@ -38,7 +38,7 @@ UDQToken::UDQToken(const std::string& string_token, const std::vector<std::strin
 {
 }
 
-const std::variant<std::string, double>& UDQToken::value() const {
+const Ewoms::variant<std::string, double>& UDQToken::value() const {
     return this->m_value;
 }
 

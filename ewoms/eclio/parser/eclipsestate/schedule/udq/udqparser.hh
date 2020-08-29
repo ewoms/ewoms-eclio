@@ -19,8 +19,9 @@
 #define UDQPARSER_H
 
 #include <string>
-#include <variant>
 #include <vector>
+
+#include <ewoms/common/variant.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqastnode.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
@@ -35,16 +36,16 @@ class ParseContext;
 class ErrorGuard;
 
 struct UDQParseNode {
-    UDQParseNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector_arg) :
+    UDQParseNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg, const std::vector<std::string>& selector_arg) :
         type(type_arg),
         value(value_arg),
         selector(selector_arg)
     {
         if (type_arg == UDQTokenType::ecl_expr)
-            this->var_type = UDQ::targetType(std::get<std::string>(value_arg), selector_arg);
+            this->var_type = UDQ::targetType(Ewoms::get<std::string>(value_arg), selector_arg);
     }
 
-    UDQParseNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg) :
+    UDQParseNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg) :
         UDQParseNode(type_arg, value_arg, {})
     {}
 
@@ -53,14 +54,14 @@ struct UDQParseNode {
     {}
 
     std::string string() const {
-        if (std::holds_alternative<std::string>(this->value))
-            return std::get<std::string>(this->value);
+        if (Ewoms::holds_alternative<std::string>(this->value))
+            return Ewoms::get<std::string>(this->value);
         else
-            return std::to_string( std::get<double>(this->value));
+            return std::to_string( Ewoms::get<double>(this->value));
     }
 
     UDQTokenType type;
-    std::variant<std::string, double> value;
+    Ewoms::variant<std::string, double> value;
     std::vector<std::string> selector;
     UDQVarType var_type = UDQVarType::NONE;
 };

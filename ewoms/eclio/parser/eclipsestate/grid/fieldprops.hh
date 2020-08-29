@@ -19,10 +19,11 @@
 #define FIELDPROPS_H
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/deck/value_status.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
@@ -41,8 +42,8 @@ namespace keywords {
 
 template <typename T>
 struct keyword_info {
-    std::optional<std::string> unit = std::nullopt;
-    std::optional<T> scalar_init = std::nullopt;
+    Ewoms::optional<std::string> unit = Ewoms::nullopt;
+    Ewoms::optional<T> scalar_init = Ewoms::nullopt;
     bool multiplier = false;
     bool top = false;
     bool global = false;
@@ -483,8 +484,8 @@ public:
     }
 
     template <typename T>
-    std::vector<T> global_copy(const std::vector<T>& data, const std::optional<T>& default_value) const {
-        T fill_value = default_value.has_value() ? *default_value : 0;
+    std::vector<T> global_copy(const std::vector<T>& data, const Ewoms::optional<T>& default_value) const {
+        T fill_value = static_cast<bool>(default_value) ? *default_value : 0;
         std::vector<T> global_data(this->global_size, fill_value);
         std::size_t i = 0;
         for (std::size_t g = 0; g < this->global_size; g++) {

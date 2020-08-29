@@ -22,9 +22,9 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <variant>
 #include <vector>
 
+#include <ewoms/common/variant.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqcontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
@@ -36,10 +36,10 @@ public:
     UDQASTNode();
     explicit UDQASTNode(UDQTokenType type_arg);
     explicit UDQASTNode(double scalar_value);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& arg);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const UDQASTNode& left, const UDQASTNode& right);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg);
-    UDQASTNode(UDQTokenType type_arg, const std::variant<std::string, double>& value_arg, const std::vector<std::string>& selector);
+    UDQASTNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg, const UDQASTNode& arg);
+    UDQASTNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg, const UDQASTNode& left, const UDQASTNode& right);
+    UDQASTNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg);
+    UDQASTNode(UDQTokenType type_arg, const Ewoms::variant<std::string, double>& value_arg, const std::vector<std::string>& selector);
 
     static UDQASTNode serializeObject();
 
@@ -71,7 +71,7 @@ private:
     UDQTokenType type;
     void func_tokens(std::set<UDQTokenType>& tokens) const;
 
-    std::variant<std::string, double> value;
+    Ewoms::variant<std::string, double> value;
     std::vector<std::string> selector;
     std::shared_ptr<UDQASTNode> left;
     std::shared_ptr<UDQASTNode> right;

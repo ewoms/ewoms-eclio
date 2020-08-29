@@ -1216,12 +1216,11 @@ WCONINJE
 
     auto deck = parser.parseString(input);
     const auto& units = deck.getActiveUnitSystem();
-    auto python = std::make_shared<Ewoms::Python>();
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);
     Ewoms::Runspec runspec (deck);
-    Ewoms::Schedule schedule(deck, grid , fp, runspec, python);
+    Ewoms::Schedule schedule(deck, grid , fp, runspec);
     {
         const auto& iwell = schedule.getWell("I", 0);
         const auto& pwell = schedule.getWell("P", 0);

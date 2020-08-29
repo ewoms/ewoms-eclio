@@ -35,9 +35,9 @@ namespace Ewoms {
     class UDQContext{
     public:
         UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState& udq_state);
-        std::optional<double> get(const std::string& key) const;
-        std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
-        std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
+        Ewoms::optional<double> get(const std::string& key) const;
+        Ewoms::optional<double> get_well_var(const std::string& well, const std::string& var) const;
+        Ewoms::optional<double> get_group_var(const std::string& group, const std::string& var) const;
         void add(const std::string& key, double value);
         void update(const std::string& keyword, const UDQSet& udq_result);
         const UDQFunctionTable& function_table() const;

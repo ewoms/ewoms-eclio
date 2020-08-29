@@ -215,12 +215,12 @@ BRANPROP
         }
 
         const auto& platform_uptree = network.uptree_branch("PLAT-A");
-        BOOST_CHECK(!platform_uptree.has_value());
+        BOOST_CHECK(!static_cast<bool>(platform_uptree));
 
         const auto& B1_uptree = network.uptree_branch("B1");
-        BOOST_CHECK(B1_uptree.has_value());
-        BOOST_CHECK_EQUAL(B1_uptree->downtree_node(), "B1");
-        BOOST_CHECK_EQUAL(B1_uptree->uptree_node(), "PLAT-A");
+        BOOST_CHECK(static_cast<bool>(B1_uptree));
+        BOOST_CHECK_EQUAL((*B1_uptree).downtree_node(), "B1");
+        BOOST_CHECK_EQUAL((*B1_uptree).uptree_node(), "PLAT-A");
 
         BOOST_CHECK(network.active());
     }
@@ -239,12 +239,12 @@ BRANPROP
         }
 
         const auto& platform_uptree = network.uptree_branch("PLAT-A");
-        BOOST_CHECK(!platform_uptree.has_value());
+        BOOST_CHECK(!static_cast<bool>(platform_uptree));
 
         const auto& B1_uptree = network.uptree_branch("B1");
-        BOOST_CHECK(B1_uptree.has_value());
-        BOOST_CHECK_EQUAL(B1_uptree->downtree_node(), "B1");
-        BOOST_CHECK_EQUAL(B1_uptree->uptree_node(), "PLAT-A");
+        BOOST_CHECK(static_cast<bool>(B1_uptree));
+        BOOST_CHECK_EQUAL((*B1_uptree).downtree_node(), "B1");
+        BOOST_CHECK_EQUAL((*B1_uptree).uptree_node(), "PLAT-A");
 
         BOOST_CHECK_THROW( network.uptree_branch("C1"), std::out_of_range);
         BOOST_CHECK_THROW( network.node("C1"), std::out_of_range);
