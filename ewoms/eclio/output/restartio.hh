@@ -20,8 +20,6 @@
 
 #include <ewoms/eclio/output/restartvalue.hh>
 
-#include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
-
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,6 +29,8 @@ namespace Ewoms {
     class EclipseGrid;
     class EclipseState;
     class Schedule;
+    class UDQState;
+    class SummaryState;
 
 } // namespace Ewoms
 
@@ -78,6 +78,7 @@ namespace Ewoms { namespace RestartIO {
               const Schedule&               schedule,
               const Action::State&          action_state,
               const SummaryState&           sumState,
+              const UDQState&               udqState,
               bool                          write_double = false);
 
     RestartValue load(const std::string&             filename,

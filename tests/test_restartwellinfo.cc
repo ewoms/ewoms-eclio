@@ -33,6 +33,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellproductionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqstate.hh>
 
 #include <ewoms/eclio/io/eclfile.hh>
 
@@ -200,6 +201,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     int countTimeStep = schedule.getTimeMap().numTimesteps();
     Ewoms::SummaryState st(std::chrono::system_clock::from_time_t(schedule.getStartTime()));
     Ewoms::Action::State action_state;
+    Ewoms::UDQState udq_state(123);
 
     Ewoms::data::Solution solution;
     solution.insert( "PRESSURE", Ewoms::UnitSystem::measure::pressure , std::vector< double >( num_cells, 1 ) , Ewoms::data::TargetType::RESTART_SOLUTION);
@@ -212,6 +214,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
 
         eclipseWriter.writeTimeStep( action_state,
                                      st,
+                                     udq_state,
                                      timestep,
                                      false,
                                      schedule.seconds(timestep),

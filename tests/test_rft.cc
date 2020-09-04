@@ -37,6 +37,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqstate.hh>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/parser.hh>
@@ -274,6 +275,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         SummaryState st(std::chrono::system_clock::now());
         Action::State action_state;
+        UDQState udq_state(1234);
 
         data::Rates r1, r2;
         r1.set( data::Rates::opt::wat, 4.11 );
@@ -309,6 +311,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         eclipseWriter.writeTimeStep( action_state,
                                      st,
+                                     udq_state,
                                      2,
                                      false,
                                      step_time - start_time,
@@ -392,6 +395,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
         SummaryState st(std::chrono::system_clock::now());
         Action::State action_state;
+        UDQState udq_state(10);
 
         const auto  start_time = schedule.posixStartTime();
         const auto& time_map   = schedule.getTimeMap( );
@@ -434,6 +438,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 eclipseWriter.writeTimeStep( action_state,
                                              st,
+                                             udq_state,
                                              step,
                                              false,
                                              step_time - start_time,

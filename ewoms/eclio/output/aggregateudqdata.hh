@@ -40,6 +40,7 @@ namespace Ewoms {
     class Schedule;
     class UDQInput;
     class UDQActive;
+    class UDQState;
 } // namespace Ewoms
 
 namespace Ewoms { namespace RestartIO { namespace Helpers {
@@ -56,7 +57,7 @@ public:
 
 void captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
                        const std::size_t                    simStep,
-                       const Ewoms::SummaryState&             st,
+                       const Ewoms::UDQState&                 udqState,
                        const std::vector<int>&              inteHead);
 
     const std::vector<int>& getIUDQ() const

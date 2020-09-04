@@ -23,6 +23,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include <ewoms/eclio/utility/serializer.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 
@@ -147,30 +148,23 @@ namespace {
         }
     }
 
-    void SummaryState::update_udq(const UDQSet& udq_set) {
+    void SummaryState::update_udq(const UDQSet& udq_set, double undefined_value) {
         auto var_type = udq_set.var_type();
         if (var_type == UDQVarType::WELL_VAR) {
             const std::vector<std::string> wells = this->wells();
             for (const auto& well : wells) {
-                const auto& udq_value = udq_set[well];
-                if (udq_value)
-                    this->update_well_var(well, udq_set.name(), udq_value.value());
-                else
-                    this->erase_well_var(well, udq_set.name());
+                const auto& udq_value = udq_set[well].value();
+                this->update_well_var(well, udq_set.name(), udq_value.value_or(undefined_value));
             }
         } else if (var_type == UDQVarType::GROUP_VAR) {
             const std::vector<std::string> groups = this->groups();
             for (const auto& group : groups) {
-                const auto& udq_value = udq_set[group];
-                if (udq_value)
-                    this->update_group_var(group, udq_set.name(), udq_value.value());
-                else
-                    this->erase_group_var(group, udq_set.name());
+                const auto& udq_value = udq_set[group].value();
+                this->update_group_var(group, udq_set.name(), udq_value.value_or(undefined_value));
             }
         } else {
-            const auto& udq_var = udq_set[0];
-            if (udq_var)
-                this->update(udq_set.name(), udq_var.value());
+            const auto& udq_var = udq_set[0].value();
+            this->update(udq_set.name(), udq_var.value_or(undefined_value));
         }
     }
 
@@ -290,77 +284,21 @@ namespace {
         return this->values.size();
     }
 
-namespace {
-    class Serializer {
-    public:
-        Serializer() = default;
-        explicit Serializer(const std::vector<char>& buffer_arg) :
-            buffer(buffer_arg)
-        {}
-
-        template <typename T>
-        void put(const T& value) {
-            this->pack(std::addressof(value), sizeof(T));
-        }
-
-        template <typename T>
-        T get() {
-            T value;
-            std::memcpy(&value, &this->buffer[pos], sizeof(T));
-            this->pos += sizeof(T);
-            return value;
-        }
-
-        std::vector<char> buffer;
-    private:
-        void pack(const void * ptr, std::size_t value_size) {
-            std::size_t write_pos = this->buffer.size();
-            std::size_t new_size = write_pos + value_size;
-            this->buffer.resize( new_size );
-            std::memcpy(&this->buffer[write_pos], ptr, value_size);
-        }
-
-        std::size_t pos = 0;
-    };
-
-    template <>
-    void Serializer::put(const std::string& value) {
-        this->put<std::string::size_type>(value.size());
-        this->pack(value.c_str(), value.size());
-    }
-
-    template <>
-    std::string Serializer::get() {
-        std::string::size_type length = this->get<std::string::size_type>();
-        this->pos += length;
-        return {std::addressof(this->buffer[this->pos - length]), length};
-    }
-
-    void put_map(Serializer& ser, const std::unordered_map<std::string, double>& values) {
-        ser.put(values.size());
-        for (const auto& value_pair : values) {
-            ser.put(value_pair.first);
-            ser.put(value_pair.second);
-        }
-    }
-
-}
-
     std::vector<char> SummaryState::serialize() const {
         Serializer ser;
         ser.put(this->elapsed);
-        put_map(ser, values);
+        ser.put(values);
 
         ser.put(this->well_values.size());
         for (const auto& well_var_pair : this->well_values) {
             ser.put(well_var_pair.first);
-            put_map(ser, well_var_pair.second);
+            ser.put(well_var_pair.second);
         }
 
         ser.put(this->group_values.size());
         for (const auto& group_var_pair : this->group_values) {
             ser.put(group_var_pair.first);
-            put_map(ser, group_var_pair.second);
+            ser.put(group_var_pair.second);
         }
 
         return std::move(ser.buffer);
@@ -376,14 +314,7 @@ namespace {
 
         Serializer ser(buffer);
         this->elapsed = ser.get<double>();
-        {
-            std::size_t num_values = ser.get<std::size_t>();
-            for (std::size_t index = 0; index < num_values; index++) {
-                std::string key = ser.get<std::string>();
-                double value = ser.get<double>();
-                this->update(key, value);
-            }
-        }
+        this->values = ser.get<std::string, double>();
 
         {
             std::size_t num_well_var = ser.get<std::size_t>();

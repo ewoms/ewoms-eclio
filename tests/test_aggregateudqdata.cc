@@ -21,6 +21,9 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqstate.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
 //#include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 //#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
@@ -71,6 +74,47 @@ namespace {
     }
     */
 }
+
+Ewoms::UDQSet make_udq_set(const std::string& name, Ewoms::UDQVarType var_type, const std::vector<std::string>& wgnames, const std::vector<double>& values) {
+    Ewoms::UDQSet s(name, var_type, wgnames);
+    for (std::size_t i=0; i < values.size(); i++)
+        s.assign(i , values[i]);
+
+    return s;
+}
+
+    Ewoms::UDQState make_udq_state()
+    {
+        auto state = Ewoms::UDQState{0};
+
+        state.add("WUOPRL", make_udq_set("WUOPRL",
+                                         Ewoms::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {210, 211, 212, 213}));
+
+        state.add("WUOPRU", make_udq_set("WUOPRU",
+                                         Ewoms::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {220, 221, 222, 223}));
+
+        state.add("WULPRL", make_udq_set("WULPRL",
+                                         Ewoms::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {230, 231, 232, 233}));
+
+        state.add("WULPRU", make_udq_set("WULPRU",
+                                         Ewoms::UDQVarType::WELL_VAR,
+                                         {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                         {160, 161, 162, 163}));
+
+        state.add("GUOPRU", make_udq_set("GUOPRU",
+                                         Ewoms::UDQVarType::GROUP_VAR,
+                                         {"WGRP1", "WGRP2", "GRP1"},
+                                         {360, 361, 362}));
+
+        state.add("FULPR", Ewoms::UDQSet::scalar("FULPR", 460));
+        return state;
+    }
 
     Ewoms::SummaryState sum_state()
     {
@@ -129,6 +173,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
     Ewoms::EclipseState es = simCase.es;
     Ewoms::SummaryState st = sum_state();
+    Ewoms::UDQState     udq_state = make_udq_state();
     Ewoms::Schedule     sched = simCase.sched;
     Ewoms::EclipseGrid  grid = simCase.grid;
     const auto& ioConfig = es.getIOConfig();
@@ -158,7 +203,7 @@ BOOST_AUTO_TEST_CASE (Declared_UDQ_data)
 
     const auto udqDims = Ewoms::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Ewoms::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep, st, ih);
+    udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
 
         rstFile.write("ZUDN", udqData.getZUDN());
         rstFile.write("ZUDL", udqData.getZUDL());

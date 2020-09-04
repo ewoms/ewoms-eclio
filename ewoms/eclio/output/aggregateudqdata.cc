@@ -26,9 +26,9 @@
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
-//#include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqstate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqinput.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqinput.hh>
@@ -268,7 +268,7 @@ namespace {
         }
 
         template <class DUDWArray>
-        void staticContrib(const Ewoms::SummaryState& st,
+        void staticContrib(const Ewoms::UDQState& udq_state,
                            const std::vector<std::string>& wnames,
                            const std::string udq,
                            const std::size_t nwmaxz,
@@ -279,8 +279,8 @@ namespace {
                 dUdw[ind] = Ewoms::UDQ::restart_default;
             }
             for (std::size_t ind = 0; ind < wnames.size(); ind++) {
-                if (st.has_well_var(wnames[ind], udq)) {
-                    dUdw[ind] = st.get_well_var(wnames[ind], udq);
+                if (udq_state.has_well_var(wnames[ind], udq)) {
+                    dUdw[ind] = udq_state.get_well_var(wnames[ind], udq);
                 }
             }
         }
@@ -300,7 +300,7 @@ namespace {
         }
 
         template <class DUDGArray>
-        void staticContrib(const Ewoms::SummaryState& st,
+        void staticContrib(const Ewoms::UDQState& udq_state,
                            const std::vector<const Ewoms::Group*> groups,
                            const std::string udq,
                            const std::size_t ngmaxz,
@@ -312,8 +312,8 @@ namespace {
                     dUdg[ind] = Ewoms::UDQ::restart_default;
                 }
                 else {
-                    if (st.has_group_var((*groups[ind]).name(), udq)) {
-                        dUdg[ind] = st.get_group_var((*groups[ind]).name(), udq);
+                    if (udq_state.has_group_var((*groups[ind]).name(), udq)) {
+                        dUdg[ind] = udq_state.get_group_var((*groups[ind]).name(), udq);
                     }
                     else {
                         dUdg[ind] = Ewoms::UDQ::restart_default;
@@ -337,13 +337,13 @@ namespace {
         }
 
         template <class DUDFArray>
-        void staticContrib(const Ewoms::SummaryState& st,
+        void staticContrib(const Ewoms::UDQState& udq_state,
                            const std::string udq,
                            DUDFArray&   dUdf)
         {
             //set value for group name "FIELD"
-            if (st.has(udq)) {
-                dUdf[0] = st.get(udq);
+            if (udq_state.has(udq)) {
+                dUdf[0] = udq_state.get(udq);
             }
             else {
                 dUdf[0] = Ewoms::UDQ::restart_default;
@@ -454,7 +454,7 @@ void
 Ewoms::RestartIO::Helpers::AggregateUDQData::
 captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
                        const std::size_t                    simStep,
-                       const Ewoms::SummaryState&             st,
+                       const Ewoms::UDQState&                 udq_state,
                        const std::vector<int>&              inteHead)
 {
     const auto& udqCfg = sched.getUDQConfig(simStep);
@@ -543,7 +543,7 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
         if (udq_input.var_type() ==  UDQVarType::WELL_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudw = this->dUDW_[i_wudq];
-            dUdw::staticContrib(st, wnames, udq, nwmax, i_dudw);
+            dUdw::staticContrib(udq_state, wnames, udq, nwmax, i_dudw);
             i_wudq++;
             cnt_dudw += 1;
         }
@@ -562,7 +562,7 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
         if (udq_input.var_type() ==  UDQVarType::GROUP_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudg = this->dUDG_[i_gudq];
-            dUdg::staticContrib(st, curGroups, udq, ngmax, i_dudg);
+            dUdg::staticContrib(udq_state, curGroups, udq, ngmax, i_dudg);
             i_gudq++;
             cnt_dudg += 1;
         }
@@ -579,7 +579,7 @@ captureDeclaredUDQData(const Ewoms::Schedule&                 sched,
         if (udq_input.var_type() ==  UDQVarType::FIELD_VAR) {
             const std::string& udq = udq_input.keyword();
             auto i_dudf = this->dUDF_[i_fudq];
-            dUdf::staticContrib(st, udq, i_dudf);
+            dUdf::staticContrib(udq_state, udq, i_dudf);
             i_fudq++;
             cnt_dudf += 1;
         }

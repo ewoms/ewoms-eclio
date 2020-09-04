@@ -22,6 +22,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqinput.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqstate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
 
@@ -100,6 +101,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
     Ewoms::EclipseState es = simCase.es;
     Ewoms::Runspec rspec   = es.runspec();
     Ewoms::SummaryState st = sum_state_TEST1();
+    Ewoms::UDQState udq_state(1);
     Ewoms::Action::State action_state;
     Ewoms::Schedule     sched = simCase.sched;
     Ewoms::EclipseGrid  grid = simCase.grid;
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE (Declared_Actionx_data)
 
     const auto udqDims = Ewoms::RestartIO::Helpers::createUdqDims(sched, rptStep, ih);
     auto  udqData = Ewoms::RestartIO::Helpers::AggregateUDQData(udqDims);
-    udqData.captureDeclaredUDQData(sched, rptStep, st, ih);
+    udqData.captureDeclaredUDQData(sched, rptStep, udq_state, ih);
 
     const auto actDims = Ewoms::RestartIO::Helpers::createActionxDims(rspec, sched, rptStep);
     auto  actionxData = Ewoms::RestartIO::Helpers::AggregateActionxData(actDims);

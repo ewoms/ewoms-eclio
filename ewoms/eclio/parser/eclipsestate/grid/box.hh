@@ -19,8 +19,9 @@
 #ifndef BOX_HH_
 #define BOX_HH_
 
-#include <vector>
 #include <cstddef>
+#include <limits>
+#include <vector>
 
 namespace Ewoms {
     class DeckRecord;
@@ -40,6 +41,18 @@ namespace Ewoms {
                 data_index(d)
             {}
 
+            /*
+              This constructor should is used by the global_index_list() member
+              which will return a list of *all* the cells in the box. In this
+              case the active_index will be set to the global_index. This is a
+              hack to simplify the treatment of global fields in the FieldProps
+              implementation.
+            */
+            cell_index(std::size_t g, std::size_t d) :
+                global_index(g),
+                active_index(g),
+                data_index(d)
+            {}
         };
 
         Box(const EclipseGrid& grid);
@@ -51,7 +64,7 @@ namespace Ewoms {
         bool   isGlobal() const;
         size_t getDim(size_t idim) const;
         const std::vector<cell_index>& index_list() const;
-        const std::vector<size_t>& getIndexList() const;
+        const std::vector<Box::cell_index>& global_index_list() const;
         bool equal(const Box& other) const;
 
         int I1() const;
@@ -70,8 +83,8 @@ namespace Ewoms {
         size_t m_offset[3];
 
         bool   m_isGlobal;
-        std::vector<size_t> global_index_list;
-        std::vector<cell_index> m_index_list;
+        std::vector<cell_index> m_active_index_list;
+        std::vector<cell_index> m_global_index_list;
 
         int lower(int dim) const;
         int upper(int dim) const;

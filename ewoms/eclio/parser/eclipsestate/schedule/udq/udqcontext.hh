@@ -19,31 +19,35 @@
 #ifndef UDQ_CONTEXT_H
 #define UDQ_CONTEXT_H
 
-#include <vector>
+#include <optional>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
 
 namespace Ewoms {
     class SummaryState;
     class UDQFunctionTable;
+    class UDQState;
 
     class UDQContext{
     public:
-        UDQContext(const UDQFunctionTable& udqft, const SummaryState& summary_state);
-        double get(const std::string& key) const;
-        bool has_well_var(const std::string& well, const std::string& var) const;
-        double get_well_var(const std::string& well, const std::string& var) const;
-        bool has_group_var(const std::string& group, const std::string& var) const;
-        double get_group_var(const std::string& group, const std::string& var) const;
+        UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState& udq_state);
+        std::optional<double> get(const std::string& key) const;
+        std::optional<double> get_well_var(const std::string& well, const std::string& var) const;
+        std::optional<double> get_group_var(const std::string& group, const std::string& var) const;
         void add(const std::string& key, double value);
+        void update(const std::string& keyword, const UDQSet& udq_result);
         const UDQFunctionTable& function_table() const;
         std::vector<std::string> wells() const;
         std::vector<std::string> groups() const;
     private:
         const UDQFunctionTable& udqft;
-        const SummaryState& summary_state;
+        SummaryState& summary_state;
+        UDQState& udq_state;
+        //std::unordered_map<std::string, UDQSet> udq_results;
         std::unordered_map<std::string, double> values;
     };
 }

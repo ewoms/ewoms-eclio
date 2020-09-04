@@ -19,11 +19,11 @@
 
 #define BOOST_TEST_MODULE Array_Dimension_Checker
 
-#include <boost/version.hpp>
 #include <boost/test/unit_test.hpp>
-
-#if BOOST_VERSION >= 105900
-// output test stream is only available since boost 1.59.0
+#include <boost/version.hpp>
+#if BOOST_VERSION / 100000 == 1 && BOOST_VERSION / 100 % 1000 < 71
+#include <boost/test/output_test_stream.hpp>
+#else
 #include <boost/test/tools/output_test_stream.hpp>
 #endif
 

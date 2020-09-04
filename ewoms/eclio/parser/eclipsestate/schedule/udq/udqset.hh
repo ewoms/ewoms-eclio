@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include <ewoms/eclio/utility/serializer.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
 namespace Ewoms {
@@ -34,7 +35,6 @@ public:
     UDQScalar() = default;
     explicit UDQScalar(double value);
     explicit UDQScalar(const std::string& wgname);
-    UDQScalar(const std::string& wgname, double value);
 
     void operator+=(const UDQScalar& rhs);
     void operator+=(double rhs);
@@ -46,10 +46,15 @@ public:
     void operator-=(double rhs);
 
     operator bool() const;
+    void assign(const std::optional<double>& value);
     void assign(double value);
     bool defined() const;
-    double value() const;
+    double get() const;
+    const std::optional<double>& value() const;
     const std::string& wgname() const;
+    bool operator==(const UDQScalar& other) const;
+    static UDQScalar deserialize(Serializer& ser);
+    void serialize(Serializer& ser) const;
 public:
     std::optional<double> m_value;
     std::string m_wgname;
@@ -62,6 +67,9 @@ public:
     UDQSet(const std::string& name, UDQVarType var_type, const std::vector<std::string>& wgnames);
     UDQSet(const std::string& name, UDQVarType var_type, std::size_t size);
     UDQSet(const std::string& name, std::size_t size);
+    void   serialize(Serializer& ser) const;
+    static UDQSet deserialize(Serializer& ser);
+    static UDQSet scalar(const std::string& name, const std::optional<double>& scalar_value);
     static UDQSet scalar(const std::string& name, double value);
     static UDQSet empty(const std::string& name);
     static UDQSet wells(const std::string& name, const std::vector<std::string>& wells);
@@ -70,10 +78,14 @@ public:
     static UDQSet groups(const std::string& name, const std::vector<std::string>& groups, double scalar_value);
     static UDQSet field(const std::string& name, double scalar_value);
 
+    void assign(const std::optional<double>& value);
+    void assign(const std::string& wgname, const std::optional<double>& value);
+
     void assign(double value);
     void assign(std::size_t index, double value);
     void assign(const std::string& wgname, double value);
 
+    bool has(const std::string& name) const;
     std::size_t size() const;
     void operator+=(const UDQSet& rhs);
     void operator+=(double rhs);
@@ -95,6 +107,7 @@ public:
     const std::string& name() const;
     void name(const std::string& name);
     UDQVarType var_type() const;
+    bool operator==(const UDQSet& other) const;
 private:
     UDQSet() = default;
 

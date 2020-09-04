@@ -281,7 +281,7 @@ namespace {
     void writeUDQ(const int                     report_step,
                   const int                     sim_step,
                   const Schedule&               schedule,
-                  const SummaryState&           sum_state,
+                  const UDQState&               udq_state,
                   const std::vector<int>&       ih,
                   EclIO::OutputStream::Restart& rstFile)
     {
@@ -295,7 +295,7 @@ namespace {
 
         const auto udqDims = Helpers::createUdqDims(schedule, simStep, ih);
         auto  udqData = Helpers::AggregateUDQData(udqDims);
-        udqData.captureDeclaredUDQData(schedule, simStep, sum_state, ih);
+        udqData.captureDeclaredUDQData(schedule, simStep, udq_state, ih);
 
         if (udqDims[0] >= 1) {
             rstFile.write("ZUDN", udqData.getZUDN());
@@ -566,7 +566,7 @@ namespace {
 
     void writeSolution(const RestartValue&           value,
                        const Schedule&               schedule,
-                       const SummaryState&           sum_state,
+                       const UDQState&               udq_state,
                        int                           report_step,
                        int                           sim_step,
                        const bool                    ecl_compatible_rst,
@@ -593,7 +593,7 @@ namespace {
 
         writeRegularSolutionVectors(value, write_double_arg, write);
 
-        writeUDQ(report_step, sim_step, schedule, sum_state, inteHD, rstFile);
+        writeUDQ(report_step, sim_step, schedule, udq_state, inteHD, rstFile);
 
         writeExtraVectors(value, write);
 
@@ -655,6 +655,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
           const Schedule&               schedule,
           const Action::State&          action_state,
           const SummaryState&           sumState,
+          const UDQState&               udqState,
           bool                          write_double)
 {
     ::Ewoms::RestartIO::checkSaveArguments(es, value, grid);
@@ -684,7 +685,7 @@ void save(EclIO::OutputStream::Restart& rstFile,
 
     writeActionx(report_step, sim_step, es, schedule, action_state, sumState, rstFile);
 
-    writeSolution(value, schedule, sumState, report_step, sim_step,
+    writeSolution(value, schedule, udqState, report_step, sim_step,
                   ecl_compatible_rst, write_double, inteHD, rstFile);
 
     if (! ecl_compatible_rst) {

@@ -40,6 +40,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqstate.hh>
 
 #include <ewoms/eclio/io/outputstream.hh>
 #include <ewoms/eclio/io/ecliodata.hh>
@@ -377,7 +378,7 @@ void init_st(SummaryState& st) {
     st.update("FLPR", 100);
 }
 
-RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, bool write_double) {
+RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryState& st, UDQState& udq_state, bool write_double) {
     EclipseIO eclWriter( setup.es, setup.grid, setup.schedule, setup.summary_config);
     auto num_cells = setup.grid.getNumActive( );
     int report_step = 1;
@@ -391,9 +392,10 @@ RestartValue first_sim(const Setup& setup, Action::State& action_state, SummaryS
     RestartValue restart_value(sol, wells, groups);
 
     init_st(st);
-    udq.eval(st);
+    udq.eval(st, udq_state);
     eclWriter.writeTimeStep( action_state,
                              st,
+                             udq_state,
                              report_step,
                              false,
                              std::difftime(first_step, start_time),
@@ -440,7 +442,8 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData) {
     Setup base_setup("BASE_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
     Action::State action_state;
-    auto state1 = first_sim( base_setup , action_state, st, false );
+    UDQState udq_state(19);
+    auto state1 = first_sim( base_setup , action_state, st, udq_state, false );
 
     Setup restart_setup("RESTART_SIM.DATA");
     auto state2 = second_sim( restart_setup , action_state, st , keys );
@@ -570,8 +573,9 @@ BOOST_AUTO_TEST_CASE(EclipseReadWriteWellStateData_double) {
     Setup base_setup("BASE_SIM.DATA");
     SummaryState st(std::chrono::system_clock::now());
     Action::State action_state;
+    UDQState udq_state(1);
 
-    auto state1 = first_sim( base_setup , action_state, st, true);
+    auto state1 = first_sim( base_setup , action_state, st, udq_state, true);
     Setup restart_setup("RESTART_SIM.DATA");
 
     auto state2 = second_sim( restart_setup, action_state, st, solution_keys );
@@ -592,6 +596,7 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
         auto groups = mkGroups();
         Ewoms::SummaryState sumState(std::chrono::system_clock::now());
         Ewoms::Action::State action_state;
+        Ewoms::UDQState udq_state(19);
 
         const auto seqnum = 1;
         auto rstFile = OS::Restart {
@@ -606,7 +611,8 @@ BOOST_AUTO_TEST_CASE(WriteWrongSOlutionSize) {
                                            setup.grid ,
                                            setup.schedule,
                                            action_state,
-                                           sumState),
+                                           sumState,
+                                           udq_state),
                            std::runtime_error);
     }
 }
@@ -641,6 +647,7 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
     Setup setup("BASE_SIM.DATA");
     {
         Action::State action_state;
+        UDQState udq_state(10);
         auto num_cells = setup.grid.getNumActive( );
         auto cells = mkSolution( num_cells );
         auto wells = mkWells();
@@ -669,7 +676,8 @@ BOOST_AUTO_TEST_CASE(ExtraData_content) {
                                 setup.grid,
                                 setup.schedule,
                                 action_state,
-                                sumState);
+                                sumState,
+                                udq_state);
             }
 
             const auto rstFile = ::Ewoms::EclIO::OutputStream::
@@ -744,6 +752,7 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
             restart_value.addExtra("THRESHPR", UnitSystem::measure::pressure, {0,1});
             const auto sumState = sim_state();
             Action::State action_state;
+            UDQState udq_state(99);
 
             /* THPRES data has wrong size in extra container. */
             {
@@ -760,7 +769,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                                    base_setup.grid,
                                                    base_setup.schedule,
                                                    action_state,
-                                                   sumState),
+                                                   sumState,
+                                                   udq_state),
                                    std::runtime_error);
             }
 
@@ -783,7 +793,8 @@ BOOST_AUTO_TEST_CASE(STORE_THPRES) {
                                 base_setup.grid,
                                 base_setup.schedule,
                                 action_state,
-                                sumState);
+                                sumState,
+                                udq_state);
             }
 
             {
@@ -828,7 +839,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
         mkGroups()
     };
     const auto sumState = sim_state();
-
+    UDQState udq_state(98);
     namespace OS = ::Ewoms::EclIO::OutputStream;
 
     const auto rset   = OS::ResultSet{ wa.currentWorkingDirectory(), "FILE" };
@@ -840,7 +851,7 @@ BOOST_AUTO_TEST_CASE(Restore_Cumulatives)
         };
 
         RestartIO::save(rstFile, seqnum, 100, restart_value,
-                        setup.es, setup.grid, setup.schedule, action_state, sumState);
+                        setup.es, setup.grid, setup.schedule, action_state, sumState, udq_state);
     }
 
     Action::State action_state;
@@ -978,7 +989,8 @@ BOOST_AUTO_TEST_CASE(UDQ_RESTART) {
     SummaryState st1(std::chrono::system_clock::now());
     SummaryState st2(std::chrono::system_clock::now());
     Action::State action_state;
-    auto state1 = first_sim( base_setup , action_state, st1, false );
+    UDQState udq_state(1);
+    auto state1 = first_sim( base_setup , action_state, st1, udq_state, false );
 
     Setup restart_setup("UDQ_RESTART.DATA");
     auto state2 = second_sim( restart_setup , action_state, st2 , keys );

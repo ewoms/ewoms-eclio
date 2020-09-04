@@ -4839,7 +4839,7 @@ WSEGITER::WSEGITER( ) : ParserKeyword("WSEGITER")
      ParserRecord record;
      {
         ParserItem item("MAX_WELL_ITERATIONS", ParserItem::itype::INT);
-        item.setDefault( 20 );
+        item.setDefault( 40 );
         record.addItem(item);
      }
      {
@@ -4862,7 +4862,7 @@ WSEGITER::WSEGITER( ) : ParserKeyword("WSEGITER")
 }
 const std::string WSEGITER::keywordName = "WSEGITER";
 const std::string WSEGITER::MAX_WELL_ITERATIONS::itemName = "MAX_WELL_ITERATIONS";
-const int WSEGITER::MAX_WELL_ITERATIONS::defaultValue = 20;
+const int WSEGITER::MAX_WELL_ITERATIONS::defaultValue = 40;
 const std::string WSEGITER::MAX_TIMES_REDUCED::itemName = "MAX_TIMES_REDUCED";
 const int WSEGITER::MAX_TIMES_REDUCED::defaultValue = 5;
 const std::string WSEGITER::REDUCTION_FACTOR::itemName = "REDUCTION_FACTOR";
