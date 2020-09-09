@@ -26,6 +26,7 @@
 #include <vector>
 
 #include <ewoms/eclio/utility/serializer.hh>
+#include <ewoms/eclio/utility/serializer.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 
 namespace Ewoms {

@@ -459,6 +459,17 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return false;
 }
 
+bool Well::updateHasProduced() {
+    if (this->wtype.producer() && this->status == Status::OPEN) {
+        if (this->has_produced)
+            return false;
+
+        this->has_produced = true;
+        return true;
+    }
+    return false;
+}
+
 bool Well::updateProduction(std::shared_ptr<WellProductionProperties> production_arg) {
     if (!this->wtype.producer())
         this->switchToProducer( );
@@ -1037,6 +1048,10 @@ bool Well::predictionMode() const {
     return this->prediction_mode;
 }
 
+bool Well::hasProduced( ) const {
+    return this->has_produced;
+}
+
 bool Well::updatePrediction(bool prediction_mode_arg) {
     if (this->prediction_mode != prediction_mode_arg) {
         this->prediction_mode = prediction_mode_arg;
@@ -1202,7 +1217,7 @@ Well::InjectorCMode Well::InjectorCModeFromString(const std::string &stringValue
     else if (stringValue == "GRUP")
         return InjectorCMode::GRUP;
     else
-        throw std::invalid_argument("Unknown enum state string: " + stringValue);
+        throw std::invalid_argument("Unknown control mode string: " + stringValue);
 }
 
 std::ostream& operator<<(std::ostream& os, const Well::InjectorCMode& cm) {

@@ -65,7 +65,7 @@ public:
               const Schedule&                schedule,
               const data::WellRates&         well_solution,
               const data::GroupValues&       group_solution,
-              const GlobalProcessParameters& single_values,
+              GlobalProcessParameters        single_values,
               const RegionParameters&        region_values = {},
               const BlockValues&             block_values  = {}) const;
 

@@ -19,8 +19,8 @@
 #ifndef WELL2_H
 #define WELL2_H
 
-#include <string>
 #include <iosfwd>
+#include <string>
 
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
@@ -539,7 +539,8 @@ public:
     bool segmented_density_calculation() const { return true; }
     double alq_value() const;
     double temperature() const;
-
+    bool hasProduced( ) const;
+    bool updateHasProduced();
     bool cmp_structure(const Well& other) const;
     bool operator==(const Well& data) const;
     void setInsertIndex(std::size_t index);
@@ -566,6 +567,7 @@ public:
         guide_rate.serializeOp(serializer);
         serializer(efficiency_factor);
         serializer(solvent_fraction);
+        serializer(has_produced);
         serializer(prediction_mode);
         serializer(econ_limits);
         serializer(foam_properties);
@@ -601,6 +603,7 @@ private:
     WellGuideRate guide_rate;
     double efficiency_factor;
     double solvent_fraction;
+    bool has_produced = false;
     bool prediction_mode = true;
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;

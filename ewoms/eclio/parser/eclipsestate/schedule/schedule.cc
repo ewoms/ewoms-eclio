@@ -896,6 +896,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                     if (well2->updatePrediction(false))
                         update_well = true;
 
+                    if (well2->updateHasProduced())
+                        update_well = true;
+
                     if (update_well) {
                         m_events.addEvent( ScheduleEvents::PRODUCTION_UPDATE , currentStep);
                         this->addWellGroupEvent( well2->name(), ScheduleEvents::PRODUCTION_UPDATE, currentStep);
@@ -952,6 +955,9 @@ std::pair<std::time_t, std::size_t> restart_info(const RestartIO::RstState * rst
                         update_well = true;
 
                     if (well2->updatePrediction(true))
+                        update_well = true;
+
+                    if (well2->updateHasProduced())
                         update_well = true;
 
                     if (update_well) {
