@@ -65,6 +65,7 @@ const Ewoms::optional<double>& UDQScalar::value() const {
 }
 
 double UDQScalar::get() const {
+    if (!static_cast<bool>(this->m_value))
         throw std::invalid_argument("UDQSCalar: Value not defined  wgname: " + this->m_wgname);
 
     return *this->m_value;

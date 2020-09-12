@@ -19,23 +19,25 @@
 #ifndef EWOMS_REGION_CACHE_H
 #define EWOMS_REGION_CACHE_H
 
+#include <map>
+#include <set>
 #include <vector>
 
 namespace Ewoms {
     class Schedule;
     class EclipseGrid;
+    class FieldPropsManager;
 
 namespace out {
     class RegionCache {
     public:
         RegionCache() = default;
-        RegionCache(const std::vector<int>& fipnum, const EclipseGrid& grid, const Schedule& schedule);
-        const std::vector<std::pair<std::string,size_t>>& connections( int region_id ) const;
+        RegionCache(const std::set<std::string>& fip_regions, const FieldPropsManager& fp, const EclipseGrid& grid, const Schedule& schedule);
+        const std::vector<std::pair<std::string,size_t>>& connections( const std::string& region_name, int region_id ) const;
 
     private:
         std::vector<std::pair<std::string,size_t>> connections_empty;
-
-        std::map<int , std::vector<std::pair<std::string,size_t>>> connection_map;
+        std::map<std::pair<std::string, int> , std::vector<std::pair<std::string,size_t>>> connection_map;
     };
 }
 }

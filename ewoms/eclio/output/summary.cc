@@ -172,7 +172,7 @@ namespace {
              const std::string& name) -> void
         {
             for (const auto& vector : vectors) {
-                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Ewoms::EclIO::SummaryNode::default_number });
+                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Ewoms::EclIO::SummaryNode::default_number, "" });
             }
         };
 
@@ -182,7 +182,7 @@ namespace {
              const std::string& wgname) -> void
         {
             for (const auto &extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Ewoms::EclIO::SummaryNode::default_number });
+                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Ewoms::EclIO::SummaryNode::default_number, "" });
             }
         };
 
@@ -223,7 +223,7 @@ namespace {
                 const int          segNumber) -> void
         {
             for (const auto &requiredVector : requiredVectors) {
-                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber});
+                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber, ""});
             }
         };
 
@@ -373,6 +373,7 @@ struct fn_args {
     double duration;
     const int sim_step;
     int  num;
+    const std::string fip_region;
     const Ewoms::SummaryState& st;
     const Ewoms::data::Wells& wells;
     const Ewoms::data::GroupValues& groups;
@@ -707,7 +708,7 @@ inline quantity duration( const fn_args& args ) {
 template<rt phase , bool injection>
 quantity region_rate( const fn_args& args ) {
     double sum = 0;
-    const auto& well_connections = args.regionCache.connections( args.num );
+    const auto& well_connections = args.regionCache.connections( args.fip_region, args.num );
 
     for (const auto& pair : well_connections) {
 
@@ -1426,7 +1427,7 @@ inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
 
         const auto region = node.number;
 
-        for ( const auto& connection : regionCache.connections( region ) ){
+        for ( const auto& connection : regionCache.connections( node.fip_region, region ) ){
             const auto& w_name = connection.first;
             if (schedule.hasWell(w_name, sim_step)) {
                 const auto& well = schedule.getWell( w_name, sim_step );
@@ -1628,6 +1629,7 @@ namespace Evaluator {
             const fn_args args {
                 wells, group_name, stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
+                this->node_.fip_region,
                 st, simRes.wellSol, simRes.groupSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
@@ -2082,6 +2084,7 @@ namespace Evaluator {
 
         const fn_args args {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
+            this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
             {}
         };
@@ -2378,7 +2381,7 @@ SummaryImplementation(const EclipseState&  es,
                       const Schedule&      sched,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
-    , regCache_      (es.globalFieldProps().get_int("FIPNUM"), grid, sched)
+    , regCache_      (sumcfg.fip_regions(), es.globalFieldProps(), grid, sched)
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
     , fmt_           { es.cfg().io().getFMTOUT() }
@@ -2722,6 +2725,7 @@ void Summary::eval(SummaryState&                  st,
     validateElapsedTime(secs_elapsed, es, st);
 
     const double duration = secs_elapsed - st.get_elapsed();
+    single_values["TIMESTEP"] = duration;
 
     /* Report_step is the one-based sequence number of the containing report.
      * Report_step = 0 for the initial condition, before simulation starts.
