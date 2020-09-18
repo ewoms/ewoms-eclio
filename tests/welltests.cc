@@ -1215,7 +1215,7 @@ WCONINJE
 )";
 
     auto deck = parser.parseString(input);
-    const auto& units = deck.getActiveUnitSystem();
+    //const auto& units = deck.getActiveUnitSystem();
     Ewoms::EclipseGrid grid(10,10,10);
     TableManager table ( deck );
     FieldPropsManager fp(deck, Phases{true, true, true}, grid, table);

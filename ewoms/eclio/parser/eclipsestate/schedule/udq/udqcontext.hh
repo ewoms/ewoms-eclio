@@ -19,10 +19,11 @@
 #ifndef UDQ_CONTEXT_H
 #define UDQ_CONTEXT_H
 
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>

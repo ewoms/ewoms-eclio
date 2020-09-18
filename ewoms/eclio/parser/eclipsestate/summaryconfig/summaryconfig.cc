@@ -470,7 +470,7 @@ inline void keywordR( SummaryConfig::keyword_list& list,
     }
     std::string region_name = "FIPNUM";
     if (keyword.size() > 5) {
-        auto dash_pos = keyword.find("_");
+        //auto dash_pos = keyword.find("_");
         region_name = "FIP" + keyword.substr(5,3);
     }
 
