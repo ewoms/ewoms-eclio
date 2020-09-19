@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms {
 
@@ -72,7 +72,7 @@ enum class Comparator {
 };
 
     Condition() = default;
-    Condition(const std::vector<std::string>& tokens, const Location& location);
+    Condition(const std::vector<std::string>& tokens, const KeywordLocation& location);
 
     Quantity lhs;
     Quantity rhs;

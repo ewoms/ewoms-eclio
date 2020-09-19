@@ -32,7 +32,7 @@
 #include <ewoms/eclio/opmlog/timerlog.hh>
 #include <ewoms/eclio/opmlog/streamlog.hh>
 #include <ewoms/eclio/opmlog/logutil.hh>
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 using namespace Ewoms;
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(DoLogging) {
 }
 
 BOOST_AUTO_TEST_CASE(Test_Format) {
-    BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage(Location("/path/to/file" , 100) , "There is an error here?"));
+    BOOST_CHECK_EQUAL( "There is an error here?\nIn file /path/to/file, line 100\n" , Log::fileMessage(KeywordLocation("Keyword", "/path/to/file" , 100) , "There is an error here?"));
 
     BOOST_CHECK_EQUAL( "Error: This is the error" ,     Log::prefixMessage(Log::MessageType::Error , "This is the error"));
     BOOST_CHECK_EQUAL( "Warning: This is the warning" , Log::prefixMessage(Log::MessageType::Warning , "This is the warning"));
@@ -232,11 +232,11 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
     BOOST_CHECK(isPower2(1ul << 62));
 
     // fileMessage
-    BOOST_CHECK_EQUAL(fileMessage(Location("foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, Location("foo/bar", 1), "message"), "Error: message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(KeywordLocation("Keyword", "foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, KeywordLocation("Keyword", "foo/bar", 1), "message"), "\nError: message\nIn file foo/bar, line 1\n");
 
     // prefixMessage
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "Error: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "\nError: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "Info: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "Note: message");
 

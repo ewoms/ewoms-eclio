@@ -1,4 +1,5 @@
 /*
+
   This file is part of the eWoms project.
 
   eWoms is free software: you can redistribute it and/or modify it under the terms
@@ -1593,6 +1594,29 @@ Ewoms::satfunc::getRawTableEndpoints(const Ewoms::TableManager& tm,
     ep->maximum.water = findMaxWaterSaturation(tm, phases);
 
     return ep;
+}
+
+std::shared_ptr<Ewoms::satfunc::RawFunctionValues>
+Ewoms::satfunc::getRawFunctionValues(const Ewoms::TableManager& tm,
+                                   const Ewoms::Phases&       phases,
+                                   const RawTableEndPoints& ep)
+{
+    auto fval = std::make_shared<RawFunctionValues>();
+
+    fval->kro.max = findMaxKro(tm, phases);
+    fval->kro.rg  = findKrorg(tm, phases, ep);
+    fval->kro.rw  = findKrorw(tm, phases, ep);
+
+    fval->krg.max = findMaxKrg(tm, phases);
+    fval->krg.r   = findKrgr(tm, phases, ep);
+
+    fval->krw.max = findMaxKrw(tm, phases);
+    fval->krw.r   = findKrwr(tm, phases, ep);
+
+    fval->pc.g = findMaxPcog(tm, phases);
+    fval->pc.w = findMaxPcow(tm, phases);
+
+    return fval;
 }
 
 std::vector<double>

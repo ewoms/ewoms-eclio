@@ -76,6 +76,7 @@ namespace {
         0.0,
         0.0,
         0.0,
+        0.0,
     };
 
     static const double to_metric[] = {
@@ -114,6 +115,7 @@ namespace {
         1 / Metric::Energy,
         1 / (Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time)),
         1 / Metric::PolymerDensity,
+        1 / Metric::Salinity,
     };
 
     static const double from_metric[] = {
@@ -152,6 +154,7 @@ namespace {
         Metric::Energy,
         Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time),
         Metric::PolymerDensity,
+        Metric::Salinity,
     };
 
     static constexpr const char* metric_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -190,6 +193,7 @@ namespace {
         "KJ", /* energy */
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "KG / SM3", /*polymer density */
+        "KG / SM3", /*salinity */
     };
 
     static_assert(
@@ -208,6 +212,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -274,6 +279,7 @@ namespace {
         1 / Field::Energy,
         1 / (Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time)),
         1 / Field::PolymerDensity,
+        1 / Field::Salinity,
     };
 
     static const double from_field[] = {
@@ -312,6 +318,7 @@ namespace {
          Field::Energy,
          Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time),
          Field::PolymerDensity,
+         Field::Salinity,
     };
 
     static constexpr const char* field_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -350,6 +357,7 @@ namespace {
         "BTU", /* energy */
         "PSI/(RFT3/DAY)2", /* ICD strength parameter */
         "LB/STB", /*polymer density */
+        "LB/STB", /*salinity */
     };
 
     static_assert(
@@ -368,6 +376,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -434,6 +443,7 @@ namespace {
         1 / Lab::Energy,
         1 / (Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time)),
         1 / Lab::PolymerDensity,
+        1 / Lab::Salinity,
     };
 
     static const double from_lab[] = {
@@ -472,6 +482,7 @@ namespace {
         Lab::Energy,
         Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time),
         Lab::PolymerDensity,
+        Lab::Salinity,
     };
 
     static constexpr const char* lab_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -510,6 +521,7 @@ namespace {
         "J", /* energy */
         "ATM/(RCC/H)2", /* ICD strength parameter */
         "G/SCC", /*polymer density */
+        "G/SCC", /*salinity */
     };
 
     static_assert(
@@ -528,6 +540,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -594,6 +607,7 @@ namespace {
         1 / PVT_M::Energy,
         1 / (PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
         1 / PVT_M::PolymerDensity,
+        1 / PVT_M::Salinity,
     };
 
     static const double from_pvt_m[] = {
@@ -632,6 +646,7 @@ namespace {
         PVT_M::Energy,
         PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time),
         PVT_M::PolymerDensity,
+        PVT_M::Salinity,
     };
 
     static constexpr const char* pvt_m_names[static_cast<int>(UnitSystem::measure::_count)] = {
@@ -670,6 +685,7 @@ namespace {
         "KJ" /* energy */,
         "ATM/(RM3/DAY)2", /* ICD strength parameter */
         "KG/SM3", /*polymer density */
+        "KG/SM3", /*salinity */
     };
 
     static_assert(
@@ -681,6 +697,7 @@ namespace {
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -754,9 +771,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -830,6 +849,7 @@ namespace {
         "KJ", /* energy */
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "KG/SM3", /*polymer density */
+        "KG/SM3", /*salinity */
     };
 
     static_assert(

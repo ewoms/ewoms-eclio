@@ -203,6 +203,9 @@ private:
     static void convertGFRToSI(const GFR_TYPE& type,
                                std::vector<double>& values,
                                const UnitSystem& unit_system);
+    static void convertAlqToSI(const ALQ_TYPE& type,
+                               std::vector<double>& values,
+                               const UnitSystem& unit_system);
 };
 
 }

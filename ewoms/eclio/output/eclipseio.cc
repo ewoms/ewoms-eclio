@@ -210,7 +210,7 @@ void EclipseIO::writeTimeStep(const Action::State& action_state,
 
     bool final_step { report_step == static_cast<int>(this->impl->schedule.size()) - 1 };
 
-    if (final_step && this->impl->summaryConfig.createRunSummary()) {
+    if (final_step && !isSubstep && this->impl->summaryConfig.createRunSummary()) {
         Ewoms::filesystem::path outputDir { this->impl->outputDir } ;
         Ewoms::filesystem::path outputFile { outputDir / this->impl->baseName } ;
         EclIO::ESmry(outputFile).write_rsm_file();

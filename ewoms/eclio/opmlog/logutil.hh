@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <string>
 
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms {
 
@@ -57,8 +57,8 @@ namespace Log {
     }
 
     bool isPower2(int64_t x);
-    std::string fileMessage(const Location& location, const std::string& msg);
-    std::string fileMessage(int64_t messageType , const Location& location , const std::string& msg);
+    std::string fileMessage(const KeywordLocation& location, const std::string& msg);
+    std::string fileMessage(int64_t messageType , const KeywordLocation& location , const std::string& msg);
     std::string prefixMessage(int64_t messageType , const std::string& msg);
     std::string colorCodeMessage(int64_t messageType , const std::string& msg);
 

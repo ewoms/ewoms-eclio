@@ -26,7 +26,7 @@
 #include <vector>
 
 #include <ewoms/eclio/io/summarynode.hh>
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms {
 
@@ -42,7 +42,7 @@ namespace Ewoms {
         using Type = Ewoms::EclIO::SummaryNode::Type;
 
         SummaryConfigNode() = default;
-        explicit SummaryConfigNode(std::string keyword, const Category cat, Location loc_arg);
+        explicit SummaryConfigNode(std::string keyword, const Category cat, KeywordLocation loc_arg);
 
         static SummaryConfigNode serializeObject();
 
@@ -61,7 +61,7 @@ namespace Ewoms {
         const std::string& fip_region() const { return this->fip_region_; }
 
         std::string uniqueNodeKey() const;
-        const Location& location( ) const { return this->loc; }
+        const KeywordLocation& location( ) const { return this->loc; }
 
         operator Ewoms::EclIO::SummaryNode() const {
             return { keyword_, category_, type_, name_, number_, fip_region_ };
@@ -83,7 +83,7 @@ namespace Ewoms {
     private:
         std::string keyword_;
         Category    category_;
-        Location    loc;
+        KeywordLocation loc;
         Type        type_{ Type::Undefined };
         std::string name_{};
         int         number_{std::numeric_limits<int>::min()};
@@ -174,6 +174,8 @@ namespace Ewoms {
             */
             bool match(const std::string& keywordPattern) const;
 
+            keyword_list keywords(const std::string& keywordPattern) const;
+
             /*
                The hasSummaryKey() method will look for fully
                qualified keys like 'RPR:3' and 'BPR:10,15,20.
@@ -191,7 +193,7 @@ namespace Ewoms {
             template<class Serializer>
             void serializeOp(Serializer& serializer)
             {
-               serializer.vector(keywords);
+               serializer.vector(m_keywords);
                serializer(short_keywords);
                serializer(summary_keywords);
             }
@@ -213,7 +215,7 @@ namespace Ewoms {
               part, e.g. "WWCT", and not the qualification with
               well/group name or a numerical value.
             */
-            keyword_list keywords;
+            keyword_list m_keywords;
             std::set<std::string> short_keywords;
             std::set<std::string> summary_keywords;
 

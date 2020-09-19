@@ -27,7 +27,7 @@
 
 #include <ewoms/eclio/utility/timeservice.hh>
 
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(TestFieldAND) {
 }
 
 BOOST_AUTO_TEST_CASE(Conditions) {
-    auto location = Location("File", 100);
+    auto location = KeywordLocation("Keyword", "File", 100);
 
     // Missing comparator
     BOOST_CHECK_THROW(Action::Condition cond({"WWCT", "OPX"}, location), std::invalid_argument);

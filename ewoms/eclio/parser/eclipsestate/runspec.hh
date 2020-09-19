@@ -289,6 +289,7 @@ public:
         hystpar.serializeOp(serializer);
         m_actdims.serializeOp(serializer);
         m_sfuncctrl.serializeOp(serializer);
+        serializer(m_nupcol);
     }
 
 private:

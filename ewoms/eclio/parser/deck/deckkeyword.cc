@@ -38,7 +38,7 @@ namespace Ewoms {
     {
     }
 
-    DeckKeyword::DeckKeyword(const Location& location, const std::string& keywordName) :
+    DeckKeyword::DeckKeyword(const KeywordLocation& location, const std::string& keywordName) :
         m_keywordName(keywordName),
         m_location(location),
         m_isDataKeyword(false),
@@ -56,7 +56,7 @@ namespace Ewoms {
     {
         DeckKeyword result;
         result.m_keywordName = "test";
-        result.m_location = Location::serializeObject();
+        result.m_location = KeywordLocation::serializeObject();
         result.m_recordList = {DeckRecord::serializeObject()};
         result.m_isDataKeyword = true;
         result.m_slashTerminated = true;
@@ -193,7 +193,7 @@ namespace Ewoms {
         m_slashTerminated = false;
     }
 
-    const Location& DeckKeyword::location() const {
+    const KeywordLocation& DeckKeyword::location() const {
         return this->m_location;
     }
 

@@ -4055,6 +4055,7 @@ WSALT::WSALT( ) : ParserKeyword("WSALT")
      }
      {
         ParserItem item("CONCENTRATION", ParserItem::itype::UDA);
+        item.push_backDimension("Salinity");
         record.addItem(item);
      }
      addRecord( record );

@@ -16,39 +16,48 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LOCATION_H
-#define LOCATION_H
+#ifndef KEYWORD_LOCATION_H
+#define KEYWORD_LOCATION_H
 
 namespace Ewoms {
 
-class Location {
+class KeywordLocation {
 public:
+    std::string keyword;
     std::string filename = "<memory string>";
     std::size_t lineno = 0;
 
-    Location() = default;
-    Location(std::string fname, std::size_t lno) :
+    KeywordLocation() = default;
+    KeywordLocation(std::string kw, std::string fname, std::size_t lno) :
+        keyword(std::move(kw)),
         filename(std::move(fname)),
         lineno(lno)
     {}
 
-    static Location serializeObject()
+    std::string message() const {
+        return this->keyword + " in " + this->filename + " at line " + std::to_string(this->lineno);
+    }
+
+    static KeywordLocation serializeObject()
     {
-        Location result;
+        KeywordLocation result;
+        result.keyword = "KW";
         result.filename = "test";
         result.lineno = 1;
 
         return result;
     }
 
-    bool operator==(const Location& data) const {
-        return filename == data.filename &&
+    bool operator==(const KeywordLocation& data) const {
+        return keyword == data.keyword &&
+               filename == data.filename &&
                lineno == data.lineno;
     }
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
+        serializer(keyword);
         serializer(filename);
         serializer(lineno);
     }

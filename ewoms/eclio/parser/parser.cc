@@ -901,15 +901,13 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                   we should not be tempted to continue the parsing.
                 */
                 const auto& location = rawKeyword->location();
-                std::string msg = "\nFailed to parse keyword: " + rawKeyword->getKeywordName() + "\n" +
-                                  "In file " + location.filename + ", line " +  std::to_string(location.lineno) + "\n\n" +
-                                  "Error message: " + exc.what() + "\n";
-
-                throw std::invalid_argument(msg);
+                std::string msg = Log::fileMessage(location, "Parse error: " + std::string{ exc.what() });
+                OpmLog::error(msg);
+                throw;
             }
         } else {
             const std::string msg = "The keyword " + rawKeyword->getKeywordName() + " is not recognized - ignored";
-            Location location(parserState.current_path().string(), parserState.line());
+            KeywordLocation location(rawKeyword->getKeywordName(), parserState.current_path().string(), parserState.line());
             OpmLog::warning(Log::fileMessage(location, msg));
         }
     }

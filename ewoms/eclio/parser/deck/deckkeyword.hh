@@ -28,7 +28,7 @@
 #include <ewoms/eclio/parser/deck/deckvalue.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/value_status.hh>
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms {
     class DeckOutput;
@@ -41,7 +41,7 @@ namespace Ewoms {
 
         DeckKeyword();
         explicit DeckKeyword(const ParserKeyword& parserKeyword);
-        DeckKeyword(const Location& location, const std::string& keywordName);
+        DeckKeyword(const KeywordLocation& location, const std::string& keywordName);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<std::vector<DeckValue>>& record_list, UnitSystem& system_active, UnitSystem& system_default);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<int>& data);
         DeckKeyword(const ParserKeyword& parserKeyword, const std::vector<double>& data, UnitSystem& system_active, UnitSystem& system_default);
@@ -50,7 +50,7 @@ namespace Ewoms {
 
         const std::string& name() const;
         void setFixedSize();
-        const Location& location() const;
+        const KeywordLocation& location() const;
 
         size_t size() const;
         void addRecord(DeckRecord&& record);
@@ -102,7 +102,7 @@ namespace Ewoms {
 
     private:
         std::string m_keywordName;
-        Location m_location;
+        KeywordLocation m_location;
 
         std::vector< DeckRecord > m_recordList;
         bool m_isDataKeyword;

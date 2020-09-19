@@ -20,7 +20,7 @@
 #include <ewoms/eclio/output/summary.hh>
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
-#include <ewoms/eclio/opmlog/location.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
@@ -2039,7 +2039,12 @@ namespace Evaluator {
 
     bool Factory::isRegionValue()
     {
-        auto pos = region_units.find(this->node_->keyword);
+        auto keyword = this->node_->keyword;
+        auto dash_pos = keyword.find("_");
+        if (dash_pos != std::string::npos)
+            keyword = keyword.substr(0, dash_pos);
+
+        auto pos = region_units.find(keyword);
         if (pos == region_units.end())
             return false;
 
@@ -2726,6 +2731,7 @@ void Summary::eval(SummaryState&                  st,
 
     const double duration = secs_elapsed - st.get_elapsed();
     single_values["TIMESTEP"] = duration;
+    st.update("TIMESTEP", es.getUnits().from_si(Ewoms::UnitSystem::measure::time, duration));
 
     /* Report_step is the one-based sequence number of the containing report.
      * Report_step = 0 for the initial condition, before simulation starts.

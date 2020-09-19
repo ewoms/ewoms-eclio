@@ -32,7 +32,7 @@ Ewoms::WellBrineProperties Ewoms::WellBrineProperties::serializeObject()
 
 void Ewoms::WellBrineProperties::handleWSALT(const DeckRecord& rec)
 {
-    this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).get<double>();
+    this->m_saltConcentration = rec.getItem("CONCENTRATION").get<UDAValue>(0).getSI();
 }
 
 bool Ewoms::WellBrineProperties::operator!=(const WellBrineProperties& other) const

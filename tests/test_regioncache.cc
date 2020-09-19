@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(create) {
     Deck deck( parser.parseFile( path ));
     EclipseState es(deck);
     const EclipseGrid& grid = es.getInputGrid();
-    Schedule schedule( deck, es);
+    Schedule schedule( deck, es );
     out::RegionCache rc({"FIPNUM"}, es.fieldProps(), grid, schedule);
     {
         const auto& empty = rc.connections( "FIPNUM", 4 );
