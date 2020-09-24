@@ -17,9 +17,18 @@
  */
 #include "config.h"
 
+#include <cmath>
+#include <iomanip>
+#include <ios>
 #include <memory>
+#include <sstream>
 
+#include <ewoms/common/fmt/format.h>
+
+#include <ewoms/eclio/opmlog/eclipseprtlog.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/opmlog/logutil.hh>
+#include <ewoms/eclio/opmlog/streamlog.hh>
 
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/e.hh>
@@ -112,12 +121,18 @@ namespace Ewoms {
         m_rtemp = ParserKeywords::RTEMP::TEMP::defaultValue;
         m_rtemp += Metric::TemperatureOffset; // <- default values always use METRIC as the unit system!
 
+        m_salinity = ParserKeywords::SALINITY::MOLALITY::defaultValue;
+
         initDims( deck );
         initSimpleTables( deck );
         initFullTables(deck, "PVTG", m_pvtgTables);
         initFullTables(deck, "PVTGW", m_pvtgwTables);
         initFullTables(deck, "PVTGWO", m_pvtgwoTables);
         initFullTables(deck, "PVTO", m_pvtoTables);
+
+        if (deck.hasKeyword<ParserKeywords::PVTO>()) {
+            this->checkPVTOMonotonicity(deck);
+        }
 
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
@@ -169,6 +184,9 @@ namespace Ewoms {
             m_rtemp = deck.getKeyword("RTEMP").getRecord(0).getItem("TEMP").getSIDouble( 0 );
         else if (deck.hasKeyword( "RTEMPA" ) )
             m_rtemp = deck.getKeyword("RTEMPA").getRecord(0).getItem("TEMP").getSIDouble( 0 );
+
+        if( deck.hasKeyword( "SALINITY" ) )
+            m_salinity = deck.getKeyword("SALINITY").getRecord(0).getItem("MOLALITY").get<double>( 0 ); //unit independent of unit systems
 
         if ( deck.hasKeyword( "ROCK2D") )
             initRockTables(deck, "ROCK2D", m_rock2dTables );
@@ -261,6 +279,7 @@ namespace Ewoms {
         if (data.jfunc)
           jfunc = std::make_shared<JFunc>(*data.jfunc);
         m_rtemp = data.m_rtemp;
+        m_salinity = data.m_salinity;
         gasDenT = data.gasDenT;
         oilDenT = data.oilDenT;
         watDenT = data.watDenT;
@@ -312,6 +331,7 @@ namespace Ewoms {
         result.stcond = StandardCond::serializeObject();
         result.m_gas_comp_index = 77;
         result.m_rtemp = 1.0;
+        result.m_salinity = 1.0;
         result.m_tlmixpar = TLMixpar::serializeObject();
         return result;
     }
@@ -1144,6 +1164,10 @@ namespace Ewoms {
         return this->m_rtemp;
     }
 
+    double TableManager::salinity() const {
+        return this->m_salinity;
+    }
+
     std::size_t TableManager::gas_comp_index() const {
         return this->m_gas_comp_index;
     }
@@ -1193,6 +1217,7 @@ namespace Ewoms {
                stcond == data.stcond &&
                jfuncOk &&
                m_rtemp == data.m_rtemp &&
+               m_salinity == data.m_salinity &&
                m_gas_comp_index == data.m_gas_comp_index;
     }
 
@@ -1205,6 +1230,115 @@ namespace Ewoms {
         assert(numEntries == numTables);
         for (unsigned lineIdx = 0; lineIdx < numEntries; ++lineIdx) {
             solventtables[lineIdx].init(keyword.getRecord(lineIdx));
+        }
+    }
+
+    void TableManager::checkPVTOMonotonicity(const Deck& deck) const
+    {
+        auto tableID = std::size_t{0};
+        for (const auto& pvto : this->getPvtoTables()) {
+            ++tableID; // One-based table ID
+
+            const auto flipped_Bo = pvto.nonMonotonicSaturatedFVF();
+            if (flipped_Bo.empty()) {
+                // Normal case.  Bo strictly increasing as a function of Rs
+                // in saturated table.  Nothing to do here.
+                continue;
+            }
+
+            // Unexpected case.  Bo is *not* strictly increasing as a
+            // function of Rs.  Report condition to user.
+            this->logPVTOMonotonicityFailure(deck, tableID, flipped_Bo);
+        }
+    }
+
+    void TableManager::logPVTOMonotonicityFailure(const Deck&                               deck,
+                                                  const std::size_t                         tableID,
+                                                  const std::vector<PvtoTable::FlippedFVF>& flipped_Bo) const
+    {
+        const auto& usys    = deck.getActiveUnitSystem();
+        const auto& pvtoLoc = deck.getKeyword<ParserKeywords::PVTO>(std::size_t{0}).location();
+
+        using M = UnitSystem::measure;
+        using namespace fmt::literals;
+
+        const auto nDigit = [](const std::size_t n)
+        {
+            return 1 + static_cast<int>(std::floor(std::log10(n)));
+        };
+
+        const auto formatHeader = [&pvtoLoc](const std::size_t pvtnum)
+        {
+            return fmt::format("Non-Monotonic Oil Formation Volume Factor Detected in Keyword PVTO, PVTNUM={num}\n"
+                               "In {file} line {line}",
+                               "num"_a = pvtnum,
+                               "file"_a = pvtoLoc.filename,
+                               "line"_a = pvtoLoc.lineno);
+        };
+
+        const auto formatBoRecord =
+            [&usys](const std::size_t            numDigitsRecordID,
+                    const std::size_t            floatPrecision,
+                    const PvtoTable::FlippedFVF& flipped)
+        {
+            return fmt::format(
+                "Record {rec:{width}}: "
+                "FVF {BO_1:.{prec}f} at RS {RS_1:.{prec}f} "
+                "is not greater than "
+                "FVF {BO_0:.{prec}f} at RS {RS_0:.{prec}f}",
+                "rec"_a = flipped.i + 1,
+                "width"_a = numDigitsRecordID,
+                "prec"_a = floatPrecision,
+                "BO_1"_a = usys.from_si(M::oil_formation_volume_factor, flipped.Bo[1]),
+                "RS_1"_a = usys.from_si(M::gas_oil_ratio, flipped.Rs[1]),
+                "BO_0"_a = usys.from_si(M::oil_formation_volume_factor, flipped.Bo[0]),
+                "RS_0"_a = usys.from_si(M::gas_oil_ratio, flipped.Rs[0])
+            );
+        };
+
+        std::ostringstream prt;
+        std::ostringstream console;
+
+        {
+            const auto header = formatHeader(tableID);
+            prt     << header << '\n';
+            console << header << '\n';
+        }
+
+        // Append record to console message if either of the following conditions hold
+        //
+        //   1. Total number of flipped records does not exceed `consoleRecordLimit`.
+        //
+        //   2. Record is among `consoleRecordLimit - 1` first records.
+        //
+        // In the second case, also emit limiter message as `consoleRecordLimit`-th
+        // record.
+        //
+        // Print file gets all flipped records.
+        const std::size_t numDigitsRecordID  = nDigit(flipped_Bo.back().i + 1);
+        const std::size_t numRecords         = static_cast<std::size_t>(flipped_Bo.size());
+        const std::size_t consoleRecordLimit = 4;
+        const std::size_t floatPrecision     = 3;
+        const bool        consoleWriteAll    = numRecords <= consoleRecordLimit;
+        for (auto recordIx = 0*numRecords; recordIx < numRecords; ++recordIx) {
+            const auto record =
+                formatBoRecord(numDigitsRecordID, floatPrecision, flipped_Bo[recordIx]);
+
+            prt << record << '\n';
+
+            if (consoleWriteAll || (recordIx + 1 < consoleRecordLimit)) {
+                console << record << '\n';
+            }
+            else if (recordIx + 1 == consoleRecordLimit) {
+                console << "Report limit reached, see PRT-file for additional records.\n";
+            }
+        }
+
+        if (auto prtLog = OpmLog::getBackend<EclipsePRTLog>("ECLIPSEPRTLOG")) {
+            prtLog->addMessage(Log::MessageType::Warning, prt.str());
+        }
+        if (auto consoleLog = OpmLog::getBackend<StreamLog>("STDOUT_LOGGER")) {
+            consoleLog->addMessage(Log::MessageType::Warning, console.str());
         }
     }
 
@@ -1237,4 +1371,3 @@ namespace Ewoms {
         return result;
     }
 }
-

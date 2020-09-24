@@ -34,6 +34,7 @@ namespace Ewoms {
     class RawRecord;
     class ErrorGuard;
     class UnitSystem;
+    class KeywordLocation;
 
     class ParserRecord {
     public:
@@ -43,7 +44,7 @@ namespace Ewoms {
         void addDataItem( ParserItem item );
         const ParserItem& get(size_t index) const;
         const ParserItem& get(const std::string& itemName) const;
-        DeckRecord parse( const ParseContext&, ErrorGuard&, RawRecord&, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const std::string& keyword, const std::string& filename) const;
+        DeckRecord parse( const ParseContext&, ErrorGuard&, RawRecord&, UnitSystem& active_unitsystem, UnitSystem& default_unitsystem, const KeywordLocation& location) const;
         bool isDataRecord() const;
         bool equal(const ParserRecord& other) const;
         bool hasDimension() const;

@@ -69,11 +69,11 @@ namespace Ewoms {
         using ExtraVector = std::vector<std::pair<RestartKey, std::vector<double>>>;
         data::Solution solution;
         data::Wells wells;
-        data::GroupValues groups;
+        data::GroupAndNetworkValues grp_nwrk;
         ExtraVector extra;
         std::vector<data::AquiferData> aquifer;
 
-        RestartValue(data::Solution sol, data::Wells wells_arg, data::GroupValues groups_arg);
+        RestartValue(data::Solution sol, data::Wells wells_arg, data::GroupAndNetworkValues grpn_nwrk_arg);
 
         RestartValue() {}
 
@@ -89,7 +89,7 @@ namespace Ewoms {
         {
           return solution == val2.solution &&
                  wells == val2.wells &&
-                 groups == val2.groups &&
+                 grp_nwrk == val2.grp_nwrk &&
                  extra == val2.extra;
         }
     };

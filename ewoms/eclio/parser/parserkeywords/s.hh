@@ -4,6 +4,20 @@
 namespace Ewoms {
 namespace ParserKeywords {
 
+   class SALINITY : public ParserKeyword {
+   public:
+       SALINITY();
+       static const std::string keywordName;
+
+       class MOLALITY {
+       public:
+           static const std::string itemName;
+           static const double defaultValue;
+       };
+   };
+
+
+
    class SALT : public ParserKeyword {
    public:
        SALT();

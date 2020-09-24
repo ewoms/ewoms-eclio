@@ -100,6 +100,9 @@ namespace Ewoms {
 
     void DeckOutput::start_keyword(const std::string& kw) {
         this->os << kw << std::endl;
+        this->split_line = true;
+        if (kw == "UDQ" || kw == "ACTIONX")
+            this->split_line = false;
     }
 
     void DeckOutput::end_keyword(bool add_slash) {
@@ -108,7 +111,7 @@ namespace Ewoms {
     }
 
     void DeckOutput::write_sep( ) {
-        if (record_on) {
+        if (record_on && this->split_line) {
             if ((row_count > 0) && ((row_count % columns) == 0))
                 split_record();
         }

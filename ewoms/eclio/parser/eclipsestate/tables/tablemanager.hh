@@ -187,6 +187,8 @@ namespace Ewoms {
 
         double rtemp() const;
 
+        double salinity() const;
+
         bool operator==(const TableManager& data) const;
 
         template<class Serializer>
@@ -237,6 +239,7 @@ namespace Ewoms {
             stcond.serializeOp(serializer);
             serializer(m_gas_comp_index);
             serializer(m_rtemp);
+            serializer(m_salinity);
             m_tlmixpar.serializeOp(serializer);
             if (!serializer.isSerializing()) {
                 m_simpleTables = simpleTables;
@@ -480,6 +483,12 @@ namespace Ewoms {
                 tableVector.emplace_back( tableKeyword , tableIdx );
         }
 
+        void checkPVTOMonotonicity(const Deck& deck) const;
+
+        void logPVTOMonotonicityFailure(const Deck&                               deck,
+                                        const std::size_t                         tableID,
+                                        const std::vector<PvtoTable::FlippedFVF>& flipped_Bo) const;
+
         std::map<std::string , TableContainer> m_simpleTables;
         std::vector<PvtgTable> m_pvtgTables;
         std::vector<PvtgwTable> m_pvtgwTables;
@@ -523,6 +532,7 @@ namespace Ewoms {
         StandardCond stcond;
         std::size_t m_gas_comp_index;
         double m_rtemp;
+        double m_salinity;
 
         struct SplitSimpleTables {
           size_t plyshMax = 0;

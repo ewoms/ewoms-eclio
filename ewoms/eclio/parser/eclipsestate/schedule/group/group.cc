@@ -66,6 +66,7 @@ Group Group::serializeObject()
     result.injection_properties = {{Ewoms::Phase::OIL, GroupInjectionProperties::serializeObject()}};
     result.production_properties = GroupProductionProperties::serializeObject();
     result.m_topup_phase = {Phase::OIL, true};
+    result.m_gpmaint = GPMaint::serializeObject();
 
     return result;
 }

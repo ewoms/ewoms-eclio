@@ -20,8 +20,10 @@
 #define BOOST_TEST_MODULE DoubHEAD_Vector
 
 #include <boost/test/unit_test.hpp>
+#include <ewoms/eclio/parser/units/units.hh>
 
 #include <ewoms/eclio/output/doubhead.hh>
+#include <ewoms/eclio/output/vectoritems/doubhead.hh>
 
 #include <ewoms/eclio/output/intehead.hh>
 
@@ -29,6 +31,8 @@
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
+#include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
 
 #include <chrono>
 #include <ctime>
@@ -36,6 +40,29 @@
 #include <numeric>              // partial_sum()
 #include <ratio>
 #include <vector>
+
+namespace {
+
+    Ewoms::Deck first_sim(std::string fname) {
+        return Ewoms::Parser{}.parseFile(fname);
+    }
+}
+
+//int main(int argc, char* argv[])
+struct SimulationCase
+{
+    explicit SimulationCase(const Ewoms::Deck& deck)
+        : es   { deck }
+        , grid { deck }
+        , sched{ deck, es }
+    {}
+
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Ewoms::EclipseState es;
+    Ewoms::EclipseGrid  grid;
+    Ewoms::Schedule     sched;
+
+};
 
 namespace {
     using Day = std::chrono::duration<double,
@@ -66,6 +93,30 @@ namespace {
     {
         return { start, elapsed };
     }
+
+    double getTimeConv(const ::Ewoms::UnitSystem& us)
+    {
+        switch (us.getType()) {
+        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC:
+            return static_cast<double>(Ewoms::Metric::Time);
+
+        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_FIELD:
+            return static_cast<double>(Ewoms::Field::Time);
+
+        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_LAB:
+            return static_cast<double>(Ewoms::Lab::Time);
+
+        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_PVT_M:
+            return static_cast<double>(Ewoms::PVT_M::Time);
+
+        case ::Ewoms::UnitSystem::UnitType::UNIT_TYPE_INPUT:
+            throw std::invalid_argument {
+                "Cannot Run Simulation With Non-Standard Units"
+            };
+        }
+
+        throw std::invalid_argument("Unknown unit type specified");
+    }
 } // Anonymous
 
 BOOST_AUTO_TEST_SUITE(Member_Functions)
@@ -89,6 +140,30 @@ BOOST_AUTO_TEST_CASE(Time_Stamp)
 
     // Start + elapsed (days)
     BOOST_CHECK_CLOSE(v[162 - 1], 736200.0, 1.0e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Wsegiter)
+{
+    const auto simCase = SimulationCase{first_sim("0A4_GRCTRL_LRAT_LRAT_GGR_BASE_MODEL2_MSW_ALL.DATA")};
+
+    Ewoms::EclipseState es    = simCase.es;
+    Ewoms::Schedule     sched = simCase.sched;
+
+    const auto& usys  = es.getDeckUnitSystem();
+    const auto  tconv = getTimeConv(usys);
+
+    const std::size_t lookup_step = 1;
+
+    const auto dh = Ewoms::RestartIO::DoubHEAD{}
+        .tuningParameters(sched.getTuning(lookup_step), tconv);
+
+    const auto& v = dh.data();
+
+    namespace VI = Ewoms::RestartIO::Helpers::VectorItems;
+
+    BOOST_CHECK_EQUAL(v[VI::WsegRedFac], 0.3);
+    BOOST_CHECK_EQUAL(v[VI::WsegIncFac], 2.0);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

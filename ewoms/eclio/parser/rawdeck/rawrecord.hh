@@ -38,9 +38,9 @@ namespace Ewoms {
 
         inline Ewoms::string_view pop_front();
         inline Ewoms::string_view front() const;
-        void push_front( Ewoms::string_view token );
-        void prepend( size_t count, Ewoms::string_view token );
+        void push_front( Ewoms::string_view token, std::size_t count );
         inline size_t size() const;
+        std::size_t max_size() const;
 
         std::string getRecordString() const;
         inline Ewoms::string_view getItem(size_t index) const;
@@ -48,6 +48,7 @@ namespace Ewoms {
     private:
         Ewoms::string_view m_sanitizedRecordString;
         std::deque< Ewoms::string_view > m_recordItems;
+        std::size_t m_max_size;
     };
 
     /*

@@ -21,6 +21,7 @@
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
+#include <ewoms/eclio/parser/parserkeywords/c.hh>
 #include <ewoms/eclio/parser/parserkeywords/n.hh>
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
@@ -96,19 +97,23 @@ bool Phases::operator==(const Phases& data) const {
 
 Welldims::Welldims(const Deck& deck)
 {
-    if (deck.hasKeyword("WELLDIMS")) {
-        const auto& wd = deck.getKeyword("WELLDIMS", 0).getRecord(0);
+    using WD = ParserKeywords::WELLDIMS;
+    if (deck.hasKeyword<WD>()) {
+        const auto& keyword = deck.getKeyword<WD>(0);
+        const auto& wd = keyword.getRecord(0);
 
-        this->nCWMax = wd.getItem("MAXCONN")      .get<int>(0);
-        this->nWGMax = wd.getItem("MAX_GROUPSIZE").get<int>(0);
+        this->nCWMax = wd.getItem<WD::MAXCONN>().get<int>(0);
+        this->nWGMax = wd.getItem<WD::MAX_GROUPSIZE>().get<int>(0);
 
         // This is the E100 definition.  E300 instead uses
         //
         //   Max{ "MAXGROUPS", "MAXWELLS" }
         //
         // i.e., the maximum of item 1 and item 4 here.
-        this->nGMax = wd.getItem("MAXGROUPS").get<int>(0);
-	      this->nWMax = wd.getItem("MAXWELLS").get<int>(0);
+        this->nGMax = wd.getItem<WD::MAXGROUPS>().get<int>(0);
+	      this->nWMax = wd.getItem<WD::MAXWELLS>().get<int>(0);
+
+        this->m_location = keyword.location();
     }
 }
 
@@ -119,7 +124,7 @@ Welldims Welldims::serializeObject()
     result.nCWMax = 2;
     result.nWGMax = 3;
     result.nGMax = 4;
-
+    result.m_location = KeywordLocation::serializeObject();
     return result;
 }
 
@@ -315,7 +320,8 @@ Runspec::Runspec( const Deck& deck ) :
     hystpar( deck ),
     m_actdims( deck ),
     m_sfuncctrl( deck ),
-    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue )
+    m_nupcol( ParserKeywords::NUPCOL::NUM_ITER::defaultValue ),
+    m_co2storage (false)
 {
     if (DeckSection::hasRUNSPEC(deck)) {
         const RUNSPECSection runspecSection{deck};
@@ -327,6 +333,11 @@ Runspec::Runspec( const Deck& deck ) :
                 std::string msg = "eflow uses 12 as default NUPCOL value";
                 OpmLog::note(msg);
             }
+        }
+        if (runspecSection.hasKeyword<ParserKeywords::CO2STOR>()) {
+            m_co2storage = true;
+            std::string msg = "The CO2 storage option is given. PVT properties from the Brine-CO2 system is used";
+            OpmLog::note(msg);
         }
     }
 }
@@ -344,6 +355,7 @@ Runspec Runspec::serializeObject()
     result.m_actdims = Actdims::serializeObject();
     result.m_sfuncctrl = SatFuncControls::serializeObject();
     result.m_nupcol = 2;
+    result.m_co2storage = true;
 
     return result;
 }
@@ -389,6 +401,11 @@ int Runspec::nupcol() const noexcept
     return this->m_nupcol;
 }
 
+bool Runspec::co2Storage() const noexcept
+{
+    return this->m_co2storage;
+}
+
 /*
   Returns an integer in the range 0...7 which can be used to indicate
   available phases in Eclipse restart and init files.
@@ -416,7 +433,8 @@ bool Runspec::operator==(const Runspec& data) const {
            this->hysterPar() == data.hysterPar() &&
            this->actdims() == data.actdims() &&
            this->saturationFunctionControls() == data.saturationFunctionControls() &&
-           this->m_nupcol == data.m_nupcol;
+           this->m_nupcol == data.m_nupcol &&
+           this->m_co2storage == data.m_co2storage;
 }
 
 }

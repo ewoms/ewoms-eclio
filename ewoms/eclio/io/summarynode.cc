@@ -14,8 +14,10 @@
 
    You should have received a copy of the GNU General Public License
    along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
-   */
+*/
 #include "config.h"
+
+#include <ewoms/eclio/io/summarynode.hh>
 
 #include <numeric>
 #include <regex>
@@ -23,8 +25,6 @@
 #include <unordered_set>
 #include <vector>
 #include <cassert>
-
-#include <ewoms/eclio/io/summarynode.hh>
 
 namespace {
 
@@ -38,6 +38,7 @@ constexpr bool use_number(Ewoms::EclIO::SummaryNode::Category category) {
         return true;
     case Ewoms::EclIO::SummaryNode::Category::Field:         [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Group:         [[fallthrough]];
+    case Ewoms::EclIO::SummaryNode::Category::Node:          [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Miscellaneous: [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Well:
         return false;
@@ -52,6 +53,7 @@ constexpr bool use_name(Ewoms::EclIO::SummaryNode::Category category) {
     case Ewoms::EclIO::SummaryNode::Category::Connection:    [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Group:         [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Segment:       [[fallthrough]];
+    case Ewoms::EclIO::SummaryNode::Category::Node:          [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Well:
         return true;
     case Ewoms::EclIO::SummaryNode::Category::Aquifer:       [[fallthrough]];
@@ -70,7 +72,23 @@ std::string default_number_renderer(const Ewoms::EclIO::SummaryNode& node) {
     return std::to_string(node.number);
 }
 
-};
+bool is_node_keyword(const std::string& keyword)
+{
+    static const auto node_kw = std::unordered_set<std::string> {
+        "GPR",
+    };
+
+    return node_kw.find(keyword) != node_kw.end();
+}
+
+Ewoms::EclIO::SummaryNode::Category
+distinguish_group_from_node(const std::string& keyword)
+{
+    return is_node_keyword(keyword)
+        ? Ewoms::EclIO::SummaryNode::Category::Node
+        : Ewoms::EclIO::SummaryNode::Category::Group;
+}
+}
 
 std::string Ewoms::EclIO::SummaryNode::unique_key(number_renderer render_number) const {
     std::vector<std::string> key_parts { keyword } ;
@@ -146,7 +164,7 @@ Ewoms::EclIO::SummaryNode::Category Ewoms::EclIO::SummaryNode::category_from_key
     case 'B': return Category::Block;
     case 'C': return Category::Connection;
     case 'F': return Category::Field;
-    case 'G': return Category::Group;
+    case 'G': return distinguish_group_from_node(keyword);
     case 'R': return Category::Region;
     case 'S': return Category::Segment;
     case 'W': return Category::Well;

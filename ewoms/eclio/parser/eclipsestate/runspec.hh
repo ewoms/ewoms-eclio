@@ -21,6 +21,9 @@
 #include <iosfwd>
 #include <string>
 
+#include <ewoms/common/optional.hh>
+
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/tabdims.hh>
 #include <ewoms/eclio/parser/eclipsestate/endpointscaling.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
@@ -103,11 +106,16 @@ public:
         return this->nWMax;
     }
 
+    const Ewoms::optional<KeywordLocation>& location() const {
+        return this->m_location;
+    }
+
     bool operator==(const Welldims& data) const {
         return this->maxConnPerWell() == data.maxConnPerWell() &&
                this->maxWellsPerGroup() == data.maxWellsPerGroup() &&
                this->maxGroupsInField() == data.maxGroupsInField() &&
-               this->maxWellsInField() == data.maxWellsInField();
+               this->maxWellsInField() == data.maxWellsInField() &&
+               this->location() == data.location();
     }
 
     template<class Serializer>
@@ -117,6 +125,7 @@ public:
         serializer(nCWMax);
         serializer(nWGMax);
         serializer(nGMax);
+        serializer(m_location);
     }
 
 private:
@@ -124,6 +133,7 @@ private:
     int nCWMax { 0 };
     int nWGMax { 0 };
     int nGMax  { 0 };
+    Ewoms::optional<KeywordLocation> m_location;
 };
 
 class WellSegmentDims {
@@ -274,6 +284,7 @@ public:
     const Actdims& actdims() const noexcept;
     const SatFuncControls& saturationFunctionControls() const noexcept;
     int nupcol() const noexcept;
+    bool co2Storage() const noexcept;
 
     bool operator==(const Runspec& data) const;
 
@@ -290,6 +301,7 @@ public:
         m_actdims.serializeOp(serializer);
         m_sfuncctrl.serializeOp(serializer);
         serializer(m_nupcol);
+        serializer(m_co2storage);
     }
 
 private:
@@ -303,6 +315,7 @@ private:
     Actdims m_actdims;
     SatFuncControls m_sfuncctrl;
     int m_nupcol;
+    bool m_co2storage;
 };
 
 }

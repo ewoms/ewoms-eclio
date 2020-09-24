@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         Ewoms::data::Solution solution = createBlackoilState(2, numCells);
         Ewoms::data::Wells wells;
-        Ewoms::data::GroupValues groups;
+        Ewoms::data::GroupAndNetworkValues group_nwrk;
 
         using SegRes = decltype(wells["w"].segments);
         using Ctrl = decltype(wells["w"].current_control);
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{}, Ctrl{} };
         wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{}, Ctrl{} };
 
-        RestartValue restart_value(std::move(solution), std::move(wells), std::move(groups));
+        RestartValue restart_value(std::move(solution), std::move(wells), std::move(group_nwrk));
 
         eclipseWriter.writeTimeStep( action_state,
                                      st,
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
                 wells["OP_1"] = { std::move(r1), 1.0, 1.1, 3.1, 1, std::move(well1_comps), SegRes{}, Ctrl{} };
                 wells["OP_2"] = { std::move(r2), 1.0, 1.1, 3.2, 1, std::move(well2_comps), SegRes{}, Ctrl{} };
 
-                RestartValue restart_value(std::move(solution), std::move(wells), data::GroupValues());
+                RestartValue restart_value(std::move(solution), std::move(wells), data::GroupAndNetworkValues());
 
                 eclipseWriter.writeTimeStep( action_state,
                                              st,

@@ -339,6 +339,14 @@ namespace ParserKeywords {
 
 
 
+   class CO2STOR : public ParserKeyword {
+   public:
+       CO2STOR();
+       static const std::string keywordName;
+   };
+
+
+
    class COAL : public ParserKeyword {
    public:
        COAL();

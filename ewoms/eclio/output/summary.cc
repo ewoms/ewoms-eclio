@@ -141,22 +141,34 @@ namespace {
     std::vector<Ewoms::EclIO::SummaryNode>
     requiredRestartVectors(const ::Ewoms::Schedule& sched)
     {
-        const auto& vectors = requiredRestartVectors();
-        const std::vector<ParamCTorArgs> extra_well_vectors {
+        auto entities = std::vector<Ewoms::EclIO::SummaryNode> {};
+
+        const auto vectors = requiredRestartVectors();
+        const auto extra_well_vectors = std::vector<ParamCTorArgs> {
             { "WTHP",  Ewoms::EclIO::SummaryNode::Type::Pressure },
             { "WBHP",  Ewoms::EclIO::SummaryNode::Type::Pressure },
             { "WGVIR", Ewoms::EclIO::SummaryNode::Type::Rate     },
             { "WWVIR", Ewoms::EclIO::SummaryNode::Type::Rate     },
+            { "WOPGR", Ewoms::EclIO::SummaryNode::Type::Rate     },
+            { "WGPGR", Ewoms::EclIO::SummaryNode::Type::Rate     },
+            { "WWPGR", Ewoms::EclIO::SummaryNode::Type::Rate     },
+            { "WGIGR", Ewoms::EclIO::SummaryNode::Type::Rate     },
+            { "WWIGR", Ewoms::EclIO::SummaryNode::Type::Rate     },
             { "WMCTL", Ewoms::EclIO::SummaryNode::Type::Mode     },
         };
-        const std::vector<ParamCTorArgs> extra_group_vectors {
+        const auto extra_group_vectors = std::vector<ParamCTorArgs> {
+            { "GOPGR", Ewoms::EclIO::SummaryNode::Type::Rate },
+            { "GGPGR", Ewoms::EclIO::SummaryNode::Type::Rate },
+            { "GWPGR", Ewoms::EclIO::SummaryNode::Type::Rate },
+            { "GGIGR", Ewoms::EclIO::SummaryNode::Type::Rate },
+            { "GWIGR", Ewoms::EclIO::SummaryNode::Type::Rate },
             { "GMCTG", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "GMCTP", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "GMCTW", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "GMWPR", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "GMWIN", Ewoms::EclIO::SummaryNode::Type::Mode },
         };
-        const std::vector<ParamCTorArgs> extra_field_vectors {
+        const auto extra_field_vectors = std::vector<ParamCTorArgs> {
             { "FMCTG", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "FMCTP", Ewoms::EclIO::SummaryNode::Type::Mode },
             { "FMCTW", Ewoms::EclIO::SummaryNode::Type::Mode },
@@ -164,43 +176,39 @@ namespace {
             { "FMWIN", Ewoms::EclIO::SummaryNode::Type::Mode },
         };
 
-        std::vector<Ewoms::EclIO::SummaryNode> entities {} ;
+        using Cat = Ewoms::EclIO::SummaryNode::Category;
 
         auto makeEntities = [&vectors, &entities]
-            (const char         kwpref,
-             const Ewoms::EclIO::SummaryNode::Category cat,
-             const std::string& name) -> void
+            (const char                        kwpref,
+             const Cat                         cat,
+             const std::vector<ParamCTorArgs>& extra_vectors,
+             const std::string&                name) -> void
         {
-            for (const auto& vector : vectors) {
-                entities.push_back({kwpref + vector.kw, cat, vector.type, name, Ewoms::EclIO::SummaryNode::default_number, "" });
-            }
-        };
+            const auto dflt_num = Ewoms::EclIO::SummaryNode::default_number;
 
-        auto makeExtraEntities = [&entities]
-            (const std::vector<ParamCTorArgs>& extra_vectors,
-             const Ewoms::EclIO::SummaryNode::Category category,
-             const std::string& wgname) -> void
-        {
-            for (const auto &extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.kw, category, extra_vector.type, wgname, Ewoms::EclIO::SummaryNode::default_number, "" });
+            // Recall: Cannot use emplace_back() for PODs.
+            for (const auto& vector : vectors) {
+                entities.push_back({ kwpref + vector.kw, cat,
+                                     vector.type, name, dflt_num, "" });
+            }
+
+            for (const auto& extra_vector : extra_vectors) {
+                entities.push_back({ extra_vector.kw, cat,
+                                     extra_vector.type, name, dflt_num, "" });
             }
         };
 
         for (const auto& well_name : sched.wellNames()) {
-            makeEntities('W', Ewoms::EclIO::SummaryNode::Category::Well, well_name);
-            makeExtraEntities(extra_well_vectors, Ewoms::EclIO::SummaryNode::Category::Well, well_name);
+            makeEntities('W', Cat::Well, extra_well_vectors, well_name);
         }
 
         for (const auto& grp_name : sched.groupNames()) {
-            if (grp_name != "FIELD") {
-                makeEntities('G', Ewoms::EclIO::SummaryNode::Category::Group, grp_name);
-                makeExtraEntities(extra_group_vectors, Ewoms::EclIO::SummaryNode::Category::Group, grp_name);
+            if (grp_name == "FIELD") { continue; }
 
-            }
+            makeEntities('G', Cat::Group, extra_group_vectors, grp_name);
         }
 
-        makeEntities('F', Ewoms::EclIO::SummaryNode::Category::Field, "FIELD");
-        makeExtraEntities(extra_field_vectors, Ewoms::EclIO::SummaryNode::Category::Field, "FIELD");
+        makeEntities('F', Cat::Field, extra_field_vectors, "FIELD");
 
         return entities;
     }
@@ -376,7 +384,7 @@ struct fn_args {
     const std::string fip_region;
     const Ewoms::SummaryState& st;
     const Ewoms::data::Wells& wells;
-    const Ewoms::data::GroupValues& groups;
+    const Ewoms::data::GroupAndNetworkValues& grp_nwrk;
     const Ewoms::out::RegionCache& regionCache;
     const Ewoms::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
@@ -487,7 +495,7 @@ template< rt phase, bool injection = true>
 inline quantity crate( const fn_args& args ) {
     const quantity zero = { 0, rate_unit< phase >() };
     // The args.num value is the literal value which will go to the
-    // NUMS array in the eclispe SMSPEC file; the values in this array
+    // NUMS array in the eclipse SMSPEC file; the values in this array
     // are offset 1 - whereas we need to use this index here to look
     // up a completion with offset 0.
     const size_t global_index = args.num - 1;
@@ -503,13 +511,13 @@ inline quantity crate( const fn_args& args ) {
                                            [=]( const Ewoms::data::Connection& c ) {
                                                 return c.index == global_index;
                                            } );
-
+    if (well_data.current_control.isProducer == injection) return zero;
     if( completion == well_data.connections.end() ) return zero;
 
     double eff_fac = efac( args.eff_factors, name );
     auto v = completion->rates.get( phase, 0.0 ) * eff_fac;
-    if( ( v > 0 ) != injection ) return zero;
-    if( !injection ) v *= -1;
+    if (!injection)
+        v *= -1;
 
     if( phase == rt::polymer || phase == rt::brine ) return { v, measure::mass_rate };
     return { v, rate_unit< phase >() };
@@ -643,6 +651,16 @@ inline quantity thp_history( const fn_args& args ) {
     return { thp_hist, measure::pressure };
 }
 
+inline quantity node_pressure(const fn_args& args)
+{
+    auto nodePos = args.grp_nwrk.nodeData.find(args.group_name);
+    if (nodePos == args.grp_nwrk.nodeData.end()) {
+        return { 0.0, measure::pressure };
+    }
+
+    return { nodePos->second.pressure, measure::pressure };
+}
+
 template< Ewoms::Phase phase >
 inline quantity production_history( const fn_args& args ) {
     /*
@@ -677,7 +695,7 @@ inline quantity injection_history( const fn_args& args ) {
 inline quantity abondoned_wells( const fn_args& args ) {
     std::size_t count = 0;
 
-    for (const auto sched_well : args.schedule_wells) {
+    for (const auto& sched_well : args.schedule_wells) {
         if (sched_well.hasProduced()) {
             const auto& well_name = sched_well.name();
             auto well_iter = args.wells.find( well_name );
@@ -769,8 +787,8 @@ inline quantity group_control( const fn_args& args ) {
 
     // production control
     if (Producer) {
-        auto it_g = args.groups.find(g_name);
-        if (it_g != args.groups.end()) {
+        auto it_g = args.grp_nwrk.groupData.find(g_name);
+        if (it_g != args.grp_nwrk.groupData.end()) {
             const auto& value = it_g->second.currentControl.currentProdConstraint;
             auto it_c = pCModeToPCntlMode.find(value);
             if (it_c == pCModeToPCntlMode.end()) {
@@ -783,8 +801,8 @@ inline quantity group_control( const fn_args& args ) {
     }
     // water injection control
     else if (waterInjector){
-        auto it_g = args.groups.find(g_name);
-        if (it_g != args.groups.end()) {
+        auto it_g = args.grp_nwrk.groupData.find(g_name);
+        if (it_g != args.grp_nwrk.groupData.end()) {
             const auto& value = it_g->second.currentControl.currentWaterInjectionConstraint;
             auto it_c = iCModeToICntlMode.find(value);
             if (it_c == iCModeToICntlMode.end()) {
@@ -798,8 +816,8 @@ inline quantity group_control( const fn_args& args ) {
 
     // gas injection control
     else if (gasInjector){
-        auto it_g = args.groups.find(g_name);
-        if (it_g != args.groups.end()) {
+        auto it_g = args.grp_nwrk.groupData.find(g_name);
+        if (it_g != args.grp_nwrk.groupData.end()) {
             const auto& value = it_g->second.currentControl.currentGasInjectionConstraint;
             auto it_c = iCModeToICntlMode.find(value);
             if (it_c == iCModeToICntlMode.end()) {
@@ -870,8 +888,8 @@ quantity guiderate_value(const ::Ewoms::data::GuideRateValue& grvalue)
 template <bool injection, Ewoms::data::GuideRateValue::Item i>
 quantity group_guiderate(const fn_args& args)
 {
-    auto xgPos = args.groups.find(args.group_name);
-    if (xgPos == args.groups.end()) {
+    auto xgPos = args.grp_nwrk.groupData.find(args.group_name);
+    if (xgPos == args.grp_nwrk.groupData.end()) {
         return { 0.0, rate_unit<i>() };
     }
 
@@ -1053,6 +1071,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GGPGR", group_guiderate<producer, Ewoms::data::GuideRateValue::Item::Gas> },
     { "GWPGR", group_guiderate<producer, Ewoms::data::GuideRateValue::Item::Water> },
     { "GVPGR", group_guiderate<producer, Ewoms::data::GuideRateValue::Item::ResV> },
+
+    { "GPR", node_pressure },
 
     { "GWPT", mul( rate< rt::wat, producer >, duration ) },
     { "GOPT", mul( rate< rt::oil, producer >, duration ) },
@@ -1445,6 +1465,7 @@ inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
 
     case Ewoms::EclIO::SummaryNode::Category::Aquifer:       [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Block:         [[fallthrough]];
+    case Ewoms::EclIO::SummaryNode::Category::Node:          [[fallthrough]];
     case Ewoms::EclIO::SummaryNode::Category::Miscellaneous:
         return {};
     }
@@ -1476,6 +1497,8 @@ bool need_wells(const Ewoms::EclIO::SummaryNode& node)
 
     case Cat::Aquifer:       [[fallthrough]];
     case Cat::Miscellaneous: [[fallthrough]];
+    case Cat::Node:          [[fallthrough]];
+        // Node values directly available in solution.
     case Cat::Block:
         return false;
     }
@@ -1576,7 +1599,7 @@ namespace Evaluator {
     struct SimulatorResults
     {
         const Ewoms::data::WellRates& wellSol;
-        const Ewoms::data::GroupValues& groupSol;
+        const Ewoms::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
@@ -1608,8 +1631,7 @@ namespace Evaluator {
                     const SimulatorResults& simRes,
                     Ewoms::SummaryState&      st) const override
         {
-            const auto get_wells =
-                need_wells(node_);
+            const auto get_wells = need_wells(this->node_);
 
             const auto wells = get_wells
                 ? find_wells(input.sched, this->node_,
@@ -1621,16 +1643,14 @@ namespace Evaluator {
                 // wells apply at this sim_step.  Nothing to do.
                 return;
 
-            std::string group_name = this->node_.category == Ewoms::EclIO::SummaryNode::Category::Group ? this->node_.wgname : "";
-
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
             const fn_args args {
-                wells, group_name, stepSize, static_cast<int>(sim_step),
+                wells, this->group_name(), stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
                 this->node_.fip_region,
-                st, simRes.wellSol, simRes.groupSol, input.reg, input.grid,
+                st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
 
@@ -1642,7 +1662,19 @@ namespace Evaluator {
 
     private:
         Ewoms::EclIO::SummaryNode node_;
-        ofun             fcn_;
+        ofun                    fcn_;
+
+        std::string group_name() const
+        {
+            using Cat = ::Ewoms::EclIO::SummaryNode::Category;
+
+            const auto need_grp_name =
+                (this->node_.category == Cat::Group) ||
+                (this->node_.category == Cat::Node);
+
+            return need_grp_name
+                ? this->node_.wgname : std::string{""};
+        }
     };
 
     class BlockValue : public Base
@@ -2314,16 +2346,16 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
-    void eval(const EclipseState&            es,
-              const Schedule&                sched,
-              const int                      sim_step,
-              const double                   duration,
-              const data::WellRates&         well_solution,
-              const data::GroupValues&       group_solution,
-              const GlobalProcessParameters& single_values,
-              const RegionParameters&        region_values,
-              const BlockValues&             block_values,
-              SummaryState&                  st) const;
+    void eval(const EclipseState&                es,
+              const Schedule&                    sched,
+              const int                          sim_step,
+              const double                       duration,
+              const data::WellRates&             well_solution,
+              const data::GroupAndNetworkValues& grp_nwrk_solution,
+              const GlobalProcessParameters&     single_values,
+              const RegionParameters&            region_values,
+              const BlockValues&                 block_values,
+              SummaryState&                      st) const;
 
     void internal_store(const SummaryState& st, const int report_step);
     void write();
@@ -2416,23 +2448,23 @@ internal_store(const SummaryState& st, const int report_step)
 
 void
 Ewoms::out::Summary::SummaryImplementation::
-eval(const EclipseState&            es,
-     const Schedule&                sched,
-     const int                      sim_step,
-     const double                   duration,
-     const data::WellRates&         well_solution,
-     const data::GroupValues&       group_solution,
-     const GlobalProcessParameters& single_values,
-     const RegionParameters&        region_values,
-     const BlockValues&             block_values,
-     Ewoms::SummaryState&             st) const
+eval(const EclipseState&                es,
+     const Schedule&                    sched,
+     const int                          sim_step,
+     const double                       duration,
+     const data::WellRates&             well_solution,
+     const data::GroupAndNetworkValues& grp_nwrk_solution,
+     const GlobalProcessParameters&     single_values,
+     const RegionParameters&            region_values,
+     const BlockValues&                 block_values,
+     Ewoms::SummaryState&                 st) const
 {
     const Evaluator::InputData input {
         es, sched, this->grid_, this->regCache_
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, group_solution, single_values, region_values, block_values
+        well_solution, grp_nwrk_solution, single_values, region_values, block_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -2716,16 +2748,16 @@ Summary::Summary(const EclipseState&  es,
     : pImpl_(new SummaryImplementation(es, sumcfg, grid, sched, basename))
 {}
 
-void Summary::eval(SummaryState&                  st,
-                   const int                      report_step,
-                   const double                   secs_elapsed,
-                   const EclipseState&            es,
-                   const Schedule&                schedule,
-                   const data::WellRates&         well_solution,
-                   const data::GroupValues&       group_solution,
-                   GlobalProcessParameters        single_values,
-                   const RegionParameters&        region_values,
-                   const BlockValues&             block_values) const
+void Summary::eval(SummaryState&                      st,
+                   const int                          report_step,
+                   const double                       secs_elapsed,
+                   const EclipseState&                es,
+                   const Schedule&                    schedule,
+                   const data::WellRates&             well_solution,
+                   const data::GroupAndNetworkValues& grp_nwrk_solution,
+                   GlobalProcessParameters            single_values,
+                   const RegionParameters&            region_values,
+                   const BlockValues&                 block_values) const
 {
     validateElapsedTime(secs_elapsed, es, st);
 
@@ -2745,7 +2777,7 @@ void Summary::eval(SummaryState&                  st,
     const auto sim_step = std::max( 0, report_step - 1 );
 
     this->pImpl_->eval(es, schedule, sim_step, duration,
-                       well_solution, group_solution, single_values,
+                       well_solution, grp_nwrk_solution, single_values,
                        region_values, block_values, st);
 
     st.update_elapsed(duration);

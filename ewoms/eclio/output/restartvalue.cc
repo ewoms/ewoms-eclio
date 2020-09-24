@@ -17,8 +17,9 @@
 */
 #include "config.h"
 
-#include <set>
 #include <iostream>
+#include <set>
+#include <utility>
 
 #include <ewoms/eclio/output/restartvalue.hh>
 
@@ -30,10 +31,10 @@ namespace Ewoms {
 
     }
 
-    RestartValue::RestartValue(data::Solution sol, data::Wells wells_arg, data::GroupValues groups_arg) :
+    RestartValue::RestartValue(data::Solution sol, data::Wells wells_arg, data::GroupAndNetworkValues grp_nwrk_arg) :
         solution(std::move(sol)),
         wells(std::move(wells_arg)),
-        groups(std::move(groups_arg))
+        grp_nwrk(std::move(grp_nwrk_arg))
     {
     }
 

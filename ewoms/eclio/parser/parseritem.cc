@@ -538,7 +538,7 @@ void scan_item( DeckItem& deck_item, const ParserItem& parser_item, RawRecord& r
     Ewoms::string_view rep = !st.hasValue()
                     ? Ewoms::string_view{ one_star }
                     : Ewoms::string_view{ token.begin() + value_start, size };
-    record.prepend( st.count() - 1, rep );
+    record.push_front(rep, st.count() - 1);
 
     return;
 }

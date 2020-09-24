@@ -184,6 +184,33 @@ namespace {
             return 0;
         }
 
+        int PLossMod(const Ewoms::Well& well)
+        {
+            using CPD   = ::Ewoms::WellSegments::CompPressureDrop;
+            using PLM = ::Ewoms::RestartIO::Helpers::
+                VectorItems::IWell::Value::PLossMod;
+            switch (well.getSegments().compPressureDrop()) {
+                case CPD::HFA: return PLM::HFA;
+                case CPD::HF_: return PLM::HF_;
+                case CPD::H__: return PLM::H__;
+            }
+
+            return 0;
+        }
+
+        /*int MPhaseMod(const Ewoms::Well& well)
+        {
+            using MPM   = ::Ewoms::WellSegments::MultiPhaseModel;
+            using MUM = ::Ewoms::RestartIO::Helpers::
+                VectorItems::IWell::Value::MPMod;
+            switch (well.getSegments().multiPhaseModel()) {
+                case MPM::HO: return MUM::HO;
+                case MPM::DF: return MUM::DF;
+            }
+
+            return 0;
+        }*/
+
         template <typename IWellArray>
         void setCurrentControl(const Ewoms::Well& well,
                                const int        curr,
@@ -266,9 +293,14 @@ namespace {
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
             iWell[Ix::NWseg] = 0;  // Number of well segments
+            iWell[Ix::MSW_PlossMod] = 0;  // Segment pressure loss model
+            iWell[Ix::MSW_MulPhaseMod] = 0;  // Segment multi phase flow model
             if (well.isMultiSegment()) {
                 iWell[Ix::MsWID] = static_cast<int>(msWellID);
                 iWell[Ix::NWseg] = well.getSegments().size();
+                iWell[Ix::MSW_PlossMod] = PLossMod(well);
+                iWell[Ix::MSW_MulPhaseMod] = 1;  // temporary solution - valid for HO - multiphase model - only implemented now
+                //iWell[Ix::MSW_MulPhaseMod] = MPhaseMod(well);
             }
 
             iWell[Ix::CompOrd] = compOrder(well);

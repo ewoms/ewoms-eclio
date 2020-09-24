@@ -419,6 +419,16 @@ CIRCLE::CIRCLE( ) : ParserKeyword("CIRCLE")
 const std::string CIRCLE::keywordName = "CIRCLE";
 
 
+CO2STOR::CO2STOR( ) : ParserKeyword("CO2STOR")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("RUNSPEC");
+  clearDeckNames();
+  addDeckName("CO2STOR");
+}
+const std::string CO2STOR::keywordName = "CO2STOR";
+
+
 COAL::COAL( ) : ParserKeyword("COAL")
 {
   setFixedSize( (size_t) 0);

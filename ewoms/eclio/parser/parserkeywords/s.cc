@@ -11,6 +11,27 @@
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 namespace Ewoms {
 namespace ParserKeywords {
+SALINITY::SALINITY( ) : ParserKeyword("SALINITY")
+{
+  setFixedSize( (size_t) 1);
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("SALINITY");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("MOLALITY", ParserItem::itype::DOUBLE);
+        item.setDefault( double(0) );
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string SALINITY::keywordName = "SALINITY";
+const std::string SALINITY::MOLALITY::itemName = "MOLALITY";
+const double SALINITY::MOLALITY::defaultValue = 0.000000;
+
+
 SALT::SALT( ) : ParserKeyword("SALT")
 {
   setFixedSize( (size_t) 1);

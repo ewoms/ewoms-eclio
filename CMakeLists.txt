@@ -69,7 +69,6 @@ ewoms_add_test(cubic SOURCES tests/test_cubic.cc CONDITION Boost_UNIT_TEST_FRAME
 ewoms_add_test(messagelimiter SOURCES tests/test_messagelimiter.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(nonuniformtablelinear SOURCES tests/test_nonuniformtablelinear.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(OpmLog SOURCES tests/test_opmlog.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
-ewoms_add_test(SimulationDataContainer SOURCES tests/test_simulationdatacontainer.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(sparsevector SOURCES tests/test_sparsevector.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(uniformtablelinear SOURCES tests/test_uniformtablelinear.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(ACTIONX SOURCES tests/actionx.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")

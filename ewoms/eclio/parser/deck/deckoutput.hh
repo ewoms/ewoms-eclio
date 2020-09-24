@@ -33,7 +33,6 @@ namespace Ewoms {
 
         void start_record( );
         void end_record( );
-        void split_record();
 
         void start_keyword(const std::string& kw);
         void end_keyword(bool add_slash);
@@ -52,8 +51,10 @@ namespace Ewoms {
         size_t row_count;
         bool record_on;
         int org_precision;
+        bool split_line;
 
         template <typename T> void write_value(const T& value);
+        void split_record();
         void write_sep( );
         void set_precision(int precision);
     };

@@ -18,6 +18,7 @@
 #include "config.h"
 
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/network/extnetwork.hh>
@@ -140,5 +141,18 @@ void ExtNetwork::add_node(Node node)
     this->m_nodes.insert({ name, std::move(node) });
 }
 
+std::vector<std::string> ExtNetwork::node_names() const
+{
+    auto nodes = std::vector<std::string>{};
+    nodes.reserve(this->m_nodes.size());
+
+    std::transform(this->m_nodes.begin(), this->m_nodes.end(), std::back_inserter(nodes),
+        [](const auto& node_pair)
+    {
+        return node_pair.first;
+    });
+
+    return nodes;
+}
 }
 }

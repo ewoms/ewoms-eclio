@@ -37,7 +37,7 @@ namespace Ewoms {
 
 namespace Ewoms { namespace data {
     class WellRates;
-    class GroupValues;
+    class GroupAndNetworkValues;
 }} // namespace Ewoms::data
 
 namespace Ewoms { namespace out {
@@ -58,16 +58,16 @@ public:
 
     void add_timestep(const SummaryState& st, const int report_step);
 
-    void eval(SummaryState&                  summary_state,
-              const int                      report_step,
-              const double                   secs_elapsed,
-              const EclipseState&            es,
-              const Schedule&                schedule,
-              const data::WellRates&         well_solution,
-              const data::GroupValues&       group_solution,
-              GlobalProcessParameters        single_values,
-              const RegionParameters&        region_values = {},
-              const BlockValues&             block_values  = {}) const;
+    void eval(SummaryState&                      summary_state,
+              const int                          report_step,
+              const double                       secs_elapsed,
+              const EclipseState&                es,
+              const Schedule&                    schedule,
+              const data::WellRates&             well_solution,
+              const data::GroupAndNetworkValues& group_and_nwrk_solution,
+              GlobalProcessParameters            single_values,
+              const RegionParameters&            region_values = {},
+              const BlockValues&                 block_values  = {}) const;
 
     void write() const;
 

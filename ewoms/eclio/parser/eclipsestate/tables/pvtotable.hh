@@ -16,9 +16,13 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
  */
 #ifndef EWOMS_PARSER_PVTO_TABLE_H
-#define	EWOMS_PARSER_PVTO_TABLE_H
+#define EWOMS_PARSER_PVTO_TABLE_H
 
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtxtable.hh>
+
+#include <array>
+#include <cstddef>
+#include <vector>
 
 namespace Ewoms {
 
@@ -26,12 +30,20 @@ namespace Ewoms {
 
     class PvtoTable : public PvtxTable {
     public:
+        struct FlippedFVF {
+            std::size_t i;
+            std::array<double, std::size_t{2}> Rs;
+            std::array<double, std::size_t{2}> Bo;
+        };
+
         PvtoTable() = default;
         PvtoTable(const DeckKeyword& keyword, size_t tableIdx);
 
         static PvtoTable serializeObject();
 
         bool operator==(const PvtoTable& data) const;
+
+        std::vector<FlippedFVF> nonMonotonicSaturatedFVF() const;
     };
 }
 

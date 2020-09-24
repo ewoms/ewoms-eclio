@@ -102,6 +102,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::CECON >();
    p.addKeyword< ParserKeywords::CECONT >();
    p.addKeyword< ParserKeywords::CIRCLE >();
+   p.addKeyword< ParserKeywords::CO2STOR >();
    p.addKeyword< ParserKeywords::COAL >();
    p.addKeyword< ParserKeywords::COALADS >();
    p.addKeyword< ParserKeywords::COALNUM >();
@@ -777,6 +778,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::RVGI >();
    p.addKeyword< ParserKeywords::RVVD >();
    p.addKeyword< ParserKeywords::RWGSALT >();
+   p.addKeyword< ParserKeywords::SALINITY >();
    p.addKeyword< ParserKeywords::SALT >();
    p.addKeyword< ParserKeywords::SALTNODE >();
    p.addKeyword< ParserKeywords::SALTPVD >();

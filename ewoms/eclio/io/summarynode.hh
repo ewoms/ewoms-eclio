@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU General Public License
    along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
-   */
+*/
 
 #ifndef EWOMS_IO_SUMMARYNODE_H
 #define EWOMS_IO_SUMMARYNODE_H
@@ -29,7 +29,6 @@ namespace Ewoms { namespace EclIO {
 
 struct SummaryNode {
     enum class Category {
-        Aquifer,
         Well,
         Group,
         Field,
@@ -37,6 +36,8 @@ struct SummaryNode {
         Block,
         Connection,
         Segment,
+        Aquifer,
+        Node,
         Miscellaneous,
     };
 
@@ -73,6 +74,6 @@ struct SummaryNode {
     Ewoms::optional<std::string> display_number(number_renderer) const;
 };
 
- }} // namespace Ewoms::EclIO
+}} // namespace Ewoms::EclIO
 
 #endif // EWOMS_IO_SUMMARYNODE_H

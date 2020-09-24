@@ -233,10 +233,10 @@ BOOST_AUTO_TEST_CASE(TestHelperFunctions)
 
     // fileMessage
     BOOST_CHECK_EQUAL(fileMessage(KeywordLocation("Keyword", "foo/bar", 1), "message"), "message\nIn file foo/bar, line 1\n");
-    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, KeywordLocation("Keyword", "foo/bar", 1), "message"), "\nError: message\nIn file foo/bar, line 1\n");
+    BOOST_CHECK_EQUAL(fileMessage(MessageType::Error, KeywordLocation("Keyword", "foo/bar", 1), "message"), "Error: message\nIn file foo/bar, line 1\n");
 
     // prefixMessage
-    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "\nError: message");
+    BOOST_CHECK_EQUAL(prefixMessage(MessageType::Error, "message"), "Error: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Info, "message"), "Info: message");
     BOOST_CHECK_EQUAL(prefixMessage(MessageType::Note, "message"), "Note: message");
 

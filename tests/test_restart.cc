@@ -134,7 +134,7 @@ std::ostream& operator<<( std::ostream& stream,
 
 }
 
-data::GroupValues mkGroups() {
+data::GroupAndNetworkValues mkGroups() {
     return {};
 }
 
