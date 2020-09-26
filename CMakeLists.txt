@@ -245,11 +245,6 @@ foreach(TEST_NAME EclIO EGrid ERft ERsm ERst ESmry)
     LIBRARIES "${Boost_LIBRARIES}")
 endforeach()
 
-ewoms_add_test(RootFinders
-  SOURCES tests/test_rootfinders.cc
-  CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND
-  LIBRARIES "${Boost_LIBRARIES}")
-
 # deal with the data required by the unit tests
 ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/ECLFILE*" "tests/*.json" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA" "tests/*.param")
 
