@@ -21,6 +21,7 @@
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/opmlog/keywordlocation.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
@@ -305,6 +306,10 @@ measure div_unit( measure denom, measure div ) {
         div   == measure::liquid_surface_rate )
         return measure::polymer_density;
 
+    if( denom == measure::energy_rate &&
+        div   == measure::time )
+        return measure::energy;
+
     return measure::identity;
 }
 
@@ -325,6 +330,9 @@ measure mul_unit( measure lhs, measure rhs ) {
 
     if(  lhs == measure::mass_rate && rhs == measure::time)
         return measure::mass;
+
+    if(  lhs == measure::energy_rate && rhs == measure::time)
+        return measure::energy;
 
     return lhs;
 }
@@ -611,6 +619,16 @@ inline quantity bhp( const fn_args& args ) {
     if( p == args.wells.end() ) return zero;
 
     return { p->second.bhp, measure::pressure };
+}
+
+inline quantity temperature( const fn_args& args ) {
+    const quantity zero = { 0, measure::temperature };
+    if( args.schedule_wells.empty() ) return zero;
+
+    const auto p = args.wells.find( args.schedule_wells.front().name() );
+    if( p == args.wells.end() ) return zero;
+
+    return { p->second.temperature, measure::temperature };
 }
 
 inline quantity thp( const fn_args& args ) {
@@ -958,6 +976,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWIR", rate< rt::wat, injector > },
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
+    { "WEIR", rate< rt::energy, injector > },
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
@@ -969,6 +988,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWIT", mul( rate< rt::wat, injector >, duration ) },
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "WEIT", mul( rate< rt::energy, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "WCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "WSIT", mul( rate< rt::brine, injector >, duration ) },
@@ -978,6 +998,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWPR", rate< rt::wat, producer > },
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
+    { "WEPR", rate< rt::energy, producer > },
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
@@ -1001,6 +1022,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWPT", mul( rate< rt::wat, producer >, duration ) },
     { "WOPT", mul( rate< rt::oil, producer >, duration ) },
     { "WGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "WEPT", mul( rate< rt::energy, producer >, duration ) },
     { "WNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "WCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "WSPT", mul( rate< rt::brine, producer >, duration ) },
@@ -1026,6 +1048,8 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WBHP", bhp },
     { "WTHP", thp },
+    { "WTPCHEA", temperature},
+    { "WTICHEA", temperature},
     { "WVPRT", res_vol_production_target },
 
     { "WMCTL", well_control_mode },

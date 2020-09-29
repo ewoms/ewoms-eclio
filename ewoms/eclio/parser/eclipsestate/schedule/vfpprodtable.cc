@@ -22,6 +22,8 @@
 #include <cmath>
 #include <iostream>
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/opmlog/opmlog.hh>
 
 #include <ewoms/eclio/parser/deck/deckitem.hh>

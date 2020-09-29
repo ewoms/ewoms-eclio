@@ -17,16 +17,25 @@
 */
 #include "config.h"
 
-#include <iostream>
-#include <stdexcept>
+#include <ewoms/eclio/parser/units/unitsystem.hh>
 
 #include <ewoms/common/string.hh>
 #include <ewoms/eclio/parser/units/dimension.hh>
 #include <ewoms/eclio/parser/units/units.hh>
-#include <ewoms/eclio/parser/units/unitsystem.hh>
 
-#include <vector>
+#include <cstddef>
+#include <iostream>
 #include <limits>
+#include <stdexcept>
+#include <vector>
+
+namespace {
+    template <typename T, std::size_t N>
+    constexpr std::size_t numElems(const T (&)[N])
+    {
+        return N;
+    }
+}
 
 namespace Ewoms {
 
@@ -48,6 +57,7 @@ namespace {
         0.0,
         0.0,
         Metric::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -113,6 +123,7 @@ namespace {
         1 / (Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / (Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure),
         1 / Metric::Energy,
+        1 / ( Metric::Energy / Metric::Time ),
         1 / (Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time)),
         1 / Metric::PolymerDensity,
         1 / Metric::Salinity,
@@ -152,6 +163,7 @@ namespace {
         Metric::LiquidSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::GasSurfaceVolume / Metric::Time / Metric::Pressure,
         Metric::Energy,
+        Metric::Energy / Metric::Time,
         Metric::Pressure / Ewoms::unit::square(Metric::GeomVolume / Metric::Time),
         Metric::PolymerDensity,
         Metric::Salinity,
@@ -191,14 +203,27 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
+        "KJ/DAY", /* energy rate*/
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "KG / SM3", /*polymer density */
         "KG / SM3", /*salinity */
     };
 
+    static_assert(numElems(from_metric_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_metric_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_metric) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_metric[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_metric) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_metric[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(metric_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "metric_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         metric_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::metric_names"
+        "Name missing from ::metric_names[]"
     );
 
     // =================================================================
@@ -212,6 +237,7 @@ namespace {
         0.0,
         0.0,
         Field::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -277,6 +303,7 @@ namespace {
         1 / (Field::LiquidSurfaceVolume / Field::Time / Field::Pressure),
         1 / (Field::GasSurfaceVolume / Field::Time / Field::Pressure),
         1 / Field::Energy,
+        1 / (Field::Energy / Field::Time),
         1 / (Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time)),
         1 / Field::PolymerDensity,
         1 / Field::Salinity,
@@ -316,6 +343,7 @@ namespace {
          Field::LiquidSurfaceVolume / Field::Time / Field::Pressure,
          Field::GasSurfaceVolume / Field::Time / Field::Pressure,
          Field::Energy,
+         Field::Energy / Field::Time,
          Field::Pressure / Ewoms::unit::square(Field::GeomVolume / Field::Time),
          Field::PolymerDensity,
          Field::Salinity,
@@ -355,14 +383,27 @@ namespace {
         "STB/DAY/PSIA",
         "MSCF/DAY/PSIA",
         "BTU", /* energy */
+        "BTU/DAY", /* energy rate*/
         "PSI/(RFT3/DAY)2", /* ICD strength parameter */
         "LB/STB", /*polymer density */
         "LB/STB", /*salinity */
     };
 
+    static_assert(numElems(from_field_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_field_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_field) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_field[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_field) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_field[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(field_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "field_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         field_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::field_names"
+        "Name missing from ::field_names[]"
     );
 
     // =================================================================
@@ -376,6 +417,7 @@ namespace {
         0.0,
         0.0,
         Lab::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -441,6 +483,7 @@ namespace {
         1 / (Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / (Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure),
         1 / Lab::Energy,
+        1 / ( Lab::Energy / Lab::Time ),
         1 / (Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time)),
         1 / Lab::PolymerDensity,
         1 / Lab::Salinity,
@@ -480,6 +523,7 @@ namespace {
         Lab::LiquidSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::GasSurfaceVolume / Lab::Time / Lab::Pressure,
         Lab::Energy,
+        Lab::Energy / Lab::Time,
         Lab::Pressure / Ewoms::unit::square(Lab::GeomVolume / Lab::Time),
         Lab::PolymerDensity,
         Lab::Salinity,
@@ -519,14 +563,27 @@ namespace {
         "SCC/HR/ATM",
         "SCC/HR/ATM",
         "J", /* energy */
+        "J/HR", /* energy */
         "ATM/(RCC/H)2", /* ICD strength parameter */
         "G/SCC", /*polymer density */
         "G/SCC", /*salinity */
     };
 
+    static_assert(numElems(from_lab_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_lab_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_lab) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_lab[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_lab) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_lab[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(lab_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "lab_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         lab_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::lab_names"
+        "Name missing from ::lab_names[]"
     );
 
     // =================================================================
@@ -540,6 +597,7 @@ namespace {
         0.0,
         0.0,
         PVT_M::TemperatureOffset,
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -605,6 +663,7 @@ namespace {
         1 / (PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / (PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure),
         1 / PVT_M::Energy,
+        1 / ( PVT_M::Energy/ PVT_M::Time ),
         1 / (PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time)),
         1 / PVT_M::PolymerDensity,
         1 / PVT_M::Salinity,
@@ -644,6 +703,7 @@ namespace {
         PVT_M::LiquidSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::GasSurfaceVolume / PVT_M::Time / PVT_M::Pressure,
         PVT_M::Energy,
+        PVT_M::Energy / PVT_M::Time,
         PVT_M::Pressure / Ewoms::unit::square(PVT_M::GeomVolume / PVT_M::Time),
         PVT_M::PolymerDensity,
         PVT_M::Salinity,
@@ -683,20 +743,34 @@ namespace {
         "SM3/DAY/ATM",
         "SM3/DAY/ATM",
         "KJ" /* energy */,
+        "KJ/DAY" /* energy */,
         "ATM/(RM3/DAY)2", /* ICD strength parameter */
         "KG/SM3", /*polymer density */
         "KG/SM3", /*salinity */
     };
 
+    static_assert(numElems(from_pvt_m_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_pvt_m_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_pvt_m) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_pvt_m[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_pvt_m) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_pvt_m[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(pvt_m_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "pvt_m_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         pvt_m_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::pvt_m_names"
+        "Name missing from ::pvt_m_names[]"
     );
 
     // =================================================================
     // INPUT Unit Conventions
 
     static const double from_input_offset[] = {
+        0.0,
         0.0,
         0.0,
         0.0,
@@ -772,9 +846,11 @@ namespace {
         1,
         1,
         1,
+        1,
     };
 
     static const double from_input[] = {
+        1,
         1,
         1,
         1,
@@ -847,14 +923,27 @@ namespace {
         "SM3/DAY/BARS",
         "SM3/DAY/BARS",
         "KJ", /* energy */
+        "KJ/DAY", /* energy rate*/
         "BARS/(RM3/DAY)2", /* ICD strength parameter */
         "KG/SM3", /*polymer density */
         "KG/SM3", /*salinity */
     };
 
+    static_assert(numElems(from_input_offset) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_input_offset[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(to_input) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "to_input[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(from_input) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "from_input[] size does not match expected-did you add/remove items in ::measure?");
+
+    static_assert(numElems(metric_names) == static_cast<std::size_t>(UnitSystem::measure::_count),
+                  "input_names[] size does not match expected-did you add/remove items in ::measure?");
+
     static_assert(
         input_names[static_cast<int>(UnitSystem::measure::_count) - 1] != nullptr,
-        "Name missing from ::input_names"
+        "Name missing from ::input_names[]"
     );
 
 } // namespace Anonymous

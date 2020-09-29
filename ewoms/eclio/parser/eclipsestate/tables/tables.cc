@@ -885,7 +885,7 @@ RocktabTable::RocktabTable(
 
     Table::ColumnOrderEnum POOrder;
 
-    if (hasStressOption)
+    if (!hasStressOption)
         POOrder = Table::STRICTLY_INCREASING;
     else
         POOrder = Table::STRICTLY_DECREASING;

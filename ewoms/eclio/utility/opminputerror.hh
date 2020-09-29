@@ -15,14 +15,15 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
+#ifndef EWOMS_ERROR_H
+#define EWOMS_ERROR_H
 
 #include <stdexcept>
 #include <string>
 
 #include <ewoms/common/fmt/format.h>
 
-#ifndef EWOMS_ERROR_H
-#define EWOMS_ERROR_H
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms {
 
@@ -69,16 +70,20 @@ public:
     */
 
     OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
-        m_what(fmt::format(msg_fmt,
-                           fmt::arg("keyword", loc.keyword),
-                           fmt::arg("file", loc.filename),
-                           fmt::arg("line", loc.lineno))),
+        m_what(OpmInputError::format(msg_fmt, loc)),
         location(loc)
     {}
 
     const char * what() const throw()
     {
         return this->m_what.c_str();
+    }
+
+    static std::string format(const std::string& msg_fmt, const KeywordLocation& loc) {
+        return fmt::format(msg_fmt,
+                           fmt::arg("keyword", loc.keyword),
+                           fmt::arg("file", loc.filename),
+                           fmt::arg("line", loc.lineno));
     }
 
 private:

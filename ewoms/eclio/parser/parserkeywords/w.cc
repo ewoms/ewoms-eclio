@@ -1860,6 +1860,8 @@ WELL_PROBE::WELL_PROBE( ) : ParserKeyword("WELL_PROBE")
   addDeckName("WEDC");
   addDeckName("WEFF");
   addDeckName("WEFFG");
+  addDeckName("WEIR");
+  addDeckName("WEIT");
   addDeckName("WEPR");
   addDeckName("WEPT");
   addDeckName("WGCV");

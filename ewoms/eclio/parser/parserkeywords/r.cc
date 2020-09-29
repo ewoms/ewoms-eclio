@@ -1368,8 +1368,6 @@ ROCKTAB::ROCKTAB( ) : ParserKeyword("ROCKTAB")
         item.push_backDimension("Pressure");
         item.push_backDimension("1");
         item.push_backDimension("1");
-        item.push_backDimension("1");
-        item.push_backDimension("1");
         record.addItem(item);
      }
      addRecord( record );
@@ -1987,7 +1985,7 @@ const std::string RSVD::DATA::itemName = "DATA";
 
 RTEMP::RTEMP( ) : ParserKeyword("RTEMP")
 {
-  setSizeType(SLASH_TERMINATED);
+  setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
   addValidSectionName("SOLUTION");
   clearDeckNames();
@@ -2010,7 +2008,7 @@ const double RTEMP::TEMP::defaultValue = 15.555000;
 
 RTEMPA::RTEMPA( ) : ParserKeyword("RTEMPA")
 {
-  setSizeType(SLASH_TERMINATED);
+  setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
   addValidSectionName("SOLUTION");
   clearDeckNames();

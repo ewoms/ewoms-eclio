@@ -19,7 +19,10 @@
 
 #include <set>
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/opmlog/logutil.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -43,19 +46,19 @@
 
 namespace Ewoms {
 
-    EclipseState::EclipseState(const Deck& deck) :
-        m_tables(            deck ),
-        m_runspec(           deck ),
-        m_eclipseConfig(     deck ),
-        m_deckUnitSystem(    deck.getActiveUnitSystem() ),
-        m_inputNnc(          deck ),
-        m_inputEditNnc(      deck ),
-        thpresft_(deck),
-        m_inputGrid(         deck, nullptr ),
-        m_gridDims(          deck ),
-        field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
-        m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
-        m_transMult(         GridDims(deck), deck, field_props)
+    EclipseState::EclipseState(const Deck& deck)
+    try
+        : m_tables(            deck ),
+          m_runspec(           deck ),
+          m_eclipseConfig(     deck ),
+          m_deckUnitSystem(    deck.getActiveUnitSystem() ),
+          m_inputNnc(          deck ),
+          m_inputEditNnc(      deck ),
+          m_inputGrid(         deck, nullptr ),
+          m_gridDims(          deck ),
+          field_props(         deck, m_runspec.phases(), m_inputGrid, m_tables),
+          m_simulationConfig(  m_eclipseConfig.getInitConfig().restartRequested(), deck, field_props),
+          m_transMult(         GridDims(deck), deck, field_props)
     {
         m_inputGrid.resetACTNUM(this->field_props.actnum());
         if( this->runspec().phases().size() < 3 )
@@ -76,6 +79,14 @@ namespace Ewoms {
         initTransMult();
         initFaults(deck);
         this->field_props.reset_actnum( this->m_inputGrid.getACTNUM() );
+    }
+    catch (const OpmInputError& opm_error) {
+        throw;
+    }
+    catch (const std::exception& std_error) {
+        OpmLog::error(fmt::format("An error occured while creating the reservoir properties\n",
+                                  "Internal error: {}", std_error.what()));
+        throw;
     }
 
     const UnitSystem& EclipseState::getDeckUnitSystem() const {

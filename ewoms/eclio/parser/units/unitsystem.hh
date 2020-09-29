@@ -72,6 +72,7 @@ namespace Ewoms {
             liquid_productivity_index,
             gas_productivity_index,
             energy,
+            energy_rate,
             icd_strength,
             polymer_density,
             salinity,

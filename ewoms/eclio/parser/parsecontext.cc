@@ -94,7 +94,7 @@ namespace Ewoms {
 
         addKey(SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
         addKey(SUMMARY_UNKNOWN_GROUP, InputError::THROW_EXCEPTION);
-        addKey(SUMMARY_UNKNOWN_NODE, InputError::THROW_EXCEPTION);
+        addKey(SUMMARY_UNKNOWN_NODE, InputError::WARN);
         addKey(SUMMARY_UNHANDLED_KEYWORD, InputError::WARN);
         addKey(SUMMARY_UNDEFINED_UDQ, InputError::WARN);
         addKey(SUMMARY_UDQ_MISSING_UNIT, InputError::WARN);
