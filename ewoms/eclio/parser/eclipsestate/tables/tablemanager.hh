@@ -530,7 +530,7 @@ namespace Ewoms {
         DenT gasDenT;
         DenT watDenT;
         StandardCond stcond;
-        std::size_t m_gas_comp_index;
+        std::size_t m_gas_comp_index = 77;
         double m_rtemp;
         double m_salinity;
 

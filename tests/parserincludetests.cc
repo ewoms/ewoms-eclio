@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <ewoms/common/filesystem.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/parser/parser.hh>
 #include <ewoms/eclio/parser/parserkeyword.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeInvalid) {
     Ewoms::ErrorGuard errors;
 
     parseContext.update(Ewoms::ParseContext::PARSE_MISSING_INCLUDE , Ewoms::InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors) , std::invalid_argument);
+    BOOST_CHECK_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors) , Ewoms::OpmInputError);
 
     parseContext.update(Ewoms::ParseContext::PARSE_MISSING_INCLUDE , Ewoms::InputError::IGNORE );
     BOOST_CHECK_NO_THROW(parser.parseFile(inputFilePath.string() , parseContext, errors));
@@ -111,9 +112,9 @@ BOOST_AUTO_TEST_CASE(ParserKeyword_includeWrongCase) {
     Ewoms::ErrorGuard errors;
     parseContext.update(Ewoms::ParseContext::PARSE_MISSING_INCLUDE , Ewoms::InputError::THROW_EXCEPTION );
 
-    BOOST_CHECK_THROW(parser.parseFile(inputFile1Path.string(), parseContext, errors), std::invalid_argument);
-    BOOST_CHECK_THROW(parser.parseFile(inputFile2Path.string(), parseContext, errors), std::invalid_argument);
-    BOOST_CHECK_THROW(parser.parseFile(inputFile3Path.string(), parseContext, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile1Path.string(), parseContext, errors), Ewoms::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile2Path.string(), parseContext, errors), Ewoms::OpmInputError);
+    BOOST_CHECK_THROW(parser.parseFile(inputFile3Path.string(), parseContext, errors), Ewoms::OpmInputError);
 #else
     // for case-insensitive filesystems, the include statement will
     // always work regardless of how the capitalization of the

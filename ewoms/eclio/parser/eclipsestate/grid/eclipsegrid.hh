@@ -19,7 +19,6 @@
 #ifndef EWOMS_PARSER_ECLIPSE_GRID_H
 #define EWOMS_PARSER_ECLIPSE_GRID_H
 
-#include <ewoms/eclio/parser/eclipsestate/util/value.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/minpvmode.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/pinchmode.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/griddims.hh>
@@ -29,6 +28,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Ewoms {
@@ -189,7 +189,7 @@ namespace Ewoms {
     private:
         std::vector<double> m_minpvVector;
         MinpvMode::ModeEnum m_minpvMode;
-        Value<double> m_pinch;
+        std::optional<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         PinchMode::ModeEnum m_pinchGapMode;

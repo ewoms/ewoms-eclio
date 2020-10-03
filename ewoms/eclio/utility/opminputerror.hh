@@ -18,10 +18,9 @@
 #ifndef EWOMS_ERROR_H
 #define EWOMS_ERROR_H
 
+#include <optional>
 #include <stdexcept>
 #include <string>
-
-#include <ewoms/common/fmt/format.h>
 
 #include <ewoms/eclio/opmlog/keywordlocation.hh>
 
@@ -50,28 +49,47 @@ public:
       The message string will be used as format string in the fmt::format()
       function as, and optional {} markers can be used to inject keyword,
       filename and linenumber into the final what() message. The placeholders
-      can use named arguments
+      must use named arguments
 
         {keyword} -> loc.keyword
         {file} -> loc.filename
         {line} -> loc.lineno
 
-      or numbered arguments
-
-        {0} -> loc.keyword
-        {1} -> loc.filename
-        {2} -> loc.lineno
-
-      If just plain {} placeholders are used the order of the arguments is
-      keyword, filename, linenumber.
+      additionally, the message can contain any number of positional
+      arguments to add further context to the message.
 
       KeywordLocation loc("KW", "file.inc", 100);
-      OpmInputError("Error at line {line} in file{file} - keyword: {keyword} ignored", location)
+      OpmInputError("Error at line {line} in file {file} - keyword: {keyword} ignored", location);
+      OpmInputError("Error at line {line} in file {file} - keyword: {keyword} has invalid argument {}", invalid_argument);
     */
 
     OpmInputError(const std::string& msg_fmt, const KeywordLocation& loc) :
-        m_what(OpmInputError::format(msg_fmt, loc)),
-        location(loc)
+        m_what   { OpmInputError::format(msg_fmt, loc) },
+        location { loc }
+    {}
+
+    /*
+      Allows for the initialisation of an OpmInputError from another exception.
+
+      Usage:
+
+      try {
+          .
+          .
+          .
+      } catch (const Ewoms::OpmInputError&) {
+          throw;
+      } catch (const std::exception& e) {
+          std::throw_with_nested(Ewoms::OpmInputError(location, e));
+      }
+    */
+    OpmInputError(const KeywordLocation& loc, const std::exception& e) :
+        m_what   { OpmInputError::formatException(loc, e) },
+        location { loc }
+    {}
+
+    OpmInputError(const std::string& msg) :
+        m_what(msg)
     {}
 
     const char * what() const throw()
@@ -79,12 +97,8 @@ public:
         return this->m_what.c_str();
     }
 
-    static std::string format(const std::string& msg_fmt, const KeywordLocation& loc) {
-        return fmt::format(msg_fmt,
-                           fmt::arg("keyword", loc.keyword),
-                           fmt::arg("file", loc.filename),
-                           fmt::arg("line", loc.lineno));
-    }
+    static std::string format(const std::string& msg_format, const KeywordLocation& loc);
+    static std::string formatException(const KeywordLocation& loc, const std::exception& e);
 
 private:
     std::string m_what;
@@ -92,7 +106,7 @@ private:
     // The location member is here for debugging; depending on the msg_fmt
     // passed in the constructor we might not have captured all the information
     // in the location argument passed to the constructor.
-    KeywordLocation location;
+    std::optional<KeywordLocation> location;
 };
 
 }

@@ -22,6 +22,8 @@
 #include <stddef.h>
 #include <iomanip>
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/utility/timeservice.hh>
 
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
@@ -84,40 +86,29 @@ namespace {
     }
 
     TimeMap::TimeMap( const Deck& deck, const std::pair<std::time_t, std::size_t>& restart) {
-        bool skiprest = deck.hasKeyword<ParserKeywords::SKIPREST>();
-        {
-            std::time_t start_time;
-            if (deck.hasKeyword("START")) {
-                // Use the 'START' keyword to find out the start date (if the
-                // keyword was specified)
-                const auto& keyword = deck.getKeyword("START");
-                start_time = timeFromEclipse(keyword.getRecord(0));
-            } else {
-                // The default start date is not specified in the Eclipse
-                // reference manual. We hence just assume it is same as for
-                // the START keyword for Eclipse R100, i.e., January 1st,
-                // 1983...
-                start_time = mkdate(1983, 1, 1);
-            }
-            this->init_start(start_time);
+        std::time_t start_time;
+        if (deck.hasKeyword("START")) {
+            // Use the 'START' keyword to find out the start date (if the
+            // keyword was specified)
+            const auto& keyword = deck.getKeyword("START");
+            start_time = timeFromEclipse(keyword.getRecord(0));
+        } else {
+            // The default start date is not specified in the Eclipse
+            // reference manual. We hence just assume it is same as for
+            // the START keyword for Eclipse R100, i.e., January 1st,
+            // 1983...
+            start_time = mkdate(1983, 1, 1);
         }
+        this->init_start(start_time);
 
-        auto restart_time = restart.first;
+        this->m_restart_time = restart.first;
         this->m_restart_offset = restart.second;
-        bool skip = false;
 
         for (std::size_t it = 1; it < this->m_restart_offset; it++)
             this->m_timeList.push_back(invalid_time);
 
-        if (this->m_restart_offset > 0) {
-            if (skiprest)
-                skip = true;
-            else {
-                this->m_timeList.push_back(restart_time);
-                skip = false;
-            }
-        }
-
+        bool skip = (this->m_restart_offset > 0);
+        bool restart_found = false;
         for( const auto& keyword : SCHEDULESection(deck)) {
             // We're only interested in "TSTEP" and "DATES" keywords,
             // so we ignore everything else here...
@@ -128,11 +119,13 @@ namespace {
                 for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {
                     const auto &record = keyword.getRecord(recordIndex);
                     const std::time_t nextTime = TimeMap::timeFromEclipse(record);
-                    if (nextTime == restart_time)
+                    if (nextTime == this->m_restart_time) {
                         skip = false;
+                        restart_found = true;
+                    }
 
                     if (!skip)
-                        addTime(nextTime);
+                        this->addTime(nextTime);
                 }
 
                 continue;
@@ -141,36 +134,25 @@ namespace {
             if (skip)
                 continue;
 
-            addFromTSTEPKeyword(keyword);
+            this->addFromTSTEPKeyword(keyword);
         }
 
         /*
-          There is a coupling between the presence of the SKIPREST keyword and
-          the restart argument: The restart argument indicates whether this is
-          deck should be parsed as restarted deck. If m_restart_offset == 0 we do
-          not interpret this as restart situation and the presence of SKIPREST
-          is ignored. In the opposite case we verify - post loading - that we
-          have actually located the restart date - otherwise "something is
-          broken".
+          It is a hard requirement that the restart date is found as a DATES
+          keyword, although it is technically possible to create a valid
+          restarted case using TSTEP we do not accept that.
         */
-        if (this->m_restart_offset != 0) {
-            if (skiprest) {
-                const auto iter = std::find(this->m_timeList.begin(), this->m_timeList.end(), restart_time);
-                if (iter == this->m_timeList.end()) {
-                    TimeStampUTC ts(restart_time);
-                    throw std::invalid_argument("Could not find restart date " + std::to_string(ts.year()) + "-" + std::to_string(ts.month()) + "-" + std::to_string(ts.day()));
-                }
-                this->m_skiprest = true;
-            }
+        if (this->m_restart_offset != 0 && !restart_found) {
+            TimeStampUTC ts(this->m_restart_time);
+            throw std::invalid_argument("Could not find restart date " + std::to_string(ts.year()) + "-" + std::to_string(ts.month()) + "-" + std::to_string(ts.day()));
         }
     }
 
     TimeMap TimeMap::serializeObject()
     {
         TimeMap result({123});
-        result.m_skiprest = true;
         result.m_restart_offset = 4;
-
+        result.m_restart_time = 19867234;
         return result;
     }
 
@@ -224,7 +206,7 @@ namespace {
     }
 
     void TimeMap::addTStep(int64_t step) {
-        addTime(forward(m_timeList.back(), step));
+        this->addTime(forward(m_timeList.back(), step));
     }
 
     size_t TimeMap::size() const {
@@ -272,7 +254,7 @@ namespace {
 
             for (size_t itemIndex = 0; itemIndex < item.data_size(); itemIndex++) {
                 const int64_t seconds = static_cast<int64_t>(item.getSIDouble(itemIndex));
-                addTStep(seconds);
+                this->addTStep(seconds);
             }
         }
     }
@@ -393,9 +375,10 @@ namespace {
         if (index >= m_timeList.size())
             throw std::invalid_argument("Index out of range");
 
-        if (index > 0 && index < this->m_restart_offset)
-            throw std::invalid_argument("Tried to get time information from the base case in restarted run");
-
+        if (index > 0 && index < this->m_restart_offset) {
+            printf("What the f... \n");
+            throw std::invalid_argument(fmt::format("Tried to get time information from the base case in restarted run index:{}  restart_offset:{}", index, this->m_restart_offset));
+        }
         return m_timeList[index];
     }
 
@@ -433,8 +416,8 @@ namespace {
         return this->m_restart_offset;
     }
 
-    bool TimeMap::skiprest() const {
-        return this->m_skiprest;
+    std::time_t TimeMap::restart_time() const {
+        return this->m_restart_time;
     }
 
 std::ostream& operator<<(std::ostream& stream, const TimeMap& tm) {

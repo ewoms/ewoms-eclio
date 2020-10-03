@@ -29,7 +29,6 @@
 #include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
-#include <ewoms/eclio/parser/eclipsestate/util/value.hh>
 
 namespace Ewoms {
 

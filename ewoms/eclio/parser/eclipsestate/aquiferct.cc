@@ -19,6 +19,8 @@
 
 #include <ewoms/eclio/parser/eclipsestate/aquiferct.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 
 namespace Ewoms {
 
@@ -136,6 +138,7 @@ AquiferCT::AquiferCT(const TableManager& tables, const Deck& deck)
         return;
 
     const auto& aquctKeyword = deck.getKeyword<AQUCT>();
+    OpmLog::info(OpmInputError::format("Initializing Carter Tracey aquifers from {keyword} in {file} line {line}", aquctKeyword.location()));
     for (auto& record : aquctKeyword)
         this->m_aquct.emplace_back(record, tables);
 }

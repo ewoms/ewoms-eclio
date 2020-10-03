@@ -19,8 +19,10 @@
 
 #define BOOST_TEST_MODULE WellTracerTests
 
+#include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -146,7 +148,7 @@ BOOST_AUTO_TEST_CASE(TestDynamicWTRACER) {
     Schedule schedule(deck, grid , fp, runspec);
     BOOST_CHECK(deck.hasKeyword("WTRACER"));
     const auto& keyword = deck.getKeyword("WTRACER");
-    BOOST_CHECK_EQUAL(keyword.size(),1);
+    BOOST_CHECK_EQUAL(keyword.size(),1U);
     const auto& record = keyword.getRecord(0);
     const std::string& well_name = record.getItem("WELL").getTrimmedString(0);
     BOOST_CHECK_EQUAL(well_name, "W_1");
@@ -165,5 +167,5 @@ BOOST_AUTO_TEST_CASE(TestTracerInProducerTHROW) {
     FieldPropsManager fp( deck, Phases{true, true, true}, grid, table);
     Runspec runspec ( deck );
 
-    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), std::invalid_argument);
+    BOOST_CHECK_THROW(Schedule(deck, grid, fp, runspec), OpmInputError);
 }

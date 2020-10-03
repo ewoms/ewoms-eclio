@@ -25,7 +25,9 @@
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/inputerroraction.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 #include <ewoms/common/string.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 
 namespace Ewoms {
 
@@ -132,10 +134,12 @@ namespace Ewoms {
 
     void ParseContext::handleError(
             const std::string& errorKey,
-            const std::string& msg,
+            const std::string& msg_fmt,
+            const std::optional<KeywordLocation>& location,
             ErrorGuard& errors) const {
 
         InputError::Action action = get( errorKey );
+        std::string msg = location ? OpmInputError::format(msg_fmt, *location) : msg_fmt;
 
         if (action == InputError::IGNORE) {
             errors.addWarning(errorKey, msg);
@@ -154,7 +158,10 @@ namespace Ewoms {
             // make sure the error object does not terminate the application
             // when it goes out of scope.
             errors.clear();
-            throw std::invalid_argument(errorKey + ": " + msg);
+            if (location)
+                throw OpmInputError(msg_fmt, *location);
+            else
+                throw OpmInputError(msg_fmt, {});
         }
 
         if (action == InputError::EXIT1) {
@@ -171,10 +178,10 @@ namespace Ewoms {
         }
     }
 
-    void ParseContext::handleUnknownKeyword(const std::string& keyword, ErrorGuard& errors) const {
+    void ParseContext::handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const {
         if (this->ignore_keywords.find(keyword) == this->ignore_keywords.end()) {
             std::string msg = "Unknown keyword: " + keyword;
-            this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, errors);
+            this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, location, errors);
         }
     }
 

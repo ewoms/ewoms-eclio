@@ -17,6 +17,8 @@
 */
 #include "config.h"
 
+#include <ewoms/eclio/utility/opminputerror.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
 #include <ewoms/eclio/parser/eclipsestate/tracerconfig.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -49,6 +51,7 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
     using TR = ParserKeywords::TRACER;
     if (deck.hasKeyword<TR>()) {
         const auto& keyword = deck.getKeyword<TR>();
+        OpmLog::info(OpmInputError::format("Initializing tracers from {keyword} in {file} line {line}", keyword.location()));
         for (const auto& record : keyword) {
             const auto& name = record.getItem<TR::NAME>().get<std::string>(0);
             Phase phase = phase_from_string(record.getItem<TR::FLUID>().get<std::string>(0));
@@ -61,7 +64,9 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 
             std::string tracer_field = "TBLKF" + name;
             if (deck.hasKeyword(tracer_field)) {
-                auto concentration = deck.getKeyword(tracer_field).getRecord(0).getItem(0).getData<double>();
+                const auto& tracer_keyword = deck.getKeyword(tracer_field);
+                auto concentration = tracer_keyword.getRecord(0).getItem(0).getData<double>();
+                OpmLog::info(OpmInputError::format("Loading tracer concentration from {keyword} in {file} line {line}", tracer_keyword.location()));
                 for (auto& c : concentration)
                     c *= inv_volume;
 
@@ -71,7 +76,9 @@ TracerConfig::TracerConfig(const UnitSystem& unit_system, const Deck& deck)
 
             std::string tracer_table = "TVDPF" + name;
             if (deck.hasKeyword(tracer_table)) {
-                const auto& deck_item = deck.getKeyword(tracer_table).getRecord(0).getItem(0);
+                const auto& tracer_keyword = deck.getKeyword(tracer_table);
+                const auto& deck_item = tracer_keyword.getRecord(0).getItem(0);
+                OpmLog::info(OpmInputError::format("Loading tracer table from {keyword} in {file} line {line}", tracer_keyword.location()));
                 this->tracers.emplace_back(name, phase, TracerVdTable(deck_item, inv_volume));
                 continue;
             }

@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/io/summarynode.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -172,7 +173,7 @@ BOOST_AUTO_TEST_CASE(EMPTY) {
     EclipseState state( deck );
     Schedule schedule(deck, state);
     SummaryConfig conf(deck, schedule, state.getTableManager());
-    BOOST_CHECK_EQUAL( conf.size(), 0 );
+    BOOST_CHECK_EQUAL( conf.size(), 0U );
 }
 
 BOOST_AUTO_TEST_CASE(wells_missingI) {
@@ -196,7 +197,7 @@ BOOST_AUTO_TEST_CASE(wells_select) {
             wells.begin(), wells.end(),
             names.begin(), names.end() );
 
-    BOOST_CHECK_EQUAL( summary.size(), 2 );
+    BOOST_CHECK_EQUAL( summary.size(), 2U );
 }
 
 BOOST_AUTO_TEST_CASE(groups_all) {
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(region2region) {
                                 names.begin(), names.end() );
 
   parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
-  //BOOST_CHECK_THROW( createSummary(input, parseContext), std::invalid_argument);
+  BOOST_CHECK_THROW( createSummary(input, parseContext), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(completions) {
@@ -385,7 +386,7 @@ static const auto ALL_keywords = {
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-        "WWPT",
+        "WWPT",  "WGLIR",
         // ALL will not expand to these keywords yet
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
 };
@@ -439,7 +440,7 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL1) {
                        "NEW-WELL /\n"
         "/\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -450,7 +451,7 @@ BOOST_AUTO_TEST_CASE(INVALID_WELL2) {
     const auto input = "WWCT\n"
         " NEW-WELL /\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_WELL , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -461,7 +462,7 @@ BOOST_AUTO_TEST_CASE(UNDEFINED_UDQ_WELL) {
     const auto input = "WUWCT\n"
         "/\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNDEFINED_UDQ, InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNDEFINED_UDQ, InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -472,7 +473,7 @@ BOOST_AUTO_TEST_CASE(INVALID_GROUP) {
     const auto input = "GWCT\n"
         " NEW-GR /\n";
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::THROW_EXCEPTION );
-    BOOST_CHECK_THROW( createSummary( input , parseContext ) , std::invalid_argument);
+    BOOST_CHECK_THROW( createSummary( input , parseContext ) , OpmInputError);
 
     parseContext.updateKey( ParseContext::SUMMARY_UNKNOWN_GROUP , InputError::IGNORE );
     BOOST_CHECK_NO_THROW( createSummary( input , parseContext ));
@@ -589,7 +590,7 @@ BOOST_AUTO_TEST_CASE( summary_FMWSET ) {
 BOOST_AUTO_TEST_CASE(FMWPA) {
     const auto input = "FMWPA\n";
     const auto summary = createSummary( input );
-    BOOST_CHECK_EQUAL(1 , summary.size() );
+    BOOST_CHECK_EQUAL(1U , summary.size() );
 }
 
 BOOST_AUTO_TEST_CASE( WOPRL ) {
@@ -603,7 +604,7 @@ WOPRL
 
     ParseContext parseContext;
     parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(createSummary( input, parseContext ), std::invalid_argument);
+    BOOST_CHECK_THROW(createSummary( input, parseContext ), OpmInputError);
     parseContext.update(ParseContext::SUMMARY_UNHANDLED_KEYWORD, InputError::IGNORE);
     BOOST_CHECK_NO_THROW( createSummary(input, parseContext ));
 }
@@ -1110,7 +1111,7 @@ ROPT_REG
 /
 )";
     const auto& summary_config = createSummary(deck_string);
-    BOOST_CHECK_EQUAL(summary_config.size(), 6);
+    BOOST_CHECK_EQUAL(summary_config.size(), 6U);
     BOOST_CHECK(summary_config.hasKeyword("RPR__REG"));
     BOOST_CHECK(summary_config.hasKeyword("ROPT_REG"));
     BOOST_CHECK(!summary_config.hasKeyword("RPR"));
@@ -1122,7 +1123,7 @@ ROPT_REG
     }
 
     const auto& fip_regions = summary_config.fip_regions();
-    BOOST_CHECK_EQUAL(fip_regions.size(), 1);
+    BOOST_CHECK_EQUAL(fip_regions.size(), 1U);
 
     auto reg_iter = fip_regions.find("FIPREG");
     BOOST_CHECK( reg_iter != fip_regions.end() );
@@ -1131,5 +1132,5 @@ ROPT_REG
     BOOST_CHECK(wkeywords.empty());
 
     auto rpr = summary_config.keywords("RP*");
-    BOOST_CHECK_EQUAL(rpr.size(), 3);
+    BOOST_CHECK_EQUAL(rpr.size(), 3U);
 }

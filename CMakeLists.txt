@@ -131,7 +131,6 @@ ewoms_add_test(TransMultTests SOURCES tests/transmulttests.cc CONDITION Boost_UN
 ewoms_add_test(TuningTests SOURCES tests/tuningtests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(UDQTests SOURCES tests/udqtests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(UnitTests SOURCES tests/unittests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
-ewoms_add_test(ValueTests SOURCES tests/valuetests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(WellSolventTests SOURCES tests/wellsolventtests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(WellTracerTests SOURCES tests/welltracertests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(WellTests SOURCES tests/welltests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")

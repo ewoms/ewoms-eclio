@@ -19,6 +19,11 @@
 
 #include <stdexcept>
 
+#include <ewoms/common/fmt/format.h>
+
+#include <ewoms/eclio/opmlog/logutil.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
+
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
@@ -29,6 +34,7 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/transmult.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/griddims.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/multregtscanner.hh>
+#include <ewoms/eclio/parser/parserkeywords/m.hh>
 
 namespace Ewoms {
 
@@ -45,13 +51,12 @@ namespace Ewoms {
         m_multregtScanner( dims, &fp, deck.getKeywordList( "MULTREGT" ))
     {
         EDITSection edit_section(deck);
-        if (edit_section.hasKeyword("MULTREGT")) {
-            std::string msg =
-R"(This deck has the MULTREGT keyword located in the EDIT section. Note that:
-      1) The MULTREGT keyword from EDIT section will be applied.
-      2) It is recommended to place MULTREGT in the GRID section.)";
-
-            OpmLog::warning(msg);
+        if (edit_section.hasKeyword<ParserKeywords::MULTREGT>()) {
+            auto& keyword = edit_section.getKeyword<ParserKeywords::MULTREGT>();
+            std::string msg_fmt = "The {keyword} located in the EDIT section\n"
+                                  "In {file} line {line}\n"
+                                  "The MULTREGT keyword will be applied, but it is recommended to place MULTREGT in the GRID section.";
+            OpmLog::warning(OpmInputError::format(msg_fmt, keyword.location()));
         }
     }
 

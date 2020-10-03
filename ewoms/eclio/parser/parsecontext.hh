@@ -19,9 +19,10 @@
 #ifndef EWOMS_PARSE_CONTEXT_H
 #define EWOMS_PARSE_CONTEXT_H
 
-#include <string>
 #include <map>
+#include <optional>
 #include <set>
+#include <string>
 #include <vector>
 
 #include <ewoms/eclio/opmlog/opmlog.hh>
@@ -29,6 +30,8 @@
 #include <ewoms/eclio/parser/inputerroraction.hh>
 
 namespace Ewoms {
+
+class KeywordLocation;
 
     /*
        The ParseContext class is meant to control the behavior of the
@@ -83,8 +86,8 @@ namespace Ewoms {
         explicit ParseContext(InputError::Action default_action);
         explicit ParseContext(const std::vector<std::pair<std::string , InputError::Action>>& initial);
 
-        void handleError( const std::string& errorKey, const std::string& msg, ErrorGuard& errors ) const;
-        void handleUnknownKeyword(const std::string& keyword, ErrorGuard& errors) const;
+        void handleError( const std::string& errorKey, const std::string& msg, const std::optional<KeywordLocation>& location, ErrorGuard& errors)  const;
+        void handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const;
         bool hasKey(const std::string& key) const;
         ParseContext  withKey(const std::string& key, InputError::Action action = InputError::WARN) const;
         ParseContext& withKey(const std::string& key, InputError::Action action = InputError::WARN);

@@ -28,6 +28,7 @@
 
 #include <string>
 
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
@@ -396,7 +397,7 @@ BOOST_AUTO_TEST_CASE(WrongDistanceCOMPSEGS) {
     Ewoms::ErrorGuard   errorGuard;
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), Ewoms::OpmInputError);
 
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_INVALID, Ewoms::InputError::IGNORE);
     BOOST_CHECK_NO_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard));
@@ -453,7 +454,7 @@ BOOST_AUTO_TEST_CASE(NegativeDepthCOMPSEGS) {
     Ewoms::ErrorGuard   errorGuard;
     Ewoms::ParseContext parseContext;
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), std::invalid_argument);
+    BOOST_CHECK_THROW(Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard), Ewoms::OpmInputError);
 
     parseContext.update(Ewoms::ParseContext::SCHEDULE_COMPSEGS_NOT_SUPPORTED, Ewoms::InputError::IGNORE);
     BOOST_CHECK_NO_THROW( Ewoms::Compsegs::processCOMPSEGS(compsegs, connection_set, segment_set, grid, parseContext, errorGuard) );
@@ -621,7 +622,7 @@ BOOST_AUTO_TEST_CASE(MSW_BRANCH_SEGMENTS) {
     }
     {
         auto seg1 = segments.branchSegments(1);
-        BOOST_CHECK_EQUAL( seg1.size(), 6 );
+        BOOST_CHECK_EQUAL( seg1.size(), 6U );
         const std::vector<int> expected = {1,2,3,4,5,6};
         for (std::size_t index = 0; index < seg1.size(); index++)
             BOOST_CHECK_EQUAL( expected[index], seg1[index].segmentNumber());
@@ -629,14 +630,14 @@ BOOST_AUTO_TEST_CASE(MSW_BRANCH_SEGMENTS) {
     {
         auto seg2 = segments.branchSegments(2);
         const std::vector<int> expected = {7,8,9,10,11};
-        BOOST_CHECK_EQUAL( seg2.size(), 5 );
+        BOOST_CHECK_EQUAL( seg2.size(), 5U );
         for (std::size_t index = 0; index < seg2.size(); index++)
             BOOST_CHECK_EQUAL( expected[index], seg2[index].segmentNumber());
     }
     {
         auto seg5 = segments.branchSegments(5);
         const std::vector<int> expected = {22,23,24,25,26};
-        BOOST_CHECK_EQUAL( seg5.size(), 5 );
+        BOOST_CHECK_EQUAL( seg5.size(), 5U );
         for (std::size_t index = 0; index < seg5.size(); index++)
             BOOST_CHECK_EQUAL( expected[index], seg5[index].segmentNumber());
     }

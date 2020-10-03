@@ -39,6 +39,7 @@ namespace Ewoms {
     class Deck;
     class SummaryState;
     class UDQState;
+    class KeywordLocation;
 
     class UDQConfig {
     public:
@@ -51,11 +52,11 @@ namespace Ewoms {
         const std::string& unit(const std::string& key) const;
         bool has_unit(const std::string& keyword) const;
         bool has_keyword(const std::string& keyword) const;
-        void add_record(const DeckRecord& record, std::size_t report_step);
+        void add_record(const DeckRecord& record, const KeywordLocation& location, std::size_t report_step);
 
         void add_unit(const std::string& keyword, const std::string& unit);
         void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value, std::size_t report_step);
-        void add_define(const std::string& quantity, const std::vector<std::string>& expression);
+        void add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression);
 
         void eval(std::size_t report_step, SummaryState& st, UDQState& udq_state) const;
         const UDQDefine& define(const std::string& key) const;

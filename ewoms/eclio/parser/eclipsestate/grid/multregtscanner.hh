@@ -21,7 +21,6 @@
 
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/facedir.hh>
-#include <ewoms/eclio/parser/eclipsestate/util/value.hh>
 
 namespace Ewoms {
 

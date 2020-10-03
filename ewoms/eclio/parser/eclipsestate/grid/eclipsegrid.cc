@@ -64,7 +64,6 @@ EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
                          const double * mapaxes)
     : GridDims(dims),
       m_minpvMode(MinpvMode::ModeEnum::Inactive),
-      m_pinch("PINCH"),
       m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
@@ -80,7 +79,6 @@ EclipseGrid::EclipseGrid(std::array<int, 3>& dims ,
 EclipseGrid::EclipseGrid(const std::string& fileName )
     : GridDims(),
       m_minpvMode(MinpvMode::ModeEnum::Inactive),
-      m_pinch("PINCH"),
       m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
@@ -95,7 +93,6 @@ EclipseGrid::EclipseGrid(size_t nx, size_t ny , size_t nz,
                          double dx, double dy, double dz)
     : GridDims(nx, ny, nz),
       m_minpvMode(MinpvMode::ModeEnum::Inactive),
-      m_pinch("PINCH"),
       m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
@@ -202,12 +199,11 @@ EclipseGrid::EclipseGrid(const EclipseGrid& src, const std::vector<int>& actnum)
 EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     : GridDims(deck),
       m_minpvMode(MinpvMode::ModeEnum::Inactive),
-      m_pinch("PINCH"),
       m_pinchoutMode(PinchMode::ModeEnum::TOPBOT),
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
 {
-
+    OpmLog::info("Creating grid");
     if (deck.hasKeyword("GDFILE")){
 
         if (deck.hasKeyword("COORD")){
@@ -299,7 +295,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         if (deck.hasKeyword<ParserKeywords::PINCH>()) {
             const auto& record = deck.getKeyword<ParserKeywords::PINCH>( ).getRecord(0);
             const auto& item = record.getItem<ParserKeywords::PINCH::THRESHOLD_THICKNESS>( );
-            m_pinch.setValue( item.getSIDouble(0) );
+            m_pinch = item.getSIDouble(0);
 
             auto pinchoutString = record.getItem<ParserKeywords::PINCH::PINCHOUT_OPTION>().get< std::string >(0);
             m_pinchoutMode = PinchMode::PinchModeFromString(pinchoutString);
@@ -462,11 +458,11 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     bool EclipseGrid::isPinchActive( ) const {
-        return m_pinch.hasValue();
+        return m_pinch.has_value();
     }
 
     double EclipseGrid::getPinchThresholdThickness( ) const {
-        return m_pinch.getValue();
+        return m_pinch.value();
     }
 
     PinchMode::ModeEnum EclipseGrid::getPinchOption( ) const {
@@ -1301,7 +1297,7 @@ std::vector<double> EclipseGrid::createDVector(const std::array<int,3>& dims, st
         if (m_mapaxes != other.m_mapaxes)
             return false;
 
-        bool status = (m_pinch.equal( other.m_pinch )  && (m_minpvMode == other.getMinpvMode()));
+        bool status = ((m_pinch == other.m_pinch)  && (m_minpvMode == other.getMinpvMode()));
 
         if(m_minpvMode!=MinpvMode::ModeEnum::Inactive) {
             status = status && (m_minpvVector == other.getMinpvVector());

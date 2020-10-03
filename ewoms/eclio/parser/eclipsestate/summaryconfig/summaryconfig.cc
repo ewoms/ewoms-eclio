@@ -28,6 +28,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/utility/opminputerror.hh>
@@ -67,7 +69,7 @@ namespace {
         "WBHP",  "WGIR",  "WGIT", "WGOR",  "WGPR", "WGPT",  "WOIR",
         "WOIT",  "WOPR",  "WOPT", "WPI",   "WTHP", "WVIR",  "WVIT",
         "WVPR",  "WVPT",  "WWCT", "WWGR",  "WWIR", "WWIT",  "WWPR",
-        "WWPT",
+        "WWPT",  "WGLIR",
         // ALL will not expand to these keywords yet
         "AAQR",  "AAQRG", "AAQT", "AAQTG"
     };
@@ -192,7 +194,7 @@ namespace {
 
     bool is_rate(const std::string& keyword) {
         static const keyword_set ratekw {
-            "OPR", "GPR", "WPR", "LPR", "NPR", "VPR",
+            "OPR", "GPR", "WPR", "GLIR", "LPR", "NPR", "VPR",
             "OPGR", "GPGR", "WPGR", "VPGR",
             "OPRH", "GPRH", "WPRH", "LPRH",
             "OVPR", "GVPR", "WVPR",
@@ -324,29 +326,23 @@ namespace {
         return SummaryConfigNode::Type::Undefined;
     }
 
-void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& well) {
-    std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such well: ") + well;
-    if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_WELL) == InputError::WARN)
-        std::cerr << "ERROR: " << msg << std::endl;
-
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msg, errors );
+void handleMissingWell( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const std::string& well) {
+    std::string msg_fmt = fmt::format("Request for missing well {} in {{keyword}}\n"
+                                      "In {{file}} line {{line}}", well);
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_WELL , msg_fmt, location, errors );
 }
 
-void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, const std::string& keyword, const std::string& group) {
-    std::string msg = std::string("Error in keyword:") + keyword + std::string(" No such group: ") + group;
-    if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_GROUP) == InputError::WARN)
-        std::cerr << "ERROR: " << msg << std::endl;
-
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg, errors );
+void handleMissingGroup( const ParseContext& parseContext , ErrorGuard& errors, const KeywordLocation& location, const std::string& group) {
+    std::string msg_fmt = fmt::format("Request for missing group {} in {{keyword}}\n"
+                                      "In {{file}} line {{line}}", group);
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_GROUP , msg_fmt, location, errors );
 }
 
-void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, const std::string& keyword, const std::string& node_name )
+void handleMissingNode( const ParseContext& parseContext, ErrorGuard& errors, const KeywordLocation& location, const std::string& node_name )
 {
-    const auto msg = std::string("Error in keyword \"") + keyword + std::string("\": No such network node: ") + node_name;
-    if (parseContext.get( ParseContext::SUMMARY_UNKNOWN_NODE) == InputError::WARN)
-        std::cerr << "ERROR: " << msg << std::endl;
-
-    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg, errors );
+    std::string msg_fmt = fmt::format("Request for missing network node {} in {{keyword}}\n"
+                                      "In {{file}} line {{line}}", node_name);
+    parseContext.handleError( ParseContext::SUMMARY_UNKNOWN_NODE, msg_fmt, location, errors );
 }
 
 inline void keywordW( SummaryConfig::keyword_list& list,
@@ -387,8 +383,9 @@ inline void keywordW( SummaryConfig::keyword_list& list,
     if (keyword.name().back() == 'L') {
         if (! (is_control_mode(keyword.name()) || is_udq(keyword.name()))) {
             const auto& location = keyword.location();
-            std::string msg = std::string("The completion keywords like: " + keyword.name() + " are not supported at: " + location.filename + ", line " + std::to_string(location.lineno));
-            parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+            std::string msg = "Unsupported summary output keyword {}\n"
+                              "In {file} line {line}";
+            parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
             return;
         }
     }
@@ -404,7 +401,7 @@ inline void keywordW( SummaryConfig::keyword_list& list,
           auto well_names = schedule.wellNames( pattern, schedule.size() - 1 );
 
             if( well_names.empty() )
-                handleMissingWell( parseContext, errors, keyword.name(), pattern );
+                handleMissingWell( parseContext, errors, keyword.location(), pattern );
 
             keywordW( list, well_names, param );
         }
@@ -458,7 +455,7 @@ inline void keywordG( SummaryConfig::keyword_list& list,
         if( schedule.hasGroup( group ) )
             list.push_back( param.namedEntity(group) );
         else
-            handleMissingGroup( parseContext, errors, keyword.name(), group );
+            handleMissingGroup( parseContext, errors, keyword.location(), group );
     }
 }
 
@@ -470,11 +467,9 @@ void keyword_node( SummaryConfig::keyword_list& list,
 {
     if (node_names.empty()) {
         const auto& location = keyword.location();
-        const std::string msg = "The network node keyword " + keyword.name()
-            + " at " + location.filename + ", line " + std::to_string(location.lineno)
-            + " is not supported in runs without networks";
-
-        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+        std::string msg = "The network node keyword {keyword} is not supported in runs without networks\n"
+                          "In {file} line {line}";
+        parseContext.handleError( ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
         return;
     }
 
@@ -502,7 +497,7 @@ void keyword_node( SummaryConfig::keyword_list& list,
         if (pos != node_names.end())
             list.push_back( param.namedEntity(node_name) );
         else
-            handleMissingNode( parseContext, errors, keyword.name(), node_name );
+            handleMissingNode( parseContext, errors, keyword.location(), node_name );
     }
 }
 
@@ -558,12 +553,10 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
                         ErrorGuard& errors,
                         const DeckKeyword& keyword)
 {
-    /*
-    // unknown keywords are handled by the simulator layer!
     const auto& location = keyword.location();
-    std::string msg = "Region to region summary keyword '" + keyword.name() + "' at " + location.filename + ", line " + std::to_string(location.lineno) + " is ignored";
-    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
-    */
+    std::string msg_fmt = "Region to region summary keyword {keyword} is ignored\n"
+                          "In {file} line {line}";
+    parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg_fmt, location, errors);
 }
 
 inline void keywordR( SummaryConfig::keyword_list& list,
@@ -643,7 +636,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         const auto ijk_defaulted = record.getItem( 1 ).defaultApplied( 0 );
 
         if( well_names.empty() )
-            handleMissingWell( parseContext, errors, keyword.name(), wellitem.getTrimmedString( 0 ) );
+            handleMissingWell( parseContext, errors, keyword.location(), wellitem.getTrimmedString( 0 ) );
 
         for(const auto& name : well_names) {
             param.namedEntity(name);
@@ -771,7 +764,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
                 : schedule.wellNames(wellitem.getTrimmedString(0));
 
             if (well_names.empty())
-                handleMissingWell(parseContext, errors, keyword.name(),
+                handleMissingWell(parseContext, errors, keyword.location(),
                                   wellitem.getTrimmedString(0));
 
             // Negative 1 (< 0) if segment ID defaulted.  Defaulted
@@ -846,25 +839,29 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         };
     }
 
-    void check_udq( const std::string& name,
+    void check_udq( const KeywordLocation& location,
                     const Schedule& schedule,
                     const ParseContext& parseContext,
                     ErrorGuard& errors ) {
-        if (! is_udq(name))
+        if (! is_udq(location.keyword))
             // Nothing to do
             return;
 
         const auto& udq = schedule.getUDQConfig(schedule.size() - 1);
 
-        if (!udq.has_keyword(name)) {
-            std::string msg{"Summary output has been requested for UDQ keyword: " + name + " but it has not been configured"};
-            parseContext.handleError(ParseContext::SUMMARY_UNDEFINED_UDQ, msg, errors);
+        if (!udq.has_keyword(location.keyword)) {
+            std::string msg = "Summary output requested for UDQ {keyword}\n"
+                              "In {file} line {line}\n"
+                              "No defintion for this UDQ found in the SCHEDULE section";
+            parseContext.handleError(ParseContext::SUMMARY_UNDEFINED_UDQ, msg, location, errors);
             return;
         }
 
-        if (!udq.has_unit(name)) {
-            std::string msg{"Summary output has been requested for UDQ keyword: " + name + " but no unit has not been configured"};
-            parseContext.handleError(ParseContext::SUMMARY_UDQ_MISSING_UNIT, msg, errors);
+        if (!udq.has_unit(location.keyword)) {
+            std::string msg = "Summary output requested for UDQ {keyword}\n"
+                              "In {file} line {line}\n"
+                              "No unit define in the SCHEDULE section";
+            parseContext.handleError(ParseContext::SUMMARY_UDQ_MISSING_UNIT, msg, location, errors);
         }
     }
 
@@ -879,7 +876,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
     using Cat = SummaryConfigNode::Category;
 
     const auto& name = keyword.name();
-    check_udq( name, schedule, parseContext, errors );
+    check_udq( keyword.location(), schedule, parseContext, errors );
 
     const auto cat = parseKeywordCategory( name );
     switch( cat ) {
@@ -894,15 +891,16 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Miscellaneous: return keywordMISC( list, keyword );
 
         default:
-            std::string msg = "Summary keywords of type: " + to_string( cat ) + " is not supported. Keyword: " + name + " is ignored";
-            parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+            std::string msg_fmt = fmt::format("Summary output keyword {{keyword}} of type {} is not supported\n"
+                                              "In {{file}} line {{line}}", to_string(cat));
+            parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg_fmt, keyword.location(), errors);
             return;
     }
 }
 
 inline void handleKW( SummaryConfig::keyword_list& list,
                       const std::string& keyword,
-                      KeywordLocation loc,
+                      const KeywordLocation& location,
                       const Schedule& schedule,
                       const ParseContext& parseContext,
                       ErrorGuard& errors) {
@@ -910,9 +908,10 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     if (is_udq(keyword))
         throw std::logic_error("UDQ keywords not handleded when expanding alias list");
 
-    if (is_aquifer( keyword )) {
-        std::string msg = "Summary keywords of type: Aquifer is not supported. Keyword: " + keyword + " is ignored";
-        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, errors);
+    if (is_aquifer(keyword)) {
+        std::string msg = "Summary output keyword {keyword} of type AQUIFER is not supported\n"
+                          "In {{file}} line {{line}}";
+        parseContext.handleError(ParseContext::SUMMARY_UNHANDLED_KEYWORD, msg, location, errors);
         return;
     }
 
@@ -920,10 +919,10 @@ inline void handleKW( SummaryConfig::keyword_list& list,
     const auto cat = parseKeywordCategory( keyword );
 
     switch( cat ) {
-        case Cat::Well: return keywordW( list, keyword, std::move(loc), schedule );
-        case Cat::Group: return keywordG( list, keyword, std::move(loc), schedule );
-        case Cat::Field: return keywordF( list, keyword, std::move(loc) );
-        case Cat::Miscellaneous: return keywordMISC( list, keyword, std::move(loc));
+        case Cat::Well: return keywordW( list, keyword, location, schedule );
+        case Cat::Group: return keywordG( list, keyword, location, schedule );
+        case Cat::Field: return keywordF( list, keyword, location );
+        case Cat::Miscellaneous: return keywordMISC( list, keyword, location);
 
         default:
             throw std::logic_error("Keyword type: " + to_string( cat ) + " is not supported in alias lists. Internal error handling: " + keyword);

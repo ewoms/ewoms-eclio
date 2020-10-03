@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE ParserKeywordsIntegrationTests
 #include <boost/test/unit_test.hpp>
 
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -213,10 +214,10 @@ BOOST_AUTO_TEST_CASE( SORWMIS ) {
 
     Parser parser;
     // missing miscible keyword
-    BOOST_CHECK_THROW (parser.parseString(sorwmisData), std::invalid_argument );
+    BOOST_CHECK_THROW (parser.parseString(sorwmisData), OpmInputError );
 
     //too many tables
-    BOOST_CHECK_THROW( parser.parseString(miscibleTightData + sorwmisData), std::invalid_argument);
+    BOOST_CHECK_THROW( parser.parseString(miscibleTightData + sorwmisData), OpmInputError);
 
     auto deck1 =  parser.parseString(miscibleData + sorwmisData);
 

@@ -118,7 +118,7 @@ void verifyWellState(const std::string& rst_filename, const Ewoms::Schedule& sch
     std::vector<std::string> wellList = schedule.wellNames(step);
 
     //Verify number of active wells
-    BOOST_CHECK_EQUAL( wellList.size(), intehead[16]);
+    BOOST_CHECK_EQUAL( wellList.size(), static_cast<std::size_t>(intehead[16]));
 
     for (size_t i=0; i< wellList.size(); i++) {
 
@@ -165,7 +165,7 @@ void verifyWellState(const std::string& rst_filename, const Ewoms::Schedule& sch
 
         // Verify number of connections
 
-        BOOST_CHECK_EQUAL(iwel[i*niwelz + 4], connections_set.size() );
+        BOOST_CHECK_EQUAL(static_cast<std::size_t>(iwel[i*niwelz + 4]), connections_set.size() );
         BOOST_CHECK_EQUAL(ref_wellConn[step][i].size(), connections_set.size() );
 
         for (size_t n=0; n< connections_set.size(); n++) {

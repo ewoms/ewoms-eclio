@@ -19,6 +19,8 @@
 
 #include <ewoms/eclio/parser/eclipsestate/grid/facedir.hh>
 #include <ewoms/eclio/parser/eclipsestate/aquancon.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 
 #include <unordered_map>
 #include <utility>
@@ -64,6 +66,7 @@ namespace Ewoms {
         std::unordered_map<std::size_t, Aquancon::AquancCell> work;
         for (std::size_t iaq = 0; iaq < deck.count("AQUANCON"); iaq++) {
             const auto& aquanconKeyword = deck.getKeyword("AQUANCON", iaq);
+            OpmLog::info(OpmInputError::format("Initializing aquifer connections from {keyword} in {file} line {line}", aquanconKeyword.location()));
             for (const auto& aquanconRecord : aquanconKeyword) {
                 const int aquiferID = aquanconRecord.getItem("AQUIFER_ID").get<int>(0);
                 const int i1 = aquanconRecord.getItem("I1").get<int>(0) - 1;

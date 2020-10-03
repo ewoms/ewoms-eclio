@@ -23,6 +23,8 @@
 #include <ewoms/eclio/parser/eclipsestate/aquifetp.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 
 namespace Ewoms {
 
@@ -67,6 +69,7 @@ Aquifetp::Aquifetp(const Deck& deck)
         return;
 
     const auto& aqufetpKeyword = deck.getKeyword<AQUFETP>();
+    OpmLog::info(OpmInputError::format("Initializing Fetkovich aquifers from {keyword} in {file} line {line}", aqufetpKeyword.location()));
     for (auto& record : aqufetpKeyword)
         this->m_aqufetp.emplace_back(record);
 }

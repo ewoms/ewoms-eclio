@@ -108,16 +108,18 @@ UDQDefine::UDQDefine()
 template <typename T>
 UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
+                     const KeywordLocation& location,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      T&& errors) :
-    UDQDefine(udq_params_arg, keyword, deck_data, parseContext, errors)
+    UDQDefine(udq_params_arg, keyword, location, deck_data, parseContext, errors)
 {}
 
 UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
+                     const KeywordLocation& location,
                      const std::vector<std::string>& deck_data) :
-    UDQDefine(udq_params_arg, keyword, deck_data, ParseContext(), ErrorGuard())
+    UDQDefine(udq_params_arg, keyword, location, deck_data, ParseContext(), ErrorGuard())
 {}
 
 namespace {
@@ -154,6 +156,7 @@ Ewoms::optional<std::string> next_token(const std::string& item, std::size_t off
 
 UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
+                     const KeywordLocation& location,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
@@ -189,7 +192,7 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
         string_tokens.insert( string_tokens.begin(), "0" );
     std::vector<UDQToken> tokens = make_tokens(string_tokens);
 
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, tokens, parseContext, errors) );
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, location, tokens, parseContext, errors) );
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
         this->string_data += deck_data[index];

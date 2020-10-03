@@ -461,6 +461,23 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
+inline quantity alqrate( const fn_args& args ) {
+    const quantity zero = { 0.0, measure::gas_surface_rate };
+
+    if (args.schedule_wells.empty()) {
+        // No wells.  Before simulation starts?
+        return zero;
+    }
+
+    const auto& well = args.schedule_wells.front();
+    auto xwPos = args.wells.find(well.name());
+    if (xwPos == args.wells.end()) {
+        return zero;
+    }
+
+    return { xwPos->second.rates.get(rt::alq, 0.0), measure::gas_surface_rate };
+}
+
 template< rt phase, bool injection = true >
 inline quantity rate( const fn_args& args ) {
     double sum = 0.0;
@@ -999,6 +1016,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
+    { "WGLIR", alqrate },
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
@@ -1080,6 +1098,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
     { "GGPR", rate< rt::gas, producer > },
+    { "GGLIR", alqrate },
     { "GNPR", rate< rt::solvent, producer > },
     { "GCPR", rate< rt::polymer, producer > },
     { "GSPR", rate< rt::brine, producer > },
@@ -1233,6 +1252,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
+    { "FGLIR", alqrate },
     { "FNPR", rate< rt::solvent, producer > },
     { "FCPR", rate< rt::polymer, producer > },
     { "FSPR", rate< rt::brine, producer > },
@@ -2192,7 +2212,8 @@ void reportUnsupportedKeywords(std::vector<Ewoms::SummaryConfigNode> keywords)
 
     for (auto node = keywords.begin(); node != uend; ++node) {
         const auto& location = node->location();
-        ::Ewoms::OpmLog::note("Unhandled summary keyword '" + node->keyword() + "' at " + location.filename + ", line " + std::to_string(location.lineno));
+        Ewoms::OpmLog::warning(Ewoms::OpmInputError::format("Unhandled summary keyword {keyword}\n"
+                                                          "In {file} line {line}", location));
     }
 }
 

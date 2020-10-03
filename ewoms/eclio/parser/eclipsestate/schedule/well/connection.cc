@@ -34,7 +34,6 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
-#include <ewoms/eclio/parser/eclipsestate/util/value.hh>
 
 namespace Ewoms {
 

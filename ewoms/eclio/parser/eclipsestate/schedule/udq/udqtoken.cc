@@ -17,6 +17,8 @@
 */
 #include "config.h"
 
+#include <numeric>
+
 #include "udqtoken.hh"
 
 namespace Ewoms {
@@ -48,6 +50,14 @@ const std::vector<std::string>& UDQToken::selector() const {
 
 UDQTokenType UDQToken::type() const {
     return this->token_type;
+}
+
+std::string UDQToken::str() const {
+    if (std::holds_alternative<std::string>(this->m_value))
+        return std::get<std::string>(this->m_value) + std::string{" "} + std::accumulate(this->m_selector.begin(), this->m_selector.end(), std::string{},
+                                                                                         [](const std::string& s1, const std::string& s2) { return s1 + " " + s2; });
+    else
+        return std::to_string(std::get<double>(this->m_value));
 }
 
 }

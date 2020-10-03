@@ -27,6 +27,7 @@
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/restartconfig.hh>
 #include <ewoms/eclio/parser/utility/functional.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 
 inline std::string fst( const std::pair< std::string, int >& p ) {
     return p.first;
@@ -396,7 +397,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_mixed_mnemonics_int_list) {
     ErrorGuard errors;
     auto deck = Parser().parseString( data, parseContext, errors );
     parseContext.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW( RestartConfig( TimeMap(deck), deck, parseContext, errors ), std::invalid_argument);
+    BOOST_CHECK_THROW( RestartConfig( TimeMap(deck), deck, parseContext, errors ), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(RPTRST) {
@@ -601,14 +602,14 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     auto deck1 = parser.parseString( deckData1, ctx, errors );
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck1), deck1, ctx, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck1), deck1, ctx, errors), OpmInputError);
 
     ctx.update(ParseContext::RPT_MIXED_STYLE, InputError::IGNORE);
     RestartConfig rstConfig1( TimeMap(deck1), deck1, ctx, errors );
 
     // The case "BASIC 1" - i.e. without '=' can not be salvaged; this should
     // give an exception whatever is the value of ParseContext::RPT_MIXED_STYLE:
-    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck0), deck0, ctx, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck0), deck0, ctx, errors), OpmInputError);
 
     // Observe that this is true due to some undocumented guessing that
     // the initial restart file should be written if a RPTRST keyword is
@@ -629,7 +630,7 @@ BOOST_AUTO_TEST_CASE(RPTRST_FORMAT_ERROR) {
     auto deck2 = parser.parseString( deckData2, ctx, errors );
 
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::THROW_EXCEPTION);
-    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck2), deck2, ctx, errors), std::invalid_argument);
+    BOOST_CHECK_THROW(RestartConfig(TimeMap(deck2), deck2, ctx, errors), OpmInputError);
     ctx.update(ParseContext::RPT_UNKNOWN_MNEMONIC, InputError::IGNORE);
 
     RestartConfig rstConfig2( TimeMap(deck2), deck2, ctx, errors );

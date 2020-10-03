@@ -17,6 +17,8 @@
  */
 #include "config.h"
 
+#include <ctime>
+
 #include <fnmatch.h>
 #include <iostream>
 #include <stdexcept>
@@ -275,6 +277,9 @@ namespace {
     void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
+        const auto& unit_system = section.unitSystem();
+        std::string time_unit = unit_system.name(UnitSystem::measure::time);
+        auto convert_time = [&unit_system](double seconds) { return unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::size_t keywordIdx = 0;
         /*
           The keywords in the skiprest_whitelist set are loaded from the
@@ -283,15 +288,83 @@ namespace {
           all.
         */
         std::unordered_set<std::string> skiprest_whitelist = {"VFPPROD", "VFPINJ", "RPTSCHED", "RPTRST", "TUNING", "MESSAGES"};
+        std::size_t currentStep = 0;
+        /*
+          The behavior of variable restart_skip is more lenient than the
+          SKIPREST keyword. If this is a restarted[1] run the loop iterating
+          over keywords will skip the all keywords[2] until DATES keyword with
+          the restart date is encountered - irrespective of whether the SKIPREST
+          keyword is present in the deck or not.
 
-        std::size_t currentStep;
-        if (this->m_timeMap.skiprest())
-            currentStep = 0;
-        else
-            currentStep = this->m_timeMap.restart_offset();
+          [1]: eflow can restart in a mode where all the keywords from the
+               historical part of the Schedule section is internalized, and only
+               the solution fields are read from the restart file. In this case
+               we will have TimeMap::restart_offset() == 0.
 
+          [2]: With the exception of the keywords in the skiprest_whitelist;
+               these keywords will be assigned to report step 0.
+        */
+
+        auto restart_skip = currentStep < this->m_timeMap.restart_offset();
         while (true) {
+            if (keywordIdx == section.size())
+                break;
+
             const auto& keyword = section.getKeyword(keywordIdx);
+            if (keyword.name() == "DATES") {
+                const auto& location = keyword.location();
+                checkIfAllConnectionsIsShut(currentStep);
+                for (const auto& record : keyword) {
+                    if (restart_skip) {
+                        auto deck_time = TimeMap::timeFromEclipse(record);
+                        if (deck_time == this->m_timeMap.restart_time()) {
+                            restart_skip = false;
+                            currentStep = this->m_timeMap.restart_offset();
+                            OpmLog::info(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
+                        } else
+                            OpmLog::info(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
+                    } else {
+                        currentStep += 1;
+                        if (currentStep < this->size()) {
+                            const auto& end_date = Schedule::formatDate(this->simTime(currentStep));
+                            const auto& start_date = Schedule::formatDate(this->simTime(currentStep - 1));
+                            const auto& days = convert_time(this->stepLength(currentStep - 1));
+                            OpmLog::info(fmt::format("Complete report step {:4}: {} - {} {:3.0f} {} {} line {}",
+                                                     currentStep,
+                                                     start_date,
+                                                     end_date,
+                                                     days,
+                                                     time_unit,
+                                                     location.filename,
+                                                     location.lineno));
+                        }
+                    }
+                }
+                keywordIdx++;
+                continue;
+            }
+
+            if (keyword.name() == "TSTEP") {
+                checkIfAllConnectionsIsShut(currentStep);
+                if (restart_skip)
+                    OpmLog::info(OpmInputError::format("Skipping TSTEP keyword at {file} line {line}", keyword.location()));
+                else {
+                    for (const auto& tstep : keyword.getRecord(0).getItem(0).getSIDoubleData()) {
+                        currentStep += 1;
+                        const auto& end_date = Schedule::formatDate( this->simTime(currentStep) );
+                        OpmLog::info(fmt::format("TSTEP {:4} {} {} -> {}", currentStep, convert_time(tstep), time_unit, end_date));
+                    }
+                }
+                keywordIdx++;
+                continue;
+            }
+
+            if (restart_skip && skiprest_whitelist.count(keyword.name()) == 0) {
+                OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
+                keywordIdx++;
+                continue;
+            }
+
             if (keyword.name() == "ACTIONX") {
                 Action::ActionX action(keyword, this->m_timeMap.getStartTime(currentStep));
                 while (true) {
@@ -303,38 +376,31 @@ namespace {
                     if (action_keyword.name() == "ENDACTIO")
                         break;
 
-                    if (Action::ActionX::valid_keyword(action_keyword.name())) {
+                    if (Action::ActionX::valid_keyword(action_keyword.name()))
                         action.addKeyword(action_keyword);
-                    } else {
-                        std::string msg = "The keyword " + action_keyword.name() + " is not supported in a ACTIONX block.";
-                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg, errors);
+                    else {
+                        std::string msg_fmt = "The keyword {keyword} is not supported in the ACTIONX block\n"
+                                              "In {file} line {line}.";
+                        parseContext.handleError( ParseContext::ACTIONX_ILLEGAL_KEYWORD, msg_fmt, action_keyword.location(), errors);
                     }
                 }
                 this->addACTIONX(action, currentStep);
+                keywordIdx++;
+                continue;
             }
 
-            else if (keyword.name() == "DATES") {
-                checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.size();
-            }
-
-            else if (keyword.name() == "TSTEP") {
-                checkIfAllConnectionsIsShut(currentStep);
-                currentStep += keyword.getRecord(0).getItem(0).data_size();
-            }
-
-            else {
-                if (currentStep >= this->m_timeMap.restart_offset() || skiprest_whitelist.count(keyword.name()))
-                    this->handleKeyword(input_path, currentStep, section, keywordIdx, keyword, parseContext, errors, grid, fp, rftProperties);
-                else
-                    OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
-            }
-
+            this->handleKeyword(input_path,
+                                currentStep,
+                                section,
+                                keywordIdx,
+                                keyword,
+                                parseContext,
+                                errors,
+                                grid,
+                                fp,
+                                rftProperties);
             keywordIdx++;
-            if (keywordIdx == section.size())
-                break;
         }
-
         checkIfAllConnectionsIsShut(currentStep);
 
         for (auto rftPair = rftProperties.begin(); rftPair != rftProperties.end(); ++rftPair) {
@@ -408,7 +474,7 @@ namespace {
         const auto& current = *this->udq_config.get(current_step);
         std::shared_ptr<UDQConfig> new_udq = std::make_shared<UDQConfig>(current);
         for (const auto& record : keyword)
-            new_udq->add_record(record, current_step);
+            new_udq->add_record(record, keyword.location(), current_step);
 
         auto next_index = this->udq_config.update_equal(current_step, new_udq);
         if (next_index) {
@@ -417,7 +483,7 @@ namespace {
                 auto udq_ptr = udq_pair.second;
                 if (report_step > current_step) {
                     for (const auto& record : keyword)
-                        udq_ptr->add_record(record, current_step);
+                        udq_ptr->add_record(record, keyword.location(), current_step);
                 }
             }
         }
@@ -449,20 +515,20 @@ namespace {
             if (conn_defaulted( record )) {
                 const auto well_status = Well::StatusFromString( status_str );
                 for (const auto& wname : well_names) {
-                    const auto& well = this->getWell(wname, currentStep);
-                    if (well_status == open && !well.canOpen()) {
-                        auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
-                        std::string msg = "Well " + wname
-                            + " where crossflow is banned has zero total rate."
-                            + " This well is prevented from opening at "
-                            + std::to_string( days ) + " days";
-                        OpmLog::note(msg);
-                    } else {
-                        this->updateWellStatus( wname, currentStep, well_status, false );
-                        if (well_status == open)
-                            this->rft_config.addWellOpen(wname, currentStep);
-
-                        OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
+                    {
+                        const auto& well = this->getWell(wname, currentStep);
+                        if( well_status == open && !well.canOpen() ) {
+                            auto days = m_timeMap.getTimePassedUntil( currentStep ) / (60 * 60 * 24);
+                            std::string msg = "Well " + wname
+                                + " where crossflow is banned has zero total rate."
+                                + " This well is prevented from opening at "
+                                + std::to_string( days ) + " days";
+                            OpmLog::note(msg);
+                        } else {
+                            this->updateWellStatus( wname, currentStep, well_status, false );
+                            if (well_status == open)
+                                this->rft_config.addWellOpen(wname, currentStep);
+                        }
                     }
                 }
 
@@ -471,13 +537,13 @@ namespace {
 
             for (const auto& wname : well_names) {
                 const auto comp_status = Connection::StateFromString( status_str );
-                auto& dynamic_state = this->wells_static.at(wname);
-                auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
-                    // The updateWell call breaks test at line 825 and 831 in ScheduleTests
-                    this->updateWell(well_ptr, currentStep);
-                    const auto well_status = Well::StatusFromString( status_str );
-                    OpmLog::info(Well::Status2String(well_status) + " well: " + wname + " at report step: " + std::to_string(currentStep));
+                {
+                    auto& dynamic_state = this->wells_static.at(wname);
+                    auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
+                        // The updateWell call breaks test at line 825 and 831 in ScheduleTests
+                        this->updateWell(well_ptr, currentStep);
+                    }
                 }
 
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
@@ -548,9 +614,12 @@ namespace {
         return this->rft_config;
     }
 
-    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg = "Error when handling " + keyword.name() + " at step: " + std::to_string(report_step) + ". No names match " + namePattern;
-        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg, errors );
+    void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
+        std::string msg_fmt = fmt::format("Invalid wellname pattern in {{keyword}}\n"
+                                          "In {{file}} line {{line}}\n"
+                                          "No wells/groups match the pattern: '{}'", namePattern);
+
+        parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
     }
 
     const TimeMap& Schedule::getTimeMap() const {
@@ -1371,6 +1440,16 @@ namespace {
                this->restart_config == data.restart_config &&
                this->wellgroup_events == data.wellgroup_events;
      }
+
+    std::string Schedule::formatDate(std::time_t t) {
+        const auto ts { TimeStampUTC(t) } ;
+        return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
+    }
+
+    std::string Schedule::simulationDays(const UnitSystem& unit_system, std::size_t currentStep) const {
+        const double sim_time { unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
+        return fmt::format("{} {}", sim_time, unit_system.name(UnitSystem::measure::time));
+    }
 
 namespace {
 
