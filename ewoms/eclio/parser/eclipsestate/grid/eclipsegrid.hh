@@ -26,9 +26,10 @@
 
 #include <ewoms/eclio/io/eclfile.hh>
 
+#include <ewoms/common/optional.hh>
+
 #include <array>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace Ewoms {
@@ -189,7 +190,7 @@ namespace Ewoms {
     private:
         std::vector<double> m_minpvVector;
         MinpvMode::ModeEnum m_minpvMode;
-        std::optional<double> m_pinch;
+        Ewoms::optional<double> m_pinch;
         PinchMode::ModeEnum m_pinchoutMode;
         PinchMode::ModeEnum m_multzMode;
         PinchMode::ModeEnum m_pinchGapMode;

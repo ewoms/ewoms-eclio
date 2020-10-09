@@ -135,7 +135,7 @@ namespace Ewoms {
     void ParseContext::handleError(
             const std::string& errorKey,
             const std::string& msg_fmt,
-            const std::optional<KeywordLocation>& location,
+            const Ewoms::optional<KeywordLocation>& location,
             ErrorGuard& errors) const {
 
         InputError::Action action = get( errorKey );
@@ -178,7 +178,7 @@ namespace Ewoms {
         }
     }
 
-    void ParseContext::handleUnknownKeyword(const std::string& keyword, const std::optional<KeywordLocation>& location, ErrorGuard& errors) const {
+    void ParseContext::handleUnknownKeyword(const std::string& keyword, const Ewoms::optional<KeywordLocation>& location, ErrorGuard& errors) const {
         if (this->ignore_keywords.find(keyword) == this->ignore_keywords.end()) {
             std::string msg = "Unknown keyword: " + keyword;
             this->handleError(ParseContext::PARSE_UNKNOWN_KEYWORD, msg, location, errors);

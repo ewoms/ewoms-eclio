@@ -22,11 +22,11 @@
 #include <iostream>
 #include <math.h>
 #include <memory>
-#include <optional>
 #include <numeric>
 #include <stdexcept>
 #include <unistd.h>
 
+#include <ewoms/common/optional.hh>
 #include <ewoms/common/filesystem.hh>
 
 #define BOOST_TEST_MODULE EclipseGridTests
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(ConstructorNORUNSPEC_PINCH) {
     BOOST_CHECK(!grid1.equal( grid2 ));
 
     BOOST_CHECK(!grid1.isPinchActive());
-    BOOST_CHECK_THROW(grid1.getPinchThresholdThickness(), std::bad_optional_access);
+    BOOST_CHECK_THROW(grid1.getPinchThresholdThickness(), Ewoms::bad_optional_access);
     BOOST_CHECK(grid2.isPinchActive());
     BOOST_CHECK_EQUAL(grid2.getPinchThresholdThickness(), 0.2);
     BOOST_CHECK_EQUAL(grid2.getPinchGapMode(), Ewoms::PinchMode::ModeEnum::GAP);

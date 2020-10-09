@@ -18,9 +18,10 @@
 #ifndef EWOMS_ERROR_H
 #define EWOMS_ERROR_H
 
-#include <optional>
 #include <stdexcept>
 #include <string>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/opmlog/keywordlocation.hh>
 
@@ -106,7 +107,7 @@ private:
     // The location member is here for debugging; depending on the msg_fmt
     // passed in the constructor we might not have captured all the information
     // in the location argument passed to the constructor.
-    std::optional<KeywordLocation> location;
+    Ewoms::optional<KeywordLocation> location;
 };
 
 }

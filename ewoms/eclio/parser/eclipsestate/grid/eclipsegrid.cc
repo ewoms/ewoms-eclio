@@ -458,7 +458,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     bool EclipseGrid::isPinchActive( ) const {
-        return m_pinch.has_value();
+        return static_cast<bool>(m_pinch);
     }
 
     double EclipseGrid::getPinchThresholdThickness( ) const {

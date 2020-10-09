@@ -17,7 +17,7 @@ ewoms_project()
 
 # the boost base package is required to compile ewoms-eclio, the unit
 # testing framework is optional
-find_package(Boost REQUIRED OPTIONAL_COMPONENTS unit_test_framework)
+find_package(Boost REQUIRED OPTIONAL_COMPONENTS system unit_test_framework)
 
 # either std::filesystem or std::experimental::filesystem  needs to be supported
 find_package(StdFilesystem REQUIRED)

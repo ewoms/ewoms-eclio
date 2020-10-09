@@ -32,12 +32,12 @@ public:
     UDQToken(const std::string& string_token, const std::vector<std::string>& selector);
 
     const std::vector<std::string>& selector() const;
-    const std::variant<std::string, double>& value() const;
+    const Ewoms::variant<std::string, double>& value() const;
     UDQTokenType type() const;
     std::string str() const;
 private:
     UDQTokenType token_type;
-    std::variant<std::string,double> m_value;
+    Ewoms::variant<std::string,double> m_value;
     std::vector<std::string> m_selector;
 };
 
