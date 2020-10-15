@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(EclipseWriteRestartWellInfo) {
     Ewoms::EclipseState es(deck);
     const Ewoms::EclipseGrid& grid = es.getInputGrid();
     Ewoms::Schedule schedule( deck, es);
-    Ewoms::SummaryConfig summary_config( deck, schedule, es.getTableManager( ));
+    Ewoms::SummaryConfig summary_config( deck, schedule, es.getTableManager( ), es.aquifer());
     const auto num_cells = grid.getCartesianSize();
     Ewoms::EclipseIO eclipseWriter( es,  grid , schedule, summary_config);
     int countTimeStep = schedule.getTimeMap().numTimesteps();

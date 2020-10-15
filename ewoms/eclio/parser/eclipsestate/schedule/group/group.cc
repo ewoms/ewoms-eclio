@@ -21,6 +21,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
+#include <ewoms/eclio/io/rst/group.hh>
 
 #include "../eval_uda.hh"
 
@@ -46,6 +47,11 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     // All groups are initially created as children of the "FIELD" group.
     if (name != "FIELD")
         this->parent_group = "FIELD";
+}
+
+Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
+    Group(rst_group.name, insert_index_arg, init_step_arg, udq_undefined_arg, unit_system_arg)
+{
 }
 
 Group Group::serializeObject()
@@ -274,6 +280,10 @@ void Group::addType(GroupType new_gtype) {
     this->group_type = this->group_type | new_gtype;
 }
 
+const Group::GroupType& Group::getGroupType() const {
+    return this-> group_type;
+}
+
 bool Group::isProductionGroup() const {
     return this->hasType(GroupType::PRODUCTION);
 }
@@ -447,10 +457,6 @@ bool Group::hasInjectionControl(Phase phase) const {
 
 Group::ProductionCMode Group::production_cmode() const {
     return this->production_properties.cmode;
-}
-
-const Group::GroupType& Group::getGroupType() const {
-    return this-> group_type;
 }
 
 bool Group::ProductionControls::has_control(Group::ProductionCMode control) const {

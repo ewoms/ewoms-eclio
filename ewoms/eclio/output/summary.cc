@@ -45,6 +45,7 @@
 #include <ewoms/eclio/output/data/groups.hh>
 #include <ewoms/eclio/output/data/guideratevalue.hh>
 #include <ewoms/eclio/output/data/wells.hh>
+#include <ewoms/eclio/output/data/aquifer.hh>
 
 #include <ewoms/eclio/output/regioncache.hh>
 
@@ -578,31 +579,32 @@ inline quantity srate( const fn_args& args ) {
 }
 
 inline quantity trans_factors ( const fn_args& args ) {
-    const quantity zero = { 0, measure::transmissibility };
+    const quantity zero = { 0.0, measure::transmissibility };
 
-    if( args.schedule_wells.empty() ) return zero;
-    // Like completion rate we need to look
-    // up a connection with offset 0.
+    if (args.schedule_wells.empty())
+        // No wells.  Before simulation starts?
+        return zero;
+
+    auto xwPos = args.wells.find(args.schedule_wells.front().name());
+    if (xwPos == args.wells.end())
+        // No dynamic results for this well.  Not open?
+        return zero;
+
+    // Like completion rate we need to look up a connection with offset 0.
     const size_t global_index = args.num - 1;
+    const auto& connections = xwPos->second.connections;
+    auto connPos = std::find_if(connections.begin(), connections.end(),
+        [global_index](const Ewoms::data::Connection& c)
+    {
+        return c.index == global_index;
+    });
 
-    const auto& well = args.schedule_wells.front();
-    const auto& name = well.name();
-    if( args.wells.count( name ) == 0 ) return zero;
+    if (connPos == connections.end())
+        // No dynamic results for this connection.
+        return zero;
 
-    const auto& grid = args.grid;
-    const auto& connections = well.getConnections();
-
-    const auto& connection = std::find_if(
-        connections.begin(),
-        connections.end(),
-        [=]( const Ewoms::Connection& c ) {
-            return grid.getGlobalIndex(c.getI(), c.getJ(), c.getK()) == global_index;
-        } );
-
-    if( connection == connections.end() ) return zero;
-
-    const auto& v = connection->CF();
-    return { v, measure::transmissibility };
+    // Dynamic connection result's "trans_factor" includes PI-adjustment.
+    return { connPos->trans_factor, measure::transmissibility };
 }
 
 template <Ewoms::data::SegmentPressures::Value ix>
@@ -727,7 +729,24 @@ inline quantity injection_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-inline quantity abondoned_wells( const fn_args& args ) {
+inline quantity abondoned_injectors( const fn_args& args ) {
+    std::size_t count = 0;
+
+    for (const auto& sched_well : args.schedule_wells) {
+        if (sched_well.hasInjected()) {
+            const auto& well_name = sched_well.name();
+            auto well_iter = args.wells.find( well_name );
+            if (well_iter == args.wells.end())
+                continue;
+
+            count += !well_iter->second.flowing();
+        }
+    }
+
+    return { 1.0 * count, measure::identity };
+}
+
+inline quantity abondoned_producers( const fn_args& args ) {
     std::size_t count = 0;
 
     for (const auto& sched_well : args.schedule_wells) {
@@ -907,9 +926,8 @@ inline quantity well_control_mode( const fn_args& args ) {
     // appropriate value depending on well type (producer/injector).
     const auto& curr = xwPos->second.current_control;
     const auto wmctl = curr.isProducer
-        ? ::Ewoms::eclipseControlMode(curr.prod, well.getStatus())
-        : ::Ewoms::eclipseControlMode(curr.inj, well.injectorType(),
-                                    well.getStatus());
+        ? ::Ewoms::eclipseControlMode(curr.prod)
+        : ::Ewoms::eclipseControlMode(curr.inj, well.injectorType());
 
     return { static_cast<double>(wmctl), unit };
 }
@@ -1350,7 +1368,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
-    { "FMWPA", abondoned_wells },
+    { "FMWPA", abondoned_producers },
+    { "FMWIA", abondoned_injectors },
 
     //Field control mode
     { "FMCTP", group_control< false, true,  false, false >},
@@ -1454,6 +1473,12 @@ static const std::unordered_map< std::string, Ewoms::UnitSystem::measure> block_
   {"BGVIS"      , Ewoms::UnitSystem::measure::viscosity},
   {"BVOIL"      , Ewoms::UnitSystem::measure::viscosity},
   {"BOVIS"      , Ewoms::UnitSystem::measure::viscosity},
+};
+
+static const std::unordered_map< std::string, Ewoms::UnitSystem::measure> aquifer_units = {
+    {"AAQT", Ewoms::UnitSystem::measure::liquid_surface_volume},
+    {"AAQR", Ewoms::UnitSystem::measure::liquid_surface_rate},
+    {"AAQP", Ewoms::UnitSystem::measure::pressure},
 };
 
 inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
@@ -1647,6 +1672,7 @@ namespace Evaluator {
         const std::map<std::string, double>& single;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
+        const Ewoms::data::Aquifers& aquifers;
     };
 
     class Base
@@ -1753,6 +1779,34 @@ namespace Evaluator {
         {
             return { this->node_.keyword, this->node_.number };
         }
+    };
+
+    class AquiferValue: public Base
+    {
+    public:
+        explicit AquiferValue(Ewoms::EclIO::SummaryNode node,
+                              const Ewoms::UnitSystem::measure m)
+        : node_(std::move(node))
+        , m_   (m)
+        {}
+
+        void update(const std::size_t    /* sim_step */,
+                    const double         /* stepSize */,
+                    const InputData&        input,
+                    const SimulatorResults& simRes,
+                    Ewoms::SummaryState&      st) const override
+        {
+            auto xPos = simRes.aquifers.find(this->node_.number);
+            if (xPos == simRes.aquifers.end()) {
+                return;
+            }
+
+            const auto& usys = input.es.getUnits();
+            updateValue(this->node_, usys.from_si(this->m_, xPos->second.get(this->node_.keyword)), st);
+        }
+    private:
+        Ewoms::EclIO::SummaryNode  node_;
+        Ewoms::UnitSystem::measure m_;
     };
 
     class RegionValue : public Base
@@ -1991,12 +2045,14 @@ namespace Evaluator {
 
         Descriptor functionRelation();
         Descriptor blockValue();
+        Descriptor aquiferValue();
         Descriptor regionValue();
         Descriptor globalProcessValue();
         Descriptor userDefinedValue();
         Descriptor unknownParameter();
 
         bool isBlockValue();
+        bool isAquiferValue();
         bool isRegionValue();
         bool isGlobalProcessValue();
         bool isFunctionRelation();
@@ -2016,6 +2072,9 @@ namespace Evaluator {
 
         if (this->isBlockValue())
             return this->blockValue();
+
+       if (this->isAquiferValue())
+            return this->aquiferValue();
 
         if (this->isRegionValue())
             return this->regionValue();
@@ -2048,6 +2107,18 @@ namespace Evaluator {
         desc.unit = this->directUnitString();
         desc.evaluator.reset(new BlockValue {
             *this->node_, this->paramUnit_
+        });
+
+        return desc;
+    }
+
+    Factory::Descriptor Factory::aquiferValue()
+    {
+        auto desc = this->unknownParameter();
+
+        desc.unit = this->directUnitString();
+        desc.evaluator.reset(new AquiferValue {
+                *this->node_, this->paramUnit_
         });
 
         return desc;
@@ -2109,6 +2180,18 @@ namespace Evaluator {
 
         // 'node_' represents a block value in an active cell.
         // Capture unit of measure and return true.
+        this->paramUnit_ = pos->second;
+        return true;
+    }
+
+    bool Factory::isAquiferValue()
+    {
+        auto pos = aquifer_units.find(this->node_->keyword);
+        if (pos == aquifer_units.end()) return false;
+
+        // if the aquifer does not exist, should we warn?
+        if ( !this->es_.aquifer().hasAquifer(this->node_->number) ) return false;
+
         this->paramUnit_ = pos->second;
         return true;
     }
@@ -2400,6 +2483,7 @@ public:
               const GlobalProcessParameters&     single_values,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
+              const data::Aquifers&              aquifer_values,
               SummaryState&                      st) const;
 
     void internal_store(const SummaryState& st, const int report_step);
@@ -2502,6 +2586,7 @@ eval(const EclipseState&                es,
      const GlobalProcessParameters&     single_values,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
+     const data::Aquifers&              aquifer_values,
      Ewoms::SummaryState&                 st) const
 {
     const Evaluator::InputData input {
@@ -2509,7 +2594,7 @@ eval(const EclipseState&                es,
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, region_values, block_values
+        well_solution, grp_nwrk_solution, single_values, region_values, block_values, aquifer_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
@@ -2802,7 +2887,8 @@ void Summary::eval(SummaryState&                      st,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
                    const RegionParameters&            region_values,
-                   const BlockValues&                 block_values) const
+                   const BlockValues&                 block_values,
+                   const Ewoms::data::Aquifers&         aquifer_values) const
 {
     validateElapsedTime(secs_elapsed, es, st);
 
@@ -2823,7 +2909,7 @@ void Summary::eval(SummaryState&                      st,
 
     this->pImpl_->eval(es, schedule, sim_step, duration,
                        well_solution, grp_nwrk_solution, single_values,
-                       region_values, block_values, st);
+                       region_values, block_values, aquifer_values, st);
 
     st.update_elapsed(duration);
 }

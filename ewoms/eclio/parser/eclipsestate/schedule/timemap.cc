@@ -17,9 +17,11 @@
 */
 #include "config.h"
 
+#include <stddef.h>
+
 #include <cassert>
 #include <ctime>
-#include <stddef.h>
+#include <exception>
 #include <iomanip>
 
 #include <ewoms/common/fmt/format.h>
@@ -28,6 +30,8 @@
 
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 
+#include <ewoms/eclio/opmlog/opmlog.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
@@ -118,7 +122,16 @@ namespace {
             if (keyword.name() == "DATES") {
                 for (size_t recordIndex = 0; recordIndex < keyword.size(); recordIndex++) {
                     const auto &record = keyword.getRecord(recordIndex);
-                    const std::time_t nextTime = TimeMap::timeFromEclipse(record);
+                    std::time_t nextTime;
+
+                    try {
+                        nextTime = TimeMap::timeFromEclipse(record);
+                    } catch (const std::exception& e) {
+                        const OpmInputError opm_error { e, keyword.location() } ;
+                        OpmLog::error(opm_error.what());
+                        std::throw_with_nested(opm_error);
+                    }
+
                     if (nextTime == this->m_restart_time) {
                         skip = false;
                         restart_found = true;

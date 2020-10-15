@@ -64,6 +64,7 @@ struct RstWell {
     std::array<int, 2> ij;
     std::pair<int,int> k1k2;
     WellType wtype;
+    int well_status;
     int active_control;
     int vfp_table;
     int pred_requested_control;
@@ -86,6 +87,7 @@ struct RstWell {
     float datum_depth;
     float drainage_radius;
     float efficiency_factor;
+    float alq_value;
 
     double oil_rate;
     double water_rate;

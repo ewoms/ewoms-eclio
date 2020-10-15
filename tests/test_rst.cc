@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
     for (const auto& s8: zgrp8)
         zgrp.push_back(s8.c_str());
 
-    Ewoms::RestartIO::RstHeader header(ih,lh,dh);
+    Ewoms::RestartIO::RstHeader header(unit_system,ih,lh,dh);
     for (int ig=0; ig < header.ngroup; ig++) {
         std::size_t zgrp_offset = ig * header.nzgrpz;
         std::size_t igrp_offset = ig * header.nigrpz;
@@ -243,6 +243,7 @@ BOOST_AUTO_TEST_CASE(group_test) {
         std::size_t xgrp_offset = ig * header.nxgrpz;
 
         Ewoms::RestartIO::RstGroup group(unit_system,
+                                       header,
                                        zgrp.data() + zgrp_offset,
                                        igrp.data() + igrp_offset,
                                        sgrp.data() + sgrp_offset,

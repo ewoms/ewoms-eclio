@@ -22,6 +22,8 @@
 #include <boost/test/unit_test.hpp>
 
 #include <utils/eclregressiontest.hh>
+#include <ewoms/eclio/output/vectoritems/group.hh>
+#include <ewoms/eclio/output/vectoritems/intehead.hh>
 
 #include <ewoms/eclio/io/egrid.hh>
 #include <ewoms/eclio/io/esmry.hh>
@@ -96,6 +98,8 @@ void makeInitFile(const std::string &fileName, std::vector<std::string> floatKey
     }
 }
 
+namespace VI = Ewoms::RestartIO::Helpers::VectorItems;
+
 void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
                    const std::vector<std::tuple<int,int,int>>& dates,
                    const std::vector<double>& time,
@@ -108,6 +112,9 @@ void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
 {
     std::vector<int> intehead= {-957688424,201702,1,-2345,-2345,-2345,-2345,-2345,2,3,2,12,6,0,1,-2345,0,10,0,10,11,0,0,0,155,122,130,3,107,112,1,-2345,25,40,58,
                                 -2345,107,112,180,5,0,1,18,24,10,7,2,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,2000,0,0,0,1,0,0,0,0,0,1,10,0,0,12,1,25,1,-2345,-2345,8,8,3,4,2,3,2,1,100};
+
+    intehead.resize(411, 0);
+    intehead[VI::intehead::NWMAXZ] = intehead[VI::intehead::NWELLS];
 
     EclOutput eclTest(fileName, false);
 
@@ -130,6 +137,53 @@ void makeUnrstFile(const std::string &fileName, std::vector<int> seqnum,
         eclTest.write("DOUBHEAD", doubhead);
         eclTest.write("ZGRP", zgrp);
         eclTest.write("IWEL", iwel);
+
+        // The blocks added below for groups, wells and connections respectively
+        // is just adding default data of correct consistent size to be able to
+        // load restart data. The content of these vectors is never used/checked.
+        {
+            std::size_t num_groups = intehead[VI::intehead::NGRP] + 1;
+            std::size_t nigrpz = intehead[VI::intehead::NIGRPZ];
+            std::size_t nsgrpz = intehead[VI::intehead::NSGRPZ];
+            std::size_t nxgrpz = intehead[VI::intehead::NXGRPZ];
+
+            std::vector<int> igrp( num_groups * nigrpz );
+            std::vector<float> sgrp( num_groups * nsgrpz );
+            std::vector<double> xgrp( num_groups * nxgrpz );
+
+            eclTest.write("IGRP", igrp);
+            eclTest.write("SGRP", sgrp);
+            eclTest.write("XGRP", xgrp);
+        }
+        {
+            std::size_t num_wells = intehead[VI::intehead::NWELLS];
+            std::size_t nzwelz = intehead[VI::intehead::NZWELZ];
+            std::size_t nswelz = intehead[VI::intehead::NSWELZ];
+            std::size_t nxwelz = intehead[VI::intehead::NXWELZ];
+
+            std::vector<std::string> zwel( num_wells * nzwelz );
+            std::vector<float> swel( num_wells * nswelz );
+            std::vector<double> xwel( num_wells * nxwelz );
+
+            eclTest.write("ZWEL", zwel);
+            eclTest.write("SWEL", swel);
+            eclTest.write("XWEL", xwel);
+        }
+        {
+            std::size_t num_wells = intehead[VI::intehead::NWELLS];
+            std::size_t num_connections = num_wells * intehead[VI::intehead::NCWMAX];
+            std::size_t niconz = intehead[VI::intehead::NICONZ];
+            std::size_t nsconz = intehead[VI::intehead::NSCONZ];
+            std::size_t nxconz = intehead[VI::intehead::NXCONZ];
+
+            std::vector<int> icon( num_connections * niconz );
+            std::vector<float> scon( num_connections * nsconz );
+            std::vector<double> xcon( num_connections * nxconz );
+
+            eclTest.write("ICON", icon);
+            eclTest.write("SCON", scon);
+            eclTest.write("XCON", xcon);
+        }
         eclTest.write("STARTSOL", std::vector<char>());
 
         for (size_t n = 0; n < solutionNames.size(); n++) {
@@ -582,8 +636,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_1) {
         Date{2000,2, 1},
         Date{2000,3, 1}
     };
-    std::vector<bool> logihead1 = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    std::vector<bool> logihead1(121, false);
+    logihead1[3] = logihead1[8] = true;
     std::vector<double> doubhead1 = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    doubhead1.resize(229, 0.0);
     std::vector<double> time1 = {0, 9, 31,60};
 
     std::vector<std::vector<float>> pressure1 = {{210,210.1,210.2,210.05,210.15,210.25},{200,200.1,200.2,200.05,200.15,200.25},
@@ -612,8 +668,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_1) {
         Date{2000,3, 1}
     };
 
-    std::vector<bool> logihead2 = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    std::vector<bool> logihead2(121, false);
+    logihead2[3] = logihead2[8] = true;
     std::vector<double> doubhead2 = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    doubhead2.resize(229, 0.0);
     std::vector<double> time2 = {0, 9, 31,60};
 
     std::vector<std::vector<float>> pressure2 = {{210,210.1,210.2,210.05,210.15,210.25},{200,200.1,200.2,200.05,200.15,200.25},
@@ -714,8 +772,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_2) {
         Date{2000,3, 1}
     };
 
-    std::vector<bool> logihead1 = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    std::vector<bool> logihead1(121, false);
+    logihead1[3] = logihead1[8] = true;
     std::vector<double> doubhead1 = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    doubhead1.resize(229, 0.0);
     std::vector<double> time1 = {0, 9, 31,60};
 
     std::vector<std::vector<float>> pressure1 = {{210,210.1,210.2,210.05,210.15,210.25},{200,200.1,200.2,200.05,200.15,200.25},
@@ -745,8 +805,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_2) {
         Date{2000,3, 1}
     };
 
-    std::vector<bool> logihead2 = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    std::vector<bool> logihead2(121, false);
+    logihead2[3] = logihead2[8] = true;
     std::vector<double> doubhead2 = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    doubhead2.resize(229, 0.0);
     std::vector<double> time2 = {0, 9, 60};
 
     std::vector<std::vector<float>> pressure2 = {{210,210.1,210.2,210.05,210.15,210.25},{200,200.1,200.2,200.05,200.15,200.25},
@@ -805,8 +867,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_3) {
         Date{2000,2, 1},
         Date{2000,3, 1},
     };
-    std::vector<bool> logihead1 = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    std::vector<bool> logihead1(121, false);
+    logihead1[3] = logihead1[8] = true;
     std::vector<double> doubhead1 = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    doubhead1.resize(229, 0.0);
     std::vector<double> time1 = {0, 9, 31,60};
 
     std::vector<std::vector<float>> pressure1 = {{210,210.1,210.2,210.05,210.15,210.25},{200,200.1,200.2,200.05,200.15,200.25},
@@ -834,8 +898,10 @@ BOOST_AUTO_TEST_CASE(results_unrst_3) {
         Date{2000,2, 1},
         Date{2000,3, 1},
     };
-    std::vector<bool> logihead2 = {false, false,false,true,false,false,false,false,true,false,false,false,false,false,false};
+    std::vector<bool> logihead2(121, false);
+    logihead2[3] = logihead2[8] = true;
     std::vector<double> doubhead2 = {0.0,1,0, 365, 0.10000000149012E+00,0.15000000596046E+00,0.30000000000000E+01};
+    doubhead2.resize(229, 0.0);
     std::vector<double> time2 = {0, 9, 31,60};
 
     std::vector<std::vector<float>> pressure2 = {{210,210.1,210.2,210.05,210.15,210.25},{200,200.1,200.2,200.05,200.15,200.25},

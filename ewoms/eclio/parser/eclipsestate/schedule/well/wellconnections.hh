@@ -23,7 +23,13 @@
 
 #include <ewoms/eclio/utility/activegridcells.hh>
 
+#include <cstddef>
+#include <vector>
+
+#include <stddef.h>
+
 namespace Ewoms {
+    class DeckRecord;
     class EclipseGrid;
     class FieldPropsManager;
     class WellConnections {
@@ -58,6 +64,7 @@ namespace Ewoms {
 
         void add( Connection );
         size_t size() const;
+        bool empty() const;
         const Connection& operator[](size_t index) const;
         const Connection& get(size_t index) const;
         const Connection& getFromIJK(const int i, const int j, const int k) const;
@@ -88,6 +95,21 @@ namespace Ewoms {
 
         Connection::Order ordering() const { return this->m_ordering; }
         std::vector<const Connection *> output(const EclipseGrid& grid) const;
+
+        /// Activate or reactivate WELPI scaling for this connection set.
+        ///
+        /// Following this call, any WELPI-based scaling will apply to all
+        /// connections whose properties are not reset in COMPDAT.
+        ///
+        /// Returns whether or not this call to prepareWellPIScaling() is
+        /// a state change (e.g., no WELPI to active WELPI or WELPI for
+        /// some connections to WELPI for all connections).
+        bool prepareWellPIScaling();
+
+        /// Scale pertinent connections' CF value by supplied value.  Scaling
+        /// factor typically derived from 'WELPI' input keyword and a dynamic
+        /// productivity index calculation.
+        void applyWellPIScaling(const double scaleFactor);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

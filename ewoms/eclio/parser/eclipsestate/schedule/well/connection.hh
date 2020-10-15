@@ -118,6 +118,8 @@ namespace RestartIO {
         void setState(State state);
         void setComplnum(int compnum);
         void scaleWellPi(double wellPi);
+        bool prepareWellPIScaling();
+        void applyWellPIScaling(const double scaleFactor);
         void updateSegmentRST(int segment_number_arg,
                               double center_depth_arg);
         void updateSegment(int segment_number_arg,
@@ -157,6 +159,7 @@ namespace RestartIO {
             serializer(m_perf_range);
             serializer(m_defaultSatTabId);
             serializer(segment_number);
+            serializer(m_subject_to_welpi);
         }
 
     private:
@@ -233,6 +236,9 @@ namespace RestartIO {
         // related segment number
         // 0 means the completion is not related to segment
         int segment_number = 0;
+
+        // Whether or not this Connection is subject to WELPI scaling.
+        bool m_subject_to_welpi = false;
 
         static std::string CTFKindToString(const CTFKind);
     };

@@ -370,6 +370,7 @@ namespace Ewoms
 
         DynamicState<std::shared_ptr<RPTConfig>> rpt_config;
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
+        void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 
         GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const Ewoms::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
@@ -383,6 +384,7 @@ namespace Ewoms
         void addGroupToGroup( const std::string& parent_group, const std::string& child_group, std::size_t timeStep);
         void addGroupToGroup( const std::string& parent_group, const Group& child_group, std::size_t timeStep);
         void addGroup(const std::string& groupName , std::size_t timeStep, const UnitSystem& unit_system);
+        void addGroup(const Group& group, std::size_t timeStep);
         void addWell(const std::string& wellName, const DeckRecord& record, std::size_t timeStep, Connection::Order connection_order, const UnitSystem& unit_system);
         void checkUnhandledKeywords( const SCHEDULESection& ) const;
         void checkIfAllConnectionsIsShut(std::size_t currentStep);
@@ -499,6 +501,7 @@ namespace Ewoms
         void handleWECON    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWEFAC    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELOPEN  (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWELPI    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELSEGS  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELSPECS (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWELTARG  (const HandlerContext&, const ParseContext&, ErrorGuard&);

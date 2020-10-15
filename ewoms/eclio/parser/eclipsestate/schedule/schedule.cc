@@ -25,10 +25,12 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <functional>
 
 #include <ewoms/common/fmt/format.h>
 
 #include <ewoms/eclio/opmlog/logutil.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/utility/numeric/cmp.hh>
 #include <ewoms/common/string.hh>
 #include <ewoms/eclio/utility/opminputerror.hh>
@@ -40,6 +42,7 @@
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/parserkeywords/p.hh>
+#include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -150,7 +153,7 @@ namespace {
         throw;
     }
     catch (const std::exception& std_error) {
-        OpmLog::error(fmt::format("An error occured while creating the reservoir schedule\n",
+        OpmLog::error(fmt::format("An error occured while creating the reservoir schedule\n"
                                   "Internal error: {}", std_error.what()));
         throw;
     }
@@ -274,13 +277,59 @@ namespace {
             rftProperties.push_back( std::make_pair( &keyword , currentStep ));
     }
 
+namespace {
+
+class ScheduleLogger {
+public:
+    explicit ScheduleLogger(bool restart_skip)
+    {
+        if (restart_skip)
+            this->log_function = &OpmLog::note;
+        else
+            this->log_function = &OpmLog::info;
+    }
+
+    void operator()(const std::string& msg) {
+        this->log_function(msg);
+    }
+
+    void info(const std::string& msg) {
+        OpmLog::info(msg);
+    }
+
+    void complete_step(const std::string& msg) {
+        this->step_count += 1;
+        if (this->step_count == this->max_print) {
+            this->log_function(msg);
+            OpmLog::info("Report limit reached, see PRT-file for remaining Schedule initialization.\n");
+            this->log_function = &OpmLog::note;
+        } else
+            this->log_function( msg + "\n");
+    };
+
+    void restart() {
+        this->step_count = 0;
+        this->log_function = &OpmLog::info;
+    }
+
+private:
+    std::size_t step_count = 0;
+    std::size_t max_print  = 5;
+    void (*log_function)(const std::string&);
+};
+
+}
+
     void Schedule::iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext , ErrorGuard& errors, const SCHEDULESection& section , const EclipseGrid& grid,
                                           const FieldPropsManager& fp) {
+
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
         const auto& unit_system = section.unitSystem();
         std::string time_unit = unit_system.name(UnitSystem::measure::time);
         auto convert_time = [&unit_system](double seconds) { return unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::size_t keywordIdx = 0;
+        std::string current_file;
+        const auto& time_map = this->m_timeMap;
         /*
           The keywords in the skiprest_whitelist set are loaded from the
           SCHEDULE section even though the SKIPREST keyword is in action. The
@@ -306,37 +355,62 @@ namespace {
         */
 
         auto restart_skip = currentStep < this->m_timeMap.restart_offset();
+        ScheduleLogger logger(restart_skip);
+        {
+            const auto& schedule_keyword = section.getKeyword<ParserKeywords::SCHEDULE>();
+            const auto& location = schedule_keyword.location();
+            current_file = location.filename;
+            logger.info(fmt::format("Processing dynamic information from\n{} line {}", current_file, location.lineno));
+            if (restart_skip)
+                logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", time_map.restart_offset(), Schedule::formatDate(time_map.restart_time())));
+
+            logger(fmt::format("Initializing report step {}/{} at {} {} {} line {}",
+                               currentStep + 1,
+                               this->size(),
+                               Schedule::formatDate(this->getStartTime()),
+                               convert_time(time_map.getTimePassedUntil(currentStep)),
+                               time_unit,
+                               location.lineno));
+        }
         while (true) {
             if (keywordIdx == section.size())
                 break;
 
             const auto& keyword = section.getKeyword(keywordIdx);
+            const auto& location = keyword.location();
+            if (location.filename != current_file) {
+                logger(fmt::format("Reading from: {} line {}", location.filename, location.lineno));
+                current_file = location.filename;
+            }
+
             if (keyword.name() == "DATES") {
-                const auto& location = keyword.location();
                 checkIfAllConnectionsIsShut(currentStep);
                 for (const auto& record : keyword) {
                     if (restart_skip) {
                         auto deck_time = TimeMap::timeFromEclipse(record);
-                        if (deck_time == this->m_timeMap.restart_time()) {
+                        if (deck_time == time_map.restart_time()) {
                             restart_skip = false;
-                            currentStep = this->m_timeMap.restart_offset();
-                            OpmLog::info(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
+                            currentStep = time_map.restart_offset();
+                            logger.restart();
+                            logger(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
                         } else
-                            OpmLog::info(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
+                            logger(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
                     } else {
                         currentStep += 1;
                         if (currentStep < this->size()) {
-                            const auto& end_date = Schedule::formatDate(this->simTime(currentStep));
-                            const auto& start_date = Schedule::formatDate(this->simTime(currentStep - 1));
+                            const auto& start_date = Schedule::formatDate(this->simTime(currentStep));
                             const auto& days = convert_time(this->stepLength(currentStep - 1));
-                            OpmLog::info(fmt::format("Complete report step {:4}: {} - {} {:3.0f} {} {} line {}",
-                                                     currentStep,
-                                                     start_date,
-                                                     end_date,
-                                                     days,
-                                                     time_unit,
-                                                     location.filename,
-                                                     location.lineno));
+                            const auto& days_total = convert_time(time_map.getTimePassedUntil(currentStep));
+                            logger.complete_step(fmt::format("Complete report step {0} ({1} {2}) at {3} ({4} {2})", currentStep,  days, time_unit, start_date, days_total));
+
+                            logger(fmt::format("Initializing report step {}/{} at {} ({} {}) - line {}",
+                                               currentStep + 1,
+                                               this->size(),
+                                               start_date,
+                                               convert_time(time_map.getTimePassedUntil(currentStep)),
+                                               time_unit,
+                                               location.lineno));
+
                         }
                     }
                 }
@@ -347,12 +421,12 @@ namespace {
             if (keyword.name() == "TSTEP") {
                 checkIfAllConnectionsIsShut(currentStep);
                 if (restart_skip)
-                    OpmLog::info(OpmInputError::format("Skipping TSTEP keyword at {file} line {line}", keyword.location()));
+                    logger(OpmInputError::format("Skipping TSTEP keyword at {file} line {line}", keyword.location()));
                 else {
                     for (const auto& tstep : keyword.getRecord(0).getItem(0).getSIDoubleData()) {
                         currentStep += 1;
                         const auto& end_date = Schedule::formatDate( this->simTime(currentStep) );
-                        OpmLog::info(fmt::format("TSTEP {:4} {} {} -> {}", currentStep, convert_time(tstep), time_unit, end_date));
+                        logger.complete_step(fmt::format("TSTEP {:4} {} {} -> {}", currentStep, convert_time(tstep), time_unit, end_date));
                     }
                 }
                 keywordIdx++;
@@ -360,7 +434,7 @@ namespace {
             }
 
             if (restart_skip && skiprest_whitelist.count(keyword.name()) == 0) {
-                OpmLog::info("Skipping keyword: " + keyword.name() + " while loading SCHEDULE section");
+                logger(fmt::format("Skipping keyword: {} while loading SCHEDULE section", keyword.name()));
                 keywordIdx++;
                 continue;
             }
@@ -388,7 +462,7 @@ namespace {
                 keywordIdx++;
                 continue;
             }
-
+            logger(fmt::format("Processing keyword {} at line {}", location.keyword, location.lineno));
             this->handleKeyword(input_path,
                                 currentStep,
                                 section,
@@ -615,10 +689,7 @@ namespace {
     }
 
     void Schedule::invalidNamePattern( const std::string& namePattern,  std::size_t, const ParseContext& parseContext, ErrorGuard& errors, const DeckKeyword& keyword ) const {
-        std::string msg_fmt = fmt::format("Invalid wellname pattern in {{keyword}}\n"
-                                          "In {{file}} line {{line}}\n"
-                                          "No wells/groups match the pattern: '{}'", namePattern);
-
+        std::string msg_fmt = fmt::format("No wells/groups match the pattern: \'{}\'", namePattern);
         parseContext.handleError( ParseContext::SCHEDULE_INVALID_NAME, msg_fmt, keyword.location(), errors );
     }
 
@@ -901,6 +972,12 @@ namespace {
         dynamic_state.update(reportStep, std::move(group));
     }
 
+    void Schedule::updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step) {
+        auto new_config = std::make_shared<GuideRateConfig>(this->guideRateConfig(report_step));
+        if (new_config->update_model(new_model))
+            this->guide_rate_config.update( report_step, new_config );
+    }
+
     /*
       There are many SCHEDULE keyword which take a wellname as argument. In
       addition to giving a fully qualified name like 'W1' you can also specify
@@ -1061,22 +1138,27 @@ namespace {
         return rst_groups;
     }
 
-    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
-        const std::size_t gseqIndex = this->groups.size();
-
-        groups.insert( std::make_pair( groupName, DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
-        auto group_ptr = std::make_shared<Group>(groupName, gseqIndex, timeStep, this->getUDQConfig(timeStep).params().undefinedValue(), unit_system);
-        auto& dynamic_state = this->groups.at(groupName);
+    void Schedule::addGroup(const Group& group, std::size_t timeStep) {
+        this->groups.insert( std::make_pair( group.name(), DynamicState<std::shared_ptr<Group>>(this->m_timeMap, nullptr)));
+        auto group_ptr = std::make_shared<Group>(group);
+        auto& dynamic_state = this->groups.at(group.name());
         dynamic_state.update(timeStep, group_ptr);
 
-        m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
-        wellgroup_events.insert( std::make_pair(groupName, Events(this->m_timeMap)));
-        this->addWellGroupEvent(groupName, ScheduleEvents::NEW_GROUP, timeStep);
+        this->m_events.addEvent( ScheduleEvents::NEW_GROUP , timeStep );
+        this->wellgroup_events.insert( std::make_pair(group.name(), Events(this->m_timeMap)));
+        this->addWellGroupEvent(group.name(), ScheduleEvents::NEW_GROUP, timeStep);
 
         // All newly created groups are attached to the field group,
         // can then be relocated with the GRUPTREE keyword.
-        if (groupName != "FIELD")
+        if (group.name() != "FIELD")
             this->addGroupToGroup("FIELD", *group_ptr, timeStep);
+    }
+
+    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
+        const std::size_t insert_index = this->groups.size();
+        auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
+        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, unit_system };
+        this->addGroup(group, timeStep);
     }
 
     std::size_t Schedule::numGroups() const {
@@ -1212,22 +1294,6 @@ namespace {
     }
 
     void Schedule::filterConnections(const ActiveGridCells& grid) {
-        for (auto& dynamic_pair : this->wells_static) {
-            auto& dynamic_state = dynamic_pair.second;
-            for (auto& well_pair : dynamic_state.unique()) {
-                if (well_pair.second)
-                    well_pair.second->filterConnections(grid);
-            }
-        }
-
-        for (auto& dynamic_pair : this->wells_static) {
-            auto& dynamic_state = dynamic_pair.second;
-            for (auto& well_pair : dynamic_state.unique()) {
-                if (well_pair.second)
-                    well_pair.second->filterConnections(grid);
-            }
-        }
-
         for (auto& dynamic_pair : this->wells_static) {
             auto& dynamic_state = dynamic_pair.second;
             for (auto& well_pair : dynamic_state.unique()) {
@@ -1473,8 +1539,23 @@ namespace {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
 
-        for (const auto& rst_group : rst_state.groups)
-            this->addGroup(rst_group.name, report_step, unit_system);
+        for (const auto& rst_group : rst_state.groups) {
+            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, unit_system };
+            this->addGroup(group, report_step);
+        }
+
+        for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
+            const auto& rst_group = rst_state.groups[group_index];
+
+            if (rst_group.parent_group == 0)
+                continue;
+
+            if (rst_group.parent_group == rst_state.header.max_groups_in_field)
+                continue;
+
+            const auto& parent_group = rst_state.groups[rst_group.parent_group - 1];
+            this->addGroupToGroup(parent_group.name, rst_group.name, report_step);
+        }
 
         for (const auto& rst_well : rst_state.wells) {
             Ewoms::Well well(rst_well, report_step, unit_system, udq_undefined);

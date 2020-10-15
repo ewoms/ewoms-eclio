@@ -23,6 +23,7 @@
 #include <ewoms/eclio/json/jsonobject.hh>
 #include <iostream>
 
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 #include <ewoms/eclio/parser/utility/typetools.hh>
 #include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/common/filesystem.hh>
@@ -408,7 +409,7 @@ BOOST_AUTO_TEST_CASE(scan_PreMatureTerminator_defaultUsed) {
     ParserItem itemInt("ITEM2", INT);
     itemInt.setDefault(123);
 
-    RawRecord rawRecord1( "" );
+    RawRecord rawRecord1( "", KeywordLocation("KW", "File", 100) );
     UnitSystem unit_system;
     const auto defaulted = itemInt.scan(rawRecord1, unit_system, unit_system);
 
@@ -598,7 +599,7 @@ BOOST_AUTO_TEST_CASE(Scan_All_CorrectIntSetInDeckItem) {
     auto sizeType = ParserItem::item_size::ALL;
     ParserItem itemInt("ITEM", INT); itemInt.setSizeType(sizeType);
 
-    RawRecord rawRecord( "100 443 10*77 10*1 25" );
+    RawRecord rawRecord( "100 443 10*77 10*1 25", KeywordLocation("KW", "File", 100) );
     UnitSystem unit_system;
     const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(23U, deckIntItem.data_size());
@@ -612,7 +613,7 @@ BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
     ParserItem itemInt("ITEM", INT); itemInt.setSizeType(sizeType);
     itemInt.setInputType( ParserItem::itype::INT );
 
-    RawRecord rawRecord( "100 10* 10*1 25" );
+    RawRecord rawRecord( "100 10* 10*1 25", KeywordLocation("KW", "File", 100) );
     UnitSystem unit_system;
     const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(22U, deckIntItem.data_size());
@@ -627,7 +628,7 @@ BOOST_AUTO_TEST_CASE(Scan_All_WithDefaults) {
 BOOST_AUTO_TEST_CASE(Scan_SINGLE_CorrectIntSetInDeckItem) {
     ParserItem itemInt(std::string("ITEM2"), INT);
 
-    RawRecord rawRecord("100 44.3 'Heisann'" );
+    RawRecord rawRecord("100 44.3 'Heisann'", KeywordLocation("KW", "File", 100) );
     UnitSystem unit_system;
     const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(100, deckIntItem.get< int >(0));
@@ -638,7 +639,7 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
     ParserItem itemInt2(std::string("ITEM2"), INT);
     ParserItem itemInt3(std::string("ITEM3"), INT);
 
-    RawRecord rawRecord( "100 443 338932 222.33 'Heisann' " );
+    RawRecord rawRecord( "100 443 338932 222.33 'Heisann' " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL(100, deckIntItem1.get< int >(0));
@@ -653,7 +654,7 @@ BOOST_AUTO_TEST_CASE(Scan_SeveralInts_CorrectIntsSetInDeckItem) {
 BOOST_AUTO_TEST_CASE(Scan_Multiplier_CorrectIntsSetInDeckItem) {
     ParserItem itemInt("ITEM2", INT);
 
-    RawRecord rawRecord( "3*4 " );
+    RawRecord rawRecord( "3*4 " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     itemInt.setSizeType(ParserItem::item_size::ALL);
     const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
@@ -666,7 +667,7 @@ BOOST_AUTO_TEST_CASE(Scan_StarNoMultiplier_ExceptionThrown) {
     ParserItem itemInt("ITEM2", INT);
 
     UnitSystem unit_system;
-    RawRecord rawRecord( "*45 " );
+    RawRecord rawRecord( "*45 ", KeywordLocation("KW", "File", 100) );
     BOOST_CHECK_THROW(itemInt.scan(rawRecord, unit_system, unit_system), std::invalid_argument);
 }
 
@@ -674,7 +675,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleItems_CorrectIntsSetInDeckItem) {
     ParserItem itemInt1(std::string("ITEM1"), INT);
     ParserItem itemInt2(std::string("ITEM2"), INT);
 
-    RawRecord rawRecord( "10 20" );
+    RawRecord rawRecord( "10 20" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
     const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
@@ -687,7 +688,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleDefault_CorrectIntsSetInDeckItem) {
     ParserItem itemInt1("ITEM1", INT); itemInt1.setDefault(10);
     ParserItem itemInt2("ITEM2", INT); itemInt2.setDefault(20);
 
-    RawRecord rawRecord( "* * " );
+    RawRecord rawRecord( "* * " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
     const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
@@ -700,7 +701,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplier_CorrectIntsSetInDeckItem) {
     ParserItem itemInt1("ITEM1", INT);
     ParserItem itemInt2("ITEM2", INT);
 
-    RawRecord rawRecord( "2*30" );
+    RawRecord rawRecord( "2*30" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
     const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
@@ -713,14 +714,14 @@ BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplier_Throw) {
     ParserItem itemInt1("ITEM1", INT);
 
     UnitSystem unit_system;
-    RawRecord rawRecord( "2.10*30" );
+    RawRecord rawRecord( "2.10*30" , KeywordLocation("KW", "File", 100));
     BOOST_CHECK_THROW(itemInt1.scan(rawRecord, unit_system, unit_system), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(Scan_MalformedMultiplierChar_Throw) {
     ParserItem itemInt1("ITEM1", INT);
 
-    RawRecord rawRecord( "210X30" );
+    RawRecord rawRecord( "210X30" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     BOOST_CHECK_THROW(itemInt1.scan(rawRecord, unit_system, unit_system), std::invalid_argument);
 }
@@ -729,7 +730,7 @@ BOOST_AUTO_TEST_CASE(Scan_MultipleWithMultiplierDefault_CorrectIntsSetInDeckItem
     ParserItem itemInt1("ITEM1", INT); itemInt1.setDefault(10);
     ParserItem itemInt2("ITEM2", INT); itemInt2.setDefault(20);
 
-    RawRecord rawRecord( "2*" );
+    RawRecord rawRecord( "2*" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     const auto deckIntItem1 = itemInt1.scan(rawRecord, unit_system, unit_system);
     const auto deckIntItem2 = itemInt2.scan(rawRecord, unit_system, unit_system);
@@ -742,16 +743,16 @@ BOOST_AUTO_TEST_CASE(Scan_RawRecordErrorInRawData_ExceptionThrown) {
     ParserItem itemInt(std::string("ITEM2"), INT);
 
     // Wrong type
-    RawRecord rawRecord2( "333.2 /" );
+    RawRecord rawRecord2( "333.2 /" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     BOOST_CHECK_THROW(itemInt.scan(rawRecord2, unit_system, unit_system), std::invalid_argument);
 
     // Wrong type
-    RawRecord rawRecord3( "100X /" );
+    RawRecord rawRecord3( "100X /" , KeywordLocation("KW", "File", 100));
     BOOST_CHECK_THROW(itemInt.scan(rawRecord3, unit_system, unit_system), std::invalid_argument);
 
     // Wrong type
-    RawRecord rawRecord5( "astring /" );
+    RawRecord rawRecord5( "astring /", KeywordLocation("KW", "File", 100) );
     BOOST_CHECK_THROW(itemInt.scan(rawRecord5, unit_system, unit_system), std::invalid_argument);
 }
 
@@ -779,21 +780,21 @@ BOOST_AUTO_TEST_CASE(InitializeStringItem_FromJsonObject_withDefaultInvalid_thro
 
 BOOST_AUTO_TEST_CASE(init_defaultvalue_defaultset) {
     ParserItem itemString(std::string("ITEM1"), STRING);
-    RawRecord rawRecord0( "'1*'" );
+    RawRecord rawRecord0( "'1*'" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     itemString.setDefault(std::string("DEFAULT"));
     BOOST_CHECK_EQUAL("1*", itemString.scan( rawRecord0, unit_system, unit_system ).get< std::string >(0) );
 
-    RawRecord rawRecord1( "13*" );
+    RawRecord rawRecord1( "13*" , KeywordLocation("KW", "File", 100));
     BOOST_CHECK_EQUAL("DEFAULT" , itemString.scan( rawRecord1, unit_system, unit_system ).get< std::string >(0) );
 
-    RawRecord rawRecord2( "*" );
+    RawRecord rawRecord2( "*" , KeywordLocation("KW", "File", 100));
     BOOST_CHECK_EQUAL("DEFAULT", itemString.scan( rawRecord2, unit_system, unit_system ).get< std::string >(0) );
 }
 
 BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
     ParserItem itemString("ITEMWITHMANY", STRING);
-    RawRecord rawRecord( "'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE 'Foo$*!% BAR' " );
+    RawRecord rawRecord( "'WELL1' FISK BANAN 3*X OPPLEGG_FOR_DATAANALYSE 'Foo$*!% BAR' " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     itemString.setSizeType( ParserItem::item_size::ALL );
     const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
@@ -811,7 +812,7 @@ BOOST_AUTO_TEST_CASE(scan_all_valuesCorrect) {
 
 BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
     ParserItem itemString("ITEMWITHMANY", INT);
-    RawRecord rawRecord( "10*1 10* 10*2 " );
+    RawRecord rawRecord( "10*1 10* 10*2 " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     itemString.setDefault(0);
     itemString.setSizeType( ParserItem::item_size::ALL );
@@ -837,7 +838,7 @@ BOOST_AUTO_TEST_CASE(scan_all_withdefaults) {
 
 BOOST_AUTO_TEST_CASE(scan_single_dataCorrect) {
     ParserItem itemString( "ITEM1", STRING);
-    RawRecord rawRecord( "'WELL1' 'WELL2'" );
+    RawRecord rawRecord( "'WELL1' 'WELL2'" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
@@ -847,7 +848,7 @@ BOOST_AUTO_TEST_CASE(scan_singleWithMixedRecord_dataCorrect) {
     ParserItem itemString("ITEM1", STRING);
     ParserItem itemInt("ITEM1", INT);
     UnitSystem unit_system;
-    RawRecord rawRecord( "2 'WELL1' /" );
+    RawRecord rawRecord( "2 'WELL1' /" , KeywordLocation("KW", "File", 100));
     itemInt.scan(rawRecord, unit_system, unit_system);
     const auto deckItem = itemString.scan(rawRecord, unit_system, unit_system);
     BOOST_CHECK_EQUAL("WELL1", deckItem.get< std::string >(0));
@@ -855,7 +856,7 @@ BOOST_AUTO_TEST_CASE(scan_singleWithMixedRecord_dataCorrect) {
 
 /******************String and int**********************/
 BOOST_AUTO_TEST_CASE(scan_intsAndStrings_dataCorrect) {
-    RawRecord rawRecord( "'WELL1' 2 2 2*3" );
+    RawRecord rawRecord( "'WELL1' 2 2 2*3" , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     ParserItem itemSingleString(std::string("ITEM1"), STRING);
     const auto deckItemWell1 = itemSingleString.scan(rawRecord, unit_system, unit_system);
@@ -992,14 +993,14 @@ BOOST_AUTO_TEST_CASE(parse_validRecord_noThrow) {
     auto record = createSimpleParserRecord();
     ParseContext parseContext;
     ErrorGuard errors;
-    RawRecord raw( Ewoms::string_view( "100 443" ) );
+    RawRecord raw( Ewoms::string_view( "100 443" ), KeywordLocation("KW", "fle", 100) );
     UnitSystem unit_system;
     BOOST_CHECK_NO_THROW(record.parse(parseContext, errors, raw , unit_system, unit_system, KeywordLocation()) );
 }
 
 BOOST_AUTO_TEST_CASE(parse_validRecord_deckRecordCreated) {
     auto record = createSimpleParserRecord();
-    RawRecord rawRecord( Ewoms::string_view( "100 443" ) );
+    RawRecord rawRecord( Ewoms::string_view( "100 443") , KeywordLocation("KW", "fle", 100) );
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem unit_system;
@@ -1030,7 +1031,7 @@ static ParserRecord createMixedParserRecord() {
 
 BOOST_AUTO_TEST_CASE(parse_validMixedRecord_noThrow) {
     auto record = createMixedParserRecord();
-    RawRecord rawRecord( Ewoms::string_view( "1 2 10.0 20.0 4 90.0") );
+    RawRecord rawRecord( Ewoms::string_view( "1 2 10.0 20.0 4 90.0"), KeywordLocation("KW", "fle", 100));
     ParseContext parseContext;
     ErrorGuard errors;
     UnitSystem unit_system;
@@ -1080,7 +1081,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     // according to the RM, this is invalid ("an asterisk by itself is not sufficient"),
     // but it seems to appear in the wild. Thus, we interpret this as "1*"...
     {
-        RawRecord rawRecord( "* " );
+        RawRecord rawRecord( "* " , KeywordLocation("KW", "File", 100));
         UnitSystem unit_system;
         const auto& deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
         const auto& deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
@@ -1092,7 +1093,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     }
 
     {
-        RawRecord rawRecord( "" );
+        RawRecord rawRecord( "" , KeywordLocation("KW", "File", 100));
         UnitSystem unit_system;
         const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
         const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
@@ -1104,7 +1105,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     }
 
     {
-        RawRecord rawRecord( "TRYGVE 10 2.9 " );
+        RawRecord rawRecord( "TRYGVE 10 2.9 " , KeywordLocation("KW", "File", 100));
 
         // let the raw record be "consumed" by the items. Note that the scan() method
         // modifies the rawRecord object!
@@ -1120,7 +1121,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
 
     // again this is invalid according to the RM, but it is used anyway in the wild...
     {
-        RawRecord rawRecord( "* * *" );
+        RawRecord rawRecord( "* * *" , KeywordLocation("KW", "File", 100));
         UnitSystem unit_system;
         const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
         const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
@@ -1132,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(ParseWithDefault_defaultAppliedCorrectInDeck) {
     }
 
     {
-        RawRecord rawRecord(  "3*" );
+        RawRecord rawRecord(  "3*" , KeywordLocation("KW", "File", 100));
         UnitSystem unit_system;
         const auto deckStringItem = itemString.scan(rawRecord, unit_system, unit_system);
         const auto deckIntItem = itemInt.scan(rawRecord, unit_system, unit_system);
@@ -1156,14 +1157,14 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooManyItems_Throws) {
     parserRecord.addItem(itemJ);
     parserRecord.addItem(itemK);
 
-    RawRecord rawRecord(  "3 3 3 " );
+    RawRecord rawRecord(  "3 3 3 " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     BOOST_CHECK_NO_THROW(parserRecord.parse(parseContext, errors, rawRecord, unit_system, unit_system, KeywordLocation()));
 
-    RawRecord rawRecordOneExtra(  "3 3 3 4 " );
+    RawRecord rawRecordOneExtra(  "3 3 3 4 " , KeywordLocation("KW", "File", 100));
     BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordOneExtra, unit_system, unit_system, KeywordLocation()), OpmInputError);
 
-    RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 " );
+    RawRecord rawRecordForgotRecordTerminator(  "3 3 3 \n 4 4 4 ", KeywordLocation("KW", "file", 100) );
     BOOST_CHECK_THROW(parserRecord.parse(parseContext, errors, rawRecordForgotRecordTerminator, unit_system, unit_system, KeywordLocation()), OpmInputError);
 
 }
@@ -1180,7 +1181,7 @@ BOOST_AUTO_TEST_CASE(Parse_RawRecordTooFewItems) {
 
     ParseContext parseContext;
     ErrorGuard errors;
-    RawRecord rawRecord(  "3 3  " );
+    RawRecord rawRecord(  "3 3  " , KeywordLocation("KW", "File", 100));
     UnitSystem unit_system;
     KeywordLocation location;
     // no default specified for the third item, record can be parsed just fine but trying
@@ -1556,7 +1557,7 @@ BOOST_AUTO_TEST_CASE(ParseEmptyRecord) {
     UnitSystem unit_system;
 
     BOOST_CHECK_EQUAL( Raw::FIXED , rawkeyword.getSizeType());
-    rawkeyword.addRecord( RawRecord("") );
+    rawkeyword.addRecord( RawRecord("", KeywordLocation("KW", "File", 100)) );
     record.addItem(item);
     tabdimsKeyword.addRecord( record );
 
@@ -2040,7 +2041,7 @@ FIELD
       section in order to provoke the exception; if at some stage the ewoms ECL parser
       treats section stricter this test might fail due to that reason instead.
     */
-    BOOST_CHECK_THROW( Parser{}.parseString(deck_string), std::invalid_argument);
+    BOOST_CHECK_THROW( Parser{}.parseString(deck_string), OpmInputError);
 }
 
 BOOST_AUTO_TEST_CASE(ParseRSConstT) {

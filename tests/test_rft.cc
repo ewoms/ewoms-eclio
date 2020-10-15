@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(test_RFT)
         const auto numCells = grid.getCartesianSize( );
 
         const Schedule schedule(deck, eclipseState);
-        const SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
+        const SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), eclipseState.aquifer() );
 
         EclipseIO eclipseWriter( eclipseState, grid, schedule, summary_config );
 
@@ -288,12 +288,12 @@ BOOST_AUTO_TEST_CASE(test_RFT)
 
         std::vector<Ewoms::data::Connection> well1_comps(9);
         for (size_t i = 0; i < 9; ++i) {
-            Ewoms::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 1.2e3};
+            Ewoms::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 1.2e3, 4.321};
             well1_comps[i] = std::move(well_comp);
         }
         std::vector<Ewoms::data::Connection> well2_comps(6);
         for (size_t i = 0; i < 6; ++i) {
-            Ewoms::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 0.15};
+            Ewoms::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 0.15, 0.54321};
             well2_comps[i] = std::move(well_comp);
         }
 
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
         const auto numCells = grid.getCartesianSize( );
 
         Schedule schedule(deck, eclipseState);
-        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ));
+        SummaryConfig summary_config( deck, schedule, eclipseState.getTableManager( ), eclipseState.aquifer() );
         SummaryState st(std::chrono::system_clock::now());
         Action::State action_state;
         UDQState udq_state(10);
@@ -416,12 +416,12 @@ BOOST_AUTO_TEST_CASE(test_RFT2)
 
                 std::vector<Ewoms::data::Connection> well1_comps(9);
                 for (size_t i = 0; i < 9; ++i) {
-                    Ewoms::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 3.14e5};
+                    Ewoms::data::Connection well_comp { grid.getGlobalIndex(8,8,i) ,r1, 0.0 , 0.0, (double)i, 0.1*i,0.2*i, 3.14e5, 0.1234};
                     well1_comps[i] = std::move(well_comp);
                 }
                 std::vector<Ewoms::data::Connection> well2_comps(6);
                 for (size_t i = 0; i < 6; ++i) {
-                    Ewoms::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 355.113};
+                    Ewoms::data::Connection well_comp { grid.getGlobalIndex(3,3,i+3) ,r2, 0.0 , 0.0, (double)i, i*0.1,i*0.2, 355.113, 0.9876};
                     well2_comps[i] = std::move(well_comp);
                 }
 
@@ -489,6 +489,7 @@ namespace {
 
             c.cell_saturation_gas   = 0.15;
             c.cell_saturation_water = 0.3 + con/20.0;
+            c.trans_factor          = 0.98765;
         }
 
         return xcon;
@@ -518,6 +519,7 @@ namespace {
 
             c.cell_saturation_gas   = 0.6 - con/20.0;
             c.cell_saturation_water = 0.25;
+            c.trans_factor          = 0.12345;
         }
 
         return xcon;

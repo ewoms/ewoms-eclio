@@ -26,6 +26,7 @@
 #include <list>
 
 namespace Ewoms {
+class KeywordLocation;
 
     /// Class representing the lowest level of the Raw datatypes, a record. A record is simply
     /// a vector containing the record elements, represented as strings. Some logic is present
@@ -33,8 +34,8 @@ namespace Ewoms {
 
     class RawRecord {
     public:
-        RawRecord( const Ewoms::string_view&, bool text);
-        explicit RawRecord( const Ewoms::string_view&);
+        RawRecord( const Ewoms::string_view&, const KeywordLocation&, bool text);
+        explicit RawRecord( const Ewoms::string_view&, const KeywordLocation&);
 
         inline Ewoms::string_view pop_front();
         inline Ewoms::string_view front() const;

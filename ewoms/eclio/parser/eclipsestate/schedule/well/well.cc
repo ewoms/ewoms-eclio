@@ -17,6 +17,8 @@
 */
 #include "config.h"
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/io/rst/well.hh>
@@ -79,8 +81,6 @@ namespace {
 
 namespace {
 
-constexpr int def_well_closed_control = 0;
-
 Connection::Order order_from_int(int int_value) {
     switch(int_value) {
     case 0:
@@ -90,7 +90,24 @@ Connection::Order order_from_int(int int_value) {
     case 2:
         return Connection::Order::INPUT;
     default:
-        throw std::invalid_argument("Invalid integer value: " + std::to_string(int_value) + " encountered when determining connection ordering");
+        throw std::invalid_argument(fmt::format("Invalid integer value: {} encountered when determining connection ordering", int_value));
+    }
+}
+
+Well::Status status_from_int(int int_value) {
+    using Value = RestartIO::Helpers::VectorItems::IWell::Value::Status;
+
+    switch (int_value) {
+        case Value::Shut:
+            return Well::Status::SHUT;
+        case Value::Stop:
+            return Well::Status::STOP;
+        case Value::Open:
+            return Well::Status::OPEN;
+        case Value::Auto:
+            return Well::Status::AUTO;
+    default:
+        throw std::logic_error(fmt::format("integer value: {} could not be converted to a valid state", int_value));
     }
 }
 
@@ -117,7 +134,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     pvt_table(rst_well.pvt_table),
     unit_system(unit_system_arg),
     udq_undefined(udq_undefined_arg),
-    status(rst_well.active_control == def_well_closed_control ? Well::Status::SHUT : Well::Status::OPEN),
+    status(status_from_int(rst_well.well_status)),
     wtype(rst_well.wtype),
     guide_rate(def_guide_rate),
     efficiency_factor(rst_well.efficiency_factor),
@@ -145,6 +162,8 @@ Well::Well(const RestartIO::RstWell& rst_well,
         p->LiquidRate = rst_well.lrat_target ;
         p->ResVRate = rst_well.resv_target ;
         p->VFPTableNumber = rst_well.vfp_table;
+        p->ALQValue = rst_well.alq_value;
+        p->predictionMode = this->prediction_mode;
 
         if (rst_well.orat_target != 0)
             p->addProductionControl( Well::ProducerCMode::ORAT );
@@ -212,6 +231,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     } else {
         auto i = std::make_shared<WellInjectionProperties>(this->unit_system, wname);
         i->VFPTableNumber = rst_well.vfp_table;
+        i->predictionMode = this->prediction_mode;
 
         if (this->status == Well::Status::OPEN) {
             switch (rst_well.active_control) {
@@ -350,6 +370,7 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
+    result.productivity_index = 10.0;
     result.econ_limits = std::make_shared<Ewoms::WellEconProductionLimits>(Ewoms::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
@@ -459,12 +480,33 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return false;
 }
 
+bool Well::updateWellProductivityIndex(const double prodIndex) {
+    const auto update = this->productivity_index != prodIndex;
+    if (update)
+        this->productivity_index = prodIndex;
+
+    // Note order here: We must always run prepareWellPIScaling(), but that operation
+    // *may* not lead to requiring updating the well state, so return 'update' if not.
+    return this->connections->prepareWellPIScaling() || update;
+}
+
 bool Well::updateHasProduced() {
     if (this->wtype.producer() && this->status == Status::OPEN) {
         if (this->has_produced)
             return false;
 
         this->has_produced = true;
+        return true;
+    }
+    return false;
+}
+
+bool Well::updateHasInjected() {
+    if (this->wtype.injector() && this->status == Status::OPEN) {
+        if (this->has_injected)
+            return false;
+
+        this->has_injected= true;
         return true;
     }
     return false;
@@ -626,7 +668,7 @@ bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
 
 bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, const EclipseGrid& grid, const std::vector<int>& pvtnum) {
     bool update = this->updateConnections(connections_arg);
-    if (this->pvt_table == 0 && this->connections->size() > 0) {
+    if (this->pvt_table == 0 && !this->connections->empty()) {
         const auto& lowest = this->connections->lowest();
         auto active_index = grid.activeIndex(lowest.global_index());
         this->pvt_table = pvtnum[active_index];
@@ -734,7 +776,7 @@ double Well::getRefDepth() const {
         return this->ref_depth;
 
     // ref depth was defaulted and we get the depth of the first completion
-    if( this->connections->size() == 0 ) {
+    if( this->connections->empty() ) {
         throw std::invalid_argument( "No completions defined for well: "
                                      + name()
                                      + ". Can not infer reference depth" );
@@ -752,6 +794,22 @@ const std::string& Well::name() const {
 
 void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
+}
+
+void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
+    if (this->connections->empty())
+        // No connections for this well.  Unexpected.
+        return;
+
+    if (!this->productivity_index)
+        // WELPI not activated.  Nothing to do.
+        return;
+
+    if (this->productivity_index == currentEffectivePI)
+        // No change in scaling.
+        return;
+
+    this->connections->applyWellPIScaling(*this->productivity_index / currentEffectivePI);
 }
 
 const WellConnections& Well::getConnections() const {
@@ -1050,6 +1108,10 @@ bool Well::predictionMode() const {
 
 bool Well::hasProduced( ) const {
     return this->has_produced;
+}
+
+bool Well::hasInjected( ) const {
+    return this->has_injected;
 }
 
 bool Well::updatePrediction(bool prediction_mode_arg) {
@@ -1406,6 +1468,11 @@ bool Well::operator==(const Well& data) const {
            this->getFoamProperties() == data.getFoamProperties() &&
            this->getStatus() == data.getStatus() &&
            this->guide_rate == data.guide_rate &&
+           this->solvent_fraction == data.solvent_fraction &&
+           this->hasProduced() == data.hasProduced() &&
+           this->hasInjected() == data.hasInjected() &&
+           this->predictionMode() == data.predictionMode() &&
+           this->productivity_index == data.productivity_index &&
            this->getTracerProperties() == data.getTracerProperties() &&
            this->getProductionProperties() == data.getProductionProperties() &&
            this->getInjectionProperties() == data.getInjectionProperties();
@@ -1414,16 +1481,12 @@ bool Well::operator==(const Well& data) const {
 }
 
 int Ewoms::eclipseControlMode(const Ewoms::Well::InjectorCMode imode,
-                            const Ewoms::InjectorType        itype,
-                            const Ewoms::Well::Status        wellStatus)
+                            const Ewoms::InjectorType        itype)
 {
     using IMode = ::Ewoms::Well::InjectorCMode;
     using Val   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
     using IType = ::Ewoms::InjectorType;
 
-    if (wellStatus == ::Ewoms::Well::Status::SHUT) {
-        return Val::Shut;
-    }
     switch (imode) {
         case IMode::RATE: {
             switch (itype) {
@@ -1438,25 +1501,17 @@ int Ewoms::eclipseControlMode(const Ewoms::Well::InjectorCMode imode,
         case IMode::THP:  return Val::THP;
         case IMode::BHP:  return Val::BHP;
         case IMode::GRUP: return Val::Group;
-
         default:
-            if (wellStatus == ::Ewoms::Well::Status::SHUT) {
-                return Val::Shut;
-            }
+            return Val::WMCtlUnk;
     }
-
     return Val::WMCtlUnk;
 }
 
-int Ewoms::eclipseControlMode(const Ewoms::Well::ProducerCMode pmode,
-                            const Ewoms::Well::Status        wellStatus)
+int Ewoms::eclipseControlMode(const Ewoms::Well::ProducerCMode pmode)
 {
     using PMode = ::Ewoms::Well::ProducerCMode;
     using Val   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
 
-    if (wellStatus == ::Ewoms::Well::Status::SHUT) {
-        return Val::Shut;
-    }
     switch (pmode) {
         case PMode::ORAT: return Val::OilRate;
         case PMode::WRAT: return Val::WatRate;
@@ -1467,13 +1522,9 @@ int Ewoms::eclipseControlMode(const Ewoms::Well::ProducerCMode pmode,
         case PMode::BHP:  return Val::BHP;
         case PMode::CRAT: return Val::CombRate;
         case PMode::GRUP: return Val::Group;
-
         default:
-            if (wellStatus == ::Ewoms::Well::Status::SHUT) {
-                return Val::Shut;
-            }
+            return Val::WMCtlUnk;
     }
-
     return Val::WMCtlUnk;
 }
 
@@ -1496,11 +1547,11 @@ int Ewoms::eclipseControlMode(const Well&         well,
     if (well.isProducer()) {
         const auto& ctrl = well.productionControls(st);
 
-        return eclipseControlMode(ctrl.cmode, well.getStatus());
+        return eclipseControlMode(ctrl.cmode);
     }
     else { // Injector
         const auto& ctrl = well.injectionControls(st);
 
-        return eclipseControlMode(ctrl.cmode, well.injectorType(), well.getStatus());
+        return eclipseControlMode(ctrl.cmode, well.injectorType());
     }
 }

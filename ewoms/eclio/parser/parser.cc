@@ -564,6 +564,32 @@ void ParserState::addPathAlias( const std::string& alias, const std::string& pat
 }
 
 RawKeyword * newRawKeyword(const ParserKeyword& parserKeyword, const std::string& keywordString, ParserState& parserState, const Parser& parser) {
+    for (const auto& keyword : parserKeyword.prohibitedKeywords()) {
+        if (parserState.deck.hasKeyword(keyword)) {
+            parserState
+                .parseContext
+                .handleError(
+                    ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                    fmt::format("Incompatible keyword combination: {} declared when {} is already present.", keywordString, keyword),
+                    KeywordLocation { keywordString, parserState.current_path(), parserState.line() } ,
+                    parserState.errors
+                );
+        }
+    }
+
+    for (const auto& keyword : parserKeyword.requiredKeywords()) {
+        if (!parserState.deck.hasKeyword(keyword)) {
+            parserState
+                .parseContext
+                .handleError(
+                    ParseContext::PARSE_INVALID_KEYWORD_COMBINATION,
+                    fmt::format("Incompatible keyword combination: {} declared, but {} is missing.", keywordString, keyword),
+                    KeywordLocation { keywordString, parserState.current_path(), parserState.line() } ,
+                    parserState.errors
+                );
+        }
+    }
+
     bool raw_string_keyword = parserKeyword.rawStringKeyword();
 
     if( parserKeyword.getSizeType() == SLASH_TERMINATED || parserKeyword.getSizeType() == UNKNOWN || parserKeyword.getSizeType() == DOUBLE_SLASH_TERMINATED) {
@@ -764,7 +790,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
                     Ewoms::string_view line_content = { line.begin(), end_pos};
                     record_buffer = str::update_record_buffer( record_buffer, line_content );
 
-                    RawRecord record(record_buffer, true);
+                    RawRecord record(record_buffer, rawKeyword->location(), true);
                     rawKeyword->addRecord(record);
                     return rawKeyword;
                 } else
@@ -800,11 +826,11 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
             record_buffer = str::update_record_buffer(record_buffer, line);
             if (is_title) {
                 if (record_buffer.empty()) {
-                    RawRecord record("eWoms simulation");
+                    RawRecord record("eWoms simulation", rawKeyword->location());
                     rawKeyword->addRecord(record);
                 } else {
                     std::size_t size = std::distance(record_buffer.begin(),record_buffer.end());
-                    RawRecord record( Ewoms::string_view{ record_buffer.begin(), size });
+                    RawRecord record( Ewoms::string_view{ record_buffer.begin(), size }, rawKeyword->location());
                     rawKeyword->addRecord(record);
                 }
                 return rawKeyword;
@@ -817,7 +843,7 @@ std::unique_ptr<RawKeyword> tryParseKeyword( ParserState& parserState, const Par
 
             if (str::isTerminatedRecordString(record_buffer)) {
                 std::size_t size = std::distance(record_buffer.begin(), record_buffer.end()) - 1;
-                RawRecord record( Ewoms::string_view{ record_buffer.begin(), size });
+                RawRecord record( Ewoms::string_view{ record_buffer.begin(), size }, rawKeyword->location());
                 if (rawKeyword->addRecord(record))
                     return rawKeyword;
 
@@ -907,10 +933,11 @@ bool parseState( ParserState& parserState, const Parser& parser ) {
                   same exception without updating the what() message of the
                   exception.
                 */
+                const OpmInputError opm_error { e, rawKeyword->location() } ;
 
-                OpmLog::error(OpmInputError::formatException(rawKeyword->location(), e));
+                OpmLog::error(opm_error.what());
 
-                throw;
+                std::throw_with_nested(opm_error);
             }
         } else {
             const std::string msg = "The keyword " + rawKeyword->getKeywordName() + " is not recognized - ignored";

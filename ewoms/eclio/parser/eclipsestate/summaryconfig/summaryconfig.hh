@@ -122,6 +122,7 @@ namespace Ewoms {
     class ParseContext;
     class Schedule;
     class TableManager;
+    class AquiferConfig;
 
     class SummaryConfig {
         public:
@@ -133,6 +134,7 @@ namespace Ewoms {
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const TableManager&,
+                           const AquiferConfig&,
                            const ParseContext&,
                            ErrorGuard&);
 
@@ -140,12 +142,14 @@ namespace Ewoms {
             SummaryConfig( const Deck&,
                            const Schedule&,
                            const TableManager&,
+                           const AquiferConfig&,
                            const ParseContext&,
                            T&&);
 
             SummaryConfig( const Deck&,
                            const Schedule&,
-                           const TableManager&);
+                           const TableManager&,
+                           const AquiferConfig&);
 
             SummaryConfig(const keyword_list& kwds,
                           const std::set<std::string>& shortKwds,
@@ -206,6 +210,7 @@ namespace Ewoms {
             SummaryConfig( const Deck& deck,
                            const Schedule& schedule,
                            const TableManager& tables,
+                           const AquiferConfig& aquiferConfig,
                            const ParseContext& parseContext,
                            ErrorGuard& errors,
                            const GridDims& dims);

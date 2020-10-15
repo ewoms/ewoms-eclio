@@ -17,10 +17,15 @@
 */
 #include "config.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <limits>
+#include <cstddef>
 #include <iostream>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 #include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/io/rst/connection.hh>
@@ -175,6 +180,21 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                                 });
         }
         return out;
+    }
+
+    bool WellConnections::prepareWellPIScaling()
+    {
+        auto update = false;
+        for (auto& conn : this->m_connections)
+            update = conn.prepareWellPIScaling() || update;
+
+        return update;
+    }
+
+    void WellConnections::applyWellPIScaling(const double scaleFactor)
+    {
+        for (auto& conn : this->m_connections)
+            conn.applyWellPIScaling(scaleFactor);
     }
 
     void WellConnections::addConnection(int i, int j , int k ,
@@ -408,6 +428,10 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         return m_connections.size();
     }
 
+    bool WellConnections::empty() const {
+        return this->size() == size_t{0};
+    }
+
     const Connection& WellConnections::get(size_t index) const {
         return (*this)[index];
     }
@@ -453,7 +477,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
     }
 
     bool WellConnections::allConnectionsShut( ) const {
-        if (this->size() == 0)
+        if (this->empty())
             return false;
 
         auto shut = []( const Connection& c ) {
@@ -546,9 +570,11 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
     }
 
     void WellConnections::filter(const ActiveGridCells& grid) {
-        auto new_end = std::remove_if(m_connections.begin(),
-                                      m_connections.end(),
-                                      [&grid](const Connection& c) { return !grid.cellActive(c.getI(), c.getJ(), c.getK()); });
+        auto isInactive = [&grid](const Connection& c) {
+            return !grid.cellActive(c.getI(), c.getJ(), c.getK());
+        };
+
+        auto new_end = std::remove_if(m_connections.begin(), m_connections.end(), isInactive);
         m_connections.erase(new_end, m_connections.end());
     }
 

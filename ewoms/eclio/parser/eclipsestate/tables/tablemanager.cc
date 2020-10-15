@@ -30,12 +30,15 @@
 #include <ewoms/eclio/opmlog/logutil.hh>
 #include <ewoms/eclio/opmlog/streamlog.hh>
 
+#include <ewoms/eclio/utility/opminputerror.hh>
+
 #include <ewoms/eclio/parser/parserkeywords/a.hh>
 #include <ewoms/eclio/parser/parserkeywords/e.hh>
 #include <ewoms/eclio/parser/parserkeywords/g.hh>
 #include <ewoms/eclio/parser/parserkeywords/m.hh>
 #include <ewoms/eclio/parser/parserkeywords/o.hh>
 #include <ewoms/eclio/parser/parserkeywords/p.hh>
+#include <ewoms/eclio/parser/parserkeywords/r.hh>
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
 #include <ewoms/eclio/parser/parserkeywords/v.hh>
@@ -591,12 +594,17 @@ namespace Ewoms {
         // the TEMPVD (E300) and RTEMPVD (E300 + E100) keywords are
         // synonymous, but we want to provide only a single cannonical
         // API here, so we jump through some small hoops...
-        if (deck.hasKeyword("TEMPVD") && deck.hasKeyword("RTEMPVD"))
-            throw std::invalid_argument("The TEMPVD and RTEMPVD tables are mutually exclusive!");
-        else if (deck.hasKeyword("TEMPVD"))
-            initSimpleTableContainer<RtempvdTable>(deck, "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
-        else if (deck.hasKeyword("RTEMPVD"))
-            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD" , m_eqldims.getNumEquilRegions());
+        const bool
+            hasTEMPVD  { deck.hasKeyword<ParserKeywords::TEMPVD>()  } ,
+            hasRTEMPVD { deck.hasKeyword<ParserKeywords::RTEMPVD>() } ;
+
+        if (hasTEMPVD && hasRTEMPVD) {
+            throw OpmInputError("The TEMPVD and RTEMPVD tables are mutually exclusive.", deck.getKeyword<ParserKeywords::TEMPVD>().location(), deck.getKeyword<ParserKeywords::RTEMPVD>().location());
+        } else if (hasTEMPVD) {
+            initSimpleTableContainer<RtempvdTable>(deck,  "TEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
+        } else if (hasRTEMPVD) {
+            initSimpleTableContainer<RtempvdTable>(deck, "RTEMPVD", "RTEMPVD", m_eqldims.getNumEquilRegions());
+        }
     }
 
     void TableManager::initGasvisctTables(const Deck& deck) {
@@ -641,8 +649,11 @@ namespace Ewoms {
         const auto& tableKeyword = deck.getKeyword(keywordName);
 
         if (tableKeyword.size() > 2) {
-            std::string msg = "The Parser does currently NOT support the alternating record schema used in PLYSHLOG";
-            throw std::invalid_argument( msg );
+            const std::string reason {
+                "The Parser does currently NOT support the alternating record schema used in PLYSHLOG"
+            } ;
+
+            throw OpmInputError(reason, tableKeyword.location());
         }
 
         for (size_t tableIdx = 0; tableIdx < tableKeyword.size(); tableIdx += 2) {
@@ -675,9 +686,13 @@ namespace Ewoms {
             if (m_plymwinjTables.find(table_number) == m_plymwinjTables.end()) {
                 m_plymwinjTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                throw std::invalid_argument("Duplicated table number "
-                                            + std::to_string(table_number)
-                                            + " for keyword PLYMWINJ found");
+                const std::string reason {
+                    "Duplicated table number " +
+                    std::to_string(table_number) +
+                    " for keyword PLYMWINJ found"
+                } ;
+
+                throw OpmInputError(reason, keyword.location());
             }
         }
     }
@@ -701,9 +716,13 @@ namespace Ewoms {
             if (m_skprwatTables.find(table_number) == m_skprwatTables.end()) {
                 m_skprwatTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                throw std::invalid_argument("Duplicated table number "
-                                            + std::to_string(table_number)
-                                            + " for keyword SKPRWAT found");
+                const std::string reason {
+                    "Duplicated table number " +
+                    std::to_string(table_number) +
+                    " for keyword SKPRWAT found"
+                } ;
+
+                throw OpmInputError(reason, keyword.location());
             }
         }
     }
@@ -727,9 +746,13 @@ namespace Ewoms {
             if (m_skprpolyTables.find(table_number) == m_skprpolyTables.end()) {
                 m_skprpolyTables.insert(std::make_pair(table_number, std::move(table)));
             } else {
-                throw std::invalid_argument("Duplicated table number "
-                                            + std::to_string(table_number)
-                                            + " for keyword SKPRPOLY found");
+                const std::string reason {
+                    "Duplicated table number " +
+                    std::to_string(table_number) +
+                    " for keyword SKPRPOLY found"
+                } ;
+
+                throw OpmInputError(reason, keyword.location());
             }
         }
     }
@@ -792,9 +815,13 @@ namespace Ewoms {
 
         bool isDirectional = deck.hasKeyword<ParserKeywords::RKTRMDIR>();
         if (isDirectional) {
-            const std::string msg = "RKTRMDIR is in the deck. EFlow does not support directional rock compaction mulipliers. \n"
-                                    "Make sure that your ROCKTAB table only has 3 columns";
-            throw std::invalid_argument(msg);
+            const auto& keyword = deck.getKeyword<ParserKeywords::RKTRMDIR>();
+            const std::string reason {
+                "RKTRMDIR is in the deck. EFlow does not support directional rock compaction mulipliers.\n"
+                "Make sure that your ROCKTAB table only has 3 columns)"
+            } ;
+
+            throw OpmInputError(reason, keyword.location());
         }
 
         bool useStressOption = false;
@@ -803,10 +830,12 @@ namespace Ewoms {
             const auto& rockoptsRecord = rockoptsKeyword.getRecord(0);
             const auto& item = rockoptsRecord.getItem<ParserKeywords::ROCKOPTS::METHOD>();
             useStressOption = (item.getTrimmedString(0) == "STRESS");
-        }
-        if (useStressOption) {
-            const std::string msg = "STRESS option is set in ROCKOPTS. EFlow does not support stress option in rock compaction mulipliers";
-            throw std::invalid_argument(msg);
+
+            if (useStressOption) {
+                const std::string reason { "STRESS option is set in ROCKOPTS. EFlow does not support stress option in rock compaction mulipliers" } ;
+
+                throw OpmInputError(reason, rockoptsKeyword.location());
+            }
         }
 
         for (size_t tableIdx = 0; tableIdx < rocktabKeyword.size(); ++tableIdx) {

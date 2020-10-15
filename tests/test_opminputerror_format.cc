@@ -27,8 +27,12 @@
 
 #include <ewoms/eclio/utility/opminputerror.hh>
 
+namespace {
+
 const Ewoms::KeywordLocation location { "MXUNSUPP", "FILENAME.DAT", 42 } ;
 const std::string error_string { "Error encountered" } ;
+
+}
 
 BOOST_AUTO_TEST_CASE(simple) {
     const std::string expected { "MXUNSUPP@FILENAME.DAT:42" } ;
@@ -48,38 +52,18 @@ BOOST_AUTO_TEST_CASE(positional) {
     BOOST_CHECK_EQUAL(formatted, expected);
 }
 
-BOOST_AUTO_TEST_CASE(exception) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
-In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
-
-    const std::string formatted { Ewoms::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
-BOOST_AUTO_TEST_CASE(exception_reason) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
-In FILENAME.DAT line 42.
-Internal error: Runtime Error)" };
-
-    const std::string formatted { Ewoms::OpmInputError::formatException(location, std::runtime_error("Runtime Error")) } ;
-
-    BOOST_CHECK_EQUAL(formatted, expected);
-}
-
 BOOST_AUTO_TEST_CASE(exception_init) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
-    const std::string formatted { Ewoms::OpmInputError(location, std::runtime_error("Runtime Error")).what() } ;
+    const std::string formatted { Ewoms::OpmInputError(std::runtime_error("Runtime Error"), location).what() } ;
 
     BOOST_CHECK_EQUAL(formatted, expected);
 }
 
 BOOST_AUTO_TEST_CASE(exception_nest) {
-    const std::string expected { R"(Problem parsing keyword MXUNSUPP
+    const std::string expected { R"(Problem with keyword MXUNSUPP
 In FILENAME.DAT line 42.
 Internal error: Runtime Error)" };
 
@@ -87,9 +71,32 @@ Internal error: Runtime Error)" };
         try {
             throw std::runtime_error("Runtime Error");
         } catch (const std::exception& e) {
-            std::throw_with_nested(Ewoms::OpmInputError(location, e));
+            std::throw_with_nested(Ewoms::OpmInputError(e, location));
         }
     } catch (const Ewoms::OpmInputError& opm_error) {
         BOOST_CHECK_EQUAL(opm_error.what(), expected);
     }
+}
+
+const Ewoms::KeywordLocation location2 { "MZUNSUPP", "FILENAME.DAT", 45 } ;
+
+BOOST_AUTO_TEST_CASE(exception_multi_1) {
+    const std::string expected { R"(Problem with keyword MXUNSUPP
+In FILENAME.DAT line 42
+Runtime Error)" } ;
+
+    const std::string formatted { Ewoms::OpmInputError("Runtime Error", location).what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
+}
+
+BOOST_AUTO_TEST_CASE(exception_multi_2) {
+    const std::string expected { R"(Problem with keywords
+  MXUNSUPP in FILENAME.DAT, line 42
+  MZUNSUPP in FILENAME.DAT, line 45
+Runtime Error)" } ;
+
+    const std::string formatted { Ewoms::OpmInputError("Runtime Error", location, location2).what() } ;
+
+    BOOST_CHECK_EQUAL(formatted, expected);
 }

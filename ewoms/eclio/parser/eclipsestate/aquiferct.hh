@@ -117,6 +117,8 @@ namespace Ewoms {
         const std::vector<AquiferCT::AQUCT_data>& data() const;
         bool operator==(const AquiferCT& other) const;
 
+        bool hasAquifer(const int aquID) const;
+
         template<class Serializer>
         void serializeOp(Serializer& serializer)
         {

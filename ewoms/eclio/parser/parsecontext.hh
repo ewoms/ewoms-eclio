@@ -192,6 +192,14 @@ class KeywordLocation;
         */
         const static std::string PARSE_MISSING_INCLUDE;
 
+        /*
+          For certain keywords, other, specific keywords are either
+          required or prohibited. When such keywords are found in an
+          invalid combination (missing required or present prohibited
+          keyword), this error situation occurs.
+         */
+        const static std::string PARSE_INVALID_KEYWORD_COMBINATION;
+
         /// Dynamic number of wells exceeds maximum declared in
         /// RUNSPEC keyword WELLDIMS (item 1).
         const static std::string RUNSPEC_NUMWELLS_TOO_LARGE;
@@ -285,6 +293,7 @@ class KeywordLocation;
         const static std::string SUMMARY_UNKNOWN_WELL;
         const static std::string SUMMARY_UNKNOWN_GROUP;
         const static std::string SUMMARY_UNKNOWN_NODE;
+        const static std::string SUMMARY_UNKNOWN_AQUIFER;
         const static std::string SUMMARY_UNHANDLED_KEYWORD;
         const static std::string SUMMARY_UNDEFINED_UDQ;
         const static std::string SUMMARY_UDQ_MISSING_UNIT;

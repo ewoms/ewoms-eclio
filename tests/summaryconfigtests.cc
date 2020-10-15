@@ -80,6 +80,8 @@ static Deck createDeck( const std::string& summary ) {
             " 10 10 10 /\n"
             "REGDIMS\n"
             "  3/\n"
+            "AQUDIMS\n"
+            "1* 1* 1* 1* 3 200 1* 1* /\n"
             "GRID\n"
             "DXV \n 10*400 /\n"
             "DYV \n 10*400 /\n"
@@ -98,6 +100,17 @@ static Deck createDeck( const std::string& summary ) {
             "200*1 300*2 500*3 /\n"
             "FIPREG\n"
             "200*10 300*20 500*30 /\n"
+            "SOLUTION\n"
+            "AQUCT\n"
+            "1    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
+            "2    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
+            "3    2040     1*    1000   .3    3.0e-5     1330     10     360.0   1   1* /\n"
+            "/\n"
+            "AQUANCON\n"
+            "1     1   10     10    2    10  10   'I-'      0.88      1  /\n"
+            "2     9   10     10    10    10  10   'I+'      0.88      1  /\n"
+            "3     9   9      8    10    9   8   'I+'      0.88      1  /\n"
+            "/\n"
             "SCHEDULE\n"
             "WELSPECS\n"
             "     \'W_1\'        \'OP\'   1   1  3.33       \'OIL\'  7* /   \n"
@@ -153,7 +166,7 @@ static SummaryConfig createSummary( std::string input , const ParseContext& pars
     auto deck = createDeck( input );
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors);
-    return SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors );
+    return SummaryConfig(deck, schedule, state.getTableManager(), state.aquifer(), parseContext, errors);
 }
 
 BOOST_AUTO_TEST_CASE(wells_all) {
@@ -172,7 +185,7 @@ BOOST_AUTO_TEST_CASE(EMPTY) {
     auto deck = createDeck_no_wells( "" );
     EclipseState state( deck );
     Schedule schedule(deck, state);
-    SummaryConfig conf(deck, schedule, state.getTableManager());
+    SummaryConfig conf(deck, schedule, state.getTableManager(), state.aquifer());
     BOOST_CHECK_EQUAL( conf.size(), 0U );
 }
 
@@ -184,7 +197,7 @@ BOOST_AUTO_TEST_CASE(wells_missingI) {
     parseContext.update(ParseContext::SUMMARY_UNKNOWN_WELL, InputError::THROW_EXCEPTION);
     EclipseState state( deck );
     Schedule schedule(deck, state, parseContext, errors );
-    BOOST_CHECK_NO_THROW( SummaryConfig( deck, schedule, state.getTableManager( ), parseContext, errors ));
+    BOOST_CHECK_NO_THROW(SummaryConfig(deck, schedule, state.getTableManager(), state.aquifer(), parseContext, errors));
 }
 
 BOOST_AUTO_TEST_CASE(wells_select) {
@@ -245,6 +258,22 @@ BOOST_AUTO_TEST_CASE(blocks) {
                        "/";
     const auto summary = createSummary( input );
     const auto keywords = { "BPR", "BPR" };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
+}
+
+BOOST_AUTO_TEST_CASE(aquifer) {
+    const auto input = "AAQR\n"
+                       " 1 2 /\n"
+                       "AAQT\n"
+                       " 1 /\n"
+                       "AAQP\n"
+                       " 1  2 3/\n";
+    const auto summary = createSummary( input );
+    const auto keywords = { "AAQP", "AAQP", "AAQP", "AAQR", "AAQR", "AAQT" };
     const auto names = sorted_keywords( summary );
 
     BOOST_CHECK_EQUAL_COLLECTIONS(
@@ -401,6 +430,11 @@ BOOST_AUTO_TEST_CASE(summary_ALL) {
     std::vector<std::string> all;
 
     for( std::string keyword: ALL_keywords ) {
+        if(keyword[0]=='A' && keyword !="ALL") {
+           all.push_back(keyword + ":1");
+           all.push_back(keyword + ":2");
+           all.push_back(keyword + ":3");
+        }
         if(keyword[0]=='F') {
             all.push_back(keyword);
         }
@@ -516,6 +550,17 @@ BOOST_AUTO_TEST_CASE( ANALYTICAL_AQUIFERS ) {
                 /
     )";
     const auto summary = createSummary( input );
+
+    const auto keywords = { "AAQP", "AAQP", "AAQPD", "AAQPD", "AAQPD",
+                            "AAQR", "AAQR", "AAQRG", "AAQRG", "AAQRG",
+                            "AAQT", "AAQT", "AAQT", "AAQTD", "AAQTD", "AAQTD",
+                            "AAQTG", "AAQTG", "AAQTG"
+                            };
+    const auto names = sorted_keywords( summary );
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+            keywords.begin(), keywords.end(),
+            names.begin(), names.end() );
 }
 
 BOOST_AUTO_TEST_CASE( NUMERICAL_AQUIFERS ) {
@@ -708,7 +753,7 @@ BOOST_AUTO_TEST_CASE(Summary_Segment)
 
     const auto schedule = Schedule { deck, state};
     const auto summary  = SummaryConfig {
-        deck, schedule, state.getTableManager()
+        deck, schedule, state.getTableManager(), state.aquifer()
     };
 
     // SOFR PROD01 segments 1, 10, 21.
@@ -1052,7 +1097,7 @@ END
     const auto parseContext = ParseContext{};
     const auto state = EclipseState (deck);
     const auto schedule = Schedule (deck, state, parseContext, errors);
-    const auto smry = SummaryConfig(deck, schedule, state.getTableManager(), parseContext, errors );
+    const auto smry = SummaryConfig(deck, schedule, state.getTableManager(), state.aquifer(), parseContext, errors);
 
     BOOST_CHECK_MESSAGE(deck.hasKeyword("GPR"), R"(Deck must have "GPR" keyword)");
     BOOST_CHECK_MESSAGE(smry.hasKeyword("GPR"), R"(SummaryConfig must have "GPR" keyword)");

@@ -458,8 +458,7 @@ END
         return Ewoms::Parser{}.parseString(input);
     }
 
-    Ewoms::data::WellRates
-    wr(const Ewoms::Schedule& sched)
+    Ewoms::data::WellRates wr(const Ewoms::Schedule& sched)
     {
         using o = ::Ewoms::data::Rates::opt;
 
@@ -483,12 +482,15 @@ END
                         .set(o::gas, qg * (float(i) + 1.));
                     c.pressure = 215.;
                     c.index = connections[i].global_index();
+                    c.trans_factor = connections[i].CF();
                 }
+
                 auto seg = Ewoms::data::Segment {};
                 for (std::size_t i = 1; i < 5; i++) {
                     xw["PROD"].segments.insert(std::pair<std::size_t, Ewoms::data::Segment>(i, seg));
                 }
             }
+
             {
                 const auto& well = sched.getWell("WINJ", 0);
                 const auto& connections = well.getConnections();
@@ -505,26 +507,27 @@ END
                     c.rates.set(o::wat, qw * (float(i) + 1.)).set(o::oil, 0.).set(o::gas, 0.);
                     c.pressure = 218.;
                     c.index = connections[i].global_index();
+                    c.trans_factor = connections[i].CF();
                 }
             }
         }
+
         return xw;
     }
-    } // namespace
+} // namespace
 
-    struct SimulationCase {
-        explicit SimulationCase(const Ewoms::Deck& deck)
-            : es(deck)
-            , grid(deck)
-            , sched(deck, es)
-        {
-        }
+struct SimulationCase {
+    explicit SimulationCase(const Ewoms::Deck& deck)
+        : es   (deck)
+        , grid (deck)
+        , sched(deck, es)
+    {}
 
-        // Order requirement: 'es' must be declared/initialised before 'sched'.
-        Ewoms::EclipseState es;
-        Ewoms::EclipseGrid grid;
-        Ewoms::Schedule sched;
-    };
+    // Order requirement: 'es' must be declared/initialised before 'sched'.
+    Ewoms::EclipseState es;
+    Ewoms::EclipseGrid grid;
+    Ewoms::Schedule sched;
+};
 
 // =====================================================================
 

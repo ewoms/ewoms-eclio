@@ -20,6 +20,7 @@
 #define EWOMS_OUTPUT_SUMMARY_H
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
+#include <ewoms/eclio/output/data/aquifer.hh>
 
 #include <map>
 #include <memory>
@@ -67,7 +68,8 @@ public:
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
               const RegionParameters&            region_values = {},
-              const BlockValues&                 block_values  = {}) const;
+              const BlockValues&                 block_values  = {},
+              const data::Aquifers&              aquifers_values = {}) const;
 
     void write() const;
 

@@ -36,6 +36,11 @@ struct RstState {
     RstState(const ::Ewoms::UnitSystem& unit_system,
              const std::vector<int>& intehead,
              const std::vector<bool>& logihead,
+             const std::vector<double>& doubhead);
+
+    RstState(const ::Ewoms::UnitSystem& unit_system,
+             const std::vector<int>& intehead,
+             const std::vector<bool>& logihead,
              const std::vector<double>& doubhead,
              const std::vector<std::string>& zgrp,
              const std::vector<int>& igrp,

@@ -161,11 +161,10 @@ namespace {
             const auto& curr = xw.current_control;
 
             if (curr.isProducer) {
-                return ::Ewoms::eclipseControlMode(curr.prod, well.getStatus());
+                return ::Ewoms::eclipseControlMode(curr.prod);
             }
             else { // injector
-                return ::Ewoms::eclipseControlMode(curr.inj, well.injectorType(),
-                                                 well.getStatus());
+                return ::Ewoms::eclipseControlMode(curr.inj, well.injectorType());
             }
         }
 
@@ -211,6 +210,22 @@ namespace {
             return 0;
         }*/
 
+        int wellStatus(Ewoms::Well::Status status) {
+            using Value = VI::IWell::Value::Status;
+            switch (status) {
+            case Ewoms::Well::Status::OPEN:
+                return Value::Open;
+            case Ewoms::Well::Status::STOP:
+                return Value::Stop;
+            case Ewoms::Well::Status::SHUT:
+                return Value::Shut;
+            case Ewoms::Well::Status::AUTO:
+                return Value::Auto;
+            default:
+                throw std::logic_error("Unhandled enum value");
+            }
+        }
+
         template <typename IWellArray>
         void setCurrentControl(const Ewoms::Well& well,
                                const int        curr,
@@ -245,7 +260,7 @@ namespace {
 
             iWell[Ix::IHead] = well.getHeadI() + 1;
             iWell[Ix::JHead] = well.getHeadJ() + 1;
-
+            iWell[Ix::Status] = wellStatus(well.getStatus());
             // Connections
             {
                 const auto& conn = well.getConnections();
@@ -310,9 +325,10 @@ namespace {
         void dynamicContribShut(IWellArray& iWell)
         {
             using Ix = VI::IWell::index;
+            using Value = VI::IWell::Value::Status;
 
             iWell[Ix::item9 ] = -1000;
-            iWell[Ix::item11] = -1000;
+            iWell[Ix::Status] = Value::Shut;
         }
 
         template <class IWellArray>
@@ -320,6 +336,7 @@ namespace {
                                 IWellArray&             iWell)
         {
             using Ix = VI::IWell::index;
+            using Value = VI::IWell::Value::Status;
 
             const auto any_flowing_conn =
                 std::any_of(std::begin(xw.connections),
@@ -332,9 +349,8 @@ namespace {
             iWell[Ix::item9] = any_flowing_conn
                 ? 0 : -1;
 
-            //item11 = 1 for an open well
-            iWell[Ix::item11] = any_flowing_conn
-                ? 0  : -1;
+            iWell[Ix::Status] = any_flowing_conn
+                ? Value::Stop  : Value::Shut;
 
         }
 
@@ -344,6 +360,7 @@ namespace {
                                 IWellArray&            iWell)
         {
             using Ix = VI::IWell::index;
+            using Value = VI::IWell::Value::Status;
 
             if (wellControlDefined(xw)) {
                 setCurrentControl(well, ctrlMode(well, xw), iWell);
@@ -360,9 +377,8 @@ namespace {
             iWell[Ix::item9] = any_flowing_conn
                 ? iWell[Ix::ActWCtrl] : -1;
 
-            //item11 = 1 for an open well
-            iWell[Ix::item11] = any_flowing_conn
-                ? 1  : -1;
+            iWell[Ix::Status] = any_flowing_conn
+                ? Value::Open : Value::Shut;
         }
     } // IWell
 

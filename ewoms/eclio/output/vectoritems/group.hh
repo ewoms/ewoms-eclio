@@ -48,6 +48,15 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
         };
     } // SGroup
 
+    namespace IGroup {
+    enum index : std::vector<int>::size_type {
+        ProdCMode = 1,
+        WInjCMode = 16,
+        GInjCMode = 21,
+        ParentGroup = 28,
+    };
+    }
+
     namespace XGroup {
         enum index : std::vector<double>::size_type {
             OilPrRate  =  0, // Group's oil production rate

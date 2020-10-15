@@ -88,7 +88,7 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::invalid_argument);
+    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(INVALID_UPTREE_NODE) {
@@ -121,7 +121,7 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::invalid_argument);
+    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(INVALID_VFP_NODE) {
@@ -154,7 +154,7 @@ NODEPROP
 /
 )";
 
-    BOOST_CHECK_THROW( make_schedule(deck_string), std::invalid_argument);
+    BOOST_CHECK_THROW( make_schedule(deck_string), std::exception);
 }
 
 BOOST_AUTO_TEST_CASE(OK) {

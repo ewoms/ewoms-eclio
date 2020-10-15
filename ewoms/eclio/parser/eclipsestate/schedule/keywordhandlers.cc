@@ -17,6 +17,7 @@
  */
 #include "config.h"
 
+#include <exception>
 #include <fnmatch.h>
 #include <functional>
 #include <iostream>
@@ -49,6 +50,7 @@
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/dynamicstate.hh>
@@ -148,8 +150,10 @@ namespace {
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                 connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager);
 
-                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM")))
+                if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
                     this->updateWell(well2, handlerContext.currentStep);
+                    this->addWellGroupEvent(name, ScheduleEvents::WELL_CONNECTIONS_UPDATED, handlerContext.currentStep);
+                }
 
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
             }
@@ -584,9 +588,7 @@ namespace {
         const bool use_free_gas = DeckItem::to_bool( record.getItem<ParserKeywords::GUIDERAT::USE_FREE_GAS>().getTrimmedString(0));
 
         const auto new_model = GuideRateModel(min_calc_delay, phase, A, B, C, D, E, F, allow_increase, damping_factor, use_free_gas);
-        auto new_config = std::make_shared<GuideRateConfig>(this->guideRateConfig(handlerContext.currentStep));
-        if (new_config->update_model(new_model))
-            this->guide_rate_config.update( handlerContext.currentStep, new_config );
+        this->updateGuideRateModel(new_model, handlerContext.currentStep);
     }
 
     void Schedule::handleLIFTOPT(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -947,6 +949,9 @@ namespace {
                 if (well2->updatePrediction(true))
                     update_well = true;
 
+                if (well2->updateHasInjected())
+                    update_well = true;
+
                 if (update_well) {
                     this->updateWell(well2, handlerContext.currentStep);
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
@@ -1006,6 +1011,9 @@ namespace {
                 if (well2->updatePrediction(false))
                     update_well = true;
 
+                if (well2->updateHasInjected())
+                    update_well = true;
+
                 if (update_well) {
                     this->updateWell(well2, handlerContext.currentStep);
                     m_events.addEvent( ScheduleEvents::INJECTION_UPDATE , handlerContext.currentStep );
@@ -1060,6 +1068,48 @@ namespace {
 
     void Schedule::handleWELOPEN (const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         return applyWELOPEN(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+    }
+
+    void Schedule::handleWELPI(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        // Keyword structure
+        //
+        //   WELPI
+        //     W1   123.45 /
+        //     W2*  456.78 /
+        //     *P   111.222 /
+        //     **X* 333.444 /
+        //   /
+        //
+        // Interpretation of productivity index (item 2) depends on well's preferred phase.
+        using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
+        using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
+
+        const auto& usys  = handlerContext.section.unitSystem();
+        const auto  gasPI = UnitSystem::measure::gas_productivity_index;
+        const auto  liqPI = UnitSystem::measure::liquid_productivity_index;
+
+        for (const auto& record : handlerContext.keyword) {
+            const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
+                                                   handlerContext.currentStep);
+
+            if (well_names.empty())
+                this->invalidNamePattern(record.getItem<WELL_NAME>().getTrimmedString(0),
+                                         handlerContext.currentStep, parseContext,
+                                         errors, handlerContext.keyword);
+
+            const auto rawProdIndex = record.getItem<PI>().get<double>(0);
+            for (const auto& well_name : well_names) {
+                // All wells in a single record *hopefully* have the same preferred phase...
+                const auto& well   = this->getWell(well_name, handlerContext.currentStep);
+                const auto  unitPI = (well.getPreferredPhase() == Phase::GAS) ? gasPI : liqPI;
+
+                auto well2 = std::make_shared<Well>(well);
+                if (well2->updateWellProductivityIndex(usys.to_si(unitPI, rawProdIndex)))
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
+
+                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
+            }
+        }
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -1679,7 +1729,7 @@ namespace {
     }
 
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        using handler_function = std::function<void(Schedule*, const HandlerContext&, const ParseContext&, ErrorGuard&)>;
+        using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
             { "BRANPROP", &Schedule::handleBRANPROP },
             { "COMPDAT" , &Schedule::handleCOMPDAT  },
@@ -1733,6 +1783,7 @@ namespace {
             { "WECON"   , &Schedule::handleWECON    },
             { "WEFAC"   , &Schedule::handleWEFAC    },
             { "WELOPEN" , &Schedule::handleWELOPEN  },
+            { "WELPI"   , &Schedule::handleWELPI    },
             { "WELSEGS" , &Schedule::handleWELSEGS  },
             { "WELSPECS", &Schedule::handleWELSPECS },
             { "WELTARG" , &Schedule::handleWELTARG  },
@@ -1756,25 +1807,24 @@ namespace {
             { "WTRACER" , &Schedule::handleWTRACER  },
         };
 
-        const auto function_iterator = handler_functions.find(handlerContext.keyword.name());
-
-        if (function_iterator != handler_functions.end()) {
-            const auto& handler = function_iterator->second;
-
-            try {
-                handler(this, handlerContext, parseContext, errors);
-            } catch (const OpmInputError&) {
-                throw;
-            } catch (const std::exception& e) {
-                OpmLog::error(OpmInputError::formatException(handlerContext.keyword.location(), e));
-
-                throw;
-            }
-
-            return true;
-        } else {
+        auto function_iterator = handler_functions.find(handlerContext.keyword.name());
+        if (function_iterator == handler_functions.end()) {
             return false;
         }
+
+        try {
+            std::invoke(function_iterator->second, this, handlerContext, parseContext, errors);
+        } catch (const OpmInputError&) {
+            throw;
+        } catch (const std::exception& e) {
+            const OpmInputError opm_error { e, handlerContext.keyword.location() } ;
+
+            OpmLog::error(opm_error.what());
+
+            std::throw_with_nested(opm_error);
+        }
+
+        return true;
     }
 
 }

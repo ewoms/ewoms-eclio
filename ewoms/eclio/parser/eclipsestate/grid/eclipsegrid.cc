@@ -26,6 +26,8 @@
 #include <tuple>
 #include <functional>
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/opmlog/opmlog.hh>
 #include <ewoms/eclio/utility/numeric/calculatecellvol.hh>
 
@@ -203,16 +205,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
       m_multzMode(PinchMode::ModeEnum::TOP),
       m_pinchGapMode(PinchMode::ModeEnum::GAP)
 {
-    OpmLog::info("Creating grid");
     if (deck.hasKeyword("GDFILE")){
-
-        if (deck.hasKeyword("COORD")){
-            throw std::invalid_argument("COORD can't be used together with GDFILE");
-        }
-
-        if (deck.hasKeyword("ZCORN")){
-            throw std::invalid_argument("ZCORN can't be used together with GDFILE");
-        }
 
         if (deck.hasKeyword("ACTNUM")){
             if (keywInputBeforeGdfile(deck, "ACTNUM"))  {
@@ -326,6 +319,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     void EclipseGrid::initGridFromEGridFile(Ewoms::EclIO::EclFile& egridfile, std::string fileName){
+        OpmLog::info(fmt::format("Creating grid from: {} ", fileName));
 
         if (!egridfile.hasKey("GRIDHEAD")) {
             throw std::invalid_argument("file: " + fileName + " is not a valid egrid file, GRIDHEAD not found");
@@ -508,7 +502,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     void EclipseGrid::initDVDEPTHZGrid(const Deck& deck) {
-
+        OpmLog::info("Creating grid from keywords DXV, DYV, DZV and DEPTHZ");
         const std::vector<double>& DXV = deck.getKeyword<ParserKeywords::DXV>().getSIDoubleData();
         const std::vector<double>& DYV = deck.getKeyword<ParserKeywords::DYV>().getSIDoubleData();
         const std::vector<double>& DZV = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
@@ -530,6 +524,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
     }
 
     void EclipseGrid::initDTOPSGrid(const Deck& deck) {
+        OpmLog::info("Creating grid from keywords DX, DY, DZ and TOPS");
 
         std::vector<double> DX = EclipseGrid::createDVector(  this->getNXYZ(), 0 , "DX" , "DXV" , deck);
         std::vector<double> DY = EclipseGrid::createDVector(  this->getNXYZ(), 1 , "DY" , "DYV" , deck);
@@ -935,6 +930,7 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
         const std::vector<double>& dthetav = deck.getKeyword<ParserKeywords::DTHETAV>().getSIDoubleData();
         const std::vector<double>& dzv     = deck.getKeyword<ParserKeywords::DZV>().getSIDoubleData();
         const std::vector<double>& tops    = deck.getKeyword<ParserKeywords::TOPS>().getSIDoubleData();
+        OpmLog::info("Creating cylindrical grid from keywords DRV, DTHETAV, DZV and TOPS");
 
         if (drv.size() != this->getNX())
             throw std::invalid_argument("DRV keyword should have exactly " + std::to_string( this->getNX() ) + " elements");
@@ -1068,7 +1064,9 @@ EclipseGrid::EclipseGrid(const Deck& deck, const int * actnum)
                     throw std::invalid_argument("ACTNUM vector has wrong size");
 
                 actnum = actnumVector.data();
-             }
+                OpmLog::info("Creating cornerpoint grid from keywords ZCORN, COORD and ACTNUM");
+             } else
+                OpmLog::info("Creating cornerpoint grid from keywords ZCORN and COORD");
 
             initCornerPointGrid( coord , zcorn, actnum, nullptr );
         }

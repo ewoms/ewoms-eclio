@@ -796,18 +796,20 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
     // IWEL (OP_1)
     {
         using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::Status;
 
         const auto i0 = 0*ih.niwelz;
 
         const auto& iwell = awd.getIWell();
 
         BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9 ], iwell[i0 + Ix::ActWCtrl]);
-        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item11], 1);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::Status], Value::Open);
     }
 
     // IWEL (OP_2)
     {
         using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::Status;
 
         const auto i1 = 1*ih.niwelz;
 
@@ -819,7 +821,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step1)
         // This needs to be corrected in flow
 
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9 ], -1); // No flowing conns.
-        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item11], -1); // No flowing conns.
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::Status], Value::Shut); // No flowing conns.
     }
 
     // XWEL (OP_1)
@@ -943,12 +945,13 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
         const auto& iwell = awd.getIWell();
 
         BOOST_CHECK_EQUAL(iwell[i0 + Ix::item9] , 0);
-        BOOST_CHECK_EQUAL(iwell[i0 + Ix::item11], 0);
+        BOOST_CHECK_EQUAL(iwell[i0 + Ix::Status], 0);
     }
 
     // IWEL (OP_2) -- water injector
     {
         using Ix = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::index;
+        using Value = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::Status;
 
         const auto i1 = 1*ih.niwelz;
 
@@ -956,7 +959,7 @@ BOOST_AUTO_TEST_CASE (Dynamic_Well_Data_Step2)
 
         BOOST_CHECK_EQUAL(iwell[i1 + Ix::item9],
                           iwell[i1 + Ix::ActWCtrl]);
-        BOOST_CHECK_EQUAL(iwell[i1 + Ix::item11], 1);
+        BOOST_CHECK_EQUAL(iwell[i1 + Ix::Status], Value::Open);
     }
 
     // XWEL (OP_1) -- closed producer
@@ -1137,7 +1140,7 @@ BOOST_AUTO_TEST_CASE(WELL_POD) {
     const auto& scon = connectionData.getSConn();
     const auto& xcon = connectionData.getXConn();
 
-    Ewoms::RestartIO::RstHeader header(ih, std::vector<bool>(100), std::vector<double>(1000));
+    Ewoms::RestartIO::RstHeader header(units, ih, std::vector<bool>(100), std::vector<double>(1000));
     std::vector<Ewoms::RestartIO::RstWell> wells;
     std::vector<std::string> zwel;
     for (const auto& s8: zwel8)

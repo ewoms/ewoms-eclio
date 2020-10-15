@@ -32,6 +32,10 @@
 
 namespace Ewoms {
 
+namespace RestartIO {
+struct RstGroup;
+}
+
 class SummaryState;
 class UDQConfig;
 class UDQActive;
@@ -204,6 +208,7 @@ struct ProductionControls {
 
     Group();
     Group(const std::string& group_name, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
+    Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system);
 
     static Group serializeObject();
 

@@ -23,6 +23,10 @@
 #include <vector>
 #include <deque>
 
+#include <ewoms/common/fmt/format.h>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
+
 #include <ewoms/eclio/parser/rawdeck/rawrecord.hh>
 #include <ewoms/eclio/parser/rawdeck/rawconsts.hh>
 
@@ -76,7 +80,7 @@ inline bool even_quotes( const T& str ) {
 
 }
 
-    RawRecord::RawRecord(const Ewoms::string_view& singleRecordString, bool text) :
+    RawRecord::RawRecord(const Ewoms::string_view& singleRecordString, const KeywordLocation& location, bool text) :
         m_sanitizedRecordString( singleRecordString )
     {
 
@@ -85,15 +89,16 @@ inline bool even_quotes( const T& str ) {
         else {
             this->m_recordItems = splitSingleRecordString( m_sanitizedRecordString );
 
-            if( !even_quotes( singleRecordString ) )
-                throw std::invalid_argument("Input string is not a complete record string, "
-                                            "offending string: '" + std::string(singleRecordString) + "'");
+            if( !even_quotes( singleRecordString ) ) {
+                std::string error = fmt::format("Quotes are not balanced in: \"{}\"", std::string(singleRecordString));
+                throw OpmInputError(error, location);
+            }
         }
         this->m_max_size = this->m_recordItems.size();
     }
 
-    RawRecord::RawRecord(const Ewoms::string_view& singleRecordString) :
-        RawRecord(singleRecordString, false)
+    RawRecord::RawRecord(const Ewoms::string_view& singleRecordString, const KeywordLocation& location) :
+        RawRecord(singleRecordString, location, false)
     {}
 
     void RawRecord::push_front( Ewoms::string_view tok, std::size_t count ) {
