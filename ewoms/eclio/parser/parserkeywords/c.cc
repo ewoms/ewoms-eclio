@@ -1881,6 +1881,9 @@ COORD::COORD( ) : ParserKeyword("COORD")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "GDFILE",
+  });
   clearDeckNames();
   addDeckName("COORD");
   {

@@ -279,19 +279,21 @@ const std::string TEMPTVD::keywordName = "TEMPTVD";
 
 TEMPVD::TEMPVD( ) : ParserKeyword("TEMPVD")
 {
-  setSizeType(SLASH_TERMINATED);
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("EQLDIMS","NTEQUL",0);
   addValidSectionName("PROPS");
+  addValidSectionName("SOLUTION");
+  setProhibitedKeywords({
+    "RTEMPVD",
+  });
   clearDeckNames();
   addDeckName("TEMPVD");
   {
      ParserRecord record;
      {
-        ParserItem item("DEPTH", ParserItem::itype::DOUBLE);
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
         item.push_backDimension("Length");
-        record.addItem(item);
-     }
-     {
-        ParserItem item("TEMP", ParserItem::itype::DOUBLE);
         item.push_backDimension("Temperature");
         record.addItem(item);
      }
@@ -299,8 +301,7 @@ TEMPVD::TEMPVD( ) : ParserKeyword("TEMPVD")
   }
 }
 const std::string TEMPVD::keywordName = "TEMPVD";
-const std::string TEMPVD::DEPTH::itemName = "DEPTH";
-const std::string TEMPVD::TEMP::itemName = "TEMP";
+const std::string TEMPVD::DATA::itemName = "DATA";
 
 
 THCGAS::THCGAS( ) : ParserKeyword("THCGAS")
@@ -751,6 +752,9 @@ TRACERKM::TRACERKM( ) : ParserKeyword("TRACERKM")
 {
   setSizeType(UNKNOWN);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "PARTTRAC",
+  });
   clearDeckNames();
   addDeckName("TRACERKM");
   {

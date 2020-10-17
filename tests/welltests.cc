@@ -19,6 +19,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <optional>
 
 #define BOOST_TEST_MODULE WellTest
 #include <boost/test/unit_test.hpp>
@@ -466,13 +467,13 @@ namespace {
             return input;
         }
 
-        Ewoms::Well::WellProductionProperties properties(const std::string& input) {
+    Ewoms::Well::WellProductionProperties properties(const std::string& input, std::optional<VFPProdTable::ALQ_TYPE> alq_type = {}) {
             Ewoms::Parser parser;
             Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
             const auto& record = deck.getKeyword("WCONHIST").getRecord(0);
             Ewoms::Well::WellProductionProperties hist(unit_system, "W");
-            hist.handleWCONHIST(record);
+            hist.handleWCONHIST(alq_type, unit_system, record);
 
             return hist;
         }
@@ -517,14 +518,14 @@ namespace {
         }
 
         Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
-        Ewoms::Well::WellProductionProperties properties(const std::string& input)
+        Ewoms::Well::WellProductionProperties properties(const std::string& input, std::optional<VFPProdTable::ALQ_TYPE> alq_type = {})
         {
             Ewoms::Parser parser;
             auto deck = parser.parseString(input);
             const auto& kwd     = deck.getKeyword("WCONPROD");
             const auto&  record = kwd.getRecord(0);
             Ewoms::Well::WellProductionProperties pred(unit_system, "W");
-            pred.handleWCONPROD("WELL", record);
+            pred.handleWCONPROD(alq_type, unit_system, "WELL", record);
 
             return pred;
         }
@@ -629,7 +630,7 @@ BOOST_AUTO_TEST_CASE(WCH_Rates_NON_Defaulted_VFP)
 {
     Ewoms::SummaryState st(std::chrono::system_clock::now());
     const Ewoms::Well::WellProductionProperties& p =
-        WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table());
+        WCONHIST::properties(WCONHIST::all_defaulted_with_bhp_vfp_table(), VFPProdTable::ALQ_UNDEF);
 
     BOOST_CHECK( !p.hasProductionControl(Ewoms::Well::ProducerCMode::ORAT));
     BOOST_CHECK( !p.hasProductionControl(Ewoms::Well::ProducerCMode::WRAT));
@@ -687,7 +688,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_ORAT_CMode)
 BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 {
     const Ewoms::Well::WellProductionProperties& p =
-        WCONPROD::properties(WCONPROD::thp_CMODE());
+        WCONPROD::properties(WCONPROD::thp_CMODE(), VFPProdTable::ALQ_UNDEF);
 
     BOOST_CHECK( p.hasProductionControl(Ewoms::Well::ProducerCMode::ORAT));
     BOOST_CHECK( p.hasProductionControl(Ewoms::Well::ProducerCMode::WRAT));
@@ -709,7 +710,7 @@ BOOST_AUTO_TEST_CASE(WCONPROD_THP_CMode)
 BOOST_AUTO_TEST_CASE(WCONPROD_BHP_CMode)
 {
     const Ewoms::Well::WellProductionProperties& p =
-        WCONPROD::properties(WCONPROD::bhp_CMODE());
+        WCONPROD::properties(WCONPROD::bhp_CMODE(), VFPProdTable::ALQ_UNDEF);
 
     BOOST_CHECK( p.hasProductionControl(Ewoms::Well::ProducerCMode::ORAT));
     BOOST_CHECK( p.hasProductionControl(Ewoms::Well::ProducerCMode::WRAT));
@@ -1075,7 +1076,7 @@ DATES             -- 2
 /
 
 WCONPROD
- 'P' 'OPEN' 'BHP' 1 2 3 2* 20. 10. 8 13 /
+ 'P' 'OPEN' 'BHP' 1 2 3 2* 20. 10. 0 13 /
 /
 
 WCONINJE

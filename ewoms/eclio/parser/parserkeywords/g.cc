@@ -1419,6 +1419,10 @@ GDFILE::GDFILE( ) : ParserKeyword("GDFILE")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "COORD",
+    "ZCORN",
+  });
   clearDeckNames();
   addDeckName("GDFILE");
   {

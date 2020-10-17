@@ -49,6 +49,7 @@
 
 #include <ewoms/eclio/output/regioncache.hh>
 
+#include <ewoms/common/fmt/format.h>
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -462,20 +463,20 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
-inline quantity alqrate( const fn_args& args ) {
+inline quantity glir( const fn_args& args ) {
     const quantity zero = { 0.0, measure::gas_surface_rate };
 
-    if (args.schedule_wells.empty()) {
-        // No wells.  Before simulation starts?
+    if (args.schedule_wells.empty())
         return zero;
-    }
 
     const auto& well = args.schedule_wells.front();
     auto xwPos = args.wells.find(well.name());
-    if (xwPos == args.wells.end()) {
+    if (xwPos == args.wells.end())
         return zero;
-    }
 
+    // This is bit dangerous, exactly how the ALQ value should be interpreted
+    // varies between the different VFP tables. The code here assumes - without
+    // checking - that it represents gas lift rate.
     return { xwPos->second.rates.get(rt::alq, 0.0), measure::gas_surface_rate };
 }
 
@@ -729,35 +730,25 @@ inline quantity injection_history( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
-inline quantity abondoned_injectors( const fn_args& args ) {
+template< bool injection >
+inline quantity abondoned_well( const fn_args& args ) {
     std::size_t count = 0;
 
     for (const auto& sched_well : args.schedule_wells) {
-        if (sched_well.hasInjected()) {
-            const auto& well_name = sched_well.name();
-            auto well_iter = args.wells.find( well_name );
-            if (well_iter == args.wells.end())
-                continue;
+        if (injection && !sched_well.hasInjected())
+            continue;
 
-            count += !well_iter->second.flowing();
+        if (!injection && !sched_well.hasProduced())
+            continue;
+
+        const auto& well_name = sched_well.name();
+        auto well_iter = args.wells.find( well_name );
+        if (well_iter == args.wells.end()) {
+            count += 1;
+            continue;
         }
-    }
 
-    return { 1.0 * count, measure::identity };
-}
-
-inline quantity abondoned_producers( const fn_args& args ) {
-    std::size_t count = 0;
-
-    for (const auto& sched_well : args.schedule_wells) {
-        if (sched_well.hasProduced()) {
-            const auto& well_name = sched_well.name();
-            auto well_iter = args.wells.find( well_name );
-            if (well_iter == args.wells.end())
-                continue;
-
-            count += !well_iter->second.flowing();
-        }
+        count += !well_iter->second.flowing();
     }
 
     return { 1.0 * count, measure::identity };
@@ -1034,7 +1025,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
-    { "WGLIR", alqrate },
+    { "WGLIR", glir},
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
     { "WSPR", rate< rt::brine, producer > },
@@ -1116,7 +1107,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
     { "GGPR", rate< rt::gas, producer > },
-    { "GGLIR", alqrate },
+    { "GGLIR", glir },
     { "GNPR", rate< rt::solvent, producer > },
     { "GCPR", rate< rt::polymer, producer > },
     { "GSPR", rate< rt::brine, producer > },
@@ -1270,7 +1261,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
-    { "FGLIR", alqrate },
+    { "FGLIR", glir },
     { "FNPR", rate< rt::solvent, producer > },
     { "FCPR", rate< rt::polymer, producer > },
     { "FSPR", rate< rt::brine, producer > },
@@ -1368,8 +1359,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FMWIN", flowing< injector > },
     { "FMWPR", flowing< producer > },
     { "FVPRT", res_vol_production_target },
-    { "FMWPA", abondoned_producers },
-    { "FMWIA", abondoned_injectors },
+    { "FMWPA", abondoned_well< producer > },
+    { "FMWIA", abondoned_well< injector >},
 
     //Field control mode
     { "FMCTP", group_control< false, true,  false, false >},

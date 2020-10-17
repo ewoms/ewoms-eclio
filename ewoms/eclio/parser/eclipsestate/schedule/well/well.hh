@@ -23,10 +23,10 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+#include <ewoms/common/optional.hh>
 
 #include <stddef.h>
 
@@ -42,6 +42,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welltracerproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellpolymerproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welleconproductionlimits.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
 #include <ewoms/eclio/parser/units/units.hh>
 
 #include <ewoms/eclio/utility/activegridcells.hh>
@@ -368,8 +369,8 @@ public:
 
         // this is used to check whether the specified control mode is an effective history matching production mode
         static bool effectiveHistoryProductionControl(ProducerCMode cmode);
-        void handleWCONPROD( const std::string& well, const DeckRecord& record);
-        void handleWCONHIST( const DeckRecord& record);
+        void handleWCONPROD( const Ewoms::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const std::string& well, const DeckRecord& record);
+        void handleWCONHIST( const Ewoms::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record);
         void handleWELTARG( WELTARGCMode cmode, const UDAValue& new_arg, double SiFactorP);
         void resetDefaultBHPLimit();
         void clearControls();
@@ -407,6 +408,7 @@ public:
         void init_rates( const DeckRecord& record );
 
         void init_history(const DeckRecord& record);
+        void init_vfp(const Ewoms::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system, const DeckRecord& record);
 
         WellProductionProperties(const DeckRecord& record);
 
@@ -618,7 +620,7 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
-    std::optional<double> productivity_index{ std::nullopt };
+    Ewoms::optional<double> productivity_index{ Ewoms::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;

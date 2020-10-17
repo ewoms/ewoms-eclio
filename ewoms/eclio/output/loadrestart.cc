@@ -65,7 +65,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/range.hpp>
+#include <boost/range/iterator_range.hpp>
 
 namespace VI = ::Ewoms::RestartIO::Helpers::VectorItems;
 

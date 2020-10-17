@@ -1437,6 +1437,9 @@ AQUCT::AQUCT( ) : ParserKeyword("AQUCT")
   addValidSectionName("PROPS");
   addValidSectionName("SCHEDULE");
   addValidSectionName("SOLUTION");
+  setRequiredKeywords({
+    "AQUDIMS",
+  });
   clearDeckNames();
   addDeckName("AQUCT");
   {

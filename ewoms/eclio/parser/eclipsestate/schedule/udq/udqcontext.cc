@@ -17,6 +17,8 @@
 */
 #include "config.h"
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqcontext.hh>
@@ -86,7 +88,13 @@ bool is_udq(const std::string& key) {
 
             return Ewoms::nullopt;
         }
-        return this->summary_state.get_well_var(well, var);
+        if (this->summary_state.has_well_var(var)) {
+            if (this->summary_state.has_well_var(well, var))
+                return this->summary_state.get_well_var(well, var);
+            else
+                return Ewoms::nullopt;
+        }
+        throw std::logic_error(fmt::format("Summary well variable: {} not registered", var));
     }
 
     Ewoms::optional<double> UDQContext::get_group_var(const std::string& group, const std::string& var) const {
@@ -96,7 +104,14 @@ bool is_udq(const std::string& key) {
 
             return Ewoms::nullopt;
         }
-        return this->summary_state.get_group_var(group, var);
+
+        if (this->summary_state.has_group_var(var)) {
+            if (this->summary_state.has_group_var(group, var))
+                return this->summary_state.get_group_var(group, var);
+            else
+                return Ewoms::nullopt;
+        }
+        throw std::logic_error(fmt::format("Summary group variable: {} not registered", var));
     }
 
     std::vector<std::string> UDQContext::wells() const {

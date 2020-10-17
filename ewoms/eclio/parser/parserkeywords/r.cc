@@ -2035,6 +2035,9 @@ RTEMPVD::RTEMPVD( ) : ParserKeyword("RTEMPVD")
   initSizeKeyword("EQLDIMS","NTEQUL",0);
   addValidSectionName("PROPS");
   addValidSectionName("SOLUTION");
+  setProhibitedKeywords({
+    "TEMPVD",
+  });
   clearDeckNames();
   addDeckName("RTEMPVD");
   {

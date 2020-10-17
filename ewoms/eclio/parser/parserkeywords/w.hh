@@ -325,7 +325,7 @@ namespace ParserKeywords {
            static const int defaultValue;
        };
 
-       class LIFT {
+       class ALQ {
        public:
            static const std::string itemName;
            static const double defaultValue;

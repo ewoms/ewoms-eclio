@@ -21,6 +21,7 @@
 
 #include <array>
 #include <vector>
+#include <ewoms/eclio/parser/units/dimension.hh>
 
 namespace Ewoms {
 
@@ -81,6 +82,7 @@ public:
                  const std::vector<double>& gfr_data,
                  const std::vector<double>& alq_data,
                  const array_type& data);
+    static Dimension ALQDimension(const ALQ_TYPE& alq_type, const UnitSystem& unit_system);
 
     static VFPProdTable serializeObject();
 

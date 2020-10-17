@@ -222,12 +222,7 @@ namespace ParserKeywords {
        TEMPVD();
        static const std::string keywordName;
 
-       class DEPTH {
-       public:
-           static const std::string itemName;
-       };
-
-       class TEMP {
+       class DATA {
        public:
            static const std::string itemName;
        };

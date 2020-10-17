@@ -1934,6 +1934,9 @@ DX::DX( ) : ParserKeyword("DX")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "DXV",
+  });
   clearDeckNames();
   addDeckName("DX");
   {
@@ -1955,6 +1958,9 @@ DXV::DXV( ) : ParserKeyword("DXV")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "DX",
+  });
   clearDeckNames();
   addDeckName("DXV");
   {
@@ -1976,6 +1982,9 @@ DY::DY( ) : ParserKeyword("DY")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "DYV",
+  });
   clearDeckNames();
   addDeckName("DY");
   {
@@ -2054,6 +2063,9 @@ DYV::DYV( ) : ParserKeyword("DYV")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "DY",
+  });
   clearDeckNames();
   addDeckName("DYV");
   {

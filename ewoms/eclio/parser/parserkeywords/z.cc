@@ -15,6 +15,9 @@ ZCORN::ZCORN( ) : ParserKeyword("ZCORN")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("GRID");
+  setProhibitedKeywords({
+    "GDFILE",
+  });
   clearDeckNames();
   addDeckName("ZCORN");
   {

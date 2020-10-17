@@ -817,6 +817,7 @@ namespace {
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -828,12 +829,17 @@ namespace {
             for (const auto& well_name : well_names) {
                 updateWellStatus( well_name , handlerContext.currentStep , status, false );
 
+                const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+                Ewoms::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 const bool switching_from_injector = !well2->isProducer();
                 auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
                 bool update_well = false;
-                properties->handleWCONHIST(record);
+
+                if (table_nr != 0)
+                    alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
+                properties->handleWCONHIST(alq_type, unit_system, record);
 
                 if (switching_from_injector) {
                     properties->resetDefaultBHPLimit();
@@ -878,6 +884,7 @@ namespace {
     }
 
     void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -888,7 +895,8 @@ namespace {
 
             for (const auto& well_name : well_names) {
                 updateWellStatus(well_name, handlerContext.currentStep, status, false);
-
+                const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+                Ewoms::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 const bool switching_from_injector = !well2->isProducer();
@@ -898,7 +906,9 @@ namespace {
                 if (well2->isAvailableForGroupControl())
                     properties->addProductionControl(Well::ProducerCMode::GRUP);
 
-                properties->handleWCONPROD(well_name, record);
+                if (table_nr != 0)
+                    alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
+                properties->handleWCONPROD(alq_type, unit_system, well_name, record);
 
                 if (switching_from_injector)
                     properties->resetDefaultBHPLimit();
@@ -1813,7 +1823,8 @@ namespace {
         }
 
         try {
-            std::invoke(function_iterator->second, this, handlerContext, parseContext, errors);
+            const auto& fn = function_iterator->second;
+            (this->*fn)(handlerContext, parseContext, errors);
         } catch (const OpmInputError&) {
             throw;
         } catch (const std::exception& e) {
