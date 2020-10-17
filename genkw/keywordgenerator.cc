@@ -34,7 +34,27 @@
 namespace {
 
 const std::string sourceHeader =
+    "// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-\n"
+    "// vi: set et ts=4 sw=4 sts=4:\n"
+    "/*\n"
+    "  This file is part of the eWoms project.\n"
+    "\n"
+    "  eWoms is free software: you can redistribute it and/or modify\n"
+    "  it under the terms of the GNU General Public License as published by\n"
+    "  the Free Software Foundation, either version 3 of the License, or\n"
+    "  (at your option) any later version.\n"
+    "\n"
+    "  eWoms is distributed in the hope that it will be useful,\n"
+    "  but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+    "  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+    "  GNU General Public License for more details.\n"
+    "\n"
+    "  You should have received a copy of the GNU General Public License\n"
+    "  along with eWoms.  If not, see <http://www.gnu.org/licenses/>.\n"
+    "*/\n"
+    "// THIS IS AN AUTOMATICALLY GENERATED FILE! DO NOT EDIT IT MANUALLY!\n"
     "#include \"config.h\"\n"
+    "\n"
     "#include <ewoms/eclio/parser/deck/udavalue.hh>\n"
     "#include <ewoms/eclio/parser/parseritem.hh>\n"
     "#include <ewoms/eclio/parser/parserrecord.hh>\n"
@@ -49,7 +69,27 @@ namespace Ewoms {
     }
 
     std::string KeywordGenerator::headerHeader(const std::string& suffix) {
-        std::string header = "#ifndef PARSER_KEYWORDS_" + boost::to_upper_copy(suffix) + "_HH\n"
+        std::string header =
+            "// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-\n"
+            "// vi: set et ts=4 sw=4 sts=4:\n"
+            "/*\n"
+            "  This file is part of the eWoms project.\n"
+            "\n"
+            "  eWoms is free software: you can redistribute it and/or modify\n"
+            "  it under the terms of the GNU General Public License as published by\n"
+            "  the Free Software Foundation, either version 3 of the License, or\n"
+            "  (at your option) any later version.\n"
+            "\n"
+            "  eWoms is distributed in the hope that it will be useful,\n"
+            "  but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+            "  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+            "  GNU General Public License for more details.\n"
+            "\n"
+            "  You should have received a copy of the GNU General Public License\n"
+            "  along with eWoms.  If not, see <http://www.gnu.org/licenses/>.\n"
+            "*/\n"
+            "// THIS IS AN AUTOMATICALLY GENERATED FILE! DO NOT EDIT IT MANUALLY!\n"
+            "#ifndef PARSER_KEYWORDS_" + boost::to_upper_copy(suffix) + "_HH\n"
             "#define PARSER_KEYWORDS_" + boost::to_upper_copy(suffix) + "_HH\n"
             "#include <ewoms/eclio/parser/parserkeyword.hh>\n"
             "namespace Ewoms {\n"
@@ -78,6 +118,26 @@ namespace Ewoms {
 
     void KeywordGenerator::updateInitSource(const KeywordLoader& loader , const std::string& sourceFile ) const {
         std::stringstream newSource;
+        newSource <<
+            "// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-\n"
+            "// vi: set et ts=4 sw=4 sts=4:\n"
+            "/*\n"
+            "  This file is part of the eWoms project.\n"
+            "\n"
+            "  eWoms is free software: you can redistribute it and/or modify\n"
+            "  it under the terms of the GNU General Public License as published by\n"
+            "  the Free Software Foundation, either version 3 of the License, or\n"
+            "  (at your option) any later version.\n"
+            "\n"
+            "  eWoms is distributed in the hope that it will be useful,\n"
+            "  but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+            "  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+            "  GNU General Public License for more details.\n"
+            "\n"
+            "  You should have received a copy of the GNU General Public License\n"
+            "  along with eWoms.  If not, see <http://www.gnu.org/licenses/>.\n"
+            "*/\n"
+            "// THIS IS AN AUTOMATICALLY GENERATED FILE! DO NOT EDIT IT MANUALLY!\n";
         newSource << "#include \"config.h\"" << std::endl;
         newSource << "#include <ewoms/eclio/parser/parser.hh>" << std::endl;
         for(const auto& kw_pair : loader) {
@@ -157,7 +217,28 @@ namespace Ewoms {
             stream << "#include <ewoms/eclio/parser/parserkeywords/" << first_char << ".hh>" << std::endl;
         }
 
-        stream << R"(
+        stream <<
+            "// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-\n"
+            "// vi: set et ts=4 sw=4 sts=4:\n"
+            "/*\n"
+            "  This file is part of the eWoms project.\n"
+            "\n"
+            "  eWoms is free software: you can redistribute it and/or modify\n"
+            "  it under the terms of the GNU General Public License as published by\n"
+            "  the Free Software Foundation, either version 3 of the License, or\n"
+            "  (at your option) any later version.\n"
+            "\n"
+            "  eWoms is distributed in the hope that it will be useful,\n"
+            "  but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+            "  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+            "  GNU General Public License for more details.\n"
+            "\n"
+            "  You should have received a copy of the GNU General Public License\n"
+            "  along with eWoms.  If not, see <http://www.gnu.org/licenses/>.\n"
+            "*/\n"
+            "// THIS IS AN AUTOMATICALLY GENERATED FILE! DO NOT EDIT IT MANUALLY!\n"
+
+               << R"(
 
 #define BOOST_TEST_MODULE GeneratedKeywordTest
 #include <ewoms/common/filesystem.hh>
