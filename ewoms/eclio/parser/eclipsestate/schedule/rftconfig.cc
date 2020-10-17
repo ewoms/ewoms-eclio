@@ -1,5 +1,6 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
-
   This file is part of the eWoms project.
 
   eWoms is free software: you can redistribute it and/or modify
@@ -8,7 +9,7 @@
   (at your option) any later version.
 
   eWoms is distributed in the hope that it will be useful,
-
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 

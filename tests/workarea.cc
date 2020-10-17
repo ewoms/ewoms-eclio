@@ -1,5 +1,6 @@
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
-
   This file is part of the eWoms project.
 
   eWoms is free software: you can redistribute it and/or modify
@@ -16,9 +17,6 @@
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "config.h"
-
-// NOTE: This file is inteded to be copy-pasted into user code
-// through an #include statement.
 
 #include <string>
 

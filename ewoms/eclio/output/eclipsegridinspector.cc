@@ -1,21 +1,6 @@
-//===========================================================================
-//
-// File: EclipseGridInspector.C
-//
-// Created: Mon Jun  2 12:17:51 2008
-//
-// Author: Atgeirr F Rasmussen <atgeirr@sintef.no>
-//
-// $Date$
-//
-// $Revision$
-//
-// Revision: $Id: EclipseGridInspector.C,v 1.2 2008/08/18 14:16:13 atgeirr Exp $
-//
-//===========================================================================
-
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
-
   This file is part of the eWoms project.
 
   eWoms is free software: you can redistribute it and/or modify
@@ -31,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

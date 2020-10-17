@@ -1,20 +1,6 @@
-//===========================================================================
-//
-// File: ParameterMapItem.hpp
-//
-// Created: Tue Jun  2 19:05:54 2009
-//
-// Author(s): Bård Skaflestad     <bard.skaflestad@sintef.no>
-//            Atgeirr F Rasmussen <atgeirr@sintef.no>
-//
-// $Date$
-//
-// $Revision$
-//
-//===========================================================================
-
+// -*- mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// vi: set et ts=4 sw=4 sts=4:
 /*
-
   This file is part of the eWoms project.
 
   eWoms is free software: you can redistribute it and/or modify
@@ -30,7 +16,6 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #ifndef EWOMS_PARAMETERMAPITEM_H
 #define EWOMS_PARAMETERMAPITEM_H
 
