@@ -36,6 +36,8 @@
 #include <fnmatch.h>
 #include <cmath>
 #include <ostream>
+#include <stdexcept>
+#include <utility>
 
 namespace Ewoms {
 
@@ -186,43 +188,42 @@ Well::Well(const RestartIO::RstWell& rst_well,
             p->addProductionControl( Well::ProducerCMode::THP );
         }
 
-        if (this->status == Well::Status::OPEN) {
-            switch (rst_well.active_control) {
-            case CModeVal::Group:
-                p->controlMode = Well::ProducerCMode::GRUP;
-                p->addProductionControl(Well::ProducerCMode::GRUP);
-                break;
-            case CModeVal::OilRate:
-                p->controlMode = Well::ProducerCMode::ORAT;
-                break;
-            case CModeVal::WatRate:
-                p->controlMode = Well::ProducerCMode::WRAT;
-                p->addProductionControl(Well::ProducerCMode::WRAT);
-                break;
-            case CModeVal::GasRate:
-                p->controlMode = Well::ProducerCMode::GRAT;
-                p->addProductionControl(Well::ProducerCMode::GRAT);
-                break;
-            case CModeVal::LiqRate:
-                p->controlMode = Well::ProducerCMode::LRAT;
-                p->addProductionControl(Well::ProducerCMode::LRAT);
-                break;
-            case CModeVal::ResVRate:
-                p->controlMode = Well::ProducerCMode::RESV;
-                p->addProductionControl(Well::ProducerCMode::RESV);
-                break;
-            case CModeVal::THP:
-                p->controlMode = Well::ProducerCMode::THP;
-                p->addProductionControl(Well::ProducerCMode::THP);
-                break;
-            case CModeVal::BHP:
-                p->controlMode = Well::ProducerCMode::BHP;
-                p->addProductionControl(Well::ProducerCMode::BHP);
-                break;
-            default:
-                throw std::invalid_argument("Can not convert integer value: " + std::to_string(rst_well.active_control)
-                                            + " to control type");
-            }
+        switch (rst_well.active_control) {
+        case CModeVal::Group:
+            p->controlMode = Well::ProducerCMode::GRUP;
+            p->addProductionControl(Well::ProducerCMode::GRUP);
+
+            break;
+        case CModeVal::OilRate:
+            p->controlMode = Well::ProducerCMode::ORAT;
+            p->addProductionControl(Well::ProducerCMode::ORAT);
+            break;
+        case CModeVal::WatRate:
+            p->controlMode = Well::ProducerCMode::WRAT;
+            p->addProductionControl(Well::ProducerCMode::WRAT);
+            break;
+        case CModeVal::GasRate:
+            p->controlMode = Well::ProducerCMode::GRAT;
+            p->addProductionControl(Well::ProducerCMode::GRAT);
+            break;
+        case CModeVal::LiqRate:
+            p->controlMode = Well::ProducerCMode::LRAT;
+            p->addProductionControl(Well::ProducerCMode::LRAT);
+            break;
+        case CModeVal::ResVRate:
+            p->controlMode = Well::ProducerCMode::RESV;
+            p->addProductionControl(Well::ProducerCMode::RESV);
+            break;
+        case CModeVal::THP:
+            p->controlMode = Well::ProducerCMode::THP;
+            p->addProductionControl(Well::ProducerCMode::THP);
+            break;
+        case CModeVal::BHP:
+            p->controlMode = Well::ProducerCMode::BHP;
+            p->addProductionControl(Well::ProducerCMode::BHP);
+            break;
+        default:
+            throw std::invalid_argument(fmt::format("Can not convert integer value:{}  to control type", rst_well.active_control));
         }
 
         p->addProductionControl(Well::ProducerCMode::BHP);
@@ -234,33 +235,33 @@ Well::Well(const RestartIO::RstWell& rst_well,
         i->VFPTableNumber = rst_well.vfp_table;
         i->predictionMode = this->prediction_mode;
 
-        if (this->status == Well::Status::OPEN) {
-            switch (rst_well.active_control) {
-            case CModeVal::Group:
-                i->controlMode = Well::InjectorCMode::GRUP;
-                break;
-            case CModeVal::OilRate: [[fallthrough]];
-            case CModeVal::WatRate: [[fallthrough]];
-            case CModeVal::GasRate: [[fallthrough]];
-            case CModeVal::LiqRate:
-                i->controlMode = Well::InjectorCMode::RATE;
-                i->addInjectionControl(Well::InjectorCMode::RATE);
-                break;
-            case CModeVal::ResVRate:
-                i->controlMode = Well::InjectorCMode::RESV;
-                i->addInjectionControl(Well::InjectorCMode::RESV);
-                break;
-            case CModeVal::THP:
-                i->controlMode = Well::InjectorCMode::THP;
-                i->addInjectionControl(Well::InjectorCMode::THP);
-                break;
-            case CModeVal::BHP:
-                i->controlMode = Well::InjectorCMode::BHP;
-                break;
-            default:
-                throw std::invalid_argument(
-                    "Could not convert integer value: " + std::to_string(rst_well.active_control) + " to control type");
-            }
+        switch (rst_well.active_control) {
+        case CModeVal::Group:
+            i->controlMode = Well::InjectorCMode::GRUP;
+            break;
+        case CModeVal::OilRate:
+            [[fallthrough]];
+        case CModeVal::WatRate:
+            [[fallthrough]];
+        case CModeVal::GasRate:
+            [[fallthrough]];
+        case CModeVal::LiqRate:
+            i->controlMode = Well::InjectorCMode::RATE;
+            i->addInjectionControl(Well::InjectorCMode::RATE);
+            break;
+        case CModeVal::ResVRate:
+            i->controlMode = Well::InjectorCMode::RESV;
+            i->addInjectionControl(Well::InjectorCMode::RESV);
+            break;
+        case CModeVal::THP:
+            i->controlMode = Well::InjectorCMode::THP;
+            i->addInjectionControl(Well::InjectorCMode::THP);
+            break;
+        case CModeVal::BHP:
+            i->controlMode = Well::InjectorCMode::BHP;
+            break;
+        default:
+            throw std::invalid_argument(fmt::format("Can not convert integer value:{}  to control type", rst_well.active_control));
         }
 
         i->injectorType = rst_well.wtype.injector_type();
@@ -304,7 +305,7 @@ Well::Well(const std::string& wname_arg,
            std::size_t insert_index_arg,
            int headI_arg,
            int headJ_arg,
-           double ref_depth_arg,
+           const std::optional<double>& ref_depth_arg,
            const WellType& wtype_arg,
            ProducerCMode whistctl_cmode,
            Connection::Order ordering_arg,
@@ -371,7 +372,7 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
-    result.productivity_index = 10.0;
+    result.productivity_index = WellProductivityIndex { 10.0, Phase::GAS };
     result.econ_limits = std::make_shared<Ewoms::WellEconProductionLimits>(Ewoms::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
@@ -469,19 +470,21 @@ void Well::switchToInjector() {
 }
 
 bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_arg) {
-    this->wtype.update(injection_arg->injectorType);
-    if (this->wtype.producer())
+    auto update = this->wtype.update(injection_arg->injectorType);
+    if (this->wtype.producer()) {
         this->switchToInjector();
+        update = true;
+    }
 
     if (*this->injection != *injection_arg) {
         this->injection = injection_arg;
-        return true;
+        update = true;
     }
 
-    return false;
+    return update;
 }
 
-bool Well::updateWellProductivityIndex(const double prodIndex) {
+bool Well::updateWellProductivityIndex(const WellProductivityIndex& prodIndex) {
     const auto update = this->productivity_index != prodIndex;
     if (update)
         this->productivity_index = prodIndex;
@@ -621,7 +624,7 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
     return update;
 }
 
-bool Well::updateRefDepth(double ref_depth_arg) {
+bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
     if (this->ref_depth != ref_depth_arg) {
         this->ref_depth = ref_depth_arg;
         return true;
@@ -773,16 +776,21 @@ bool Well::getAllowCrossFlow() const {
 }
 
 double Well::getRefDepth() const {
-    if( this->ref_depth >= 0.0 )
-        return this->ref_depth;
+    if (!this->ref_depth.has_value())
+        throw std::logic_error(fmt::format("Well: {} - tried to access not initialized well reference depth", this->name()));
+    return *this->ref_depth;
+}
 
-    // ref depth was defaulted and we get the depth of the first completion
-    if( this->connections->empty() ) {
-        throw std::invalid_argument( "No completions defined for well: "
-                                     + name()
+void Well::updateRefDepth() {
+    if( !this->ref_depth ) {
+        // ref depth was defaulted and we get the depth of the first completion
+
+        if( this->connections->empty() )
+            throw std::invalid_argument( "No completions defined for well: "
+                                         + name()
                                      + ". Can not infer reference depth" );
+        this->ref_depth = this->connections->get(0).depth();
     }
-    return this->connections->get(0).depth();
 }
 
 double Well::getDrainageRadius() const {
@@ -793,11 +801,35 @@ const std::string& Well::name() const {
     return this->wname;
 }
 
+bool Well::hasSameConnectionsPointers(const Well& other) const
+{
+    // Note: This is *supposed* to be a pointer comparison.  We need to know
+    // if the two connection structures represent the exact same object, not
+    // just if they have the same value.
+    return this->connections == other.connections;
+}
+
 void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
-void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
+double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
+    if (this->connections->empty())
+        // No connections for this well.  Unexpected.
+        return 1.0;
+
+    if (!this->productivity_index)
+        // WELPI not activated.  Nothing to do.
+        return 1.0;
+
+    if (this->productivity_index->pi_value == currentEffectivePI)
+        // No change in scaling.
+        return 1.0;
+
+    return this->productivity_index->pi_value / currentEffectivePI;
+}
+
+void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
         return;
@@ -806,11 +838,11 @@ void Well::applyWellProdIndexScaling(const double currentEffectivePI) {
         // WELPI not activated.  Nothing to do.
         return;
 
-    if (this->productivity_index == currentEffectivePI)
+    if (scalingFactor == 1.0)
         // No change in scaling.
         return;
 
-    this->connections->applyWellPIScaling(*this->productivity_index / currentEffectivePI);
+    this->connections->applyWellPIScaling(scalingFactor, scalingApplicable);
 }
 
 const WellConnections& Well::getConnections() const {
@@ -831,6 +863,16 @@ const WellBrineProperties& Well::getBrineProperties() const {
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
+}
+
+const Well::WellProductivityIndex& Well::getWellProductivityIndex() const
+{
+    if (this->productivity_index)
+        return *this->productivity_index;
+    else
+        throw std::logic_error {
+            "WELPI not activated in well " + this->name()
+        };
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const {
@@ -1013,6 +1055,11 @@ bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs
         return true;
     } else
         return false;
+}
+
+void Well::forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg) {
+    connections_arg->order();
+    this->connections = std::move(connections_arg);
 }
 
 void Well::filterConnections(const ActiveGridCells& grid) {

@@ -415,6 +415,29 @@ public:
         double getBHPLimit() const;
     };
 
+    struct WellProductivityIndex {
+        double pi_value;
+        Phase preferred_phase;
+
+        bool operator==(const WellProductivityIndex& rhs) const
+        {
+            return (this->pi_value == rhs.pi_value)
+                && (this->preferred_phase == rhs.preferred_phase);
+        }
+
+        bool operator!=(const WellProductivityIndex& rhs) const
+        {
+            return ! (*this == rhs);
+        }
+
+        template <class Serializer>
+        void serializeOp(Serializer& serializer)
+        {
+            serializer(this->pi_value);
+            serializer(this->preferred_phase);
+        }
+    };
+
     Well() = default;
     Well(const std::string& wname,
          const std::string& gname,
@@ -422,7 +445,7 @@ public:
          std::size_t insert_index,
          int headI,
          int headJ,
-         double ref_depth,
+         const std::optional<double>& ref_depth,
          const WellType& wtype_arg,
          ProducerCMode whistctl_cmode,
          Connection::Order ordering,
@@ -478,6 +501,7 @@ public:
     const WellPolymerProperties& getPolymerProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
+    const WellProductivityIndex& getWellProductivityIndex() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -510,7 +534,8 @@ public:
     bool updateCrossFlow(bool allow_cross_flow);
     bool updatePVTTable(int pvt_table);
     bool updateHead(int I, int J);
-    bool updateRefDepth(double ref_dpeth);
+    void updateRefDepth();
+    bool updateRefDepth(const std::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections);
@@ -528,7 +553,7 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
-    bool updateWellProductivityIndex(const double prodIndex);
+    bool updateWellProductivityIndex(const WellProductivityIndex& prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
@@ -537,6 +562,8 @@ public:
     bool handleWELOPEN(const DeckRecord& record, Connection::State status, bool action_mode);
     bool handleCOMPLUMP(const DeckRecord& record);
     bool handleWPIMULT(const DeckRecord& record);
+
+    void forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg);
 
     void filterConnections(const ActiveGridCells& grid);
     ProductionControls productionControls(const SummaryState& st) const;
@@ -554,8 +581,11 @@ public:
     bool updateHasProduced();
     bool cmp_structure(const Well& other) const;
     bool operator==(const Well& data) const;
+    bool hasSameConnectionsPointers(const Well& other) const;
     void setInsertIndex(std::size_t index);
-    void applyWellProdIndexScaling(const double currentEffectivePI);
+    double getWellPIScalingFactor(const double currentEffectivePI) const;
+    void applyWellProdIndexScaling(const double       scalingFactor,
+                                   std::vector<bool>& scalingApplicable);
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -604,7 +634,7 @@ private:
     std::size_t insert_index;
     int headI;
     int headJ;
-    double ref_depth;
+    std::optional<double> ref_depth;
     double drainage_radius;
     bool allow_cross_flow;
     bool automatic_shutin;
@@ -620,7 +650,7 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
-    Ewoms::optional<double> productivity_index{ Ewoms::nullopt };
+    std::optional<WellProductivityIndex> productivity_index{ std::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;

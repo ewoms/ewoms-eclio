@@ -28,7 +28,6 @@
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/parser.hh>
-#include <ewoms/eclio/parser/python/python.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
@@ -53,7 +52,7 @@ namespace {
 
         explicit Setup(const Ewoms::Deck& deck)
             : es    { deck }
-            , sched { deck, es, std::make_shared<const Ewoms::Python>() }
+            , sched { deck, es }
             , gr    { sched }
         {}
 

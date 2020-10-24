@@ -876,6 +876,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::SPECGRID >();
    p.addKeyword< ParserKeywords::SPECHEAT >();
    p.addKeyword< ParserKeywords::SPECROCK >();
+   p.addKeyword< ParserKeywords::SPIDER >();
    p.addKeyword< ParserKeywords::SPOLY >();
    p.addKeyword< ParserKeywords::SPOLYMW >();
    p.addKeyword< ParserKeywords::SSFN >();

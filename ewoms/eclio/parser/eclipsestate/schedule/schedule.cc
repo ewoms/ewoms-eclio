@@ -18,15 +18,16 @@
 */
 #include "config.h"
 
+#include <algorithm>
 #include <ctime>
-
 #include <fnmatch.h>
+#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
-#include <functional>
 
 #include <ewoms/common/fmt/format.h>
 
@@ -615,10 +616,9 @@ private:
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode)) {
+                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode))
                         // The updateWell call breaks test at line 825 and 831 in ScheduleTests
-                        this->updateWell(well_ptr, currentStep);
-                    }
+                        this->updateWell(std::move(well_ptr), currentStep);
                 }
 
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
@@ -747,9 +747,9 @@ private:
             }
         }
         const auto& refDepthItem = record.getItem("REF_DEPTH");
-        double refDepth = refDepthItem.hasValue( 0 )
-            ? refDepthItem.getSIDouble( 0 )
-            : -1.0;
+        std::optional<double> ref_depth;
+        if (refDepthItem.hasValue( 0 ))
+            ref_depth = refDepthItem.getSIDouble( 0 );
 
         double drainageRadius = record.getItem( "D_RADIUS" ).getSIDouble(0);
 
@@ -773,7 +773,7 @@ private:
                       headI,
                       headJ,
                       preferredPhase,
-                      refDepth,
+                      ref_depth,
                       drainageRadius,
                       allowCrossFlow,
                       automaticShutIn,
@@ -802,7 +802,7 @@ private:
                            int headI,
                            int headJ,
                            Phase preferredPhase,
-                           double refDepth,
+                           const std::optional<double>& ref_depth,
                            double drainageRadius,
                            bool allowCrossFlow,
                            bool automaticShutIn,
@@ -817,7 +817,7 @@ private:
                   timeStep,
                   0,
                   headI, headJ,
-                  refDepth,
+                  ref_depth,
                   WellType(preferredPhase),
                   this->global_whistctl_mode[timeStep],
                   wellConnectionOrder,
@@ -1435,6 +1435,38 @@ private:
         }
     }
 
+    void Schedule::applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor) {
+        auto wstat = this->wells_static.find(well_name);
+        if (wstat == this->wells_static.end())
+            return;
+
+        auto unique_well_instances = wstat->second.unique();
+
+        auto end   = unique_well_instances.end();
+        auto start = std::lower_bound(unique_well_instances.begin(), end, reportStep,
+            [](const auto& time_well_pair, const auto lookup) -> bool
+        {
+            //     time                 < reportStep
+            return time_well_pair.first < lookup;
+        });
+
+        if (start == end)
+            // Report step after last?
+            return;
+
+        // Relies on wells_static being OrderedMap<string, DynamicState<shared_ptr<>>>
+        // which means unique_well_instances is a vector<pair<report_step, shared_ptr<>>>
+        std::vector<bool> scalingApplicable;
+        auto wellPtr = start->second;
+        wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+
+        for (; start != end; ++start)
+            if (! wellPtr->hasSameConnectionsPointers(*start->second)) {
+                wellPtr = start->second;
+                wellPtr->applyWellProdIndexScaling(scalingFactor, scalingApplicable);
+            }
+    }
+
     RestartConfig& Schedule::restart() {
         return this->restart_config;
     }
@@ -1543,6 +1575,16 @@ namespace {
         for (const auto& rst_group : rst_state.groups) {
             auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, unit_system };
             this->addGroup(group, report_step);
+
+            if (group.isProductionGroup()) {
+                this->m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, report_step + 1);
+                this->addWellGroupEvent(rst_group.name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, report_step + 1);
+            }
+
+            if (group.isInjectionGroup()) {
+                this->m_events.addEvent(ScheduleEvents::GROUP_INJECTION_UPDATE, report_step + 1);
+                this->addWellGroupEvent(rst_group.name, ScheduleEvents::GROUP_INJECTION_UPDATE, report_step + 1);
+            }
         }
 
         for (std::size_t group_index = 0; group_index < rst_state.groups.size(); group_index++) {
@@ -1591,6 +1633,35 @@ namespace {
 
         m_tuning.update(report_step, rst_state.tuning);
         m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
+
+        {
+            const auto& header = rst_state.header;
+            bool time_interval = 0;
+            GuideRateModel::Target target = GuideRateModel::Target::OIL;
+            bool allow_increase = true;
+            bool use_free_gas = false;
+            if (GuideRateModel::rst_valid(time_interval,
+                                          header.guide_rate_a,
+                                          header.guide_rate_b,
+                                          header.guide_rate_c,
+                                          header.guide_rate_d,
+                                          header.guide_rate_e,
+                                          header.guide_rate_f,
+                                          header.guide_rate_damping)) {
+                auto guide_rate_model = GuideRateModel(time_interval,
+                                                       target,
+                                                       header.guide_rate_a,
+                                                       header.guide_rate_b,
+                                                       header.guide_rate_c,
+                                                       header.guide_rate_d,
+                                                       header.guide_rate_e,
+                                                       header.guide_rate_f,
+                                                       allow_increase,
+                                                       header.guide_rate_damping,
+                                                       use_free_gas);
+                this->updateGuideRateModel(guide_rate_model, report_step);
+            }
+        }
     }
 
     void Schedule::updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step) {

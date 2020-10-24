@@ -77,6 +77,7 @@ namespace Ewoms {
 
         static bool hasGDFILE(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);
+        static bool hasSpiderwebKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
         size_t  getNumActive( ) const;
@@ -225,6 +226,7 @@ namespace Ewoms {
         bool keywInputBeforeGdfile(const Deck& deck, const std::string keyword) const;
 
         void initCylindricalGrid(const Deck&);
+        void initSpiderwebGrid(const Deck&);
         void initCartesianGrid(const Deck&);
         void initDTOPSGrid(const Deck&);
         void initDVDEPTHZGrid(const Deck&);

@@ -1166,74 +1166,9 @@ static Ewoms::Deck radial_missing_INRAD() {
     return parser.parseString( deckData);
 }
 
-static Ewoms::Deck radial_keywords_OK() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 6 10 /\n"
-        "RADIAL\n"
-        "GRID\n"
-        "INRAD\n"
-        "1 /\n"
-        "DRV\n"
-        "10*1 /\n"
-        "DTHETAV\n"
-        "6*60 /\n"
-        "DZV\n"
-        "10*0.25 /\n"
-        "TOPS\n"
-        "60*0.0 /\n"
-        "PORO \n"
-        "  600*0.15 /"
-        "\n";
-
-    Ewoms::Parser parser;
-    return parser.parseString( deckData);
-}
-
-static Ewoms::Deck radial_keywords_OK_CIRCLE() {
-    const char* deckData =
-        "RUNSPEC\n"
-        "\n"
-        "DIMENS\n"
-        " 10 6 10 /\n"
-        "RADIAL\n"
-        "GRID\n"
-        "CIRCLE\n"
-        "INRAD\n"
-        "1 /\n"
-        "DRV\n"
-        "10*1 /\n"
-        "DTHETAV\n"
-        "6*60 /\n"
-        "DZV\n"
-        "10*0.25 /\n"
-        "TOPS\n"
-        "60*0.0 /\n"
-        "PORO \n"
-        "  600*0.15 /"
-        "\n";
-
-    Ewoms::Parser parser;
-    return parser.parseString( deckData);
-}
-
 BOOST_AUTO_TEST_CASE(RadialTest) {
     Ewoms::Deck deck = radial_missing_INRAD();
     BOOST_CHECK_THROW( Ewoms::EclipseGrid{ deck }, std::invalid_argument);
-}
-
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK) {
-    Ewoms::Deck deck = radial_keywords_OK();
-    Ewoms::EclipseGrid grid( deck );
-    BOOST_CHECK(!grid.circle());
-}
-
-BOOST_AUTO_TEST_CASE(RadialKeywordsOK_CIRCLE) {
-    Ewoms::Deck deck = radial_keywords_OK_CIRCLE();
-    Ewoms::EclipseGrid grid( deck );
-    BOOST_CHECK(grid.circle());
 }
 
 static Ewoms::Deck radial_keywords_DRV_size_mismatch() {
@@ -1377,13 +1312,13 @@ BOOST_AUTO_TEST_CASE(RadialKeywords_SIZE_ERROR) {
     BOOST_CHECK_THROW( Ewoms::EclipseGrid{ radial_keywords_ANGLE_OVERFLOW() } , std::invalid_argument);
 }
 
-static Ewoms::Deck radial_details() {
+static Ewoms::Deck spider_details() {
     const char* deckData =
         "RUNSPEC\n"
         "\n"
         "DIMENS\n"
         "1 5 2 /\n"
-        "RADIAL\n"
+        "SPIDER\n"
         "GRID\n"
         "INRAD\n"
         "1 /\n"
@@ -1403,8 +1338,8 @@ static Ewoms::Deck radial_details() {
     return parser.parseString( deckData);
 }
 
-BOOST_AUTO_TEST_CASE(RadialDetails) {
-    Ewoms::Deck deck = radial_details();
+BOOST_AUTO_TEST_CASE(SpiderDetails) {
+    Ewoms::Deck deck = spider_details();
     Ewoms::EclipseGrid grid( deck );
 
     BOOST_CHECK_CLOSE( grid.getCellVolume( 0 , 0 , 0 ) , 0.5*(2*2 - 1)*1, 0.0001);

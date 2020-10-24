@@ -1858,6 +1858,16 @@ const std::string SPECROCK::keywordName = "SPECROCK";
 const std::string SPECROCK::DATA::itemName = "DATA";
 
 
+SPIDER::SPIDER( ) : ParserKeyword("SPIDER")
+{
+  setFixedSize( (size_t) 0);
+  addValidSectionName("RUNSPEC");
+  clearDeckNames();
+  addDeckName("SPIDER");
+}
+const std::string SPIDER::keywordName = "SPIDER";
+
+
 SPOLY::SPOLY( ) : ParserKeyword("SPOLY")
 {
   setFixedSize( (size_t) 1);

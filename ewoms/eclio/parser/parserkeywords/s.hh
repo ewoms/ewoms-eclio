@@ -1171,6 +1171,14 @@ namespace ParserKeywords {
 
 
 
+   class SPIDER : public ParserKeyword {
+   public:
+       SPIDER();
+       static const std::string keywordName;
+   };
+
+
+
    class SPOLY : public ParserKeyword {
    public:
        SPOLY();

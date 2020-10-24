@@ -22,10 +22,12 @@
 #include <fnmatch.h>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <ewoms/common/fmt/format.h>
@@ -140,6 +142,7 @@ namespace {
     }
 
     void Schedule::handleCOMPDAT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        std::unordered_set<std::string> wells;
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             auto wellnames = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -150,16 +153,24 @@ namespace {
                 auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
                 connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager);
-
                 if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
-                    this->updateWell(well2, handlerContext.currentStep);
-                    this->addWellGroupEvent(name, ScheduleEvents::WELL_CONNECTIONS_UPDATED, handlerContext.currentStep);
+                    this->updateWell(std::move(well2), handlerContext.currentStep);
+                    wells.insert( name );
                 }
-
                 this->addWellGroupEvent(name, ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
             }
         }
         m_events.addEvent(ScheduleEvents::COMPLETION_CHANGE, handlerContext.currentStep);
+
+        // In the case the wells reference depth has been defaulted in the
+        // WELSPECS keyword we need to force a calculation of the wells
+        // reference depth exactly when the COMPDAT keyword has been completely
+        // processed.
+        for (const auto& wname : wells) {
+            const auto& dynamic_state = this->wells_static.at(wname);
+            auto& well_ptr = dynamic_state.get(handlerContext.currentStep);
+            well_ptr->updateRefDepth();
+        }
     }
 
     void Schedule::handleCOMPLUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -269,19 +280,8 @@ namespace {
             const auto voidage_target = record.getItem("VOIDAGE_TARGET").get<UDAValue>(0);
             const bool is_free = DeckItem::to_bool(record.getItem("FREE").getTrimmedString(0));
 
-            const Ewoms::optional<std::string> reinj_group_name = record.getItem("REINJECT_GROUP").defaultApplied(0)
-                ? Ewoms::nullopt
-                : Ewoms::optional<std::string>(record.getItem("REINJECT_GROUP").getTrimmedString(0));
-
-            const Ewoms::optional<std::string> voidage_group_name = record.getItem("VOIDAGE_GROUP").defaultApplied(0)
-                ? Ewoms::nullopt
-                : Ewoms::optional<std::string>(record.getItem("VOIDAGE_GROUP").getTrimmedString(0));
-
             for (const auto& group_name : group_names) {
                 const bool availableForGroupControl = is_free && (group_name != "FIELD");
-                const std::string reinj_group = reinj_group_name.value_or(group_name);
-                const std::string voidage_group = voidage_group_name.value_or(group_name);
-
                 auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                 Group::GroupInjectionProperties injection;
                 injection.phase = phase;
@@ -291,8 +291,6 @@ namespace {
                 injection.target_reinj_fraction = reinj_target;
                 injection.target_void_fraction = voidage_target;
                 injection.injection_controls = 0;
-                injection.reinj_group = reinj_group;
-                injection.voidage_group = voidage_group;
                 injection.available_group_control = availableForGroupControl;
 
                 if (!record.getItem("SURFACE_TARGET").defaultApplied(0))
@@ -306,6 +304,12 @@ namespace {
 
                 if (!record.getItem("VOIDAGE_TARGET").defaultApplied(0))
                     injection.injection_controls += static_cast<int>(Group::InjectionCMode::VREP);
+
+                if (record.getItem("REINJECT_GROUP").hasValue(0))
+                    injection.reinj_group = record.getItem("REINJECT_GROUP").getTrimmedString(0);
+
+                if (record.getItem("VOIDAGE_GROUP").hasValue(0))
+                    injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
                 if (group_ptr->updateInjection(injection)) {
                     this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
@@ -1111,11 +1115,23 @@ namespace {
             const auto rawProdIndex = record.getItem<PI>().get<double>(0);
             for (const auto& well_name : well_names) {
                 // All wells in a single record *hopefully* have the same preferred phase...
-                const auto& well   = this->getWell(well_name, handlerContext.currentStep);
-                const auto  unitPI = (well.getPreferredPhase() == Phase::GAS) ? gasPI : liqPI;
+                const auto& well      = this->getWell(well_name, handlerContext.currentStep);
+                const auto  preferred = well.getPreferredPhase();
+                const auto  unitPI    = (preferred == Phase::GAS) ? gasPI : liqPI;
 
-                auto well2 = std::make_shared<Well>(well);
-                if (well2->updateWellProductivityIndex(usys.to_si(unitPI, rawProdIndex)))
+                const auto wellPI = Well::WellProductivityIndex {
+                    usys.to_si(unitPI, rawProdIndex),
+                    preferred
+                };
+
+                // Note: Need to ensure we have an independent copy of
+                // well's connections because
+                // Well::updateWellProductivityIndex() implicitly mutates
+                // internal state in the WellConnections class.
+                auto well2       = std::make_shared<Well>(well);
+                auto connections = std::make_shared<WellConnections>(well2->getConnections());
+                well2->forceUpdateConnections(std::move(connections));
+                if (well2->updateWellProductivityIndex(wellPI))
                     this->updateWell(std::move(well2), handlerContext.currentStep);
 
                 this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
@@ -1194,18 +1210,19 @@ namespace {
                 const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
                 int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
                 double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
-                double refDepth = refDepthItem.hasValue(0)
-                    ? refDepthItem.getSIDouble(0)
-                    : -1.0;
+                std::optional<double> ref_depth;
+                if (refDepthItem.hasValue(0))
+                    ref_depth = refDepthItem.getSIDouble(0);
                 {
                     bool update = false;
                     auto well2 = std::shared_ptr<Well>(new Well( this->getWell(wellName, handlerContext.currentStep)));
-                    update = well2->updateHead(headI, headJ);
-                    update |= well2->updateRefDepth(refDepth);
+                    update  = well2->updateHead(headI, headJ);
+                    update |= well2->updateRefDepth(ref_depth);
                     update |= well2->updateDrainageRadius(drainageRadius);
                     update |= well2->updatePVTTable(pvt_table);
 
                     if (update) {
+                        well2->updateRefDepth();
                         this->updateWell(std::move(well2), handlerContext.currentStep);
                         this->addWellGroupEvent(wellName, ScheduleEvents::WELL_WELSPECS_UPDATE, handlerContext.currentStep);
                     }

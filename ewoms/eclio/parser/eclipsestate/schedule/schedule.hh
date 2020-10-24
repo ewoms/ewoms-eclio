@@ -259,6 +259,7 @@ namespace Ewoms
         RestartConfig& restart();
 
         void applyAction(std::size_t reportStep, const Action::ActionX& action, const Action::Result& result);
+        void applyWellProdIndexScaling(const std::string& well_name, const std::size_t reportStep, const double scalingFactor);
         int getNupcol(std::size_t reportStep) const;
 
         const Network::ExtNetwork& network(std::size_t report_step) const;
@@ -359,7 +360,7 @@ namespace Ewoms
                      int headI,
                      int headJ,
                      Phase preferredPhase,
-                     double refDepth,
+                     const std::optional<double>& refDepth,
                      double drainageRadius,
                      bool allowCrossFlow,
                      bool automaticShutIn,

@@ -73,6 +73,7 @@ enum class InjectionCMode  : int {
 };
 static const std::string InjectionCMode2String( InjectionCMode enumValue );
 static InjectionCMode InjectionCModeFromString( const std::string& stringValue );
+static InjectionCMode InjectionCModeFromInt(int ecl_int);
 
 enum class ProductionCMode : int {
     NONE = 0,
@@ -87,6 +88,7 @@ enum class ProductionCMode : int {
 };
 static const std::string ProductionCMode2String( ProductionCMode enumValue );
 static ProductionCMode ProductionCModeFromString( const std::string& stringValue );
+static ProductionCMode ProductionCModeFromInt(int ecl_int);
 
 enum class GuideRateTarget {
     OIL = 0,
@@ -111,8 +113,8 @@ struct GroupInjectionProperties {
     UDAValue resv_max_rate;
     UDAValue target_reinj_fraction;
     UDAValue target_void_fraction;
-    std::string reinj_group;
-    std::string voidage_group;
+    std::optional<std::string> reinj_group;
+    std::optional<std::string> voidage_group;
     bool available_group_control = true;
 
     static GroupInjectionProperties serializeObject();
