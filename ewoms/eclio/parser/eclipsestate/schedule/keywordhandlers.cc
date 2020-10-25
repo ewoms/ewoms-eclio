@@ -1210,7 +1210,7 @@ namespace {
                 const auto& refDepthItem = record.getItem<ParserKeywords::WELSPECS::REF_DEPTH>();
                 int pvt_table = record.getItem<ParserKeywords::WELSPECS::P_TABLE>().get<int>(0);
                 double drainageRadius = record.getItem<ParserKeywords::WELSPECS::D_RADIUS>().getSIDouble(0);
-                std::optional<double> ref_depth;
+                Ewoms::optional<double> ref_depth;
                 if (refDepthItem.hasValue(0))
                     ref_depth = refDepthItem.getSIDouble(0);
                 {

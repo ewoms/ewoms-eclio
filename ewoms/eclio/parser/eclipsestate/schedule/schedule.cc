@@ -747,7 +747,7 @@ private:
             }
         }
         const auto& refDepthItem = record.getItem("REF_DEPTH");
-        std::optional<double> ref_depth;
+        Ewoms::optional<double> ref_depth;
         if (refDepthItem.hasValue( 0 ))
             ref_depth = refDepthItem.getSIDouble( 0 );
 
@@ -802,7 +802,7 @@ private:
                            int headI,
                            int headJ,
                            Phase preferredPhase,
-                           const std::optional<double>& ref_depth,
+                           const Ewoms::optional<double>& ref_depth,
                            double drainageRadius,
                            bool allowCrossFlow,
                            bool automaticShutIn,
@@ -1379,6 +1379,13 @@ private:
     const UDQConfig& Schedule::getUDQConfig(std::size_t timeStep) const {
         const auto& ptr = this->udq_config.get(timeStep);
         return *ptr;
+    }
+
+    std::vector<const UDQConfig*> Schedule::udqConfigList() const {
+        std::vector<const UDQConfig*> udq_list;
+        for (const auto& udq_pair : this->udq_config.unique())
+            udq_list.push_back( udq_pair.second.get() );
+        return udq_list;
     }
 
     const GuideRateConfig& Schedule::guideRateConfig(std::size_t timeStep) const {

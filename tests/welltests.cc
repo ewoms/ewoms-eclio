@@ -20,9 +20,10 @@
 
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <stdexcept>
 #include <utility>
+
+#include <ewoms/common/optional.hh>
 
 #define BOOST_TEST_MODULE WellTest
 #include <boost/test/unit_test.hpp>
@@ -470,7 +471,7 @@ namespace {
             return input;
         }
 
-    Ewoms::Well::WellProductionProperties properties(const std::string& input, std::optional<VFPProdTable::ALQ_TYPE> alq_type = {}) {
+    Ewoms::Well::WellProductionProperties properties(const std::string& input, Ewoms::optional<VFPProdTable::ALQ_TYPE> alq_type = {}) {
             Ewoms::Parser parser;
             Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
             auto deck = parser.parseString(input);
@@ -521,7 +522,7 @@ namespace {
         }
 
         Ewoms::UnitSystem unit_system(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC);
-        Ewoms::Well::WellProductionProperties properties(const std::string& input, std::optional<VFPProdTable::ALQ_TYPE> alq_type = {})
+        Ewoms::Well::WellProductionProperties properties(const std::string& input, Ewoms::optional<VFPProdTable::ALQ_TYPE> alq_type = {})
         {
             Ewoms::Parser parser;
             auto deck = parser.parseString(input);

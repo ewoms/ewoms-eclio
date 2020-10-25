@@ -77,6 +77,7 @@ namespace Ewoms {
         const UDQFunctionTable& function_table() const;
 
         bool operator==(const UDQConfig& config) const;
+        void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

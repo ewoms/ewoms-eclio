@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <ewoms/common/variant.hh>
@@ -55,6 +56,7 @@ public:
     UDQASTNode* get_right() const;
 
     bool operator==(const UDQASTNode& data) const;
+    void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

@@ -184,8 +184,8 @@ Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject
     result.resv_max_rate = UDAValue(2.0);
     result.target_reinj_fraction = UDAValue(3.0);
     result.target_void_fraction = UDAValue(4.0);
-    result.reinj_group = "test1";
-    result.voidage_group = "test2";
+    result.reinj_group = std::string("test1");
+    result.voidage_group = std::string("test2");
     result.injection_controls = 5;
 
     return result;

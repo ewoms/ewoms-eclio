@@ -113,8 +113,8 @@ struct GroupInjectionProperties {
     UDAValue resv_max_rate;
     UDAValue target_reinj_fraction;
     UDAValue target_void_fraction;
-    std::optional<std::string> reinj_group;
-    std::optional<std::string> voidage_group;
+    Ewoms::optional<std::string> reinj_group;
+    Ewoms::optional<std::string> voidage_group;
     bool available_group_control = true;
 
     static GroupInjectionProperties serializeObject();

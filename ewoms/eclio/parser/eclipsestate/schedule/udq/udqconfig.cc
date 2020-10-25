@@ -329,5 +329,13 @@ namespace Ewoms {
             context.update_define(def.keyword(), field_udq);
         }
     }
+
+    void UDQConfig::required_summary(std::unordered_set<std::string>& summary_keys) const {
+        for (const auto& def_pair : this->m_definitions) {
+            const auto& udq_def = def_pair.second;
+            udq_def.required_summary(summary_keys);
+        }
+    }
+
 }
 

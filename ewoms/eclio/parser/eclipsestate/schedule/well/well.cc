@@ -305,7 +305,7 @@ Well::Well(const std::string& wname_arg,
            std::size_t insert_index_arg,
            int headI_arg,
            int headJ_arg,
-           const std::optional<double>& ref_depth_arg,
+           const Ewoms::optional<double>& ref_depth_arg,
            const WellType& wtype_arg,
            ProducerCMode whistctl_cmode,
            Connection::Order ordering_arg,
@@ -624,7 +624,7 @@ bool Well::updateStatus(Status well_state, bool update_connections) {
     return update;
 }
 
-bool Well::updateRefDepth(const std::optional<double>& ref_depth_arg) {
+bool Well::updateRefDepth(const Ewoms::optional<double>& ref_depth_arg) {
     if (this->ref_depth != ref_depth_arg) {
         this->ref_depth = ref_depth_arg;
         return true;
@@ -776,7 +776,7 @@ bool Well::getAllowCrossFlow() const {
 }
 
 double Well::getRefDepth() const {
-    if (!this->ref_depth.has_value())
+    if (!static_cast<bool>(this->ref_depth))
         throw std::logic_error(fmt::format("Well: {} - tried to access not initialized well reference depth", this->name()));
     return *this->ref_depth;
 }

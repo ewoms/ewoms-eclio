@@ -16,8 +16,9 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <optional>
 #include <vector>
+
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>

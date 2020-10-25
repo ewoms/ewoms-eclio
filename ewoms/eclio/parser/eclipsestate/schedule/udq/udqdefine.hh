@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_set>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
@@ -71,6 +72,7 @@ public:
     const std::string& input_string() const;
     UDQVarType  var_type() const;
     std::set<UDQTokenType> func_tokens() const;
+    void required_summary(std::unordered_set<std::string>& summary_keys) const;
 
     bool operator==(const UDQDefine& data) const;
 

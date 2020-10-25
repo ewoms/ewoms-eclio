@@ -89,7 +89,7 @@ namespace Ewoms {
         this->GasRate    = record.getItem("GRAT").get<UDAValue>(0);
     }
 
-    void Well::WellProductionProperties::init_vfp(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record) {
+    void Well::WellProductionProperties::init_vfp(const Ewoms::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record) {
         if (alq_type) {
             this->VFPTableNumber = record.getItem("VFP_TABLE").get<int>(0);
             double alq_input = record.getItem("ALQ").get<double>(0);
@@ -150,7 +150,7 @@ namespace Ewoms {
 
     }
 
-void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const std::string& /* well */, const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONPROD(const Ewoms::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const std::string& /* well */, const DeckRecord& record)
     {
         this->predictionMode = true;
         this->init_vfp(alq_type, unit_system_arg, record);
@@ -198,7 +198,7 @@ void Well::WellProductionProperties::handleWCONPROD(const std::optional<VFPProdT
       originate from the WCONHIST keyword. Predictions are handled with the
       default constructor and the handleWCONPROD() method.
     */
-void Well::WellProductionProperties::handleWCONHIST(const std::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record)
+void Well::WellProductionProperties::handleWCONHIST(const Ewoms::optional<VFPProdTable::ALQ_TYPE>& alq_type, const UnitSystem& unit_system_arg, const DeckRecord& record)
     {
         this->init_rates(record);
         this->init_vfp(alq_type, unit_system_arg, record);
