@@ -187,6 +187,8 @@ FIELD_PROBE::FIELD_PROBE( ) : ParserKeyword("FIELD_PROBE")
   addDeckName("FCPR");
   addDeckName("FCPT");
   addDeckName("FCSC");
+  addDeckName("FEIR");
+  addDeckName("FEIT");
   addDeckName("FEPR");
   addDeckName("FEPT");
   addDeckName("FGCR");

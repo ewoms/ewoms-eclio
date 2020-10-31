@@ -36,36 +36,45 @@ BOOST_AUTO_TEST_CASE(UniqueKey) {
     using Category = Ewoms::EclIO::SummaryNode::Category;
     using Type = Ewoms::EclIO::SummaryNode::Type;
 
-    expect_key( { "KEYW", Category::Well,          Type::Rate, "NORA", 1 ,""}, "KEYW:NORA" );
-    expect_key( { "KEYW", Category::Group,         Type::Rate, "NORA", 2 ,""}, "KEYW:NORA" );
-    expect_key( { "KEYW", Category::Field,         Type::Rate, "NORA", 3 ,""}, "KEYW" );
-    expect_key( { "KEYW", Category::Region,        Type::Rate, "NORA", 4 ,""}, "KEYW:4" );
-    expect_key( { "KEYW", Category::Block,         Type::Rate, "NORA", 5 ,""}, "KEYW:5" );
-    expect_key( { "KEYW", Category::Connection,    Type::Rate, "NORA", 6 ,""}, "KEYW:NORA:6" );
-    expect_key( { "KEYW", Category::Segment,       Type::Rate, "NORA", 7 ,""}, "KEYW:NORA:7" );
-    expect_key( { "KEYW", Category::Miscellaneous, Type::Rate, "NORA", 8 ,""}, "KEYW" );
+
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Well, Type::Rate, std::string("NORA"), 1, std::string("") };
+        expect_key(node, "KEYW:NORA"); }
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Group,         Type::Rate, std::string("NORA"), 2 ,std::string("")};
+        expect_key(node, "KEYW:NORA" ); };
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Field,         Type::Rate, std::string("NORA"), 3 ,std::string("")};
+        expect_key(node, "KEYW" ); };
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Region,        Type::Rate, std::string("NORA"), 4 ,std::string("")};
+        expect_key(node, "KEYW:4" ); };
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Block,         Type::Rate, std::string("NORA"), 5 ,std::string("")};
+        expect_key(node, "KEYW:5" ); };
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Connection,    Type::Rate, std::string("NORA"), 6 ,std::string("")};
+        expect_key(node, "KEYW:NORA:6" ); };
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Segment,       Type::Rate, std::string("NORA"), 7 ,std::string("")};
+        expect_key(node, "KEYW:NORA:7" ); };
+    { Ewoms::EclIO::SummaryNode node = { "KEYW", Category::Miscellaneous, Type::Rate, std::string("NORA"), 8 ,std::string("")};
+        expect_key(node, "KEYW" ); };
 }
 
 BOOST_AUTO_TEST_CASE(InjectedNumberRenderer) {
     using Category = Ewoms::EclIO::SummaryNode::Category;
     using Type = Ewoms::EclIO::SummaryNode::Type;
 
-    Ewoms::EclIO::SummaryNode positiveNode {
+    Ewoms::EclIO::SummaryNode positiveNode = {
       "SIGN",
       Category::Region,
       Type::Undefined,
-      "-",
+      std::string("-"),
       2,
-      ""
+      std::string("")
     };
 
-    Ewoms::EclIO::SummaryNode negativeNode {
+    Ewoms::EclIO::SummaryNode negativeNode = {
       "SIGN",
       Category::Region,
       Type::Undefined,
-      "-",
+      std::string("-"),
       -2,
-      ""
+      std::string("")
     };
 
     auto chooseSign = [](const Ewoms::EclIO::SummaryNode& node) -> std::string {
@@ -77,7 +86,7 @@ BOOST_AUTO_TEST_CASE(InjectedNumberRenderer) {
 }
 
 BOOST_AUTO_TEST_CASE(user_defined) {
-    auto summary_node = Ewoms::EclIO::SummaryNode{"FU_VAR1", Ewoms::EclIO::SummaryNode::Category::Field, Ewoms::EclIO::SummaryNode::Type::Undefined, "", -1 , ""};
+    Ewoms::EclIO::SummaryNode summary_node = {"FU_VAR1", Ewoms::EclIO::SummaryNode::Category::Field, Ewoms::EclIO::SummaryNode::Type::Undefined, std::string(""), -1 , std::string("")};
     BOOST_CHECK( summary_node.is_user_defined() );
 }
 

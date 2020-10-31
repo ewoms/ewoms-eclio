@@ -36,6 +36,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellproductionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/units/units.hh>
@@ -192,13 +193,30 @@ namespace {
 
             // Recall: Cannot use emplace_back() for PODs.
             for (const auto& vector : vectors) {
-                entities.push_back({ kwpref + vector.kw, cat,
-                                     vector.type, name, dflt_num, "" });
+                Ewoms::EclIO::SummaryNode node = {
+                    .keyword = kwpref + vector.kw,
+                    .category = cat,
+                    .type = vector.type,
+                    .wgname =  name,
+                    .number = dflt_num,
+                    .fip_region = std::string("")
+                };
+
+                entities.push_back(node);
+                                        
             }
 
             for (const auto& extra_vector : extra_vectors) {
-                entities.push_back({ extra_vector.kw, cat,
-                                     extra_vector.type, name, dflt_num, "" });
+                Ewoms::EclIO::SummaryNode node = {
+                    .keyword = extra_vector.kw,
+                    .category = cat,
+                    .type = extra_vector.type,
+                    .wgname =  name,
+                    .number = dflt_num,
+                    .fip_region = std::string("")
+                };
+
+                entities.push_back(node);
             }
         };
 
@@ -235,7 +253,16 @@ namespace {
                 const int          segNumber) -> void
         {
             for (const auto &requiredVector : requiredVectors) {
-                ret.push_back({requiredVector.first, category, requiredVector.second, well, segNumber, ""});
+                Ewoms::EclIO::SummaryNode node = {
+                    .keyword = requiredVector.first,
+                    .category = category,
+                    .type = requiredVector.second,
+                    .wgname =  well,
+                    .number = segNumber,
+                    .fip_region = std::string("")
+                };
+
+                ret.push_back(node);
             }
         };
 
@@ -392,7 +419,7 @@ struct fn_args {
     double duration;
     const int sim_step;
     int  num;
-    const std::string fip_region;
+    const Ewoms::optional<Ewoms::variant<std::string, int>> extra_data;
     const Ewoms::SummaryState& st;
     const Ewoms::data::Wells& wells;
     const Ewoms::data::GroupAndNetworkValues& grp_nwrk;
@@ -464,21 +491,21 @@ double efac( const std::vector<std::pair<std::string,double>>& eff_factors, cons
     return (it != eff_factors.end()) ? it->second : 1;
 }
 
+/*
+  This is bit dangerous, exactly how the ALQ value should be interpreted varies
+  between the different VFP tables. The code here assumes - without checking -
+  that it represents gas lift rate.
+*/
 inline quantity glir( const fn_args& args ) {
-    const quantity zero = { 0.0, measure::gas_surface_rate };
+    double alq_rate = 0;
 
-    if (args.schedule_wells.empty())
-        return zero;
+    for (const auto& well : args.schedule_wells) {
+        auto xwPos = args.wells.find(well.name());
+        if (xwPos != args.wells.end())
+            alq_rate += xwPos->second.rates.get(rt::alq, 0.0);
+    }
 
-    const auto& well = args.schedule_wells.front();
-    auto xwPos = args.wells.find(well.name());
-    if (xwPos == args.wells.end())
-        return zero;
-
-    // This is bit dangerous, exactly how the ALQ value should be interpreted
-    // varies between the different VFP tables. The code here assumes - without
-    // checking - that it represents gas lift rate.
-    return { xwPos->second.rates.get(rt::alq, 0.0), measure::gas_surface_rate };
+    return { alq_rate, measure::gas_surface_rate };
 }
 
 template< rt phase, bool injection = true >
@@ -772,7 +799,7 @@ inline quantity duration( const fn_args& args ) {
 template<rt phase , bool injection>
 quantity region_rate( const fn_args& args ) {
     double sum = 0;
-    const auto& well_connections = args.regionCache.connections( args.fip_region, args.num );
+    const auto& well_connections = args.regionCache.connections( Ewoms::get<std::string>(*args.extra_data), args.num );
 
     for (const auto& pair : well_connections) {
 
@@ -1004,6 +1031,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIR", rate< rt::oil, injector > },
     { "WGIR", rate< rt::gas, injector > },
     { "WEIR", rate< rt::energy, injector > },
+    { "WTIRHEA", rate< rt::energy, injector > },
     { "WNIR", rate< rt::solvent, injector > },
     { "WCIR", rate< rt::polymer, injector > },
     { "WSIR", rate< rt::brine, injector > },
@@ -1016,6 +1044,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOIT", mul( rate< rt::oil, injector >, duration ) },
     { "WGIT", mul( rate< rt::gas, injector >, duration ) },
     { "WEIT", mul( rate< rt::energy, injector >, duration ) },
+    { "WTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "WNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "WCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "WSIT", mul( rate< rt::brine, injector >, duration ) },
@@ -1026,6 +1055,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPR", rate< rt::oil, producer > },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
+    { "WTPRHEA", rate< rt::energy, producer > },
     { "WGLIR", glir},
     { "WNPR", rate< rt::solvent, producer > },
     { "WCPR", rate< rt::polymer, producer > },
@@ -1051,6 +1081,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPT", mul( rate< rt::oil, producer >, duration ) },
     { "WGPT", mul( rate< rt::gas, producer >, duration ) },
     { "WEPT", mul( rate< rt::energy, producer >, duration ) },
+    { "WTPTHEA", mul( rate< rt::energy, producer >, duration ) },
     { "WNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "WCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "WSPT", mul( rate< rt::brine, producer >, duration ) },
@@ -1087,6 +1118,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WWVIR", rate< rt::reservoir_water, injector >},
     { "GOIR", rate< rt::oil, injector > },
     { "GGIR", rate< rt::gas, injector > },
+    { "GEIR", rate< rt::energy, injector > },
+    { "GTIRHEA", rate< rt::energy, injector > },
     { "GNIR", rate< rt::solvent, injector > },
     { "GCIR", rate< rt::polymer, injector > },
     { "GSIR", rate< rt::brine, injector > },
@@ -1099,6 +1132,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWIT", mul( rate< rt::wat, injector >, duration ) },
     { "GOIT", mul( rate< rt::oil, injector >, duration ) },
     { "GGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "GEIT", mul( rate< rt::energy, injector >, duration ) },
+    { "GTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "GNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "GCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "GSIT", mul( rate< rt::brine, injector >, duration ) },
@@ -1108,6 +1143,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPR", rate< rt::wat, producer > },
     { "GOPR", rate< rt::oil, producer > },
     { "GGPR", rate< rt::gas, producer > },
+    { "GEPR", rate< rt::energy, producer > },
+    { "GTPRHEA", rate< rt::energy, producer > },
     { "GGLIR", glir },
     { "GNPR", rate< rt::solvent, producer > },
     { "GCPR", rate< rt::polymer, producer > },
@@ -1130,6 +1167,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "GWPT", mul( rate< rt::wat, producer >, duration ) },
     { "GOPT", mul( rate< rt::oil, producer >, duration ) },
     { "GGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "GEPT", mul( rate< rt::energy, producer >, duration ) },
+    { "GTPTHEA", mul( rate< rt::energy, producer >, duration ) },
     { "GNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "GCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "GOPTS", mul( rate< rt::vaporized_oil, producer >, duration ) },
@@ -1262,6 +1301,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
     { "FGPR", rate< rt::gas, producer > },
+    { "FEPR", rate< rt::energy, producer > },
+    { "FTPRHEA", rate< rt::energy, producer > },
     { "FGLIR", glir },
     { "FNPR", rate< rt::solvent, producer > },
     { "FCPR", rate< rt::polymer, producer > },
@@ -1279,6 +1320,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWPT", mul( rate< rt::wat, producer >, duration ) },
     { "FOPT", mul( rate< rt::oil, producer >, duration ) },
     { "FGPT", mul( rate< rt::gas, producer >, duration ) },
+    { "FEPT", mul( rate< rt::energy, producer >, duration ) },
+    { "FTPTHEA", mul( rate< rt::energy, producer >, duration ) },
     { "FNPT", mul( rate< rt::solvent, producer >, duration ) },
     { "FCPT", mul( rate< rt::polymer, producer >, duration ) },
     { "FSPT", mul( rate< rt::brine, producer >, duration ) },
@@ -1296,6 +1339,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWIR", rate< rt::wat, injector > },
     { "FOIR", rate< rt::oil, injector > },
     { "FGIR", rate< rt::gas, injector > },
+    { "FEIR", rate< rt::energy, injector > },
+    { "FTIRHEA", rate< rt::energy, injector > },
     { "FNIR", rate< rt::solvent, injector > },
     { "FCIR", rate< rt::polymer, injector > },
     { "FCPR", rate< rt::polymer, producer > },
@@ -1308,6 +1353,8 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "FWIT", mul( rate< rt::wat, injector >, duration ) },
     { "FOIT", mul( rate< rt::oil, injector >, duration ) },
     { "FGIT", mul( rate< rt::gas, injector >, duration ) },
+    { "FEIT", mul( rate< rt::energy, injector >, duration ) },
+    { "FTITHEA", mul( rate< rt::energy, injector >, duration ) },
     { "FNIT", mul( rate< rt::solvent, injector >, duration ) },
     { "FCIT", mul( rate< rt::polymer, injector >, duration ) },
     { "FCPT", mul( rate< rt::polymer, producer >, duration ) },
@@ -1508,7 +1555,7 @@ inline std::vector<Ewoms::Well> find_wells( const Ewoms::Schedule& schedule,
 
         const auto region = node.number;
 
-        for ( const auto& connection : regionCache.connections( node.fip_region, region ) ){
+        for ( const auto& connection : regionCache.connections( *node.fip_region , region ) ){
             const auto& w_name = connection.first;
             if (schedule.hasWell(w_name, sim_step)) {
                 const auto& well = schedule.getWell( w_name, sim_step );
@@ -1711,7 +1758,9 @@ namespace Evaluator {
             const fn_args args {
                 wells, this->group_name(), stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
-                this->node_.fip_region,
+                static_cast<bool>(this->node_.fip_region)
+                ?   Ewoms::variant<std::string, int>(*this->node_.fip_region)
+                :   Ewoms::variant<std::string, int>(std::string("")),
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
                 std::move(efac.factors)
             };
@@ -2240,7 +2289,9 @@ namespace Evaluator {
 
         const fn_args args {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
-            this->node_->fip_region,
+            static_cast<bool>(this->node_->fip_region)
+            ?   Ewoms::optional<Ewoms::variant<std::string, int>>(*this->node_->fip_region)
+            :   Ewoms::nullopt,
             this->st_, {}, {}, reg, this->grid_,
             {}
         };
@@ -2505,8 +2556,8 @@ private:
     int prevReportStepID_{-1};
     std::vector<MiniStep>::size_type numUnwritten_{0};
 
-    SummaryOutputParameters  outputParameters_{};
-    std::vector<EvalPtr>     requiredRestartParameters_{};
+    SummaryOutputParameters                  outputParameters_{};
+    std::unordered_map<std::string, EvalPtr> extra_parameters{};
     std::vector<std::string> valueKeys_{};
     std::vector<MiniStep>    unwritten_{};
 
@@ -2522,6 +2573,8 @@ private:
 
     void configureRequiredRestartParameters(const SummaryConfig& sumcfg,
                                             const Schedule&      sched);
+
+    void configureUDQ(const SummaryConfig& summary_config, const Schedule& sched);
 
     MiniStep& getNextMiniStep(const int report_step);
     const MiniStep& lastUnwritten() const;
@@ -2548,6 +2601,7 @@ SummaryImplementation(const EclipseState&  es,
     this->configureTimeVectors(es, sumcfg);
     this->configureSummaryInput(es, sumcfg, grid, sched);
     this->configureRequiredRestartParameters(sumcfg, sched);
+    this->configureUDQ(sumcfg, sched);
 }
 
 void Ewoms::out::Summary::SummaryImplementation::
@@ -2593,7 +2647,8 @@ eval(const EclipseState&                es,
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
-    for (auto& evalPtr : this->requiredRestartParameters_) {
+    for (auto& paramsPair : this->extra_parameters) {
+        auto& evalPtr = paramsPair.second;
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 }
@@ -2744,6 +2799,102 @@ configureSummaryInput(const EclipseState&  es,
         reportUnsupportedKeywords(std::move(unsuppkw));
 }
 
+/*
+   These nodes are added to the summary evaluation list because they are
+   requested by the UDQ system. In the case of well and group variables the code
+   will all nodes for all wells / groups - irrespective of what has been
+   requested in the UDQ code.
+*/
+
+std::vector<Ewoms::EclIO::SummaryNode> make_default_nodes(const std::string& keyword, const Ewoms::Schedule& sched) {
+    auto nodes = std::vector<Ewoms::EclIO::SummaryNode> {};
+    auto category = Ewoms::parseKeywordCategory(keyword);
+    auto type = Ewoms::parseKeywordType(keyword);
+
+    switch (category) {
+    case Ewoms::EclIO::SummaryNode::Category::Field:
+        {
+            Ewoms::EclIO::SummaryNode node;
+            node.keyword = keyword;
+            node.category = category;
+            node.type = type;
+
+            nodes.push_back(node);
+        }
+        break;
+    case Ewoms::EclIO::SummaryNode::Category::Miscellaneous:
+        {
+            Ewoms::EclIO::SummaryNode node;
+            node.keyword = keyword;
+            node.category = category;
+            node.type = type;
+
+            nodes.push_back(node);
+        }
+        break;
+    case Ewoms::EclIO::SummaryNode::Category::Well:
+        {
+            for (const auto& well : sched.wellNames()) {
+                Ewoms::EclIO::SummaryNode node;
+                node.keyword = keyword;
+                node.category = category;
+                node.type = type;
+                node.wgname = well;
+
+                nodes.push_back(node);
+            }
+        }
+        break;
+    case Ewoms::EclIO::SummaryNode::Category::Group:
+        {
+            for (const auto& group : sched.groupNames()) {
+                Ewoms::EclIO::SummaryNode node;
+                node.keyword = keyword;
+                node.category = category;
+                node.type = type;
+                node.wgname = group;
+
+                nodes.push_back(node);
+            }
+        }
+        break;
+    default:
+        throw std::logic_error(fmt::format("make_default_nodes does not yet support: {}", keyword));
+    }
+
+    return nodes;
+}
+
+void Ewoms::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
+    auto nodes = std::vector<Ewoms::EclIO::SummaryNode> {};
+    std::unordered_set<std::string> summary_keys;
+    for (const auto& udq_ptr : sched.udqConfigList())
+        udq_ptr->required_summary(summary_keys);
+
+    for (const auto& key : summary_keys) {
+        const auto& default_nodes = make_default_nodes(key, sched);
+        for (const auto& def_node : default_nodes)
+            nodes.push_back(def_node);
+    }
+
+    for (const auto& node: nodes) {
+        if (summary_config.hasSummaryKey(node.unique_key()))
+            // Handler already exists.  Don't add second evaluation.
+            continue;
+
+        auto fun_pos = funs.find(node.keyword);
+        if (fun_pos != funs.end())
+            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
+        else {
+            auto unit = single_values_units.find(node.keyword);
+            if (unit == single_values_units.end())
+                throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
+
+            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+        }
+    }
+}
+
 void
 Ewoms::out::Summary::SummaryImplementation::
 configureRequiredRestartParameters(const SummaryConfig& sumcfg,
@@ -2756,13 +2907,13 @@ configureRequiredRestartParameters(const SummaryConfig& sumcfg,
             return;
 
         auto fcnPos = funs.find(node.keyword);
-        assert ((fcnPos != funs.end()) &&
-                "Internal error creating required restart vectors");
+        if (fcnPos == funs.end())
+            throw std::logic_error(fmt::format("Evaluation function for:{} not found", node.keyword));
 
         auto eval = std::make_unique<
             Evaluator::FunctionRelation>(node, fcnPos->second);
 
-        this->requiredRestartParameters_.push_back(std::move(eval));
+        this->extra_parameters.emplace(node.unique_key(), std::move(eval));
     };
 
     for (const auto& node : requiredRestartVectors(sched))

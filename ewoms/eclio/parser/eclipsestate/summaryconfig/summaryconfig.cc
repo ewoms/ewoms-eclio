@@ -254,6 +254,10 @@ namespace {
             || is_in_set(countkw, keyword.substr(1));
     }
 
+    bool is_liquid_phase(const std::string& keyword) {
+        return keyword == "WPIL";
+    }
+
     bool is_region_to_region(const std::string& keyword) {
         using sz_t = std::string::size_type;
         if ((keyword.size() == sz_t{3}) && keyword[2] == 'F') return true;
@@ -410,14 +414,14 @@ inline void keywordW( SummaryConfig::keyword_list& list,
       Two step check for whether to discard this keyword as unsupported:
 
       1. Completion quantity keywords are currently not supported.  These are
-      well summary keywords, apart from "WMCTL", that end in 'L'.
+      well summary keywords, apart from "WMCTL" and "WPIL", that end in 'L'.
 
       2. If the keyword is a UDQ keyword there is no convention enforced to
       the last character, and in that case it is treated as a normal well
       keyword anyways.
     */
     if (keyword.name().back() == 'L') {
-        if (! (is_control_mode(keyword.name()) || is_udq(keyword.name()))) {
+        if (! (is_control_mode(keyword.name()) || is_liquid_phase(keyword.name()) || is_udq(keyword.name()))) {
             const auto& location = keyword.location();
             std::string msg = "Unsupported summary output keyword {}\n"
                               "In {file} line {line}";
@@ -909,7 +913,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         if (!udq.has_unit(location.keyword)) {
             std::string msg = "Summary output requested for UDQ {keyword}\n"
                               "In {file} line {line}\n"
-                              "No unit define in the SCHEDULE section";
+                              "No unit defined in the SCHEDULE section for {keyword}";
             parseContext.handleError(ParseContext::SUMMARY_UDQ_MISSING_UNIT, msg, location, errors);
         }
     }
@@ -1201,8 +1205,12 @@ SummaryConfig::SummaryConfig( const Deck& deck,
             if (section.hasKeyword(meta_pair.first)) {
                 const auto& deck_keyword = section.getKeyword(meta_pair.first);
                 for (const auto& kw : meta_pair.second) {
-                    if (!this->hasKeyword(kw))
-                        handleKW(this->m_keywords, kw, deck_keyword.location(), schedule, aquiferConfig, parseContext, errors);
+                    if (!this->hasKeyword(kw)) {
+                        KeywordLocation location = deck_keyword.location();
+                        location.keyword = fmt::format("{}/{}", meta_pair.first, kw);
+
+                        handleKW(this->m_keywords, kw, location, schedule, aquiferConfig, parseContext, errors);
+                    }
                 }
             }
         }
@@ -1350,9 +1358,8 @@ bool SummaryConfig::require3DField( const std::string& keyword ) const {
 std::set<std::string> SummaryConfig::fip_regions() const {
     std::set<std::string> reg_set;
     for (const auto& node : this->m_keywords) {
-        const auto& fip_region = node.fip_region();
-        if (fip_region.size() > 0)
-            reg_set.insert( fip_region );
+        if (node.category() == EclIO::SummaryNode::Category::Region)
+            reg_set.insert( node.fip_region() );
     }
     return reg_set;
 }

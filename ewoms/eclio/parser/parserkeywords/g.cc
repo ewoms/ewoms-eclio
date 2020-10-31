@@ -2626,6 +2626,8 @@ GROUP_PROBE::GROUP_PROBE( ) : ParserKeyword("GROUP_PROBE")
   addDeckName("GEDC");
   addDeckName("GEDCQ");
   addDeckName("GEFF");
+  addDeckName("GEIR");
+  addDeckName("GEIT");
   addDeckName("GEPR");
   addDeckName("GEPT");
   addDeckName("GESR");

@@ -170,12 +170,14 @@ void ERsm::load_block(std::deque<std::string>& lines, std::size_t& vector_length
 
     std::vector<ERsm::Vector> block_data;
     for (std::size_t kw_index = 1; kw_index < kw_list.size(); kw_index++) {
-        auto node = SummaryNode{ kw_list[kw_index],
-                                 SummaryNode::category_from_keyword(kw_list[kw_index]),
-                                 SummaryNode::Type::Undefined,
-                                 wgnames[kw_index],
-                                 make_num(nums_list[kw_index]),
-                                 ""};
+        SummaryNode node = {
+            .keyword = kw_list[kw_index],
+            .category = SummaryNode::category_from_keyword(kw_list[kw_index]),
+            .type = SummaryNode::Type::Undefined,
+            .wgname = wgnames[kw_index],
+            .number = make_num(nums_list[kw_index]),
+            .fip_region = std::string("")
+        };
         block_data.emplace_back( node, vector_length );
     }
 

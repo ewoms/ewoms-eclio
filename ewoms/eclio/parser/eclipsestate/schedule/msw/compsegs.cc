@@ -29,6 +29,7 @@
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
+#include <ewoms/eclio/output/vectoritems/well.hh>
 #include <ewoms/eclio/io/rst/well.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
@@ -352,6 +353,20 @@ namespace {
         }
     }
 
+    WellSegments::CompPressureDrop pressure_drop_from_int(int ecl_id) {
+        using PLM = RestartIO::Helpers::VectorItems::IWell::Value::PLossMod;
+        switch (ecl_id) {
+        case PLM::HFA:
+            return WellSegments::CompPressureDrop::HFA;
+        case PLM::HF_:
+            return WellSegments::CompPressureDrop::HF_;
+        case PLM::H__:
+            return WellSegments::CompPressureDrop::H__;
+        default:
+            throw std::logic_error("Converting to pressure loss value failed");
+        }
+    }
+
 }
 
     std::pair<WellConnections, WellSegments>
@@ -386,7 +401,7 @@ namespace {
             segments_list.push_back( std::move(segment_pair.second) );
 
         std::sort( segments_list.begin(), segments_list.end(),[](const Segment& seg1, const Segment& seg2) { return seg1.segmentNumber() < seg2.segmentNumber(); } );
-        auto comp_pressure_drop = WellSegments::CompPressureDrop::HFA;
+        auto comp_pressure_drop = pressure_drop_from_int(rst_well.msw_pressure_drop_model);
 
         WellSegments segments( comp_pressure_drop, segments_list);
         segments.updatePerfLength( connections );

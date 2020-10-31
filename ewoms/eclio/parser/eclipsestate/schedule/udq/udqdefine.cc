@@ -21,12 +21,15 @@
 #include <iostream>
 #include <cstring>
 #include <tuple>
+#include <ewoms/common/fmt/format.h>
+#include <exception>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/errorguard.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqastnode.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqdefine.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
+#include <ewoms/eclio/opmlog/opmlog.hh>
 
 #include <ewoms/eclio/parser/rawdeck/rawconsts.hh>
 #include "udqtoken.hh"
@@ -162,7 +165,8 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
     m_keyword(keyword),
-    m_var_type(UDQ::varType(keyword))
+    m_var_type(UDQ::varType(keyword)),
+    m_location(location)
 {
     std::vector<std::string> string_tokens;
     for (const std::string& deck_item : deck_data) {
@@ -184,16 +188,8 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
             }
         }
     }
-    /*
-      This is hysterical special casing; the parser does not correctly handle a
-      leading '-' to change sign; we just hack it up by adding a fictious '0'
-      token in front.
-    */
-    if (string_tokens[0] == "-")
-        string_tokens.insert( string_tokens.begin(), "0" );
     std::vector<UDQToken> tokens = make_tokens(string_tokens);
-
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, location, tokens, parseContext, errors) );
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, tokens, parseContext, errors) );
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
         this->string_data += deck_data[index];
@@ -202,16 +198,6 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
     }
 }
 
-UDQDefine::UDQDefine(const std::string& keyword,
-                     std::shared_ptr<UDQASTNode> astPtr,
-                     UDQVarType type,
-                     const std::string& stringData)
-    : m_keyword(keyword)
-    , ast(astPtr)
-    , m_var_type(type)
-    , string_data(stringData)
-{}
-
 UDQDefine UDQDefine::serializeObject()
 {
     UDQDefine result;
@@ -219,6 +205,7 @@ UDQDefine UDQDefine::serializeObject()
     result.ast = std::make_shared<UDQASTNode>(UDQASTNode::serializeObject());
     result.m_var_type = UDQVarType::SEGMENT_VAR;
     result.string_data = "test2";
+    result.m_location = KeywordLocation{"KEYWOR", "file", 100};
 
     return result;
 }
@@ -248,15 +235,25 @@ void UDQDefine::required_summary(std::unordered_set<std::string>& summary_keys) 
 }
 
 UDQSet UDQDefine::eval(const UDQContext& context) const {
-    UDQSet res = this->ast->eval(this->m_var_type, context);
-    res.name( this->m_keyword );
-
-    if (!dynamic_type_check(this->var_type(), res.var_type())) {
-        std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
-        throw std::invalid_argument(msg);
+    Ewoms::optional<UDQSet> res;
+    try {
+        res = this->ast->eval(this->m_var_type, context);
+        res->name( this->m_keyword );
+        if (!dynamic_type_check(this->var_type(), res->var_type())) {
+            std::string msg = "Invalid runtime type conversion detected when evaluating UDQ";
+            throw std::invalid_argument(msg);
+        }
+    } catch (const std::exception& exc) {
+        auto msg = fmt::format("Problem evaluating UDQ {}\n"
+                               "In {} line {}\n"
+                               "Internal error: {}", this->m_keyword, this->m_location.filename, this->m_location.lineno, exc.what());
+        OpmLog::error(msg);
+        std::throw_with_nested(exc);
     }
+    if (!res)
+        throw std::logic_error("Bug in UDQDefine::eval()");
 
-    if (res.var_type() == UDQVarType::SCALAR) {
+    if (res->var_type() == UDQVarType::SCALAR) {
         /*
           If the right hand side evaluates to a scalar that scalar value should
           be set for all wells in the wellset:
@@ -273,7 +270,7 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
           regarding the semantics of group sets.
         */
 
-        const auto& scalar_value = res[0].value();
+        const auto& scalar_value = res->operator[](0).value();
         if (this->var_type() == UDQVarType::WELL_VAR) {
             const std::vector<std::string> wells = context.wells();
             UDQSet well_res = UDQSet::wells(this->m_keyword, wells);
@@ -295,7 +292,11 @@ UDQSet UDQDefine::eval(const UDQContext& context) const {
         }
     }
 
-    return res;
+    return *res;
+}
+
+const KeywordLocation& UDQDefine::location() const {
+    return this->m_location;
 }
 
 UDQVarType UDQDefine::var_type() const {
@@ -321,6 +322,7 @@ bool UDQDefine::operator==(const UDQDefine& data) const {
         return false;
 
     return this->keyword() == data.keyword() &&
+           this->m_location == data.location() &&
            this->var_type() == data.var_type() &&
            this->input_string() == data.input_string();
 }

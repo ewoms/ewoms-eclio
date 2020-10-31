@@ -35,6 +35,8 @@ namespace Ewoms {
     class Deck;
     class DeckKeyword;
     class DeckRecord;
+    class KeywordLocation;
+    class TimeMapContext;
 
     class TimeMap {
     public:
@@ -107,9 +109,8 @@ namespace Ewoms {
 
         bool isTimestepInFreqSequence (size_t timestep, size_t start_timestep, size_t frequency, bool years) const;
         size_t closest(const std::vector<size_t> & vec, size_t value) const;
-        void addTStep(int64_t step);
-        void addTime(std::time_t newTime);
-        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword );
+        void addTime(std::time_t newTime, TimeMapContext& context, const KeywordLocation& location);
+        void addFromTSTEPKeyword( const DeckKeyword& TSTEPKeyword, TimeMapContext& context);
         void init_start(std::time_t start_time);
 
         std::vector<std::time_t> m_timeList;

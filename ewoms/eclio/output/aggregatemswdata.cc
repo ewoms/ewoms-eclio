@@ -181,30 +181,37 @@ namespace {
         return segmentOrder(segSet, 0);
     }
 
+    /// Accumulate connection flow rates (surface conditions) to their connecting segment.
     Ewoms::RestartIO::Helpers::SegmentSetSourceSinkTerms
-    getSegmentSetSSTerms(const std::string& wname, const Ewoms::WellSegments& segSet, const std::vector<Ewoms::data::Connection>& rateConns,
-                         const Ewoms::WellConnections& welConns, const Ewoms::UnitSystem& units)
+    getSegmentSetSSTerms(const Ewoms::WellSegments& segSet,
+                         const std::vector<Ewoms::data::Connection>& rateConns,
+                         const Ewoms::WellConnections& welConns,
+                         const Ewoms::UnitSystem& units)
     {
         std::vector<double> qosc (segSet.size(), 0.);
         std::vector<double> qwsc (segSet.size(), 0.);
         std::vector<double> qgsc (segSet.size(), 0.);
-        std::vector<const Ewoms::Connection* > openConnections;
-        using M  = ::Ewoms::UnitSystem::measure;
-        using R  = ::Ewoms::data::Rates::opt;
-        for (auto nConn = welConns.size(), connID = 0*nConn; connID < nConn; connID++) {
-            if (welConns[connID].state() == Ewoms::Connection::State::OPEN) openConnections.push_back(&welConns[connID]);
-        }
-        if (openConnections.size() != rateConns.size()) {
-            throw std::invalid_argument {
-                "Inconsistent number of open connections I in Ewoms::WellConnections (" +
-                std::to_string(welConns.size()) + ") and vector<Ewoms::data::Connection> (" +
-                std::to_string(rateConns.size()) + ") in Well " + wname
-            };
-        }
-        for (auto nConn = openConnections.size(), connID = 0*nConn; connID < nConn; connID++) {
-            const auto& segNo = openConnections[connID]->segment();
-            const auto& segInd = segSet.segmentNumberToIndex(segNo);
-            const auto& Q = rateConns[connID].rates;
+
+        using M = ::Ewoms::UnitSystem::measure;
+        using R = ::Ewoms::data::Rates::opt;
+
+        for (const auto& conn : welConns) {
+            if (conn.state() != Ewoms::Connection::State::OPEN) {
+                continue;
+            }
+
+            auto xcPos = std::find_if(rateConns.begin(), rateConns.end(),
+                [&conn](const Ewoms::data::Connection& xconn) -> bool
+            {
+                return xconn.index == conn.global_index();
+            });
+
+            if (xcPos == rateConns.end()) {
+                continue;
+            }
+
+            const auto segInd = segSet.segmentNumberToIndex(conn.segment());
+            const auto& Q = xcPos->rates;
 
             auto get = [&units, &Q](const M u, const R q) -> double
             {
@@ -226,15 +233,17 @@ namespace {
     }
 
     Ewoms::RestartIO::Helpers::SegmentSetFlowRates
-    getSegmentSetFlowRates(const std::string& wname, const Ewoms::WellSegments& segSet, const std::vector<Ewoms::data::Connection>& rateConns,
-                           const Ewoms::WellConnections& welConns, const Ewoms::UnitSystem& units)
+    getSegmentSetFlowRates(const Ewoms::WellSegments& segSet,
+                           const std::vector<Ewoms::data::Connection>& rateConns,
+                           const Ewoms::WellConnections& welConns,
+                           const Ewoms::UnitSystem& units)
     {
         std::vector<double> sofr (segSet.size(), 0.);
         std::vector<double> swfr (segSet.size(), 0.);
         std::vector<double> sgfr (segSet.size(), 0.);
         //
         //call function to calculate the individual segment source/sink terms
-        auto sSSST = getSegmentSetSSTerms(wname, segSet, rateConns, welConns, units);
+        auto segmentSources = getSegmentSetSSTerms(segSet, rateConns, welConns, units);
 
         // find an ordered list of segments
         auto orderedSegmentInd = segmentOrder(segSet);
@@ -245,9 +254,9 @@ namespace {
             const auto& segInd = sNFOSN[indOSN];
             // the segment flow rates is the sum of the the source/sink terms for each segment plus the flow rates from the inflow segments
             // add source sink terms
-            sofr[segInd] += sSSST.qosc[segInd];
-            swfr[segInd] += sSSST.qwsc[segInd];
-            sgfr[segInd] += sSSST.qgsc[segInd];
+            sofr[segInd] += segmentSources.qosc[segInd];
+            swfr[segInd] += segmentSources.qwsc[segInd];
+            sgfr[segInd] += segmentSources.qgsc[segInd];
             // add flow from all inflow segments
             for (const auto& segNo : segSet[segInd].inletSegments()) {
                 const auto & ifSegInd = segSet.segmentNumberToIndex(segNo);
@@ -256,6 +265,7 @@ namespace {
                 sgfr[segInd] += sgfr[ifSegInd];
             }
         }
+
         return {
             sofr,
             swfr,
@@ -654,7 +664,7 @@ namespace {
                 // find well connections and calculate segment rates based on well connection production/injection terms
                 auto sSFR = Ewoms::RestartIO::Helpers::SegmentSetFlowRates{};
                 if (haveWellRes) {
-                    sSFR = getSegmentSetFlowRates(well.name(), welSegSet, wRatesIt->second.connections, welConns, units);
+                    sSFR = getSegmentSetFlowRates(welSegSet, wRatesIt->second.connections, welConns, units);
                 }
 
                 std::string stringSegNum = std::to_string(segment0.segmentNumber());

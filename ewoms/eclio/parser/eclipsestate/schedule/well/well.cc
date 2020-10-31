@@ -25,6 +25,7 @@
 #include <ewoms/eclio/io/rst/well.hh>
 #include <ewoms/eclio/output/vectoritems/well.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqactive.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
@@ -372,7 +373,7 @@ Well Well::serializeObject()
     result.efficiency_factor = 8.0;
     result.solvent_fraction = 9.0;
     result.prediction_mode = false;
-    result.productivity_index = WellProductivityIndex { 10.0, Phase::GAS };
+    result.productivity_index = 10.0;
     result.econ_limits = std::make_shared<Ewoms::WellEconProductionLimits>(Ewoms::WellEconProductionLimits::serializeObject());
     result.foam_properties = std::make_shared<WellFoamProperties>(WellFoamProperties::serializeObject());
     result.polymer_properties =  std::make_shared<WellPolymerProperties>(WellPolymerProperties::serializeObject());
@@ -484,7 +485,7 @@ bool Well::updateInjection(std::shared_ptr<WellInjectionProperties> injection_ar
     return update;
 }
 
-bool Well::updateWellProductivityIndex(const WellProductivityIndex& prodIndex) {
+bool Well::updateWellProductivityIndex(const double prodIndex) {
     const auto update = this->productivity_index != prodIndex;
     if (update)
         this->productivity_index = prodIndex;
@@ -813,6 +814,32 @@ void Well::setInsertIndex(std::size_t index) {
     this->insert_index = index;
 }
 
+namespace {
+    double convertWellPIToSI(const double rawWellPI,
+                             const Phase preferred_phase,
+                             const UnitSystem& unit_system)
+    {
+        using M = UnitSystem::measure;
+
+        // XXX: Should really have LIQUID here too, but the 'Phase' type does
+        //      not provide that enumerator.
+        switch (preferred_phase) {
+        case Phase::GAS:
+            return unit_system.to_si(M::gas_productivity_index, rawWellPI);
+
+        case Phase::OIL:
+        case Phase::WATER:
+            return unit_system.to_si(M::liquid_productivity_index, rawWellPI);
+
+        default:
+            throw std::invalid_argument {
+                "Preferred phase " + std::to_string(static_cast<int>(preferred_phase)) +
+                " is not supported. Must be one of 'OIL', 'GAS', or 'WATER'"
+            };
+        }
+    }
+}
+
 double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
     if (this->connections->empty())
         // No connections for this well.  Unexpected.
@@ -822,11 +849,10 @@ double Well::getWellPIScalingFactor(const double currentEffectivePI) const {
         // WELPI not activated.  Nothing to do.
         return 1.0;
 
-    if (this->productivity_index->pi_value == currentEffectivePI)
-        // No change in scaling.
-        return 1.0;
+    const double requestedWellPI_SI =
+        convertWellPIToSI(*this->productivity_index, this->getPreferredPhase(), this->unit_system);
 
-    return this->productivity_index->pi_value / currentEffectivePI;
+    return requestedWellPI_SI / currentEffectivePI;
 }
 
 void Well::applyWellProdIndexScaling(const double scalingFactor, std::vector<bool>& scalingApplicable) {
@@ -849,6 +875,15 @@ const WellConnections& Well::getConnections() const {
     return *this->connections;
 }
 
+const std::vector<const Connection *> Well::getConnections(int completion) const {
+    std::vector<const Connection *> connvector;
+    for (const auto& conn : this->getConnections()) {
+        if (conn.complnum() == completion)
+            connvector.push_back( &conn );
+    }
+    return connvector;
+}
+
 const WellFoamProperties& Well::getFoamProperties() const {
     return *this->foam_properties;
 }
@@ -863,16 +898,6 @@ const WellBrineProperties& Well::getBrineProperties() const {
 
 const WellTracerProperties& Well::getTracerProperties() const {
     return *this->tracer_properties;
-}
-
-const Well::WellProductivityIndex& Well::getWellProductivityIndex() const
-{
-    if (this->productivity_index)
-        return *this->productivity_index;
-    else
-        throw std::logic_error {
-            "WELPI not activated in well " + this->name()
-        };
 }
 
 const WellEconProductionLimits& Well::getEconLimits() const {
@@ -911,6 +936,14 @@ std::map<int, std::vector<Connection>> Well::getCompletions() const {
     }
 
     return completions;
+}
+
+bool Well::hasCompletion(int completion) const {
+    for (const auto& conn : *this->connections) {
+        if (conn.complnum() == completion)
+            return true;
+    }
+    return false;
 }
 
 Phase Well::getPreferredPhase() const {

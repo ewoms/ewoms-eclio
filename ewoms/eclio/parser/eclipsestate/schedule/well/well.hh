@@ -415,29 +415,6 @@ public:
         double getBHPLimit() const;
     };
 
-    struct WellProductivityIndex {
-        double pi_value;
-        Phase preferred_phase;
-
-        bool operator==(const WellProductivityIndex& rhs) const
-        {
-            return (this->pi_value == rhs.pi_value)
-                && (this->preferred_phase == rhs.preferred_phase);
-        }
-
-        bool operator!=(const WellProductivityIndex& rhs) const
-        {
-            return ! (*this == rhs);
-        }
-
-        template <class Serializer>
-        void serializeOp(Serializer& serializer)
-        {
-            serializer(this->pi_value);
-            serializer(this->preferred_phase);
-        }
-    };
-
     Well() = default;
     Well(const std::string& wname,
          const std::string& gname,
@@ -491,6 +468,7 @@ public:
     Status getStatus() const;
     const std::string& groupName() const;
     Phase getPreferredPhase() const;
+
     const WellConnections& getConnections() const;
     const WellSegments& getSegments() const;
 
@@ -501,7 +479,6 @@ public:
     const WellPolymerProperties& getPolymerProperties() const;
     const WellBrineProperties& getBrineProperties() const;
     const WellTracerProperties& getTracerProperties() const;
-    const WellProductivityIndex& getWellProductivityIndex() const;
     /* The rate of a given phase under the following assumptions:
      * * Returns zero if production is requested for an injector (and vice
      *   versa)
@@ -528,6 +505,13 @@ public:
       keyword.
     */
     std::map<int, std::vector<Connection>> getCompletions() const;
+    /*
+      For hasCompletion(int completion) and getConnections(int completion) the
+      completion argument is an integer ID used to denote a collection of
+      connections. The integer ID is assigned with the COMPLUMP keyword.
+     */
+    bool hasCompletion(int completion) const;
+    const std::vector<const Connection *> getConnections(int completion) const;
 
     bool updatePrediction(bool prediction_mode);
     bool updateAutoShutin(bool auto_shutin);
@@ -553,7 +537,7 @@ public:
     bool updateEconLimits(std::shared_ptr<WellEconProductionLimits> econ_limits);
     bool updateProduction(std::shared_ptr<WellProductionProperties> production);
     bool updateInjection(std::shared_ptr<WellInjectionProperties> injection);
-    bool updateWellProductivityIndex(const WellProductivityIndex& prodIndex);
+    bool updateWellProductivityIndex(const double prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
 
@@ -650,7 +634,7 @@ private:
     bool has_produced = false;
     bool has_injected = false;
     bool prediction_mode = true;
-    Ewoms::optional<WellProductivityIndex> productivity_index{ Ewoms::nullopt };
+    Ewoms::optional<double> productivity_index{ Ewoms::nullopt };
 
     std::shared_ptr<WellEconProductionLimits> econ_limits;
     std::shared_ptr<WellFoamProperties> foam_properties;

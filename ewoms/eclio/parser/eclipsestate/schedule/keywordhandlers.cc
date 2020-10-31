@@ -344,9 +344,16 @@ namespace {
             const bool apply_default_liquid_target = record.getItem("LIQUID_TARGET").defaultApplied(0);
             const bool apply_default_resv_target = record.getItem("RESERVOIR_FLUID_TARGET").defaultApplied(0);
 
-            const Ewoms::optional<std::string> guide_rate_str = record.getItem("GUIDE_RATE_DEF").hasValue(0)
-                ? Ewoms::optional<std::string>(record.getItem("GUIDE_RATE_DEF").getTrimmedString(0))
-                : Ewoms::nullopt;
+            Ewoms::optional<std::string> guide_rate_str;
+            {
+                const auto& item = record.getItem("GUIDE_RATE_DEF");
+                if (item.hasValue(0)) {
+                    const auto& string_value = record.getItem("GUIDE_RATE_DEF").getTrimmedString(0);
+                    if (string_value.size() > 0)
+                        guide_rate_str = string_value;
+                }
+
+            }
 
             for (const auto& group_name : group_names) {
                 const bool is_field { group_name == "FIELD" } ;
@@ -376,7 +383,8 @@ namespace {
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
                     Group::GroupProductionProperties production(group_name);
-                    production.cmode = controlMode;
+                    production.gconprod_cmode = controlMode;
+                    production.active_cmode = controlMode;
                     production.oil_target = oil_target;
                     production.gas_target = gas_target;
                     production.water_target = water_target;
@@ -386,10 +394,10 @@ namespace {
                     production.resv_target = resv_target;
                     production.available_group_control = availableForGroupControl;
 
-                    if ((production.cmode == Group::ProductionCMode::ORAT) ||
-                        (production.cmode == Group::ProductionCMode::WRAT) ||
-                        (production.cmode == Group::ProductionCMode::GRAT) ||
-                        (production.cmode == Group::ProductionCMode::LRAT))
+                    if ((production.gconprod_cmode == Group::ProductionCMode::ORAT) ||
+                        (production.gconprod_cmode == Group::ProductionCMode::WRAT) ||
+                        (production.gconprod_cmode == Group::ProductionCMode::GRAT) ||
+                        (production.gconprod_cmode == Group::ProductionCMode::LRAT))
                         production.exceed_action = Group::ExceedAction::RATE;
                     else
                         production.exceed_action = exceedAction;
@@ -1099,10 +1107,6 @@ namespace {
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
-        const auto& usys  = handlerContext.section.unitSystem();
-        const auto  gasPI = UnitSystem::measure::gas_productivity_index;
-        const auto  liqPI = UnitSystem::measure::liquid_productivity_index;
-
         for (const auto& record : handlerContext.keyword) {
             const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
                                                    handlerContext.currentStep);
@@ -1114,29 +1118,22 @@ namespace {
 
             const auto rawProdIndex = record.getItem<PI>().get<double>(0);
             for (const auto& well_name : well_names) {
-                // All wells in a single record *hopefully* have the same preferred phase...
-                const auto& well      = this->getWell(well_name, handlerContext.currentStep);
-                const auto  preferred = well.getPreferredPhase();
-                const auto  unitPI    = (preferred == Phase::GAS) ? gasPI : liqPI;
-
-                const auto wellPI = Well::WellProductivityIndex {
-                    usys.to_si(unitPI, rawProdIndex),
-                    preferred
-                };
+                auto well2 = std::make_shared<Well>(this->getWell(well_name, handlerContext.currentStep));
 
                 // Note: Need to ensure we have an independent copy of
                 // well's connections because
                 // Well::updateWellProductivityIndex() implicitly mutates
                 // internal state in the WellConnections class.
-                auto well2       = std::make_shared<Well>(well);
                 auto connections = std::make_shared<WellConnections>(well2->getConnections());
                 well2->forceUpdateConnections(std::move(connections));
-                if (well2->updateWellProductivityIndex(wellPI))
+                if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), handlerContext.currentStep);
 
                 this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
             }
         }
+
+        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, handlerContext.currentStep);
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {

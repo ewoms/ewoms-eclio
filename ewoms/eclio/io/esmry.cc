@@ -172,14 +172,15 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             combindKeyList.push_back(keyString);
 
             if (keyString.length() > 0) {
-                summaryNodes.push_back({
-                    keywords[i],
-                    SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
-                    SummaryNode::Type::Undefined,
-                    wgnames[i],
-                    nums[i],
-                    ""
-                });
+                SummaryNode node = {
+                    .keyword = keywords[i],
+                    .category = SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                    .type = SummaryNode::Type::Undefined,
+                    .wgname = std::string(wgnames[i]),
+                    .number = nums[i],
+                    .fip_region = std::string("")
+                };
+                summaryNodes.push_back(node);
 
                 keywList.insert(keyString);
                 kwunits[keyString] = units[i];
@@ -236,14 +237,15 @@ ESmry::ESmry(const std::string &filename, bool loadBaseRunData) :
             const std::string keyString = makeKeyString(keywords[i], wgnames[i], nums[i]);
             combindKeyList.push_back(keyString);
             if (keyString.length() > 0) {
-                summaryNodes.push_back({
-                    keywords[i],
-                    SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
-                    SummaryNode::Type::Undefined,
-                    wgnames[i],
-                    nums[i],
-                    ""
-                });
+                SummaryNode node = {
+                    .keyword = keywords[i],
+                    .category = SummaryNode::category_from_keyword(keywords[i], segmentExceptions),
+                    .type = SummaryNode::Type::Undefined,
+                    .wgname = std::string(wgnames[i]),
+                    .number = nums[i],
+                    .fip_region = std::string("")
+                };
+                summaryNodes.push_back(node);
 
                 keywList.insert(keyString);
                 kwunits[keyString] = units[i];

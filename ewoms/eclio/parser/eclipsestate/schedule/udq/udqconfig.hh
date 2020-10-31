@@ -32,6 +32,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/orderedmap.hh>
 #include <ewoms/eclio/parser/eclipsestate/util/iorderset.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms {
 

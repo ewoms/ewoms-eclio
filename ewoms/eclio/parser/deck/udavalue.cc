@@ -18,6 +18,8 @@
 */
 #include "config.h"
 
+#include <ewoms/common/fmt/format.h>
+
 #include <iostream>
 
 #include <ewoms/eclio/parser/deck/udavalue.hh>
@@ -71,8 +73,10 @@ UDAValue UDAValue::serializeObject()
 }
 
 void UDAValue::assert_numeric() const {
-    std::string msg = "Internal error: The support for use of UDQ/UDA is not complete in eWoms. The string: '" + this->string_value + "' must be numeric";
-    this->assert_numeric(msg);
+    if (!this->numeric_value) {
+        std::string msg = fmt::format("Internal error: The support for use of UDQ/UDA is not complete in eWoms. The string: '{}' must be numeric", this->string_value);
+        this->assert_numeric(msg);
+    }
 }
 
 void UDAValue::assert_numeric(const std::string& error_msg) const {
