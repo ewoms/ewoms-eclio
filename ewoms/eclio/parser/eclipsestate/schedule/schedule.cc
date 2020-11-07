@@ -128,11 +128,12 @@ namespace {
         rft_config(this->m_timeMap),
         m_nupcol(this->m_timeMap, runspec.nupcol()),
         restart_config(m_timeMap, deck, parseContext, errors),
+        unit_system(deck.getActiveUnitSystem()),
         rpt_config(this->m_timeMap, std::make_shared<RPTConfig>())
     {
-        addGroup( "FIELD", 0, deck.getActiveUnitSystem());
+        addGroup( "FIELD", 0);
         if (rst)
-            this->load_rst(*rst, grid, fp, deck.getActiveUnitSystem());
+            this->load_rst(*rst, grid, fp);
 
         /*
           We can have the MESSAGES keyword anywhere in the deck, we
@@ -240,6 +241,7 @@ namespace {
         result.m_nupcol = {{1}, 1};
         result.restart_config = RestartConfig::serializeObject();
         result.wellgroup_events = {{"test", Events::serializeObject()}};
+        result.unit_system = UnitSystem::newFIELD();
 
         return result;
     }
@@ -267,7 +269,18 @@ namespace {
                                  const FieldPropsManager& fp,
                                  std::vector<std::pair<const DeckKeyword*, std::size_t > >& rftProperties) {
 
-        const HandlerContext handlerContext { section, keyword, keywordIdx, currentStep, grid, fp };
+        HandlerContext handlerContext { keyword, currentStep, grid, fp };
+
+        /*
+          The WELSPECS handler needs to look in the same report step for a
+          COMPORD keyword. This keyword-keyword interaction is quite ugly, so in
+          this case it is made very explicit - hopefully it can be refactored in
+          the future.
+         */
+        if (keyword.name() == "WELSPECS") {
+            handlerContext.section = &section;
+            handlerContext.keywordIndex = keywordIdx;
+        }
 
         if (handleNormalKeyword(handlerContext, parseContext, errors))
             return;
@@ -326,9 +339,8 @@ private:
                                           const FieldPropsManager& fp) {
 
         std::vector<std::pair< const DeckKeyword* , std::size_t> > rftProperties;
-        const auto& unit_system = section.unitSystem();
-        std::string time_unit = unit_system.name(UnitSystem::measure::time);
-        auto convert_time = [&unit_system](double seconds) { return unit_system.from_si(UnitSystem::measure::time, seconds); };
+        std::string time_unit = this->unit_system.name(UnitSystem::measure::time);
+        auto convert_time = [this](double seconds) { return this->unit_system.from_si(UnitSystem::measure::time, seconds); };
         std::size_t keywordIdx = 0;
         std::string current_file;
         const auto& time_map = this->m_timeMap;
@@ -362,7 +374,7 @@ private:
             const auto& schedule_keyword = section.getKeyword<ParserKeywords::SCHEDULE>();
             const auto& location = schedule_keyword.location();
             current_file = location.filename;
-            logger.info(fmt::format("Processing dynamic information from\n{} line {}", current_file, location.lineno));
+            logger.info(fmt::format("\nProcessing dynamic information from\n{} line {}", current_file, location.lineno));
             if (restart_skip)
                 logger.info(fmt::format("This is a restarted run - skipping until report step {} at {}", time_map.restart_offset(), Schedule::formatDate(time_map.restart_time())));
 
@@ -394,7 +406,7 @@ private:
                             restart_skip = false;
                             currentStep = time_map.restart_offset();
                             logger.restart();
-                            logger(fmt::format("Found restart date {}", Schedule::formatDate(deck_time)));
+                            logger(fmt::format("Found restart date: {} report: {}", Schedule::formatDate(deck_time), time_map.restart_offset()));
                         } else
                             logger(fmt::format("Skipping DATES keyword {}", Schedule::formatDate(deck_time)));
                     } else {
@@ -726,8 +738,7 @@ private:
     void Schedule::addWell(const std::string& wellName,
                            const DeckRecord& record,
                            std::size_t timeStep,
-                           Connection::Order wellConnectionOrder,
-                           const UnitSystem& unit_system)
+                           Connection::Order wellConnectionOrder)
     {
         // We change from eclipse's 1 - n, to a 0 - n-1 solution
         int headI = record.getItem("HEAD_I").get< int >(0) - 1;
@@ -780,8 +791,7 @@ private:
                       pvt_table,
                       gas_inflow,
                       timeStep,
-                      wellConnectionOrder,
-                      unit_system);
+                      wellConnectionOrder);
     }
 
     void Schedule::addWell(Well well, std::size_t report_step) {
@@ -809,8 +819,7 @@ private:
                            int pvt_table,
                            Well::GasInflowEquation gas_inflow,
                            std::size_t timeStep,
-                           Connection::Order wellConnectionOrder,
-                           const UnitSystem& unit_system) {
+                           Connection::Order wellConnectionOrder) {
 
         Well well(wellName,
                   group,
@@ -821,7 +830,7 @@ private:
                   WellType(preferredPhase),
                   this->global_whistctl_mode[timeStep],
                   wellConnectionOrder,
-                  unit_system,
+                  this->unit_system,
                   this->getUDQConfig(timeStep).params().undefinedValue(),
                   drainageRadius,
                   allowCrossFlow,
@@ -994,40 +1003,22 @@ private:
     */
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern, std::size_t timeStep, const std::vector<std::string>& matching_wells) const {
-        if (pattern.size() == 0)
-            return {};
-
-        // WLIST
-        if (pattern[0] == '*' && pattern.size() > 1) {
-            const auto& wlm = this->getWListManager(timeStep);
-            return wlm.wells(pattern);
-        }
-
-        // Normal pattern matching
-        auto star_pos = pattern.find('*');
-        if (star_pos != std::string::npos) {
-            std::vector<std::string> names;
-            for (const auto& well_pair : this->wells_static) {
-                if (name_match(pattern, well_pair.first)) {
-                    const auto& dynamic_state = well_pair.second;
-                    if (dynamic_state.get(timeStep))
-                        names.push_back(well_pair.first);
-                }
-            }
-            return names;
-        }
-
         // ACTIONX handler
         if (pattern == "?")
             return { matching_wells.begin(), matching_wells.end() };
 
-        // Normal well name without any special characters
-        if (this->hasWell(pattern)) {
-            const auto& dynamic_state = this->wells_static.at(pattern);
-            if (dynamic_state.get(timeStep))
-                return { pattern };
+        auto wm = this->wellMatcher(timeStep);
+        return wm.wells(pattern);
+    }
+
+    WellMatcher Schedule::wellMatcher(std::size_t report_step) const {
+        std::vector<std::string> wnames;
+        for (const auto& well_pair : this->wells_static) {
+            const auto& dynamic_state = well_pair.second;
+            if (dynamic_state.get(report_step))
+                wnames.push_back(well_pair.first);
         }
-        return {};
+        return WellMatcher(wnames, this->getWListManager(report_step));
     }
 
     std::vector<std::string> Schedule::wellNames(const std::string& pattern) const {
@@ -1155,10 +1146,10 @@ private:
             this->addGroupToGroup("FIELD", *group_ptr, timeStep);
     }
 
-    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep, const UnitSystem& unit_system) {
+    void Schedule::addGroup(const std::string& groupName, std::size_t timeStep) {
         const std::size_t insert_index = this->groups.size();
         auto udq_undefined = this->getUDQConfig(timeStep).params().undefinedValue();
-        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, unit_system };
+        auto group = Group{ groupName, insert_index, timeStep, udq_undefined, this->unit_system };
         this->addGroup(group, timeStep);
     }
 
@@ -1544,6 +1535,7 @@ private:
                rft_config  == data.rft_config &&
                this->m_nupcol == data.m_nupcol &&
                this->restart_config == data.restart_config &&
+               this->unit_system == data.unit_system &&
                this->wellgroup_events == data.wellgroup_events;
      }
 
@@ -1552,9 +1544,9 @@ private:
         return fmt::format("{:04d}-{:02d}-{:02d}" , ts.year(), ts.month(), ts.day());
     }
 
-    std::string Schedule::simulationDays(const UnitSystem& unit_system, std::size_t currentStep) const {
-        const double sim_time { unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
-        return fmt::format("{} {}", sim_time, unit_system.name(UnitSystem::measure::time));
+    std::string Schedule::simulationDays(std::size_t currentStep) const {
+        const double sim_time { this->unit_system.from_si(UnitSystem::measure::time, simTime(currentStep)) } ;
+        return fmt::format("{} {}", sim_time, this->unit_system.name(UnitSystem::measure::time));
     }
 
 namespace {
@@ -1574,13 +1566,13 @@ namespace {
     }
 }
 
-    void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp, const UnitSystem& unit_system)
+    void Schedule::load_rst(const RestartIO::RstState& rst_state, const EclipseGrid& grid, const FieldPropsManager& fp)
     {
         double udq_undefined = 0;
         const auto report_step = rst_state.header.report_step - 1;
 
         for (const auto& rst_group : rst_state.groups) {
-            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, unit_system };
+            auto group = Group{ rst_group, this->groups.size(), static_cast<std::size_t>(report_step), udq_undefined, this->unit_system };
             this->addGroup(group, report_step);
 
             if (group.isProductionGroup()) {
@@ -1608,7 +1600,7 @@ namespace {
         }
 
         for (const auto& rst_well : rst_state.wells) {
-            Ewoms::Well well(rst_well, report_step, unit_system, udq_undefined);
+            Ewoms::Well well(rst_well, report_step, this->unit_system, udq_undefined);
             std::vector<Ewoms::Connection> rst_connections;
 
             for (const auto& rst_conn : rst_well.connections)
@@ -1637,9 +1629,8 @@ namespace {
             this->addWell(well, report_step);
             this->addWellToGroup(well.groupName(), well.name(), report_step);
         }
-
-        m_tuning.update(report_step, rst_state.tuning);
-        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step);
+        m_tuning.update(report_step + 1, rst_state.tuning);
+        m_events.addEvent( ScheduleEvents::TUNING_CHANGE , report_step + 1);
 
         {
             const auto& header = rst_state.header;

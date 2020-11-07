@@ -41,6 +41,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/gasliftopt.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wellmatcher.hh>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/deckitem.hh>
@@ -2153,7 +2154,7 @@ BOOST_AUTO_TEST_CASE( complump ) {
             /
 
             COMPDAT
-                'W1' 0 0 1 2 'SHUT' 1*    /
+                'W1' 0 0 1 2 'SHUT' 1*    /    Global Index = 23, 123, 223, 323, 423, 523
                 'W1' 0 0 2 3 'SHUT' 1*    /
                 'W1' 0 0 4 6 'SHUT' 1*    /
                 'W2' 0 0 3 4 'SHUT' 1*    /
@@ -2233,6 +2234,15 @@ BOOST_AUTO_TEST_CASE( complump ) {
             BOOST_CHECK( conn_iter != conn1.end() );
         }
     }
+
+    const auto& all_connections = w0.getConnections();
+    auto global_index = grid.getGlobalIndex(2,2,0);
+    BOOST_CHECK( all_connections.hasGlobalIndex(global_index));
+    const auto& conn_g = all_connections.getFromGlobalIndex(global_index);
+    const auto& conn_ijk = all_connections.getFromIJK(2,2,0);
+    BOOST_CHECK(conn_g == conn_ijk);
+
+    BOOST_CHECK_THROW( all_connections.getFromGlobalIndex(100000), std::exception );
 }
 
 BOOST_AUTO_TEST_CASE( COMPLUMP_specific_coordinates ) {
@@ -3203,6 +3213,34 @@ BOOST_AUTO_TEST_CASE(WellNames) {
 
     auto abs_all = schedule.wellNames();
     BOOST_CHECK_EQUAL(abs_all.size(), 9U);
+
+    WellMatcher wm0( {}, WListManager{});
+    const auto& wml0 = wm0.wells();
+    BOOST_CHECK(wml0.empty());
+
+    WellMatcher wm1( {"W1", "W2", "W3", "P1", "P2", "P3"}, WListManager{});
+    const std::vector<std::string> pwells = {"P1", "P2", "P3"};
+    BOOST_CHECK( pwells == wm1.wells("P*"));
+
+    auto wm2 = schedule.wellMatcher(4);
+    const auto& all_wells = wm2.wells();
+    BOOST_CHECK_EQUAL(all_wells.size(), 9);
+    for (const auto& w : std::vector<std::string>{"W1", "W2", "W3", "I1", "I2", "I3", "DEFAULT", "ALLOW", "BAN"})
+        BOOST_CHECK(has(all_wells, w));
+
+    const std::vector<std::string> wwells = {"W1", "W2", "W3"};
+    BOOST_CHECK( wwells == wm2.wells("W*"));
+    BOOST_CHECK( wm2.wells("XYZ*").empty() );
+    BOOST_CHECK( wm2.wells("XYZ").empty() );
+
+    auto def = wm2.wells("DEFAULT");
+    BOOST_CHECK_EQUAL(def.size() , 1);
+    BOOST_CHECK_EQUAL(def[0], "DEFAULT");
+
+    auto l2 = wm2.wells("*ILIST");
+    BOOST_CHECK_EQUAL( l2.size(), 2U);
+    BOOST_CHECK( has(l2, "I1"));
+    BOOST_CHECK( has(l2, "I2"));
 }
 
 BOOST_AUTO_TEST_CASE(RFT_CONFIG) {
@@ -3589,6 +3627,8 @@ WLIFTOPT
     const auto& plat_group = glo.group("PLAT-A");
     BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), siFactorG * 200000);
     BOOST_CHECK(!static_cast<bool>(plat_group.max_total_gas()));
+    BOOST_CHECK(glo.has_group("PLAT-A"));
+    BOOST_CHECK(!glo.has_well("NO-GROUP"));
 
     const auto& w1 = glo.well("B-1H");
     BOOST_CHECK(w1.use_glo());
@@ -3605,6 +3645,8 @@ WLIFTOPT
     BOOST_CHECK_EQUAL(w3.min_rate(), -1.00 * siFactorG);
     BOOST_CHECK_EQUAL(w3.inc_weight_factor(), 1.00);
     BOOST_CHECK(w3.alloc_extra_gas());
+    BOOST_CHECK(glo.has_well("C-1H"));
+    BOOST_CHECK(!glo.has_well("NO-WELL"));
 }
 
 BOOST_AUTO_TEST_CASE(WellPI) {

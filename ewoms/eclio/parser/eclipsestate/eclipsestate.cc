@@ -221,7 +221,7 @@ namespace Ewoms {
     void EclipseState::setMULTFLT(const DeckSection& section) {
         for (size_t index=0; index < section.count("MULTFLT"); index++) {
             const auto& faultsKeyword = section.getKeyword("MULTFLT" , index);
-            OpmLog::info(OpmInputError::format("Applying {keyword} in {file} line {line}", faultsKeyword.location()));
+            OpmLog::info(OpmInputError::format("\nApplying {keyword} in {file} line {line}", faultsKeyword.location()));
             InfoLogger logger("MULTFLT",3);
             for (auto iter = faultsKeyword.begin(); iter != faultsKeyword.end(); ++iter) {
                 const auto& faultRecord = *iter;

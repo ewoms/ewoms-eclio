@@ -105,8 +105,12 @@ enum class GuideRateTarget {
     NO_GUIDE_RATE = 11
 };
 static GuideRateTarget GuideRateTargetFromString( const std::string& stringValue );
+static GuideRateTarget GuideRateTargetFromInt(int ecl_id);
 
 struct GroupInjectionProperties {
+    GroupInjectionProperties();
+    GroupInjectionProperties(Phase phase, const UnitSystem& unit_system);
+
     Phase phase = Phase::WATER;
     InjectionCMode cmode = InjectionCMode::NONE;
     UDAValue surface_max_rate;
@@ -153,10 +157,8 @@ struct InjectionControls {
 };
 
 struct GroupProductionProperties {
-    GroupProductionProperties() = default;
-    GroupProductionProperties(const std::string& gname) :
-        name(gname)
-    {}
+    GroupProductionProperties();
+    GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname);
 
     std::string name;
     ProductionCMode gconprod_cmode = ProductionCMode::NONE;

@@ -335,8 +335,8 @@ std::vector<std::size_t> groupParentSeqIndex(const Ewoms::Schedule& sched,
 }
 
 bool higherLevelProdCMode_NotNoneFld(const Ewoms::Schedule& sched,
-                       const Ewoms::Group& group,
-                       const size_t simStep)
+                                     const Ewoms::Group& group,
+                                     const size_t simStep)
 {
     bool ctrl_mode_not_none_fld = false;
     if (group.defined( simStep )) {
@@ -433,28 +433,28 @@ void productionGroup(const Ewoms::Schedule&     sched,
         iGrp[nwgmax + 7] = 0;
         switch (prod_cmode) {
         case Ewoms::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
             break;
         case Ewoms::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + 10] = 1;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 1;
             break;
         case Ewoms::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + 10] = 2;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 2;
             break;
         case Ewoms::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + 10] = 3;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 3;
             break;
         case Ewoms::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + 10] = 4;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 4;
             break;
         case Ewoms::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + 10] = 5;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 5;
             break;
         case Ewoms::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
             break;
         default:
-            iGrp[nwgmax + 10] = 0;
+            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
         }
         return;
     }
@@ -505,8 +505,8 @@ void productionGroup(const Ewoms::Schedule&     sched,
     */
     // default value
     iGrp[nwgmax + 5] = -1;
-    int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
-    int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+    const int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
+    const int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
     if (groupProductionControllable(sched, sumState, group, simStep)) {

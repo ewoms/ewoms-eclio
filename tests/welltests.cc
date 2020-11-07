@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
         /* Set a surface injection rate => Well becomes an Injector */
         auto injectionProps1 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps1->surfaceInjectionRate = 100;
+        injectionProps1->surfaceInjectionRate.update(100);
         well.updateInjection(injectionProps1);
         BOOST_CHECK_EQUAL( true  , well.isInjector());
         BOOST_CHECK_EQUAL( false , well.isProducer());
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
 
         /* Set a reservoir injection rate => Well becomes an Injector */
         auto injectionProps2 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-        injectionProps2->reservoirInjectionRate = 200;
+        injectionProps2->reservoirInjectionRate.update(200);
         well.updateInjection(injectionProps2);
         BOOST_CHECK_EQUAL( false , well.isProducer());
         BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().reservoirInjectionRate.get<double>());
@@ -238,9 +238,9 @@ BOOST_AUTO_TEST_CASE(isProducerCorrectlySet) {
         well.updateInjection(injectionProps3);
 
         auto properties = std::make_shared<Ewoms::Well::WellProductionProperties>( well.getProductionProperties() );
-        properties->OilRate = 100;
-        properties->GasRate = 200;
-        properties->WaterRate = 300;
+        properties->OilRate.update(100);
+        properties->GasRate.update(200);
+        properties->WaterRate.update(300);
         well.updateProduction(properties);
 
         BOOST_CHECK_EQUAL( false , well.isInjector());
@@ -274,14 +274,14 @@ BOOST_AUTO_TEST_CASE(XHPLimitDefault) {
     Ewoms::Well well("WELL1", "GROUP", 0, 1, 23, 42, 2334.32, Ewoms::WellType(Ewoms::Phase::WATER), Ewoms::Well::ProducerCMode::CMODE_UNDEFINED, Connection::Order::DEPTH, UnitSystem::newMETRIC(), 0, 1.0, false, false, 0, Ewoms::Well::GasInflowEquation::STD);
 
     auto productionProps = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    productionProps->BHPTarget = 100;
+    productionProps->BHPTarget.update(100);
     productionProps->addProductionControl(Ewoms::Well::ProducerCMode::BHP);
     well.updateProduction(productionProps);
     BOOST_CHECK_EQUAL( 100 , well.getProductionProperties().BHPTarget.get<double>());
     BOOST_CHECK_EQUAL( true, well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::BHP ));
 
     auto injProps = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps->THPTarget = 200;
+    injProps->THPTarget.update(200);
     well.updateInjection(injProps);
     BOOST_CHECK_EQUAL( 200 , well.getInjectionProperties().THPTarget.get<double>());
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::THP ));
@@ -308,26 +308,26 @@ BOOST_AUTO_TEST_CASE(WellHaveProductionControlLimit) {
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::RESV ));
 
     auto properties1 = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    properties1->OilRate = 100;
+    properties1->OilRate.update(100);
     properties1->addProductionControl(Ewoms::Well::ProducerCMode::ORAT);
     well.updateProduction(properties1);
     BOOST_CHECK(  well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::ORAT ));
     BOOST_CHECK( !well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::RESV ));
 
     auto properties2 = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    properties2->ResVRate = 100;
+    properties2->ResVRate.update(100);
     properties2->addProductionControl(Ewoms::Well::ProducerCMode::RESV);
     well.updateProduction(properties2);
     BOOST_CHECK( well.getProductionProperties().hasProductionControl( Ewoms::Well::ProducerCMode::RESV ));
 
     auto properties3 = std::make_shared<Ewoms::Well::WellProductionProperties>(well.getProductionProperties());
-    properties3->OilRate = 100;
-    properties3->WaterRate = 100;
-    properties3->GasRate = 100;
-    properties3->LiquidRate = 100;
-    properties3->ResVRate = 100;
-    properties3->BHPTarget = 100;
-    properties3->THPTarget = 100;
+    properties3->OilRate.update(100);
+    properties3->WaterRate.update(100);
+    properties3->GasRate.update(100);
+    properties3->LiquidRate.update(100);
+    properties3->ResVRate.update(100);
+    properties3->BHPTarget.update(100);
+    properties3->THPTarget.update(100);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::ORAT);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::LRAT);
     properties3->addProductionControl(Ewoms::Well::ProducerCMode::BHP);
@@ -353,22 +353,22 @@ BOOST_AUTO_TEST_CASE(WellHaveInjectionControlLimit) {
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps1 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps1->surfaceInjectionRate = 100;
+    injProps1->surfaceInjectionRate.update(100);
     injProps1->addInjectionControl(Ewoms::Well::InjectorCMode::RATE);
     well.updateInjection(injProps1);
     BOOST_CHECK(  well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RATE ));
     BOOST_CHECK( !well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps2 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps2->reservoirInjectionRate = 100;
+    injProps2->reservoirInjectionRate.update(100);
     injProps2->addInjectionControl(Ewoms::Well::InjectorCMode::RESV);
     well.updateInjection(injProps2);
     BOOST_CHECK( well.getInjectionProperties().hasInjectionControl( Ewoms::Well::InjectorCMode::RESV ));
 
     auto injProps3 = std::make_shared<Ewoms::Well::WellInjectionProperties>(well.getInjectionProperties());
-    injProps3->BHPTarget = 100;
+    injProps3->BHPTarget.update(100);
     injProps3->addInjectionControl(Ewoms::Well::InjectorCMode::BHP);
-    injProps3->THPTarget = 100;
+    injProps3->THPTarget.update(100);
     injProps3->addInjectionControl(Ewoms::Well::InjectorCMode::THP);
     well.updateInjection(injProps3);
 

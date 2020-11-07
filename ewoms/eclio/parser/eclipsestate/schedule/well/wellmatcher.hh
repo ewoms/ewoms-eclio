@@ -16,39 +16,27 @@
   You should have received a copy of the GNU General Public License
   along with eWoms.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef WLISTMANAGER_H
-#define WLISTMANAGER_H
+#ifndef WELL_MATCHER_H
+#define WELL_MATCHER_H
 
-#include <cstddef>
-#include <map>
 #include <vector>
 #include <string>
-#include <ewoms/eclio/parser/eclipsestate/schedule/well/wlist.hh>
+
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wlistmanager.hh>
 
 namespace Ewoms {
 
-class WListManager {
+class WellMatcher {
 public:
-    WListManager() = default;
-
-    static WListManager serializeObject();
-
-    bool hasList(const std::string&) const;
-    WList& getList(const std::string& name);
-    const WList& getList(const std::string& name) const;
-    WList& newList(const std::string& name);
-    void delWell(const std::string& well);
-
-    bool operator==(const WListManager& data) const;
-    std::vector<std::string> wells(const std::string& wlist_pattern) const;
-    template<class Serializer>
-    void serializeOp(Serializer& serializer)
-    {
-        serializer.map(wlists);
-    }
+    WellMatcher() = default;
+    explicit WellMatcher(const std::vector<std::string>& wells);
+    WellMatcher(const std::vector<std::string>& wells, const WListManager& wlm);
+    const std::vector<std::string>& wells() const;
+    std::vector<std::string> wells(const std::string& pattern) const;
 
 private:
-    std::map<std::string, WList> wlists;
+    std::vector<std::string> m_wells;
+    WListManager m_wlm;
 };
 
 }

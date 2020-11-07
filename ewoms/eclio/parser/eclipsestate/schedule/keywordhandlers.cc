@@ -382,7 +382,7 @@ namespace {
 
                 {
                     auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
-                    Group::GroupProductionProperties production(group_name);
+                    Group::GroupProductionProperties production(this->unit_system, group_name);
                     production.gconprod_cmode = controlMode;
                     production.active_cmode = controlMode;
                     production.oil_target = oil_target;
@@ -438,7 +438,6 @@ namespace {
     }
 
     void Schedule::handleGCONSALE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        const auto& unit_system = handlerContext.section.unitSystem();
         const auto& current = *this->gconsale.get(handlerContext.currentStep);
         std::shared_ptr<GConSale> new_gconsale(new GConSale(current));
         for (const auto& record : handlerContext.keyword) {
@@ -449,7 +448,7 @@ namespace {
             std::string procedure = record.getItem("MAX_PROC").getTrimmedString(0);
             auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
-            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, unit_system);
+            new_gconsale->add(groupName, sales_target, max_rate, min_rate, procedure, udqconfig, this->unit_system);
 
             auto group_ptr = std::make_shared<Group>(this->getGroup(groupName, handlerContext.currentStep));
             Group::GroupInjectionProperties injection;
@@ -462,7 +461,6 @@ namespace {
     }
 
     void Schedule::handleGCONSUMP(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        const auto& unit_system = handlerContext.section.unitSystem();
         const auto& current = *this->gconsump.get(handlerContext.currentStep);
         std::shared_ptr<GConSump> new_gconsump(new GConSump(current));
         for (const auto& record : handlerContext.keyword) {
@@ -477,7 +475,7 @@ namespace {
 
             auto udqconfig = this->getUDQConfig(handlerContext.currentStep).params().undefinedValue();
 
-            new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, unit_system);
+            new_gconsump->add(groupName, consumption_rate, import_rate, network_node_name, udqconfig, this->unit_system);
         }
         this->gconsump.update(handlerContext.currentStep, new_gconsump);
     }
@@ -554,12 +552,11 @@ namespace {
     }
 
     void Schedule::handleGRUPNET(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const auto& groupName = record.getItem("NAME").getTrimmedString(0);
 
             if (!hasGroup(groupName))
-                addGroup(groupName , handlerContext.currentStep, unit_system);
+                addGroup(groupName , handlerContext.currentStep);
 
             int table = record.getItem("VFP_TABLE").get< int >(0);
 
@@ -570,16 +567,15 @@ namespace {
     }
 
     void Schedule::handleGRUPTREE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const std::string& childName = trim_wgname(handlerContext.keyword, record.getItem("CHILD_GROUP").get<std::string>(0), parseContext, errors);
             const std::string& parentName = trim_wgname(handlerContext.keyword, record.getItem("PARENT_GROUP").get<std::string>(0), parseContext, errors);
 
             if (!hasGroup(childName))
-                addGroup(childName, handlerContext.currentStep, unit_system);
+                addGroup(childName, handlerContext.currentStep);
 
             if (!hasGroup(parentName))
-                addGroup(parentName, handlerContext.currentStep, unit_system);
+                addGroup(parentName, handlerContext.currentStep);
 
             this->addGroupToGroup(parentName, childName, handlerContext.currentStep);
         }
@@ -802,7 +798,7 @@ namespace {
     }
 
     void Schedule::handleVFPINJ(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, handlerContext.section.unitSystem());
+        std::shared_ptr<VFPInjTable> table = std::make_shared<VFPInjTable>(handlerContext.keyword, this->unit_system);
         int table_id = table->getTableNum();
 
         if (vfpinj_tables.find(table_id) == vfpinj_tables.end()) {
@@ -816,7 +812,7 @@ namespace {
     }
 
     void Schedule::handleVFPPROD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
-        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, handlerContext.section.unitSystem());
+        std::shared_ptr<VFPProdTable> table = std::make_shared<VFPProdTable>(handlerContext.keyword, this->unit_system);
         int table_id = table->getTableNum();
 
         if (vfpprod_tables.find(table_id) == vfpprod_tables.end()) {
@@ -830,7 +826,6 @@ namespace {
     }
 
     void Schedule::handleWCONHIST(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -852,7 +847,7 @@ namespace {
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
-                properties->handleWCONHIST(alq_type, unit_system, record);
+                properties->handleWCONHIST(alq_type, this->unit_system, record);
 
                 if (switching_from_injector) {
                     properties->resetDefaultBHPLimit();
@@ -897,7 +892,6 @@ namespace {
     }
 
     void Schedule::handleWCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& unit_system = handlerContext.section.unitSystem();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = this->wellNames(wellNamePattern, handlerContext.currentStep);
@@ -921,7 +915,7 @@ namespace {
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
-                properties->handleWCONPROD(alq_type, unit_system, well_name, record);
+                properties->handleWCONPROD(alq_type, this->unit_system, well_name, record);
 
                 if (switching_from_injector)
                     properties->resetDefaultBHPLimit();
@@ -1147,20 +1141,18 @@ namespace {
     }
 
     void Schedule::handleWELSPECS(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const auto& section = handlerContext.section;
-        const auto& unit_system = section.unitSystem();
         const auto COMPORD_in_timestep = [&]() -> const DeckKeyword* {
-            auto itr = section.begin() + handlerContext.keywordIndex;
+            const auto& section = *handlerContext.section;
+            auto itr = section.begin() + handlerContext.keywordIndex.value();
             for( ; itr != section.end(); ++itr ) {
                 if (itr->name() == "DATES") return nullptr;
                 if (itr->name() == "TSTEP") return nullptr;
                 if (itr->name() == "COMPORD") return std::addressof( *itr );
             }
-
             return nullptr;
         };
 
-        const auto& keyword = section.getKeyword(handlerContext.keywordIndex);
+        const auto& keyword = handlerContext.keyword;
         for (std::size_t recordNr = 0; recordNr < keyword.size(); recordNr++) {
             const auto& record = keyword.getRecord(recordNr);
             const std::string& wellName = trim_wgname(keyword, record.getItem<ParserKeywords::WELSPECS::WELL>().get<std::string>(0), parseContext, errors);
@@ -1181,7 +1173,7 @@ namespace {
             }
 
             if (!hasGroup(groupName))
-                addGroup(groupName, handlerContext.currentStep, unit_system);
+                addGroup(groupName, handlerContext.currentStep);
 
             if (!hasWell(wellName)) {
                 auto wellConnectionOrder = Connection::Order::TRACK;
@@ -1199,7 +1191,7 @@ namespace {
                         }
                     }
                 }
-                this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder, unit_system);
+                this->addWell(wellName, record, handlerContext.currentStep, wellConnectionOrder);
                 this->addWellToGroup(groupName, wellName, handlerContext.currentStep);
             } else {
                 const auto headI = record.getItem<ParserKeywords::WELSPECS::HEAD_I>().get<int>(0) - 1;
@@ -1247,7 +1239,7 @@ namespace {
       rates will be wrong.
     */
     void Schedule::handleWELTARG(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        const double SiFactorP = handlerContext.section.unitSystem().parse("Pressure").getSIScaling();
+        const double SiFactorP = this->unit_system.parse("Pressure").getSIScaling();
         for (const auto& record : handlerContext.keyword) {
             const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
             const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);

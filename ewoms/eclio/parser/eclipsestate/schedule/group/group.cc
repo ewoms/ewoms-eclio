@@ -45,7 +45,7 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
     gefac(1),
     transfer_gefac(true),
     vfp_table(0),
-    production_properties(name)
+    production_properties(unit_system, name)
 {
     // All groups are initially created as children of the "FIELD" group.
     if (name != "FIELD")
@@ -55,6 +55,44 @@ Group::Group(const std::string& name, std::size_t insert_index_arg, std::size_t 
 Group::Group(const RestartIO::RstGroup& rst_group, std::size_t insert_index_arg, std::size_t init_step_arg, double udq_undefined_arg, const UnitSystem& unit_system_arg) :
     Group(rst_group.name, insert_index_arg, init_step_arg, udq_undefined_arg, unit_system_arg)
 {
+    if (rst_group.prod_active_cmode != 0) {
+        Group::GroupProductionProperties production(unit_system_arg, this->m_name);
+        production.oil_target.update(rst_group.oil_rate_limit);
+        production.gas_target.update(rst_group.gas_rate_limit);
+        production.water_target.update(rst_group.water_rate_limit);
+        production.liquid_target.update(rst_group.liquid_rate_limit);
+        production.active_cmode = Group::ProductionCModeFromInt(rst_group.prod_active_cmode);
+        production.gconprod_cmode = Group::ProductionCModeFromInt(rst_group.gconprod_cmode);
+        production.guide_rate_def = Group::GuideRateTargetFromInt(rst_group.guide_rate_def);
+        if ((production.active_cmode == Group::ProductionCMode::ORAT) ||
+            (production.active_cmode == Group::ProductionCMode::WRAT) ||
+            (production.active_cmode == Group::ProductionCMode::GRAT) ||
+            (production.active_cmode == Group::ProductionCMode::LRAT))
+            production.exceed_action = Group::ExceedAction::RATE;
+        this->updateProduction(production);
+    }
+
+    if (rst_group.winj_cmode != 0) {
+        Group::GroupInjectionProperties injection;
+        injection.surface_max_rate.update(rst_group.water_surface_limit);
+        injection.resv_max_rate.update(rst_group.water_reservoir_limit);
+        injection.target_reinj_fraction.update(rst_group.water_reinject_limit);
+        injection.target_void_fraction.update(rst_group.water_voidage_limit);
+        injection.phase = Phase::WATER;
+        injection.cmode = Group::InjectionCModeFromInt(rst_group.winj_cmode);
+        this->updateInjection(injection);
+    }
+
+    if (rst_group.ginj_cmode != 0) {
+        Group::GroupInjectionProperties injection;
+        injection.surface_max_rate.update(rst_group.gas_surface_limit);
+        injection.resv_max_rate.update(rst_group.gas_reservoir_limit);
+        injection.target_reinj_fraction.update(rst_group.gas_reinject_limit);
+        injection.target_void_fraction.update(rst_group.gas_voidage_limit);
+        injection.phase = Phase::GAS;
+        injection.cmode = Group::InjectionCModeFromInt(rst_group.ginj_cmode);
+        this->updateInjection(injection);
+    }
 }
 
 Group Group::serializeObject()
@@ -175,6 +213,24 @@ bool Group::updateProduction(const GroupProductionProperties& production) {
     return update;
 }
 
+Group::GroupInjectionProperties::GroupInjectionProperties() :
+    GroupInjectionProperties(Phase::WATER, UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC))
+{}
+
+Group::GroupInjectionProperties::GroupInjectionProperties(Phase phase_arg, const UnitSystem& unit_system) :
+    phase(phase_arg),
+    target_reinj_fraction(unit_system.getDimension(UnitSystem::measure::identity)),
+    target_void_fraction(unit_system.getDimension(UnitSystem::measure::identity))
+{
+    if (phase == Phase::WATER) {
+        this->surface_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate));
+        this->resv_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::rate));
+    } else {
+        this->surface_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::gas_surface_rate));
+        this->resv_max_rate = UDAValue(unit_system.getDimension(UnitSystem::measure::rate));
+    }
+}
+
 Group::GroupInjectionProperties Group::GroupInjectionProperties::serializeObject()
 {
     Group::GroupInjectionProperties result;
@@ -209,9 +265,22 @@ bool Group::GroupInjectionProperties::operator!=(const GroupInjectionProperties&
     return !(*this == other);
 }
 
+Group::GroupProductionProperties::GroupProductionProperties() :
+    GroupProductionProperties(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "")
+{}
+
+Group::GroupProductionProperties::GroupProductionProperties(const UnitSystem& unit_system, const std::string& gname) :
+    name(gname),
+    oil_target(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate)),
+    water_target(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate)),
+    gas_target(unit_system.getDimension(UnitSystem::measure::gas_surface_rate)),
+    liquid_target(unit_system.getDimension(UnitSystem::measure::liquid_surface_rate))
+{
+}
+
 Group::GroupProductionProperties Group::GroupProductionProperties::serializeObject()
 {
-    Group::GroupProductionProperties result("Group123");
+    Group::GroupProductionProperties result(UnitSystem(UnitSystem::UnitType::UNIT_TYPE_METRIC), "Group123");
     result.name = "Group123";
     result.gconprod_cmode = ProductionCMode::PRBL;
     result.active_cmode = ProductionCMode::PRBL;
@@ -684,6 +753,30 @@ Group::GuideRateTarget Group::GuideRateTargetFromString( const std::string& stri
         return GuideRateTarget::NO_GUIDE_RATE;
     else
         return GuideRateTarget::NO_GUIDE_RATE;
+}
+
+// Integer values defined vectoritems/group.hpp
+Group::GuideRateTarget Group::GuideRateTargetFromInt(int ecl_id) {
+    switch(ecl_id) {
+    case 0:
+        return GuideRateTarget::NO_GUIDE_RATE;
+    case 1:
+        return GuideRateTarget::OIL;
+    case 2:
+        return GuideRateTarget::WAT;
+    case 3:
+        return GuideRateTarget::GAS;
+    case 4:
+        return GuideRateTarget::LIQ;
+    case 7:
+        return GuideRateTarget::POTN;
+    case 8:
+        return GuideRateTarget::FORM;
+    case 9:
+        return GuideRateTarget::COMB;
+    default:
+        throw std::logic_error(fmt::format("Integer GuideRateTarget: {} not recognized", ecl_id));
+    }
 }
 
 bool Group::operator==(const Group& data) const

@@ -27,6 +27,7 @@
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqset.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/wellmatcher.hh>
 
 namespace Ewoms {
     class SummaryState;
@@ -35,7 +36,7 @@ namespace Ewoms {
 
     class UDQContext{
     public:
-        UDQContext(const UDQFunctionTable& udqft, SummaryState& summary_state, UDQState& udq_state);
+        UDQContext(const UDQFunctionTable& udqft, const WellMatcher& wm, SummaryState& summary_state, UDQState& udq_state);
         Ewoms::optional<double> get(const std::string& key) const;
         Ewoms::optional<double> get_well_var(const std::string& well, const std::string& var) const;
         Ewoms::optional<double> get_group_var(const std::string& group, const std::string& var) const;
@@ -44,9 +45,11 @@ namespace Ewoms {
         void update_define(const std::string& keyword, const UDQSet& udq_result);
         const UDQFunctionTable& function_table() const;
         std::vector<std::string> wells() const;
+        std::vector<std::string> wells(const std::string& pattern) const;
         std::vector<std::string> groups() const;
     private:
         const UDQFunctionTable& udqft;
+        WellMatcher well_matcher;
         SummaryState& summary_state;
         UDQState& udq_state;
         //std::unordered_map<std::string, UDQSet> udq_results;

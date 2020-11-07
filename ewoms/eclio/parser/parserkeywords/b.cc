@@ -215,6 +215,8 @@ BLOCK_PROBE::BLOCK_PROBE( ) : ParserKeyword("BLOCK_PROBE")
   addDeckName("BHPV");
   addDeckName("BKRG");
   addDeckName("BKRO");
+  addDeckName("BKROG");
+  addDeckName("BKROW");
   addDeckName("BKRW");
   addDeckName("BNIP");
   addDeckName("BNKR");

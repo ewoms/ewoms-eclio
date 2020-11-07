@@ -27,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
+#include <ewoms/common/fmt/format.h>
 
 #include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/io/rst/connection.hh>
@@ -462,6 +463,12 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         return *max_iter;
     }
 
+    bool WellConnections::hasGlobalIndex(std::size_t global_index) const {
+        auto conn_iter = std::find_if(this->begin(), this->end(),
+                                      [global_index] (const Connection& conn) {return conn.global_index() == global_index;});
+        return (conn_iter != this->end());
+    }
+
     const Connection& WellConnections::getFromIJK(const int i, const int j, const int k) const {
         for (size_t ic = 0; ic < size(); ++ic) {
             if (get(ic).sameCoordinate(i, j, k)) {
@@ -469,6 +476,15 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             }
         }
         throw std::runtime_error(" the connection is not found! \n ");
+    }
+
+    const Connection& WellConnections::getFromGlobalIndex(std::size_t global_index) const {
+        auto conn_iter = std::find_if(this->begin(), this->end(),
+                                      [global_index] (const Connection& conn) {return conn.global_index() == global_index;});
+
+        if (conn_iter == this->end())
+            throw std::logic_error(fmt::format("No connection with global index {}", global_index));
+        return *conn_iter;
     }
 
     Connection& WellConnections::getFromIJK(const int i, const int j, const int k) {

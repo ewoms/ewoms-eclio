@@ -202,8 +202,8 @@ void Well::WellProductionProperties::handleWCONHIST(const Ewoms::optional<VFPPro
     {
         this->init_rates(record);
         this->init_vfp(alq_type, unit_system_arg, record);
-        this->LiquidRate = 0;
-        this->ResVRate = 0;
+        this->LiquidRate.update(0);
+        this->ResVRate.update(0);
 
         // when the well is switching to history matching producer from prediction mode
         // or switching from injector to producer
