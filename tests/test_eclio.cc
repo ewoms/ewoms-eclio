@@ -234,6 +234,28 @@ BOOST_AUTO_TEST_CASE(TestEclFile_FORMATTED) {
 
 }
 
+BOOST_AUTO_TEST_CASE(TestEclFile_IX) {
+
+    // file MODEL1_IX.INIT is output from comercial simulator ix with
+    // BASE_MODEL_1.DATA in opm-tests
+
+    // binary representation of true value for data type LOGI is different
+    // compared with output from Eclipse and EFlow
+
+    std::string testInitFile="MODEL1_IX.INIT";
+
+    EclFile file1(testInitFile);
+    file1.loadData();
+
+    std::vector<bool> refLogihead = {true, true, false,  false, true, false, false, false, false, false, false,
+         false, false, false, false, false, true, false,  true, false };
+
+    auto logih = file1.get<bool>("LOGIHEAD");
+
+    for (size_t n = 0 ; n < refLogihead.size(); n++)
+        BOOST_CHECK_EQUAL(refLogihead[n], logih[n]);
+}
+
 BOOST_AUTO_TEST_CASE(TestEcl_Write_binary) {
 
     std::string inputFile="ECLFILE.INIT";
@@ -385,24 +407,127 @@ BOOST_AUTO_TEST_CASE(TestEcl_getList) {
 
 BOOST_AUTO_TEST_CASE(TestEcl_Write_CHAR) {
 
-    std::string testFile="TEST.FDAT";
-    std::vector<std::string> refStrList = {"This", "is", "a test.", "", "charact", "er >'<", "can be", "part of", "a string"};
+    std::string testFile1="TEST.FDAT";
+    std::string testFile2="TEST2.DAT";
+
+    std::vector<std::string> refStrList1 = {"This", "is", "a test.", "", "charact", "er >'<", "can be", "part of", "a string"};
+    std::vector<std::string> refStrList2 = {"strings with length", "beyone 8 character","is also possible", "will use type C0nn"};
 
     {
-        EclOutput eclTest(testFile, true);
-        eclTest.write("TEST",refStrList);
+        EclOutput eclTest(testFile1, true);
+        eclTest.write("TEST1",refStrList1);
     }
 
     {
-        EclFile file1(testFile);
-        std::vector<std::string> strList=file1.get<std::string>("TEST");
+        EclFile file1(testFile1);
+        std::vector<std::string> strList=file1.get<std::string>("TEST1");
 
-        for (size_t n = 0; n < refStrList.size(); n++) {
-            BOOST_CHECK(refStrList[n] == strList[n]);
+        for (size_t n = 0; n < refStrList1.size(); n++) {
+            BOOST_CHECK(refStrList1[n] == strList[n]);
         }
+
+        auto arrayList =file1.getList();
+        BOOST_CHECK(std::get<1>(arrayList[0]) == Ewoms::EclIO::CHAR);
     }
 
-    if (remove(testFile.c_str())==-1) {
+    // the next should automatically use C019
+    {
+        EclOutput eclTest(testFile1, true);
+        eclTest.write("TEST2",refStrList2);
+    }
+
+    {
+        EclFile file1(testFile1);
+        std::vector<std::string> strList=file1.get<std::string>("TEST2");
+
+        for (size_t n = 0; n < refStrList2.size(); n++) {
+            BOOST_CHECK(refStrList2[n] == strList[n]);
+        }
+
+        auto arrayList =file1.getList();
+        BOOST_CHECK(std::get<1>(arrayList[0]) == Ewoms::EclIO::C0NN);
+    }
+
+    // the next should automatically use C008 (and not CHAR)
+    // will use C0nn since element size is specified in function call
+    {
+        EclOutput eclTest(testFile1, true);
+        eclTest.write("TEST3",refStrList1, 8);
+    }
+
+    {
+        EclFile file1(testFile1);
+        std::vector<std::string> strList=file1.get<std::string>("TEST3");
+
+        for (size_t n = 0; n < refStrList1.size(); n++) {
+            BOOST_CHECK(refStrList1[n] == strList[n]);
+        }
+
+        auto arrayList =file1.getList();
+        BOOST_CHECK(std::get<1>(arrayList[0]) == Ewoms::EclIO::C0NN);
+    }
+
+    // testing binary CHAR/C0nn format
+
+    {
+        EclOutput eclTest(testFile2, false);
+        eclTest.write("TEST4",refStrList1);
+    }
+
+    {
+        EclFile file1(testFile2);
+        std::vector<std::string> strList=file1.get<std::string>("TEST4");
+
+        for (size_t n = 0; n < refStrList1.size(); n++) {
+            BOOST_CHECK(refStrList1[n] == strList[n]);
+        }
+
+        auto arrayList =file1.getList();
+        BOOST_CHECK(std::get<1>(arrayList[0]) == Ewoms::EclIO::CHAR);
+    }
+
+    // the next should automatically use C019
+    {
+        EclOutput eclTest(testFile2, false);
+        eclTest.write("TEST5",refStrList2);
+    }
+
+    {
+        EclFile file1(testFile2);
+        std::vector<std::string> strList=file1.get<std::string>("TEST5");
+
+        for (size_t n = 0; n < refStrList2.size(); n++) {
+            BOOST_CHECK(refStrList2[n] == strList[n]);
+        }
+
+        auto arrayList =file1.getList();
+        BOOST_CHECK(std::get<1>(arrayList[0]) == Ewoms::EclIO::C0NN);
+    }
+
+    // the next should automatically use C008 (and not CHAR)
+    // will use C0nn since element size is specified in function call
+    {
+        EclOutput eclTest(testFile2, false);
+        eclTest.write("TEST6",refStrList1, 8);
+    }
+
+    {
+        EclFile file1(testFile2);
+        std::vector<std::string> strList=file1.get<std::string>("TEST6");
+
+        for (size_t n = 0; n < refStrList1.size(); n++) {
+            BOOST_CHECK(refStrList1[n] == strList[n]);
+        }
+
+        auto arrayList =file1.getList();
+        BOOST_CHECK(std::get<1>(arrayList[0]) == Ewoms::EclIO::C0NN);
+    }
+
+    if (remove(testFile1.c_str())==-1) {
+        std::cout << " > Warning! temporary file was not deleted" << std::endl;
+    };
+
+    if (remove(testFile2.c_str())==-1) {
         std::cout << " > Warning! temporary file was not deleted" << std::endl;
     };
 

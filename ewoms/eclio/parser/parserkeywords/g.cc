@@ -1942,6 +1942,9 @@ GLIFTOPT::GLIFTOPT( ) : ParserKeyword("GLIFTOPT")
 {
   setSizeType(SLASH_TERMINATED);
   addValidSectionName("SCHEDULE");
+  setRequiredKeywords({
+    "LIFTOPT",
+  });
   clearDeckNames();
   addDeckName("GLIFTOPT");
   {

@@ -545,6 +545,84 @@ inline quantity rate( const fn_args& args ) {
     return { sum, rate_unit< phase >() };
 }
 
+template< rt phase, bool injection = true >
+inline quantity ratel( const fn_args& args ) {
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
+        ? measure::mass_rate : rate_unit<phase>();
+
+    const quantity zero = { 0.0, unit };
+
+    if (args.schedule_wells.empty())
+        return zero;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well.name();
+    if( args.wells.count( name ) == 0 ) return zero;
+    const auto& well_data = args.wells.at( name );
+    if (well_data.current_control.isProducer == injection) return zero;
+
+    double sum = 0;
+    const auto& connections = well.getConnections( args.num );
+    for (const auto& conn_ptr : connections) {
+        const size_t global_index = conn_ptr->global_index();
+        const auto& conn_data = std::find_if(well_data.connections.begin(),
+                                             well_data.connections.end(),
+                                             [global_index] (const Ewoms::data::Connection cdata)
+                                             {
+                                                 return cdata.index == global_index;
+                                             });
+
+        if (conn_data != well_data.connections.end()) {
+            double eff_fac = efac( args.eff_factors, name );
+            sum += conn_data->rates.get( phase, 0.0 ) * eff_fac;
+        }
+    }
+    if( !injection ) sum *= -1;
+
+    return { sum, unit };
+}
+
+template< rt phase, bool injection = true >
+inline quantity cratel( const fn_args& args ) {
+    const auto unit = ((phase == rt::polymer) || (phase == rt::brine))
+        ? measure::mass_rate : rate_unit<phase>();
+
+    const quantity zero = { 0.0, unit };
+
+    if (args.schedule_wells.empty())
+        return zero;
+
+    const auto& well = args.schedule_wells.front();
+    const auto& name = well.name();
+    if( args.wells.count( name ) == 0 ) return zero;
+    const auto& well_data = args.wells.at( name );
+    if (well_data.current_control.isProducer == injection) return zero;
+
+    const auto complnum = getCompletionNumberFromGlobalConnectionIndex(well.getConnections(), args.num - 1);
+    if (!static_cast<bool>(complnum))
+        // Connection might not yet have come online.
+        return zero;
+
+    double sum = 0;
+    const auto& connections = well.getConnections(*complnum);
+    for (const auto& conn_ptr : connections) {
+        const size_t global_index = conn_ptr->global_index();
+        const auto& conn_data = std::find_if(well_data.connections.begin(),
+                                             well_data.connections.end(),
+                                             [global_index] (const Ewoms::data::Connection cdata)
+                                             {
+                                                 return cdata.index == global_index;
+                                             });
+        if (conn_data != well_data.connections.end()) {
+            double eff_fac = efac( args.eff_factors, name );
+            sum += conn_data->rates.get( phase, 0.0 ) * eff_fac;
+        }
+    }
+    if( !injection ) sum *= -1;
+
+    return { sum, unit };
+}
+
 template< bool injection >
 inline quantity flowing( const fn_args& args ) {
     const auto& wells = args.wells;
@@ -1069,6 +1147,21 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "WWPR", rate< rt::wat, producer > },
     { "WOPR", rate< rt::oil, producer > },
+    { "WWPTL",mul(ratel< rt::wat, producer >, duration) },
+    { "WGPTL",mul(ratel< rt::gas, producer >, duration) },
+    { "WOPTL",mul(ratel< rt::oil, producer >, duration) },
+    { "WWPRL",ratel< rt::wat, producer > },
+    { "WGPRL",ratel< rt::gas, producer > },
+    { "WOPRL",ratel< rt::oil, producer > },
+    { "WOFRL",ratel< rt::oil, producer > },
+    { "WWIRL",ratel< rt::wat, injector> },
+    { "WWITL",mul(ratel< rt::wat, injector>, duration) },
+    { "WGIRL",ratel< rt::gas, injector> },
+    { "WGITL",mul(ratel< rt::gas, injector>, duration) },
+    { "WLPTL",mul( sum(ratel<rt::wat, producer>, ratel<rt::oil, producer>), duration)},
+    { "WWCTL", div( ratel< rt::wat, producer >,
+                    sum( ratel< rt::wat, producer >, ratel< rt::oil, producer > ) ) },
+    { "WGORL", div( ratel< rt::gas, producer >, ratel< rt::oil, producer > ) },
     { "WGPR", rate< rt::gas, producer > },
     { "WEPR", rate< rt::energy, producer > },
     { "WTPRHEA", rate< rt::energy, producer > },
@@ -1283,6 +1376,20 @@ static const std::unordered_map< std::string, ofun > funs = {
 
     { "GVPRT", res_vol_production_target },
 
+    { "CGIRL", cratel< rt::gas, injector> },
+    { "CGITL", mul( cratel< rt::gas, injector>, duration) },
+    { "CWIRL", cratel< rt::wat, injector> },
+    { "CWITL", mul( cratel< rt::wat, injector>, duration) },
+    { "CWPRL", cratel< rt::wat, producer > },
+    { "CWPTL", mul( cratel< rt::wat, producer >, duration) },
+    { "COPRL", cratel< rt::oil, producer > },
+    { "COPTL", mul( cratel< rt::oil, producer >, duration) },
+    { "CGPRL", cratel< rt::gas, producer > },
+    { "CGPTL", mul( cratel< rt::gas, producer >, duration) },
+    { "COFRL", cratel< rt::oil, producer > },
+    { "CGORL", div( cratel< rt::gas, producer >, cratel< rt::oil, producer > ) },
+    { "CWCTL", div( cratel< rt::wat, producer >,
+                    sum( cratel< rt::wat, producer >, cratel< rt::oil, producer > ) ) },
     { "CWIR", crate< rt::wat, injector > },
     { "CGIR", crate< rt::gas, injector > },
     { "CCIR", crate< rt::polymer, injector > },
@@ -2287,13 +2394,27 @@ namespace Evaluator {
     bool Factory::isFunctionRelation()
     {
         auto pos = funs.find(this->node_->keyword);
-        if (pos == funs.end())
-            return false;
+        if (pos != funs.end()) {
+            // 'node_' represents a functional relation.
+            // Capture evaluation function and return true.
+            this->paramFunction_ = pos->second;
+            return true;
+        }
 
-        // 'node_' represents a functional relation.
-        // Capture evaluation function and return true.
-        this->paramFunction_ = pos->second;
-        return true;
+        auto keyword = this->node_->keyword;
+        auto dash_pos = keyword.find("_");
+        if (dash_pos != std::string::npos)
+            keyword = keyword.substr(0, dash_pos);
+
+        pos = funs.find(keyword);
+        if (pos != funs.end()) {
+            // 'node_' represents a functional relation.
+            // Capture evaluation function and return true.
+            this->paramFunction_ = pos->second;
+            return true;
+        }
+
+        return false;
     }
 
     bool Factory::isUserDefined()
@@ -2357,7 +2478,7 @@ void reportUnsupportedKeywords(std::vector<Ewoms::SummaryConfigNode> keywords)
     for (auto node = keywords.begin(); node != uend; ++node) {
         const auto& location = node->location();
         Ewoms::OpmLog::warning(Ewoms::OpmInputError::format("Unhandled summary keyword {keyword}\n"
-                                                          "In {file} line {line}", location));
+                                                        "In {file} line {line}", location));
     }
 }
 

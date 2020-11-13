@@ -154,6 +154,7 @@ ewoms_add_test(LogiHEAD SOURCES tests/test_logihead.cc CONDITION Boost_UNIT_TEST
 ewoms_add_test(OutputStream SOURCES tests/test_outputstream.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(regionCache SOURCES tests/test_regioncache.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(PaddedOutputString SOURCES tests/test_paddedoutputstring.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
+ewoms_add_test(PAvgTests SOURCES tests/pavgtests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(Restart SOURCES tests/test_restart.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(RFT SOURCES tests/test_rft.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
 ewoms_add_test(RFTConfigTests SOURCES tests/rftconfigtests.cc CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND LIBRARIES "${Boost_LIBRARIES}")
@@ -200,7 +201,6 @@ ewoms_add_test(EclipseStateTests
 foreach(TEST_NAME BoxTest
     CheckDeckValidity
     EclipseGridCreateFromDeck
-    EDITNNCTests
     IncludeTest
     IntegrationTests
     IOConfigIntegrationTest
@@ -248,7 +248,7 @@ foreach(TEST_NAME EclIO EGrid ERft ERsm ERst ESmry)
 endforeach()
 
 # deal with the data required by the unit tests
-ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/ECLFILE*" "tests/*.json" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA" "tests/*.param")
+ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/*INIT" "tests/*.UNSMRY" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.json" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA" "tests/*.param")
 
 # link the UNRST files for the restart test to the build directory
 set(FROMDIR "${PROJECT_BINARY_DIR}/restart")

@@ -24,6 +24,7 @@
 #include <ewoms/eclio/utility/activegridcells.hh>
 
 #include <cstddef>
+#include <ewoms/common/optional.hh>
 #include <vector>
 
 #include <stddef.h>
@@ -160,6 +161,10 @@ namespace Ewoms {
         int headI, headJ;
         std::vector< Connection > m_connections;
     };
+
+    Ewoms::optional<int>
+    getCompletionNumberFromGlobalConnectionIndex(const WellConnections& connections,
+                                                 const std::size_t      global_index);
 }
 
 #endif

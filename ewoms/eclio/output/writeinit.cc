@@ -536,14 +536,14 @@ namespace {
         }
     }
 
-    void writeNonNeighbourConnections(const ::Ewoms::NNC&                 nnc,
-                                      const ::Ewoms::UnitSystem&          units,
-                                      ::Ewoms::EclIO::OutputStream::Init& initFile)
+    void writeNonNeighbourConnections(const std::vector<::Ewoms::NNCdata>& nnc,
+                                      const ::Ewoms::UnitSystem&           units,
+                                      ::Ewoms::EclIO::OutputStream::Init&  initFile)
     {
         auto tran = std::vector<double>{};
-        tran.reserve(nnc.numNNC());
+        tran.reserve(nnc.size());
 
-        for (const auto& nd : nnc.data()) {
+        for (const auto& nd : nnc) {
             tran.push_back(nd.trans);
         }
 
@@ -558,7 +558,7 @@ void Ewoms::InitIO::write(const ::Ewoms::EclipseState&              es,
                         const ::Ewoms::Schedule&                  schedule,
                         const ::Ewoms::data::Solution&            simProps,
                         std::map<std::string, std::vector<int>> int_data,
-                        const ::Ewoms::NNC&                       nnc,
+                        const std::vector<::Ewoms::NNCdata>&      nnc,
                         ::Ewoms::EclIO::OutputStream::Init&       initFile)
 {
     const auto& units = es.getUnits();
@@ -579,7 +579,7 @@ void Ewoms::InitIO::write(const ::Ewoms::EclipseState&              es,
     writeIntegerMaps(std::move(int_data), initFile);
     writeSatFuncScaling(es, units, initFile);
 
-    if (nnc.numNNC() > std::size_t{0}) {
+    if (!nnc.empty()) {
         writeNonNeighbourConnections(nnc, units, initFile);
     }
 }

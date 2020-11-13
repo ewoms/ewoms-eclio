@@ -40,6 +40,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wlist.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wlistmanager.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -49,6 +50,17 @@
 #include <ewoms/eclio/parser/errorguard.hh>
 
 using namespace Ewoms;
+
+Schedule make_schedule(const std::string& deck_string, const ParseContext& parseContext = {}) {
+    ErrorGuard errors;
+    Ewoms::Parser parser;
+    auto deck = parser.parseString(deck_string);
+    EclipseGrid grid1(10,10,10);
+    TableManager table ( deck );
+    FieldPropsManager fp( deck, Phases{true, true, true}, grid1, table);
+    Runspec runspec (deck);
+    return Schedule(deck, grid1, fp, runspec, parseContext, errors);
+}
 
 BOOST_AUTO_TEST_CASE(Create) {
     const auto action_kw = std::string{ R"(
@@ -122,26 +134,15 @@ ENDACTIO
 TSTEP
    10 /
 )"};
-    Ewoms::Parser parser;
-    auto deck1 = parser.parseString(MISSING_END);
-    auto deck2 = parser.parseString(WITH_WELSPECS);
-    auto deck3 = parser.parseString(WITH_GRID);
-    EclipseGrid grid1(10,10,10);
-    TableManager table ( deck1 );
-    FieldPropsManager fp( deck1, Phases{true, true, true}, grid1, table);
-    Runspec runspec (deck1);
+    BOOST_CHECK_THROW(make_schedule(MISSING_END), OpmInputError);
 
-    // The ACTIONX keyword has no matching 'ENDACTIO' -> exception
-    BOOST_CHECK_THROW(Schedule(deck1, grid1, fp, runspec), OpmInputError);
-
-    Schedule sched(deck2, grid1, fp, runspec);
+    Schedule sched = make_schedule(WITH_WELSPECS);
     BOOST_CHECK( !sched.hasWell("W1") );
     BOOST_CHECK( sched.hasWell("W2"));
 
     // The deck3 contains the 'GRID' keyword in the ACTIONX block - that is not a whitelisted keyword.
     ParseContext parseContext( {{ParseContext::ACTIONX_ILLEGAL_KEYWORD, InputError::THROW_EXCEPTION}} );
-    ErrorGuard errors;
-    BOOST_CHECK_THROW(Schedule(deck3, grid1, fp, runspec, parseContext, errors), OpmInputError);
+    BOOST_CHECK_THROW( make_schedule(WITH_GRID, parseContext), OpmInputError );
 }
 
 BOOST_AUTO_TEST_CASE(TestActions) {
@@ -874,4 +875,126 @@ ENDACTIO
     st.add_run(action1, 1000);
     BOOST_CHECK_EQUAL( st.run_count(action1), 1U);
     BOOST_CHECK_EQUAL( st.run_count(action2), 0U);
+}
+
+BOOST_AUTO_TEST_CASE(Action_GCON) {
+    const auto deck_string = std::string{ R"(
+SCHEDULE
+
+WELSPECS
+    'PROD1' 'G1'  1 1 10 'OIL' /
+    'INJ1'  'G1'  1 1 10 'WAT' /
+/
+
+GCONPROD
+'G1' 'ORAT' 100  /
+/
+
+GCONINJE
+'G1' 'WATER' 'RATE' 1000 /
+/
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+GCONPROD
+   'G1'  'ORAT' 200 /
+/
+
+GCONINJE
+'G1' 'WATER' 'RATE' 5000 /
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+        )"};
+
+    auto unit_system =  UnitSystem::newMETRIC();
+    const auto st = SummaryState{ std::chrono::system_clock::now() };
+    Schedule sched = make_schedule(deck_string);
+    const auto& action1 = sched.actions(0).get("A");
+    {
+        const auto& group = sched.getGroup("G1", 0);
+        const auto& prod = group.productionControls(st);
+        BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 100), 1e-5 );
+
+        const auto& inj = group.injectionControls(Phase::WATER, st);
+        BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 1000), 1e-5 );
+    }
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result);
+
+    {
+        const auto& group = sched.getGroup("G1", 1);
+        const auto& prod = group.productionControls(st);
+        BOOST_CHECK_CLOSE( prod.oil_target , unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 200), 1e-5 );
+
+        const auto& inj = group.injectionControls(Phase::WATER, st);
+        BOOST_CHECK_CLOSE( inj.surface_max_rate, unit_system.to_si(UnitSystem::measure::liquid_surface_rate, 5000), 1e-5 );
+    }
+}
+
+BOOST_AUTO_TEST_CASE(GASLIFT_OPT_DECK) {
+    const auto input = R"(-- Turns on gas lift optimization
+RUNSPEC
+LIFTOPT
+/
+
+SCHEDULE
+
+GRUPTREE
+ 'PROD'    'FIELD' /
+
+ 'M5S'    'PLAT-A'  /
+ 'M5N'    'PLAT-A'  /
+
+ 'C1'     'M5N'  /
+ 'F1'     'M5N'  /
+ 'B1'     'M5S'  /
+ 'G1'     'M5S'  /
+ /
+
+ACTIONX
+'A' /
+WWCT 'OPX'     > 0.75    AND /
+FPR < 100 /
+/
+
+GLIFTOPT
+ 'PLAT-A'  200000 /  --
+/
+
+ENDACTIO
+
+TSTEP
+10 /
+
+)";
+
+    Ewoms::UnitSystem unitSystem = UnitSystem( UnitSystem::UnitType::UNIT_TYPE_METRIC );
+    auto sched = make_schedule(input);
+    const auto& action1 = sched.actions(0).get("A");
+    {
+        const auto& glo = sched.glo(0);
+        BOOST_CHECK(!glo.has_group("PLAT-A"));
+    }
+
+    Action::Result action_result(true);
+    sched.applyAction(0, action1, action_result);
+
+    {
+        const auto& glo = sched.glo(0);
+        BOOST_CHECK(glo.has_group("PLAT-A"));
+        const auto& plat_group = glo.group("PLAT-A");
+        BOOST_CHECK_EQUAL( *plat_group.max_lift_gas(), unitSystem.to_si( UnitSystem::measure::gas_surface_rate, 200000));
+        BOOST_CHECK(!static_cast<bool>(plat_group.max_total_gas()));
+    }
+
 }

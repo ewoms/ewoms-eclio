@@ -31,6 +31,7 @@
 #include <array>
 #include <memory>
 #include <vector>
+#include <unordered_set>
 
 namespace Ewoms {
 
@@ -86,7 +87,7 @@ namespace Ewoms {
         size_t activeIndex(size_t i, size_t j, size_t k) const;
         size_t activeIndex(size_t globalIndex) const;
 
-        void save(const std::string& filename, bool formatted, const Ewoms::NNC& nnc, const Ewoms::UnitSystem& units) const;
+        void save(const std::string& filename, bool formatted, const std::vector<Ewoms::NNCdata>& nnc, const Ewoms::UnitSystem& units) const;
         /*
           Observe that the there is a getGlobalIndex(i,j,k)
           implementation in the base class. This method - translating
@@ -212,6 +213,10 @@ namespace Ewoms {
         int m_nactive;
         std::vector<int> m_active_to_global;
         std::vector<int> m_global_to_active;
+        // Numerical aquifer cells, needs to be active
+        std::unordered_set<size_t> m_aquifer_cells;
+
+        void updateNumericalAquiferCells(const Deck&);
 
         void initGridFromEGridFile(Ewoms::EclIO::EclFile& egridfile, std::string fileName);
         void resetACTNUM( const int* actnum);

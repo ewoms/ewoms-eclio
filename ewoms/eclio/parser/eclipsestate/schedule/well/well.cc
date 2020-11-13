@@ -383,8 +383,17 @@ Well Well::serializeObject()
     result.production = std::make_shared<Well::WellProductionProperties>(Well::WellProductionProperties::serializeObject());
     result.injection = std::make_shared<Well::WellInjectionProperties>(Well::WellInjectionProperties::serializeObject());
     result.segments = std::make_shared<WellSegments>(WellSegments::serializeObject());
+    result.m_pavg = PAvg();
 
     return result;
+}
+
+bool Well::updateWPAVE(const PAvg& pavg) {
+    if (this->m_pavg == pavg)
+        return false;
+
+    this->m_pavg = pavg;
+    return true;
 }
 
 bool Well::updateEfficiencyFactor(double efficiency_factor_arg) {
@@ -921,6 +930,10 @@ const Well::WellInjectionProperties& Well::getInjectionProperties() const {
 
 Well::Status Well::getStatus() const {
     return this->status;
+}
+
+const PAvg& Well::pavg() const {
+    return this->m_pavg;
 }
 
 std::map<int, std::vector<Connection>> Well::getCompletions() const {
@@ -1556,6 +1569,7 @@ bool Well::operator==(const Well& data) const {
            this->productivity_index == data.productivity_index &&
            this->getTracerProperties() == data.getTracerProperties() &&
            this->getProductionProperties() == data.getProductionProperties() &&
+           this->m_pavg == data.m_pavg &&
            this->getInjectionProperties() == data.getInjectionProperties();
 }
 
@@ -1636,3 +1650,4 @@ int Ewoms::eclipseControlMode(const Well&         well,
         return eclipseControlMode(ctrl.cmode, well.injectorType());
     }
 }
+

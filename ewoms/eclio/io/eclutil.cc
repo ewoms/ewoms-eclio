@@ -28,6 +28,10 @@
 #include <cmath>
 #include <fstream>
 #include <cstring>
+#include <type_traits>
+
+//temporary
+#include <iostream>
 
 int Ewoms::EclIO::flipEndianInt(int num)
 {
@@ -110,6 +114,9 @@ std::tuple<int, int> Ewoms::EclIO::block_size_data_binary(eclArrType arrType)
     case CHAR:
         return BlockSizeTuple{sizeOfChar, MaxBlockSizeChar};
         break;
+    case C0NN:
+        return BlockSizeTuple{sizeOfChar, MaxBlockSizeChar};
+        break;
     case MESS:
         EWOMS_THROW(std::invalid_argument, "Type 'MESS' have no associated data");
         break;
@@ -139,6 +146,9 @@ std::tuple<int, int, int> Ewoms::EclIO::block_size_data_formatted(eclArrType arr
     case CHAR:
         return BlockSizeTuple{MaxNumBlockChar,numColumnsChar, columnWidthChar};
         break;
+    case C0NN:
+        return BlockSizeTuple{MaxNumBlockChar,numColumnsChar, columnWidthChar};
+        break;
     case MESS:
         EWOMS_THROW(std::invalid_argument, "Type 'MESS' have no associated data") ;
         break;
@@ -159,7 +169,7 @@ std::string Ewoms::EclIO::trimr(const std::string &str1)
     }
 }
 
-uint64_t Ewoms::EclIO::sizeOnDiskBinary(int64_t num, Ewoms::EclIO::eclArrType arrType)
+uint64_t Ewoms::EclIO::sizeOnDiskBinary(int64_t num, Ewoms::EclIO::eclArrType arrType, int elementSize)
 {
     uint64_t size = 0;
 
@@ -171,6 +181,11 @@ uint64_t Ewoms::EclIO::sizeOnDiskBinary(int64_t num, Ewoms::EclIO::eclArrType ar
     } else {
         if (num > 0) {
             auto sizeData = Ewoms::EclIO::block_size_data_binary(arrType);
+
+            if (arrType == Ewoms::EclIO::C0NN){
+                std::get<1>(sizeData)= std::get<1>(sizeData) / std::get<0>(sizeData) * elementSize;
+                std::get<0>(sizeData) = elementSize;
+            }
 
             int sizeOfElement = std::get<0>(sizeData);
             int maxBlockSize = std::get<1>(sizeData);
@@ -194,7 +209,7 @@ uint64_t Ewoms::EclIO::sizeOnDiskBinary(int64_t num, Ewoms::EclIO::eclArrType ar
     return size;
 }
 
-uint64_t Ewoms::EclIO::sizeOnDiskFormatted(const int64_t num, Ewoms::EclIO::eclArrType arrType)
+uint64_t Ewoms::EclIO::sizeOnDiskFormatted(const int64_t num, Ewoms::EclIO::eclArrType arrType, int elementSize)
 {
     uint64_t size = 0;
 
@@ -204,6 +219,11 @@ uint64_t Ewoms::EclIO::sizeOnDiskFormatted(const int64_t num, Ewoms::EclIO::eclA
         }
     } else {
         auto sizeData = block_size_data_formatted(arrType);
+
+        if (arrType == Ewoms::EclIO::C0NN){
+            std::get<2>(sizeData) = elementSize + 3;
+            std::get<1>(sizeData) = 80 / std::get<2>(sizeData);
+        }
 
         int maxBlockSize = std::get<0>(sizeData);
         int nColumns = std::get<1>(sizeData);
@@ -269,7 +289,7 @@ void Ewoms::EclIO::readBinaryHeader(std::fstream& fileH, std::string& tmpStrName
 }
 
 void Ewoms::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
-                      int64_t& size, Ewoms::EclIO::eclArrType &arrType)
+                      int64_t& size, Ewoms::EclIO::eclArrType &arrType, int& elementSize)
 {
     std::string tmpStrName(8,' ');
     std::string tmpStrType(4,' ');
@@ -294,15 +314,25 @@ void Ewoms::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
         size = static_cast<int64_t>(tmpSize);
     }
 
+    elementSize = 4;
+
     arrName = tmpStrName;
     if (tmpStrType == "INTE")
         arrType = Ewoms::EclIO::INTE;
     else if (tmpStrType == "REAL")
         arrType = Ewoms::EclIO::REAL;
-    else if (tmpStrType == "DOUB")
+    else if (tmpStrType == "DOUB"){
         arrType = Ewoms::EclIO::DOUB;
-    else if (tmpStrType == "CHAR")
+        elementSize = 8;
+    }
+    else if (tmpStrType == "CHAR"){
         arrType = Ewoms::EclIO::CHAR;
+        elementSize = 8;
+    }
+    else if (tmpStrType.substr(0,1)=="C"){
+        arrType = Ewoms::EclIO::C0NN;
+        elementSize = std::stoi(tmpStrType.substr(1,3));
+    }
     else if (tmpStrType =="LOGI")
         arrType = Ewoms::EclIO::LOGI;
     else if (tmpStrType == "MESS")
@@ -312,7 +342,7 @@ void Ewoms::EclIO::readBinaryHeader(std::fstream& fileH, std::string& arrName,
 }
 
 void Ewoms::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName,
-                         int64_t &num, Ewoms::EclIO::eclArrType &arrType)
+                         int64_t &num, Ewoms::EclIO::eclArrType &arrType, int& elementSize)
 {
     std::string line;
     std::getline(fileH,line);
@@ -332,14 +362,24 @@ void Ewoms::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName
 
     num = std::stol(antStr);
 
+    elementSize = 4;
+
     if (arrTypeStr == "INTE")
         arrType = Ewoms::EclIO::INTE;
     else if (arrTypeStr == "REAL")
         arrType = Ewoms::EclIO::REAL;
-    else if (arrTypeStr == "DOUB")
+    else if (arrTypeStr == "DOUB"){
         arrType = Ewoms::EclIO::DOUB;
-    else if (arrTypeStr == "CHAR")
+        elementSize = 8;
+    }
+    else if (arrTypeStr == "CHAR"){
         arrType = Ewoms::EclIO::CHAR;
+        elementSize = 8;
+    }
+    else if (arrTypeStr.substr(0,1)=="C"){
+        arrType = Ewoms::EclIO::C0NN;
+        elementSize = std::stoi(arrTypeStr.substr(1,3));
+    }
     else if (arrTypeStr == "LOGI")
         arrType = Ewoms::EclIO::LOGI;
     else if (arrTypeStr == "MESS")
@@ -352,13 +392,31 @@ void Ewoms::EclIO::readFormattedHeader(std::fstream& fileH, std::string& arrName
     }
 }
 
+template <class T>
+void readFileHValue_(std::fstream& fileH, T& value, int sizeOfElement)
+{
+    fileH.read(reinterpret_cast<char*>(&value), sizeOfElement);
+}
+
+void readFileHValue_(std::fstream& fileH, std::string& value, int sizeOfElement)
+{
+    value.resize(sizeOfElement);
+    fileH.read(&value[0], sizeOfElement);
+}
+
 template<typename T, typename T2>
 std::vector<T> Ewoms::EclIO::readBinaryArray(std::fstream& fileH, const int64_t size, Ewoms::EclIO::eclArrType type,
-                               std::function<T(T2)>& flip)
+                               std::function<T(T2)>& flip, int elementSize)
 {
     std::vector<T> arr;
 
     auto sizeData = block_size_data_binary(type);
+
+    if (type == Ewoms::EclIO::C0NN){
+        std::get<1>(sizeData)= std::get<1>(sizeData) / std::get<0>(sizeData) * elementSize;
+        std::get<0>(sizeData) = elementSize;
+    }
+
     int sizeOfElement = std::get<0>(sizeData);
     int maxBlockSize = std::get<1>(sizeData);
     int maxNumberOfElements = maxBlockSize / sizeOfElement;
@@ -366,11 +424,11 @@ std::vector<T> Ewoms::EclIO::readBinaryArray(std::fstream& fileH, const int64_t 
     arr.reserve(size);
 
     int64_t rest = size;
+
     while (rest > 0) {
         int dhead;
         fileH.read(reinterpret_cast<char*>(&dhead), sizeof(dhead));
         dhead = Ewoms::EclIO::flipEndianInt(dhead);
-
         int num = dhead / sizeOfElement;
 
         if ((num > maxNumberOfElements) || (num < 0)) {
@@ -379,7 +437,8 @@ std::vector<T> Ewoms::EclIO::readBinaryArray(std::fstream& fileH, const int64_t 
 
         for (int i = 0; i < num; i++) {
             T2 value;
-            fileH.read(reinterpret_cast<char*>(&value), sizeOfElement);
+            readFileHValue_(fileH, value, sizeOfElement);
+ 
             arr.push_back(flip(value));
         }
 
@@ -406,19 +465,19 @@ std::vector<T> Ewoms::EclIO::readBinaryArray(std::fstream& fileH, const int64_t 
 std::vector<int> Ewoms::EclIO::readBinaryInteArray(std::fstream &fileH, const int64_t size)
 {
     std::function<int(int)> f = Ewoms::EclIO::flipEndianInt;
-    return readBinaryArray<int,int>(fileH, size, Ewoms::EclIO::INTE, f);
+    return readBinaryArray<int,int>(fileH, size, Ewoms::EclIO::INTE, f, sizeOfInte);
 }
 
 std::vector<float> Ewoms::EclIO::readBinaryRealArray(std::fstream& fileH, const int64_t size)
 {
     std::function<float(float)> f = Ewoms::EclIO::flipEndianFloat;
-    return readBinaryArray<float,float>(fileH, size, Ewoms::EclIO::REAL, f);
+    return readBinaryArray<float,float>(fileH, size, Ewoms::EclIO::REAL, f, sizeOfReal);
 }
 
 std::vector<double> Ewoms::EclIO::readBinaryDoubArray(std::fstream& fileH, const int64_t size)
 {
     std::function<double(double)> f = Ewoms::EclIO::flipEndianDouble;
-    return readBinaryArray<double,double>(fileH, size, Ewoms::EclIO::DOUB, f);
+    return readBinaryArray<double,double>(fileH, size, Ewoms::EclIO::DOUB, f, sizeOfDoub);
 }
 
 std::vector<bool> Ewoms::EclIO::readBinaryLogiArray(std::fstream &fileH, const int64_t size)
@@ -426,17 +485,28 @@ std::vector<bool> Ewoms::EclIO::readBinaryLogiArray(std::fstream &fileH, const i
     std::function<bool(unsigned int)> f = [](unsigned int intVal)
                                           {
                                               bool value;
-                                              if (intVal == Ewoms::EclIO::true_value) {
+                                              if (intVal == Ewoms::EclIO::true_value_ecl) {
                                                   value = true;
                                               } else if (intVal == Ewoms::EclIO::false_value) {
                                                   value = false;
+                                              } else if (intVal == Ewoms::EclIO::true_value_ix) {
+                                                  value = true;
                                               } else {
                                                   EWOMS_THROW(std::runtime_error, "Error reading logi value");
                                               }
 
                                               return value;
                                           };
-    return readBinaryArray<bool,unsigned int>(fileH, size, Ewoms::EclIO::LOGI, f);
+    return readBinaryArray<bool,unsigned int>(fileH, size, Ewoms::EclIO::LOGI, f, sizeOfLogi);
+}
+
+std::vector<unsigned int> Ewoms::EclIO::readBinaryRawLogiArray(std::fstream &fileH, const int64_t size)
+{
+    std::function<unsigned int(unsigned int)> f = [](unsigned int intVal)
+                                          {
+                                              return intVal;
+                                          };
+    return readBinaryArray<unsigned int, unsigned int>(fileH, size, Ewoms::EclIO::LOGI, f, sizeOfLogi);
 }
 
 std::vector<std::string> Ewoms::EclIO::readBinaryCharArray(std::fstream& fileH, const int64_t size)
@@ -447,7 +517,17 @@ std::vector<std::string> Ewoms::EclIO::readBinaryCharArray(std::fstream& fileH, 
                                               std::string res(val.begin(), val.end());
                                               return Ewoms::EclIO::trimr(res);
                                           };
-    return readBinaryArray<std::string,Char8>(fileH, size, Ewoms::EclIO::CHAR, f);
+    return readBinaryArray<std::string,Char8>(fileH, size, Ewoms::EclIO::CHAR, f, sizeOfChar);
+}
+
+std::vector<std::string> Ewoms::EclIO::readBinaryC0nnArray(std::fstream& fileH, const int64_t size, int elementSize)
+{
+    std::function<std::string(std::string)> f = [](const std::string& val)
+                                          {
+                                              return Ewoms::EclIO::trimr(val);
+                                          };
+
+    return readBinaryArray<std::string,std::string>(fileH, size, Ewoms::EclIO::C0NN, f, elementSize);
 }
 
 template<typename T>
@@ -470,7 +550,6 @@ std::vector<T> Ewoms::EclIO::readFormattedArray(const std::string& file_str, con
     }
 
     return arr;
-
 }
 
 std::vector<int> Ewoms::EclIO::readFormattedInteArray(const std::string& file_str, const int64_t size, int64_t fromPos)
@@ -484,7 +563,8 @@ std::vector<int> Ewoms::EclIO::readFormattedInteArray(const std::string& file_st
     return readFormattedArray(file_str, size, fromPos, f);
 }
 
-std::vector<std::string> Ewoms::EclIO::readFormattedCharArray(const std::string& file_str, const int64_t size, int64_t fromPos)
+std::vector<std::string> Ewoms::EclIO::readFormattedCharArray(const std::string& file_str, const int64_t size,
+                                                            int64_t fromPos, int elementSize)
 {
     std::vector<std::string> arr;
     arr.reserve(size);
@@ -493,7 +573,7 @@ std::vector<std::string> Ewoms::EclIO::readFormattedCharArray(const std::string&
 
     for (int i=0; i< size; i++) {
         p1 = file_str.find_first_of('\'',p1);
-        std::string value = file_str.substr(p1 + 1, 8);
+        std::string value = file_str.substr(p1 + 1, elementSize);
 
         if (value == "        ") {
             arr.push_back("");
@@ -501,7 +581,7 @@ std::vector<std::string> Ewoms::EclIO::readFormattedCharArray(const std::string&
             arr.push_back(Ewoms::EclIO::trimr(value));
         }
 
-        p1 = p1+10;
+        p1 = p1 + elementSize + 2;
     }
 
     return arr;
@@ -519,6 +599,17 @@ std::vector<float> Ewoms::EclIO::readFormattedRealArray(const std::string& file_
                                                  };
 
     return readFormattedArray<float>(file_str, size, fromPos, f);
+}
+
+std::vector<std::string> Ewoms::EclIO::readFormattedRealRawStrings(const std::string& file_str, const int64_t size, int64_t fromPos)
+{
+
+    std::function<std::string(const std::string&)> f = [](const std::string& val)
+                                                 {
+                                                     return val;
+                                                 };
+
+    return readFormattedArray<std::string>(file_str, size, fromPos, f);
 }
 
 std::vector<bool> Ewoms::EclIO::readFormattedLogiArray(const std::string& file_str, const int64_t size, int64_t fromPos)
@@ -546,15 +637,18 @@ std::vector<double> Ewoms::EclIO::readFormattedDoubArray(const std::string& file
                                                   {
                                                       auto p1 = val.find_first_of("D");
 
-                                                      if (p1 == std::string::npos) {
-                                                          auto p2 = val.find_first_of("-+", 1);
-                                                          if (p2 != std::string::npos) {
-                                                              val = val.insert(p2,"E");
-                                                          }
-                                                      } else {
+                                                      if (p1 != std::string::npos) {
                                                           val.replace(p1,1,"E");
                                                       }
 
+                                                      p1 = val.find_first_of("E");
+
+                                                      if (p1 == std::string::npos) {
+                                                          auto p2 = val.find_first_of("-+", 1);
+
+                                                          if (p2 != std::string::npos)
+                                                              val = val.insert(p2,"E");
+                                                      }
                                                       return std::stod(val);
                                                   };
 

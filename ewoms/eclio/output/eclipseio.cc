@@ -95,8 +95,8 @@ namespace Ewoms {
 class EclipseIO::Impl {
     public:
     Impl( const EclipseState&, EclipseGrid, const Schedule&, const SummaryConfig& );
-        void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) const;
-        void writeEGRIDFile( const NNC& nnc );
+        void writeINITFile( const data::Solution& simProps, std::map<std::string, std::vector<int> > int_data, const std::vector<NNCdata>& nnc) const;
+        void writeEGRIDFile( const std::vector<NNCdata>& nnc );
         bool wantRFTOutput( const int report_step, const bool isSubstep ) const;
 
         const EclipseState& es;
@@ -125,7 +125,7 @@ EclipseIO::Impl::Impl( const EclipseState& eclipseState,
 
 void EclipseIO::Impl::writeINITFile(const data::Solution&                   simProps,
                                     std::map<std::string, std::vector<int>> int_data,
-                                    const NNC&                              nnc) const
+                                    const std::vector<NNCdata>&             nnc) const
 {
     EclIO::OutputStream::Init initFile {
         EclIO::OutputStream::ResultSet { this->outputDir, this->baseName },
@@ -136,7 +136,7 @@ void EclipseIO::Impl::writeINITFile(const data::Solution&                   simP
                   simProps, std::move(int_data), nnc, initFile);
 }
 
-void EclipseIO::Impl::writeEGRIDFile( const NNC& nnc ) {
+void EclipseIO::Impl::writeEGRIDFile( const std::vector<NNCdata>& nnc ) {
     const auto formatted = this->es.cfg().io().getFMTOUT();
 
     const auto ext = '.'
@@ -162,7 +162,7 @@ int_data: Writes key(string) and integers vector to INIT file as eclipse keyword
 - Key: Max 8 chars.
 - Wrong input: invalid_argument exception.
 */
-void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > int_data, const NNC& nnc) {
+void EclipseIO::writeInitial( data::Solution simProps, std::map<std::string, std::vector<int> > int_data, const std::vector<NNCdata>& nnc) {
     if( !this->impl->output_enabled )
         return;
 

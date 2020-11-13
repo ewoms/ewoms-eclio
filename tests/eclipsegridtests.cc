@@ -1666,7 +1666,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     const auto& grid1 = es.getInputGrid();
 
-    Ewoms::NNC nnc( deck );
+    Ewoms::NNC nnc(grid1,  deck);
     bool formatted = false;
 
     time_t timer;
@@ -1682,7 +1682,7 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
     Ewoms::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.EGRID";
-    grid1.save(fileName, formatted, nnc, units);
+    grid1.save(fileName, formatted, nnc.input(), units);
 
     Ewoms::EclIO::EclFile file1(fileName);
 
@@ -1737,13 +1737,12 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     Ewoms::EclipseState es2(deck2);
     Ewoms::UnitSystem units2 = es.getDeckUnitSystem();
-    Ewoms::NNC nnc2( deck2 );
-
     const auto& grid2 = es2.getInputGrid();
+    Ewoms::NNC nnc2(grid2,  deck2 );
 
     std::string fileName2 = testDir + "/" + "TMP2.FEGRID";
 
-    grid2.save(fileName2, true, nnc2, units);
+    grid2.save(fileName2, true, nnc2.input(), units);
 
     Ewoms::EclIO::EclFile file2(fileName2);
 
@@ -1763,13 +1762,12 @@ BOOST_AUTO_TEST_CASE(SAVE_FIELD_UNITS) {
 
     Ewoms::EclipseState es3(deck3);
     Ewoms::UnitSystem units3 = es.getDeckUnitSystem();
-    Ewoms::NNC nnc3( deck3 );
-
     const auto& grid3 = es3.getInputGrid();
+    Ewoms::NNC nnc3(grid3, deck3);
 
     std::string fileName3 = testDir + "/" + "TMP3.FEGRID";
 
-    grid3.save(fileName3, true, nnc3, units3);
+    grid3.save(fileName3, true, nnc3.input(), units3);
 
     Ewoms::EclIO::EclFile file3(fileName3);
 
@@ -1858,7 +1856,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     const auto length = ::Ewoms::UnitSystem::measure::length;
 
     const auto& grid1 = es1.getInputGrid();
-    Ewoms::NNC nnc( deck1 );
+    Ewoms::NNC nnc(grid1, deck1);
 
     bool formatted = true;
 
@@ -1875,7 +1873,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     Ewoms::filesystem::create_directory(testDir);
 
     std::string fileName = testDir + "/" + "TMP.FEGRID";
-    grid1.save(fileName, formatted, nnc, units1);
+    grid1.save(fileName, formatted, nnc.input(), units1);
 
     Ewoms::EclIO::EclFile file1(fileName);
 
@@ -1929,7 +1927,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
     BOOST_CHECK( file1.hasKey("NNCHEAD"));
     const std::vector<int> nnchead = file1.get<int>("NNCHEAD");
 
-    BOOST_CHECK( nnchead[0] == static_cast<int>(nnc.numNNC()) );
+    BOOST_CHECK( nnchead[0] == static_cast<int>(nnc.input().size()) );
 
     std::vector<int> ref_nnc1 = { 6, 7, 8 };
     std::vector<int> ref_nnc2 = { 26, 27, 28 };
@@ -1961,7 +1959,7 @@ BOOST_AUTO_TEST_CASE(SAVE_METRIC_UNITS) {
 
     std::string fileName2 = testDir + "/" + "TMP2.FEGRID";
 
-    grid2.save(fileName2, true, nnc, units2);
+    grid2.save(fileName2, true, nnc.input(), units2);
 
     Ewoms::EclIO::EclFile file2(fileName2);
 
@@ -2123,6 +2121,69 @@ BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_UPDATE) {
     for (size_t n=0; n< actGrid1.size(); n++) {
         BOOST_CHECK_EQUAL( actGrid1[n], actInDeck[n]);
         BOOST_CHECK_EQUAL( actGrid2[n], newAct[n]);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TESTCP_ACTNUM_AQUNUM) {
+    const std::string deckData = R"(
+         RUNSPEC
+         DIMENS
+         3 2 1 /
+         GRID
+         COORD
+         2000.0000  2000.0000  2000.0000   1999.9476  2000.0000  2002.9995
+         2049.9924  2000.0000  2000.8726   2049.9400  2000.0000  2003.8722
+         2099.9848  2000.0000  2001.7452   2099.9324  2000.0000  2004.7448
+         2149.9772  2000.0000  2002.6179   2149.9248  2000.0000  2005.6174
+         2000.0000  2050.0000  2000.0000   1999.9476  2050.0000  2002.9995
+         2049.9924  2050.0000  2000.8726   2049.9400  2050.0000  2003.8722
+         2099.9848  2050.0000  2001.7452   2099.9324  2050.0000  2004.7448
+         2149.9772  2050.0000  2002.6179   2149.9248  2050.0000  2005.6174
+         2000.0000  2100.0000  2000.0000   1999.9476  2100.0000  2002.9995
+         2049.9924  2100.0000  2000.8726   2049.9400  2100.0000  2003.8722
+         2099.9848  2100.0000  2001.7452   2099.9324  2100.0000  2004.7448
+         2149.9772  2100.0000  2002.6179   2149.9248  2100.0000  2005.6174 /
+         ZCORN
+         2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179
+         2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179
+         2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179
+         2000.0000  2000.8726  2000.8726  2001.7452  2001.7452  2002.6179
+         2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174
+         2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174
+         2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174
+         2002.9995  2003.8722  2003.8722  2004.7448  2004.7448  2005.6174 /
+         ACTNUM
+          0 0 1 1 0 1 /
+         PORO
+          6*0.15 /
+         AQUNUM
+            1     1  1  1   1000000.0   10000   0.25   400    2585.00   285.00    1   1  /
+            1     2  1  1   1000000.0   10000   0.25   400    2585.00   285.00    1   1  /
+         /
+         AQUCON
+           1     3    3      2    2     1   1   'J+'      1.00      1  /
+         /
+         EDIT)";
+
+    Ewoms::Parser parser;
+    const auto deck = parser.parseString( deckData) ;
+    Ewoms::EclipseGrid grid( deck);
+
+    const std::vector<int>& grid_actnum = grid.getACTNUM();
+    const std::vector<int> desired_actnum = {1, 1, 1, 1, 0, 1};
+
+    BOOST_CHECK( grid_actnum.size() == desired_actnum.size() );
+
+    for (size_t n=0; n< grid_actnum.size(); n++) {
+        BOOST_CHECK_EQUAL( grid_actnum[n], desired_actnum[n] );
+    }
+
+    Ewoms::EclipseState es(deck);
+    const auto& grid_actnum2 = es.getInputGrid().getACTNUM();
+
+    BOOST_CHECK( desired_actnum.size() == grid_actnum2.size());
+    for (size_t n=0; n< grid_actnum.size(); n++) {
+        BOOST_CHECK_EQUAL( grid_actnum2[n], desired_actnum[n] );
     }
 }
 
@@ -2561,16 +2622,16 @@ BOOST_AUTO_TEST_CASE(TEST_GDFILE_2) {
     Ewoms::UnitSystem units1a = es1a.getDeckUnitSystem();
 
     const auto& grid1a = es1a.getInputGrid();
-    Ewoms::NNC nnc( deck1a );
+    Ewoms::NNC nnc(grid1a, deck1a);
 
-    grid1a.save("BAD_CP_M.EGRID", false, nnc, units1a);
+    grid1a.save("BAD_CP_M.EGRID", false, nnc.input(), units1a);
 
     auto deck1b = parser.parseString( deckData1b) ;
     Ewoms::EclipseState es1b( deck1b );
     Ewoms::UnitSystem units1b = es1b.getDeckUnitSystem();
     const auto& grid1b = es1b.getInputGrid();
 
-    grid1b.save("BAD_CP_F.EGRID", false, nnc, units1b);
+    grid1b.save("BAD_CP_F.EGRID", false, nnc.input(), units1b);
 
     auto deck1 = parser.parseString( deckData1) ;
     Ewoms::EclipseGrid grid1( deck1);

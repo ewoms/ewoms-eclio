@@ -615,4 +615,20 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
         return perf_length;
     }
 
+    Ewoms::optional<int>
+    getCompletionNumberFromGlobalConnectionIndex(const WellConnections& connections,
+                                                 const std::size_t      global_index)
+    {
+        auto connPos = std::find_if(connections.begin(), connections.end(),
+            [global_index](const Connection& conn)
+        {
+            return conn.global_index() == global_index;
+        });
+
+        if (connPos == connections.end())
+            // No connection exists with the requisite 'global_index'
+            return {};
+
+        return { connPos->complnum() };
+    }
 }

@@ -25,11 +25,12 @@ namespace Ewoms { namespace EclIO {
 
     // type MESS have no assisiated data
     enum eclArrType {
-        INTE, REAL, DOUB, CHAR, LOGI, MESS
+        INTE, REAL, DOUB, CHAR, LOGI, MESS, C0NN
     };
 
     // named constants related to binary file format
-    const unsigned int true_value = 0xffffffff;
+    const unsigned int true_value_ecl = 0xffffffff;
+    const unsigned int true_value_ix = 0x1000000;
     const unsigned int false_value = 0x00000000;
 
     const int sizeOfInte =  4;    // number of bytes pr integer (inte) element

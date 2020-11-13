@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <ewoms/eclio/parser/eclipsestate/grid/nnc.hh>
+
 namespace Ewoms {
 
     class EclipseGrid;
@@ -51,7 +53,7 @@ namespace Ewoms { namespace InitIO {
                const ::Ewoms::Schedule&                  schedule,
                const ::Ewoms::data::Solution&            simProps,
                std::map<std::string, std::vector<int>> int_data,
-               const ::Ewoms::NNC&                       nnc,
+               const std::vector<::Ewoms::NNCdata>&      nnc,
                ::Ewoms::EclIO::OutputStream::Init&       initFile);
 
 }} // namespace Ewoms::InitIO

@@ -2639,13 +2639,13 @@ namespace ParserKeywords {
        WPAVE();
        static const std::string keywordName;
 
-       class WEIGTH_FACTOR1 {
+       class F1 {
        public:
            static const std::string itemName;
            static const double defaultValue;
        };
 
-       class WEIGTH_FACTOR2 {
+       class F2 {
        public:
            static const std::string itemName;
            static const double defaultValue;
@@ -4535,7 +4535,7 @@ namespace ParserKeywords {
            static const std::string defaultValue;
        };
 
-       class WELL_CONNECTION {
+       class CONNECTION {
        public:
            static const std::string itemName;
            static const std::string defaultValue;

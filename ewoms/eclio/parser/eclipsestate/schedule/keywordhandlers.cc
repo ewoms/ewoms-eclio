@@ -266,11 +266,17 @@ namespace {
     }
 
     void Schedule::handleGCONINJE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : handlerContext.keyword) {
+        auto current_step = handlerContext.currentStep;
+        const auto& keyword = handlerContext.keyword;
+        this->handleGCONINJE(keyword, current_step, parseContext, errors);
+    }
+
+    void Schedule::handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, current_step, parseContext, errors, keyword);
 
             const Group::InjectionCMode controlMode = Group::InjectionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             const Phase phase = get_phase( record.getItem("PHASE").getTrimmedString(0));
@@ -282,7 +288,7 @@ namespace {
 
             for (const auto& group_name : group_names) {
                 const bool availableForGroupControl = is_free && (group_name != "FIELD");
-                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
                 Group::GroupInjectionProperties injection;
                 injection.phase = phase;
                 injection.cmode = controlMode;
@@ -312,20 +318,26 @@ namespace {
                     injection.voidage_group = record.getItem("VOIDAGE_GROUP").getTrimmedString(0);
 
                 if (group_ptr->updateInjection(injection)) {
-                    this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                    m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , handlerContext.currentStep);
-                    this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, handlerContext.currentStep);
+                    this->updateGroup(std::move(group_ptr), current_step);
+                    m_events.addEvent( ScheduleEvents::GROUP_INJECTION_UPDATE , current_step);
+                    this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_INJECTION_UPDATE, current_step);
                 }
             }
         }
     }
 
     void Schedule::handleGCONPROD(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
-        for (const auto& record : handlerContext.keyword) {
+        auto current_step = handlerContext.currentStep;
+        const auto& keyword = handlerContext.keyword;
+        this->handleGCONPROD(keyword, current_step, parseContext, errors);
+    }
+
+    void Schedule::handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem("GROUP").getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, current_step, parseContext, errors, keyword);
 
             const Group::ProductionCMode controlMode = Group::ProductionCModeFromString(record.getItem("CONTROL_MODE").getTrimmedString(0));
             const Group::ExceedAction exceedAction = Group::ExceedActionFromString(record.getItem("EXCEED_PROC").getTrimmedString(0));
@@ -371,7 +383,7 @@ namespace {
                             std::string msg_fmt = "Problem with {keyword}\n"
                                 "In {file} line {line}\n"
                                 "The supplied guide rate will be ignored";
-                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg_fmt, handlerContext.keyword.location(), errors);
+                            parseContext.handleError(ParseContext::SCHEDULE_IGNORED_GUIDE_RATE, msg_fmt, keyword.location(), errors);
                         } else {
                             guide_rate = record.getItem("GUIDE_RATE").get<double>(0);
                             if (guide_rate == 0)
@@ -381,7 +393,7 @@ namespace {
                 }
 
                 {
-                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, handlerContext.currentStep));
+                    auto group_ptr = std::make_shared<Group>(this->getGroup(group_name, current_step));
                     Group::GroupProductionProperties production(this->unit_system, group_name);
                     production.gconprod_cmode = controlMode;
                     production.active_cmode = controlMode;
@@ -420,17 +432,17 @@ namespace {
                         production.production_controls += static_cast<int>(Group::ProductionCMode::RESV);
 
                     if (group_ptr->updateProduction(production)) {
-                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(handlerContext.currentStep) );
+                        auto new_config = std::make_shared<GuideRateConfig>( this->guideRateConfig(current_step) );
                         new_config->update_group(*group_ptr);
-                        this->guide_rate_config.update( handlerContext.currentStep, std::move(new_config) );
+                        this->guide_rate_config.update( current_step, std::move(new_config) );
 
-                        this->updateGroup(std::move(group_ptr), handlerContext.currentStep);
-                        m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, handlerContext.currentStep);
-                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, handlerContext.currentStep);
+                        this->updateGroup(std::move(group_ptr), current_step);
+                        m_events.addEvent(ScheduleEvents::GROUP_PRODUCTION_UPDATE, current_step);
+                        this->addWellGroupEvent(group_name, ScheduleEvents::GROUP_PRODUCTION_UPDATE, current_step);
 
-                        auto udq = std::make_shared<UDQActive>(this->udqActive(handlerContext.currentStep));
-                        if (production.updateUDQActive(this->getUDQConfig(handlerContext.currentStep), *udq))
-                            this->updateUDQActive(handlerContext.currentStep, udq);
+                        auto udq = std::make_shared<UDQActive>(this->udqActive(current_step));
+                        if (production.updateUDQActive(this->getUDQConfig(current_step), *udq))
+                            this->updateUDQActive(current_step, udq);
                     }
                 }
             }
@@ -498,14 +510,18 @@ namespace {
         }
     }
 
-    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard&errors) {
-        auto glo = std::make_shared<GasLiftOpt>( this->glo(handlerContext.currentStep) );
+    void Schedule::handleGLIFTOPT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        this->handleGLIFTOPT(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
+    }
 
-        for (const auto& record : handlerContext.keyword) {
+    void Schedule::handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard&errors) {
+        auto glo = std::make_shared<GasLiftOpt>( this->glo(report_step) );
+
+        for (const auto& record : keyword) {
             const std::string& groupNamePattern = record.getItem<ParserKeywords::GLIFTOPT::GROUP_NAME>().getTrimmedString(0);
             const auto group_names = this->groupNames(groupNamePattern);
             if (group_names.empty())
-                invalidNamePattern(groupNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+                invalidNamePattern(groupNamePattern, report_step, parseContext, errors, keyword);
 
             const auto& max_gas_item = record.getItem<ParserKeywords::GLIFTOPT::MAX_LIFT_GAS_SUPPLY>();
             const double max_lift_gas_value = max_gas_item.hasValue(0)
@@ -526,7 +542,7 @@ namespace {
             }
         }
 
-        this->m_glo.update(handlerContext.currentStep, std::move(glo));
+        this->m_glo.update(report_step, std::move(glo));
     }
 
     void Schedule::handleGPMAINT(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
@@ -1745,6 +1761,28 @@ namespace {
         }
     }
 
+    void Schedule::handleWPAVE(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        auto wpave = std::make_shared<PAvg>( handlerContext.keyword.getRecord(0) );
+        for (const auto& wname : this->wellNames(handlerContext.currentStep))
+            this->updateWPAVE(wname, handlerContext.currentStep, *wpave );
+
+        this->m_pavg.update( handlerContext.currentStep, std::move(wpave) );
+    }
+
+    void Schedule::handleWWPAVE(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
+        for (const auto& record : handlerContext.keyword) {
+            const std::string& wellNamePattern = record.getItem("WELL").getTrimmedString(0);
+            const auto well_names = wellNames(wellNamePattern, handlerContext.currentStep);
+
+            if (well_names.empty())
+                invalidNamePattern(wellNamePattern, handlerContext.currentStep, parseContext, errors, handlerContext.keyword);
+
+            auto wpave = PAvg(record);
+            for (const auto& well_name : well_names)
+                this->updateWPAVE(well_name, handlerContext.currentStep, wpave);
+        }
+    }
+
     bool Schedule::handleNormalKeyword(const HandlerContext& handlerContext, const ParseContext& parseContext, ErrorGuard& errors) {
         using handler_function = void (Schedule::*)(const HandlerContext&, const ParseContext&, ErrorGuard&);
         static const std::unordered_map<std::string,handler_function> handler_functions = {
@@ -1810,6 +1848,8 @@ namespace {
             { "WINJTEMP", &Schedule::handleWINJTEMP },
             { "WLIFTOPT", &Schedule::handleWLIFTOPT },
             { "WLIST"   , &Schedule::handleWLIST    },
+            { "WPAVE"   , &Schedule::handleWPAVE    },
+            { "WWPAVE"  , &Schedule::handleWWPAVE   },
             { "WPIMULT" , &Schedule::handleWPIMULT  },
             { "WPMITAB" , &Schedule::handleWPMITAB  },
             { "WPOLYMER", &Schedule::handleWPOLYMER },

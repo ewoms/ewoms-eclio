@@ -21,10 +21,16 @@
 
 #include <cstddef>
 #include <memory>
+#include <ewoms/common/optional.hh>
+#include <tuple>
 #include <vector>
+
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 
 namespace Ewoms
 {
+
+class GridDims;
 
 struct NNCdata {
     NNCdata(size_t c1, size_t c2, double t)
@@ -47,41 +53,86 @@ struct NNCdata {
         serializer(trans);
     }
 
+    // Observe that the operator< is only for cell ordering and does not consider the
+    // trans member
+    bool operator<(const NNCdata& other) const
+    {
+        return std::tie(this->cell1, this->cell2) < std::tie(other.cell1, other.cell2);
+    }
+
     size_t cell1;
     size_t cell2;
     double trans;
 };
 
 class Deck;
+class EclipseGrid;
 
-/// Represents non-neighboring connections (non-standard adjacencies).
-/// This class is essentially a directed weighted graph.
+/*
+  This class is an internalization of the NNC and EDITNNC keywords. Because the
+  opm-common codebase does not itself manage the simulation grid the purpose of
+  the NNC class is mainly to hold on to the NNC/EDITNNC input and pass it on to
+  the grid construction proper.
+
+  The EDITNNC keywords can operate on two different types of NNCs.
+
+    1. NNCs which have been explicitly entered using the NNC keyword.
+    2. NNCs which are inderectly inferred from the grid - e.g. due to faults.
+
+  When processing the EDITNNC keyword the class will search through the NNCs
+  configured explicitly with the NNC keyword and apply the edit transformation
+  on those NNCs, EDITNNCs which affect NNCs which are not configured explicitly
+  are stored for later use by the simulator.
+
+  The class guarantees the following ordering:
+
+    1. For all NNC / EDITNNC records we will have cell1 <= cell2
+    2. The vectors NNC::input() and NNC::edit() will be ordered in ascending
+       order.
+
+  While constructing from a deck NNCs connected to inactive cells will be
+  silently ignored. Do observe though that the addNNC() function does not check
+  the arguments and alas there is no guarantee that only active cells are
+  involved.
+*/
+
 class NNC
 {
 public:
     NNC() = default;
-
     /// Construct from input deck.
-    explicit NNC(const Deck& deck);
+    NNC(const EclipseGrid& grid, const Deck& deck);
 
     static NNC serializeObject();
 
-    void addNNC(const size_t cell1, const size_t cell2, const double trans);
-    const std::vector<NNCdata>& data() const { return m_nnc; }
-    size_t numNNC() const;
-    bool hasNNC() const;
+    bool addNNC(const size_t cell1, const size_t cell2, const double trans);
+    const std::vector<NNCdata>& input() const { return m_input; }
+    const std::vector<NNCdata>& edit() const { return m_edit; }
+    KeywordLocation input_location(const NNCdata& nnc) const;
+    KeywordLocation edit_location(const NNCdata& nnc) const;
 
     bool operator==(const NNC& data) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
     {
-        serializer.vector(m_nnc);
+        serializer.vector(m_input);
+        serializer.vector(m_edit);
+        serializer(m_nnc_location);
+        serializer(m_edit_location);
     }
 
 private:
 
-    std::vector<NNCdata> m_nnc;
+    void load_input(const EclipseGrid& grid, const Deck& deck);
+    void load_edit(const EclipseGrid& grid, const Deck& deck);
+    void add_edit(const NNCdata& edit_node);
+    bool update_nnc(std::size_t global_index1, std::size_t global_index2, double tran_mult);
+
+    std::vector<NNCdata> m_input;
+    std::vector<NNCdata> m_edit;
+    Ewoms::optional<KeywordLocation> m_nnc_location;
+    Ewoms::optional<KeywordLocation> m_edit_location;
 };
 
 } // namespace Ewoms

@@ -65,17 +65,19 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
         std::string arrName(8,' ');
         eclArrType arrType;
         int64_t num;
+        int sizeOfElement;
 
         if (formatted) {
-            readFormattedHeader(fileH,arrName,num,arrType);
+            readFormattedHeader(fileH,arrName,num,arrType, sizeOfElement);
         } else {
-            readBinaryHeader(fileH,arrName,num,arrType);
+            readBinaryHeader(fileH,arrName,num, arrType, sizeOfElement);
         }
 
         array_size.push_back(num);
         array_type.push_back(arrType);
-
         array_name.push_back(trimr(arrName));
+        array_element_size.push_back(sizeOfElement);
+
         array_index[array_name[n]] = n;
 
         uint64_t pos = fileH.tellg();
@@ -85,10 +87,10 @@ EclFile::EclFile(const std::string& filename, bool preload) : inputFilename(file
 
         if (num > 0){
             if (formatted) {
-                uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType);
+                uint64_t sizeOfNextArray = sizeOnDiskFormatted(num, arrType, sizeOfElement);
                 fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
             } else {
-                uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType);
+                uint64_t sizeOfNextArray = sizeOnDiskBinary(num, arrType, sizeOfElement);
                 fileH.seekg(static_cast<std::streamoff>(sizeOfNextArray), std::ios_base::cur);
             }
         }
@@ -124,6 +126,9 @@ void EclFile::loadBinaryArray(std::fstream& fileH, std::size_t arrIndex)
     case CHAR:
         char_array[arrIndex] = readBinaryCharArray(fileH, array_size[arrIndex]);
         break;
+    case C0NN:
+        char_array[arrIndex] = readBinaryC0nnArray(fileH, array_size[arrIndex], array_element_size[arrIndex]);
+        break;
     case MESS:
         break;
     default:
@@ -151,7 +156,10 @@ void EclFile::loadFormattedArray(const std::string& fileStr, std::size_t arrInde
         logi_array[arrIndex] = readFormattedLogiArray(fileStr, array_size[arrIndex], fromPos);
         break;
     case CHAR:
-        char_array[arrIndex] = readFormattedCharArray(fileStr, array_size[arrIndex], fromPos);
+        char_array[arrIndex] = readFormattedCharArray(fileStr, array_size[arrIndex], fromPos, sizeOfChar);
+        break;
+    case C0NN:
+        char_array[arrIndex] = readFormattedCharArray(fileStr, array_size[arrIndex], fromPos, array_element_size[arrIndex]);
         break;
     case MESS:
         break;
@@ -205,7 +213,7 @@ void EclFile::loadData(const std::string& name)
                 inFile.seekg(ifStreamPos[arrIndex]);
 
                 char* buffer;
-                size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex])+1;
+                size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
                 buffer = new char [size];
                 inFile.read (buffer, size);
 
@@ -249,7 +257,7 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
             inFile.seekg(ifStreamPos[ind]);
 
             char* buffer;
-            size_t size = sizeOnDiskFormatted(array_size[ind], array_type[ind])+1;
+            size_t size = sizeOnDiskFormatted(array_size[ind], array_type[ind], array_element_size[ind])+1;
             buffer = new char [size];
             inFile.read (buffer, size);
 
@@ -279,7 +287,6 @@ void EclFile::loadData(const std::vector<int>& arrIndex)
 
 void EclFile::loadData(int arrIndex)
 {
-
     if (formatted) {
 
         std::ifstream inFile(inputFilename);
@@ -287,7 +294,7 @@ void EclFile::loadData(int arrIndex)
             inFile.seekg(ifStreamPos[arrIndex]);
 
             char* buffer;
-            size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex])+1;
+            size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
             buffer = new char [size];
             inFile.read (buffer, size);
 
@@ -310,6 +317,108 @@ void EclFile::loadData(int arrIndex)
 
         fileH.close();
     }
+}
+
+bool EclFile::is_ix() const
+{
+    // assuming that array data type C0nn only are used in IX. This may change in future.
+
+    // Formatted files,
+    //   >> use real arrays. Example Ecl = '0.70000000E-01', IX = '7.0000000E-02'
+    // Binary files,
+    //   >> if logi array exists in file, look for IX spes binary representation of true value
+
+    if (formatted) {
+        for (size_t n=0; n < array_type.size(); n++) {
+            if (array_type[n] == Ewoms::EclIO::C0NN) {
+                return true;
+            } else if (array_type[n] == Ewoms::EclIO::REAL) {
+                auto realStr = get_fmt_real_raw_str_values(n);
+                int p, first;
+
+                for (auto val : realStr) {
+                    double dtmpv = abs(std::stod(val));
+
+                    if (dtmpv > 0.0) {
+                        p = val.find_first_of(".");
+                        first = abs(std::stoi(val.substr(0, p)));
+
+                        if (first > 0)
+                            return true;
+                        else
+                            return false;
+                    }
+                }
+            }
+        }
+    } else {
+        for (size_t n=0; n < array_type.size(); n++) {
+            if (array_type[n] == Ewoms::EclIO::C0NN) {
+                return true;
+            } else if (array_type[n] == Ewoms::EclIO::LOGI) {
+                auto raw_logi_values = get_bin_logi_raw_values(n);
+                for (unsigned int val : raw_logi_values) {
+                    if (val == Ewoms::EclIO::true_value_ix)
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    return false;
+}
+
+std::vector<unsigned int> EclFile::get_bin_logi_raw_values(int arrIndex) const
+{
+    if (array_type[arrIndex] != Ewoms::EclIO::LOGI)
+        EWOMS_THROW(std::runtime_error, "Error, selected array is not of type LOGI");
+
+    std::fstream fileH;
+    fileH.open(inputFilename, std::ios::in |  std::ios::binary);
+
+    if (!fileH) {
+        std::string message="Could not open file: '" + inputFilename +"'";
+        EWOMS_THROW(std::runtime_error, message);
+    }
+
+    fileH.seekg (ifStreamPos[arrIndex], fileH.beg);
+
+    std::vector<unsigned int> raw_logi = readBinaryRawLogiArray(fileH, array_size[arrIndex]);
+
+    return raw_logi;
+}
+
+std::vector<std::string> EclFile::get_fmt_real_raw_str_values(int arrIndex) const
+{
+    std::vector<std::string> real_vect;
+
+    if (array_type[arrIndex] != Ewoms::EclIO::REAL)
+        EWOMS_THROW(std::runtime_error, "Error, selected array is not of type REAL");
+
+    std::ifstream inFile(inputFilename);
+
+    if (!inFile) {
+        std::string message="Could not open file: '" + inputFilename +"'";
+        EWOMS_THROW(std::runtime_error, message);
+    }
+
+    inFile.seekg(ifStreamPos[arrIndex]);
+
+    char* buffer;
+    size_t size = sizeOnDiskFormatted(array_size[arrIndex], array_type[arrIndex], array_element_size[arrIndex])+1;
+
+    buffer = new char [size];
+    inFile.read (buffer, size);
+
+    std::string fileStr = std::string(buffer, size);
+
+    std::vector<std::string> real_vect_str;
+    real_vect_str = readFormattedRealRawStrings(fileStr, array_size[arrIndex], 0);
+    delete buffer;
+
+    return real_vect_str;
 }
 
 std::vector<EclFile::EclEntry> EclFile::getList() const
@@ -352,7 +461,12 @@ const std::vector<bool>& EclFile::get<bool>(int arrIndex)
 template<>
 const std::vector<std::string>& EclFile::get<std::string>(int arrIndex)
 {
-    return getImpl(arrIndex, CHAR, char_array, "string");
+    if ((array_type[arrIndex] != Ewoms::EclIO::C0NN) && (array_type[arrIndex] != Ewoms::EclIO::CHAR)){
+        std::string message = "Array with index " + std::to_string(arrIndex) + " is not of type " + "std::string";
+        EWOMS_THROW(std::runtime_error, message);
+    }
+
+    return getImpl(arrIndex, array_type[arrIndex], char_array, "string");
 }
 
 bool EclFile::hasKey(const std::string &name) const
@@ -483,7 +597,12 @@ const std::vector<std::string>& EclFile::get<std::string>(const std::string &nam
         EWOMS_THROW(std::invalid_argument, message);
     }
 
-    return getImpl(search->second, CHAR, char_array, "string");
+    if ((array_type[search->second] != Ewoms::EclIO::C0NN) && (array_type[search->second] != Ewoms::EclIO::CHAR)){
+        std::string message = "Array with index " + std::to_string(search->second) + " is not of type " + "std::string";
+        EWOMS_THROW(std::runtime_error, message);
+    }
+
+    return getImpl(search->second, array_type[search->second], char_array, "string");
 }
 
 std::size_t EclFile::size() const {

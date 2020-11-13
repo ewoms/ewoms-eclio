@@ -35,6 +35,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellconnections.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/pavg.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/productioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/injectioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellfoamproperties.hh>
@@ -539,6 +540,7 @@ public:
     bool updateWellProductivityIndex(const double prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
+    bool updateWPAVE(const PAvg& pavg);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
     bool handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid, const ParseContext& parseContext, ErrorGuard& errors);
@@ -569,6 +571,7 @@ public:
     double getWellPIScalingFactor(const double currentEffectivePI) const;
     void applyWellProdIndexScaling(const double       scalingFactor,
                                    std::vector<bool>& scalingApplicable);
+    const PAvg& pavg() const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)
@@ -605,6 +608,7 @@ public:
         serializer(production);
         serializer(injection);
         serializer(segments);
+        m_pavg.serializeOp(serializer);
     }
 
 private:
@@ -644,6 +648,7 @@ private:
     std::shared_ptr<WellProductionProperties> production;
     std::shared_ptr<WellInjectionProperties> injection;
     std::shared_ptr<WellSegments> segments;
+    PAvg m_pavg;
 };
 
 std::ostream& operator<<( std::ostream&, const Well::WellInjectionProperties& );

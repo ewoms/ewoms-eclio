@@ -1109,26 +1109,31 @@ namespace ParserKeywords {
        class TRANS_MULT {
        public:
            static const std::string itemName;
+           static const double defaultValue;
        };
 
        class TRANS_OPTION {
        public:
            static const std::string itemName;
+           static const int defaultValue;
        };
 
        class ALLOW_INTERNAL_CELLS {
        public:
            static const std::string itemName;
+           static const std::string defaultValue;
        };
 
        class VEFRAC {
        public:
            static const std::string itemName;
+           static const double defaultValue;
        };
 
        class VEFRACP {
        public:
            static const std::string itemName;
+           static const double defaultValue;
        };
    };
 

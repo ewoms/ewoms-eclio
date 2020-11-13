@@ -1899,7 +1899,6 @@ WELL_PROBE::WELL_PROBE( ) : ParserKeyword("WELL_PROBE")
   addDeckName("WGLRH");
   addDeckName("WGOR");
   addDeckName("WGORH");
-  addDeckName("WGORL");
   addDeckName("WGPGR");
   addDeckName("WGPI");
   addDeckName("WGPI2");
@@ -3602,12 +3601,12 @@ WPAVE::WPAVE( ) : ParserKeyword("WPAVE")
   {
      ParserRecord record;
      {
-        ParserItem item("WEIGTH_FACTOR1", ParserItem::itype::DOUBLE);
+        ParserItem item("F1", ParserItem::itype::DOUBLE);
         item.setDefault( double(0.500000) );
         record.addItem(item);
      }
      {
-        ParserItem item("WEIGTH_FACTOR2", ParserItem::itype::DOUBLE);
+        ParserItem item("F2", ParserItem::itype::DOUBLE);
         item.setDefault( double(1.000000) );
         record.addItem(item);
      }
@@ -3625,10 +3624,10 @@ WPAVE::WPAVE( ) : ParserKeyword("WPAVE")
   }
 }
 const std::string WPAVE::keywordName = "WPAVE";
-const std::string WPAVE::WEIGTH_FACTOR1::itemName = "WEIGTH_FACTOR1";
-const double WPAVE::WEIGTH_FACTOR1::defaultValue = 0.500000;
-const std::string WPAVE::WEIGTH_FACTOR2::itemName = "WEIGTH_FACTOR2";
-const double WPAVE::WEIGTH_FACTOR2::defaultValue = 1.000000;
+const std::string WPAVE::F1::itemName = "F1";
+const double WPAVE::F1::defaultValue = 0.500000;
+const std::string WPAVE::F2::itemName = "F2";
+const double WPAVE::F2::defaultValue = 1.000000;
 const std::string WPAVE::DEPTH_CORRECTION::itemName = "DEPTH_CORRECTION";
 const std::string WPAVE::DEPTH_CORRECTION::defaultValue = "WELL";
 const std::string WPAVE::CONNECTION::itemName = "CONNECTION";
@@ -5960,7 +5959,7 @@ WWPAVE::WWPAVE( ) : ParserKeyword("WWPAVE")
         record.addItem(item);
      }
      {
-        ParserItem item("WELL_CONNECTION", ParserItem::itype::STRING);
+        ParserItem item("CONNECTION", ParserItem::itype::STRING);
         item.setDefault( std::string("OPEN") );
         record.addItem(item);
      }
@@ -5975,8 +5974,8 @@ const std::string WWPAVE::F2::itemName = "F2";
 const double WWPAVE::F2::defaultValue = 0.500000;
 const std::string WWPAVE::DEPTH_CORRECTION::itemName = "DEPTH_CORRECTION";
 const std::string WWPAVE::DEPTH_CORRECTION::defaultValue = "WELL";
-const std::string WWPAVE::WELL_CONNECTION::itemName = "WELL_CONNECTION";
-const std::string WWPAVE::WELL_CONNECTION::defaultValue = "OPEN";
+const std::string WWPAVE::CONNECTION::itemName = "CONNECTION";
+const std::string WWPAVE::CONNECTION::defaultValue = "OPEN";
 
 
 }

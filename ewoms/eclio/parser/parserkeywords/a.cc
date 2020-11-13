@@ -1413,22 +1413,27 @@ AQUCON::AQUCON( ) : ParserKeyword("AQUCON")
      }
      {
         ParserItem item("TRANS_MULT", ParserItem::itype::DOUBLE);
+        item.setDefault( double(1.000000) );
         record.addItem(item);
      }
      {
         ParserItem item("TRANS_OPTION", ParserItem::itype::INT);
+        item.setDefault( 0 );
         record.addItem(item);
      }
      {
         ParserItem item("ALLOW_INTERNAL_CELLS", ParserItem::itype::STRING);
+        item.setDefault( std::string("NO") );
         record.addItem(item);
      }
      {
         ParserItem item("VEFRAC", ParserItem::itype::DOUBLE);
+        item.setDefault( double(1.000000) );
         record.addItem(item);
      }
      {
         ParserItem item("VEFRACP", ParserItem::itype::DOUBLE);
+        item.setDefault( double(1.000000) );
         record.addItem(item);
      }
      addRecord( record );
@@ -1444,10 +1449,15 @@ const std::string AQUCON::K1::itemName = "K1";
 const std::string AQUCON::K2::itemName = "K2";
 const std::string AQUCON::CONNECT_FACE::itemName = "CONNECT_FACE";
 const std::string AQUCON::TRANS_MULT::itemName = "TRANS_MULT";
+const double AQUCON::TRANS_MULT::defaultValue = 1.000000;
 const std::string AQUCON::TRANS_OPTION::itemName = "TRANS_OPTION";
+const int AQUCON::TRANS_OPTION::defaultValue = 0;
 const std::string AQUCON::ALLOW_INTERNAL_CELLS::itemName = "ALLOW_INTERNAL_CELLS";
+const std::string AQUCON::ALLOW_INTERNAL_CELLS::defaultValue = "NO";
 const std::string AQUCON::VEFRAC::itemName = "VEFRAC";
+const double AQUCON::VEFRAC::defaultValue = 1.000000;
 const std::string AQUCON::VEFRACP::itemName = "VEFRACP";
+const double AQUCON::VEFRACP::defaultValue = 1.000000;
 
 
 AQUCT::AQUCT( ) : ParserKeyword("AQUCT")
