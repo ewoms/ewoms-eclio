@@ -62,8 +62,6 @@ std::vector<T> sorted(std::vector<T> v) {
     return v;
 }
 
-}
-
 template <typename T>
 int compare(const std::string& name, const T& v1, const T& v2, const std::string& fmt) {
     if (v1 == v2)
@@ -98,14 +96,15 @@ bool rst_cmp(const Ewoms::RestartIO::RstState& rst1, const Ewoms::RestartIO::Rst
         error_count += compare(well1.name, well1.well_status,            well2.well_status,           "Different status for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.active_control,         well2.active_control,        "Different active_control for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.vfp_table,              well2.vfp_table,             "Different vfp_table for well: {}  case1: {}  case2: {}");
-        error_count += compare(well1.name, well1.pred_requested_control, well2.pred_requested_control,"Different pred_requested_control for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.allow_xflow,            well2.allow_xflow,           "Different allow_xflow for well: {}  case1: {}  case2: {}");
+        error_count += compare(well1.name, well1.preferred_phase,        well2.preferred_phase,       "Different preferred_phase for well: {} case1: {}  case2: {}");
         error_count += compare(well1.name, well1.hist_requested_control, well2.hist_requested_control,"Different hist_requested_control for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.msw_index,              well2.msw_index,             "Different msw_index for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.completion_ordering,    well2.completion_ordering,   "Different completion_ordering for well: {}  case1: {}  case2: {}");
         error_count += compare(well1.name, well1.pvt_table,              well2.pvt_table,             "Different pvt_table for well: {}  case1: {}  case2: {}");
     }
     return error_count == 0;
+}
 }
 
 using namespace Ewoms::EclIO;

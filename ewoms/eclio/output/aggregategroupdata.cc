@@ -115,162 +115,89 @@ int currentGroupLevel(const Ewoms::Schedule& sched, const Ewoms::Group& group, c
     }
 }
 
-bool groupProductionControllable(const Ewoms::Schedule& sched, const Ewoms::SummaryState& sumState, const Ewoms::Group& group, const size_t simStep)
+void groupProductionControllable(const Ewoms::Schedule& sched, const Ewoms::SummaryState& sumState, const Ewoms::Group& group, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
-    bool controllable = false;
-    if (group.defined( simStep )) {
-        if (!group.wellgroup()) {
-            if(!group.groups().empty()) {
-                for (const auto& group_name : group.groups()) {
-                    if (groupProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep)) {
-                        controllable = true;
-                        continue;
-                    }
-                }
+    if (controllable)
+        return;
+
+    for (const auto& group_name : group.groups())
+        groupProductionControllable(sched, sumState, sched.getGroup(group_name, simStep), simStep, controllable);
+
+    for (const auto& well_name : group.wells()) {
+        const auto& well = sched.getWell(well_name, simStep);
+        if (well.isProducer()) {
+            int cur_prod_ctrl = 0;
+            // Find control mode for well
+            const std::string sum_key = "WMCTL";
+            if (sumState.has_well_var(well_name, sum_key)) {
+                cur_prod_ctrl = static_cast<int>(sumState.get_well_var(well_name, sum_key));
+            }
+            if (cur_prod_ctrl == wellCtrlMode::Group) {
+                controllable = true;
+                return;
             }
         }
-        else {
-            for (const auto& well_name : group.wells()) {
-                const auto& well = sched.getWell(well_name, simStep);
-                if (well.isProducer()) {
-                    int cur_prod_ctrl = 0;
-                    // Find control mode for well
-                    std::string well_key_1 = "WMCTL:" + well_name;
-                    if (sumState.has(well_key_1)) {
-                        cur_prod_ctrl = static_cast<int>(sumState.get(well_key_1));
-                    }
-                    if (cur_prod_ctrl == wellCtrlMode::Group) {
-                        controllable = true;
-                        continue;
-                    }
-                }
-            }
-        }
-        return controllable;
-    } else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
     }
 }
 
-bool groupInjectionControllable(const Ewoms::Schedule& sched, const Ewoms::SummaryState& sumState, const Ewoms::Group& group, const Ewoms::Phase& iPhase, const size_t simStep)
+bool groupProductionControllable(const Ewoms::Schedule& sched, const Ewoms::SummaryState& sumState, const Ewoms::Group& group, const size_t simStep) {
+    bool controllable = false;
+    groupProductionControllable(sched, sumState, group, simStep, controllable);
+    return controllable;
+}
+
+void groupInjectionControllable(const Ewoms::Schedule& sched, const Ewoms::SummaryState& sumState, const Ewoms::Group& group, const Ewoms::Phase& iPhase, const size_t simStep, bool& controllable)
 {
     using wellCtrlMode   = ::Ewoms::RestartIO::Helpers::VectorItems::IWell::Value::WellCtrlMode;
+    if (controllable)
+        return;
+
+    for (const auto& group_name : group.groups())
+        groupInjectionControllable(sched, sumState, sched.getGroup(group_name, simStep), iPhase, simStep, controllable);
+
+    for (const auto& well_name : group.wells()) {
+        const auto& well = sched.getWell(well_name, simStep);
+        if (well.isInjector() && iPhase == well.wellType().injection_phase()) {
+            int cur_inj_ctrl = 0;
+            // Find control mode for well
+            const std::string sum_key = "WMCTL";
+            if (sumState.has_well_var(well_name, sum_key)) {
+                cur_inj_ctrl = static_cast<int>(sumState.get_well_var(well_name, sum_key));
+            }
+
+            if (cur_inj_ctrl == wellCtrlMode::Group) {
+                controllable = true;
+                return;
+            }
+        }
+    }
+}
+
+bool groupInjectionControllable(const Ewoms::Schedule& sched, const Ewoms::SummaryState& sumState, const Ewoms::Group& group, const Ewoms::Phase& iPhase, const size_t simStep) {
     bool controllable = false;
-    if (group.defined( simStep )) {
-        if (!group.wellgroup()) {
-            if(!group.groups().empty()) {
-                for (const auto& group_name : group.groups()) {
-                    if (groupInjectionControllable(sched, sumState, sched.getGroup(group_name, simStep), iPhase, simStep)) {
-                        controllable = true;
-                        continue;
-                    }
-                }
-            }
-        }
-        else {
-            for (const auto& well_name : group.wells()) {
-                const auto& well = sched.getWell(well_name, simStep);
-                if (well.isInjector()) {
-                    if (((iPhase == Ewoms::Phase::WATER) && (well.injectionControls(sumState).injector_type ==  Ewoms::InjectorType::WATER)) ||
-                        ((iPhase == Ewoms::Phase::GAS) && (well.injectionControls(sumState).injector_type ==  Ewoms::InjectorType::GAS))
-                    ) {
-                        int cur_inj_ctrl = 0;
-                        // Find control mode for well
-                        std::string well_key_1 = "WMCTL:" + well_name;
-                        if (sumState.has(well_key_1)) {
-                            cur_inj_ctrl = static_cast<int>(sumState.get(well_key_1));
-                        }
-                        if (cur_inj_ctrl == wellCtrlMode::Group) {
-                            controllable = true;
-                            continue;
-                        }
-                    }
-                }
-            }
-        }
-        return controllable;
-    } else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    groupInjectionControllable(sched, sumState, group, iPhase, simStep, controllable);
+    return controllable;
 }
 
-int higherLevelProdControlGroupSeqIndex(const Ewoms::Schedule& sched,
-                       const Ewoms::SummaryState& sumState,
-                       const Ewoms::Group& group,
-                       const size_t simStep)
-//
-// returns the sequence number of higher (highest) level group with active control different from (NONE or FLD)
-//
-{
-    int ctrl_grup_seq_no = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        double cur_prod_ctrl = -1.;
-        while (current.name() != "FIELD" && ctrl_grup_seq_no < 0) {
-            current = sched.getGroup(current.parent(), simStep);
-            cur_prod_ctrl = -1.;
-            if (sumState.has_group_var(current.name(), "GMCTP")) {
-                cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
-            }
-            else {
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-                cur_prod_ctrl = 0.;
-            }
-            if (cur_prod_ctrl > 0. && ctrl_grup_seq_no < 0) {
-                ctrl_grup_seq_no = current.insert_index();
-            }
-        }
-        return ctrl_grup_seq_no;
-    }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
-}
+/*
+  Searches upwards in the group tree for the first parent group with active
+  control different from NONE and FLD. The function will return an empty
+  optional if no such group can be found.
+*/
 
-int higherLevelProdControlMode(const Ewoms::Schedule& sched,
-                       const Ewoms::SummaryState& sumState,
-                       const Ewoms::Group& group,
-                       const size_t simStep)
-//
-// returns the sequence number of higher (highest) level group with active control different from (NONE or FLD)
-//
-{
-    int ctrl_mode = -1;
-    if (group.defined( simStep )) {
-        auto current = group;
-        double  cur_prod_ctrl = -1.;
-        while (current.name() != "FIELD" && ctrl_mode < 0.) {
-            current = sched.getGroup(current.parent(), simStep);
-            cur_prod_ctrl = -1.;
-            if (sumState.has_group_var(current.name(), "GMCTP")) {
-                cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP");
-            }
-            else {
-#if ENABLE_GCNTL_DEBUG_OUTPUT
-                std::cout << "Current group control is not defined for group: " << current.name() << " at timestep: " << simStep  << std::endl;
-#endif // ENABLE_GCNTL_DEBUG_OUTPUT
-                cur_prod_ctrl = 0.;
-            }
-            if (cur_prod_ctrl > 0. && ctrl_mode < 0) {
-                ctrl_mode = static_cast<int>(cur_prod_ctrl);
-            }
-        }
-        return ctrl_mode;
+std::optional<Ewoms::Group> controlGroup(const Ewoms::Schedule& sched,
+                                       const Ewoms::SummaryState& sumState,
+                                       const Ewoms::Group& group,
+                                       const std::size_t simStep) {
+    auto current = group;
+    while (current.name() != "FIELD") {
+        current = sched.getGroup(current.parent(), simStep);
+        auto cur_prod_ctrl = sumState.get_group_var(current.name(), "GMCTP", 0);
+        if (cur_prod_ctrl > 0)
+            return current;
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    return {};
 }
 
 int higherLevelInjControlGroupSeqIndex(const Ewoms::Schedule& sched,
@@ -338,23 +265,19 @@ bool higherLevelProdCMode_NotNoneFld(const Ewoms::Schedule& sched,
                                      const Ewoms::Group& group,
                                      const size_t simStep)
 {
-    bool ctrl_mode_not_none_fld = false;
-    if (group.defined( simStep )) {
-        auto current = group;
-        while (current.name() != "FIELD" && ctrl_mode_not_none_fld == false) {
-            current = sched.getGroup(current.parent(), simStep);
-            const auto& prod_cmode = group.gconprod_cmode();
-            if ((prod_cmode != Ewoms::Group::ProductionCMode::FLD) && (prod_cmode!= Ewoms::Group::ProductionCMode::NONE)) {
-                ctrl_mode_not_none_fld = true;
-            }
-        }
-        return ctrl_mode_not_none_fld;
+    auto current = group;
+    while (current.name() != "FIELD") {
+        current = sched.getGroup(current.parent(), simStep);
+        const auto& prod_cmode = group.gconprod_cmode();
+
+        if (prod_cmode != Ewoms::Group::ProductionCMode::FLD)
+            return true;
+
+        if (prod_cmode != Ewoms::Group::ProductionCMode::NONE)
+            return true;
+
     }
-    else {
-        std::stringstream str;
-        str << "actual group has not been defined at report time: " << simStep;
-        throw std::invalid_argument(str.str());
-    }
+    return false;
 }
 
 int higherLevelInjCMode_NotNoneFld_SeqIndex(const Ewoms::Schedule& sched,
@@ -385,20 +308,6 @@ int higherLevelInjCMode_NotNoneFld_SeqIndex(const Ewoms::Schedule& sched,
     }
 }
 
-int groupType(const Ewoms::Group& group) {
-    if (group.wellgroup())
-        return 0;
-    else
-        return 1;
-}
-
-std::size_t groupSize(const Ewoms::Group& group) {
-    if (group.wellgroup())
-        return group.wells().size();
-    else
-        return group.groups().size();
-}
-
 namespace IGrp {
 std::size_t entriesPerGroup(const std::vector<int>& inteHead)
 {
@@ -417,6 +326,40 @@ allocate(const std::vector<int>& inteHead)
 }
 
 template <class IGrpArray>
+void gconprodCMode(const Ewoms::Group& group,
+                   const int nwgmax,
+                   IGrpArray& iGrp) {
+    using IGroup = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::index;
+
+    const auto& prod_cmode = group.gconprod_cmode();
+    switch (prod_cmode) {
+    case Ewoms::Group::ProductionCMode::NONE:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0;
+        break;
+    case Ewoms::Group::ProductionCMode::ORAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 1;
+        break;
+    case Ewoms::Group::ProductionCMode::WRAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 2;
+        break;
+    case Ewoms::Group::ProductionCMode::GRAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 3;
+        break;
+    case Ewoms::Group::ProductionCMode::LRAT:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 4;
+        break;
+    case Ewoms::Group::ProductionCMode::RESV:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 5;
+        break;
+    case Ewoms::Group::ProductionCMode::FLD:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
+        break;
+    default:
+        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
+    }
+}
+
+template <class IGrpArray>
 void productionGroup(const Ewoms::Schedule&     sched,
                      const Ewoms::Group&        group,
                      const int                nwgmax,
@@ -427,49 +370,23 @@ void productionGroup(const Ewoms::Schedule&     sched,
 {
     using IGroup = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::index;
     namespace Value = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::Value;
-    const auto& prod_cmode = group.gconprod_cmode();
+    gconprodCMode(group, nwgmax, iGrp);
+
     if (group.name() == "FIELD") {
         iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
         iGrp[nwgmax + 7] = 0;
-        switch (prod_cmode) {
-        case Ewoms::Group::ProductionCMode::NONE:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-            break;
-        case Ewoms::Group::ProductionCMode::ORAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 1;
-            break;
-        case Ewoms::Group::ProductionCMode::WRAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 2;
-            break;
-        case Ewoms::Group::ProductionCMode::GRAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 3;
-            break;
-        case Ewoms::Group::ProductionCMode::LRAT:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 4;
-            break;
-        case Ewoms::Group::ProductionCMode::RESV:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 5;
-            break;
-        case Ewoms::Group::ProductionCMode::FLD:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-            break;
-        default:
-            iGrp[nwgmax + IGroup::GConProdCMode] = 0;
-        }
         return;
     }
 
-    const auto& prod_guide_rate_def = group.productionControls(sumState).guide_rate_def;
-    const auto& p_exceed_act = group.productionControls(sumState).exceed_action;
-    // Find production control mode for group
-    const double cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
-    Ewoms::Group::ProductionCMode pctl_mode = Ewoms::Group::ProductionCMode::NONE;
-    if (cur_prod_ctrl >= 0) {
-        const auto it_ctrl = pCtrlToPCmode.find(cur_prod_ctrl);
-        if (it_ctrl != pCtrlToPCmode.end()) {
-            pctl_mode = it_ctrl->second;
-        }
+    const auto& production_controls = group.productionControls(sumState);
+    const auto& prod_guide_rate_def = production_controls.guide_rate_def;
+    Ewoms::Group::ProductionCMode active_cmode = Ewoms::Group::ProductionCMode::NONE;
+    {
+        auto cur_prod_ctrl = sumState.get_group_var(group.name(), "GMCTP", -1);
+        if (cur_prod_ctrl >= 0)
+            active_cmode = pCtrlToPCmode.at(static_cast<int>(cur_prod_ctrl));
     }
+
 #if ENABLE_GCNTL_DEBUG_OUTPUT
     else {
         // std::stringstream str;
@@ -504,43 +421,50 @@ void productionGroup(const Ewoms::Schedule&     sched,
 
     */
     // default value
-    iGrp[nwgmax + 5] = -1;
-    const int higher_lev_ctrl = higherLevelProdControlGroupSeqIndex(sched, sumState, group, simStep);
-    const int higher_lev_ctrl_mode = higherLevelProdControlMode(sched, sumState, group, simStep);
+
+    const auto& cgroup = controlGroup(sched, sumState, group, simStep);
+    const auto& deck_cmode = group.gconprod_cmode();
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
+
+    if (cgroup && cgroup->name() == "FIELD")
+        throw std::logic_error("Got cgroup == FIELD - uncertain logic");
+
+    iGrp[nwgmax + 5] = -1;
     if (groupProductionControllable(sched, sumState, group, simStep)) {
         // this section applies if group is controllable - i.e. has wells that may be controlled
-        if (!group.productionGroupControlAvailable() && (higher_lev_ctrl <= 0)) {
+        if (!group.productionGroupControlAvailable() && (!cgroup)) {
             // group can respond to higher level control
             iGrp[nwgmax + 5] = 0;
-        } else if (((pctl_mode != Ewoms::Group::ProductionCMode::NONE)) && (higher_lev_ctrl < 0)) {
-            // group is constrained by its own limits or controls
-            // if (pctl_mode != Ewoms::Group::ProductionCMode::FLD)  -  need to use this test? - else remove
-            iGrp[nwgmax + 5] = -1; // only value that seems to work when no group at higher level has active control
-        } else if (higher_lev_ctrl > 0) {
-            if (((prod_cmode == Ewoms::Group::ProductionCMode::FLD) || (prod_cmode == Ewoms::Group::ProductionCMode::NONE))
-                && (group.productionControls(sumState).guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE)) {
-                iGrp[nwgmax + 5] = higher_lev_ctrl;
-            } else {
-                iGrp[nwgmax + 5] = 1;
-            }
-        } else if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
-            if (!((prod_cmode == Ewoms::Group::ProductionCMode::FLD)
-                  || (prod_cmode == Ewoms::Group::ProductionCMode::NONE))) {
-                iGrp[nwgmax + 5] = -1;
-            } else {
-                iGrp[nwgmax + 5] = 1;
-            }
-        } else if ((prod_cmode == Ewoms::Group::ProductionCMode::FLD)
-                   || (prod_cmode == Ewoms::Group::ProductionCMode::NONE)) {
-            iGrp[nwgmax + 5] = -1;
-        } else {
-            iGrp[nwgmax + 5] = -1;
+            goto CGROUP_DONE;
         }
-    } else if (prod_cmode == Ewoms::Group::ProductionCMode::NONE) {
+
+        if (cgroup) {
+            iGrp[nwgmax + 5] = 1;
+            if (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE) {
+                if (deck_cmode == Ewoms::Group::ProductionCMode::FLD)
+                    iGrp[nwgmax + 5] = cgroup->insert_index();
+
+                if (deck_cmode == Ewoms::Group::ProductionCMode::NONE)
+                    iGrp[nwgmax + 5] = cgroup->insert_index();
+            }
+            goto CGROUP_DONE;
+        }
+
+        if (higherLevelProdCMode_NotNoneFld(sched, group, simStep)) {
+
+            if (deck_cmode == Ewoms::Group::ProductionCMode::FLD)
+                iGrp[nwgmax] = 1;
+            if (deck_cmode == Ewoms::Group::ProductionCMode::NONE)
+                iGrp[nwgmax] = 1;
+
+            goto CGROUP_DONE;
+        }
+
+    } else if (deck_cmode == Ewoms::Group::ProductionCMode::NONE) {
         iGrp[nwgmax + 5] = 1;
     }
+ CGROUP_DONE:
 
     // Set iGrp for [nwgmax + 7]
     /*
@@ -558,11 +482,12 @@ void productionGroup(const Ewoms::Schedule&     sched,
     Other reduction options are currently not covered in the code
     */
 
-    if (higher_lev_ctrl > 0 && (group.getGroupType() != Ewoms::Group::GroupType::NONE)) {
+    if (cgroup && (group.getGroupType() != Ewoms::Group::GroupType::NONE)) {
+        auto cgroup_control = static_cast<int>(sumState.get_group_var(cgroup->name(), "GMCTP", 0));
         iGrp[nwgmax + IGroup::ProdActiveCMode]
-            = (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE) ? higher_lev_ctrl_mode : 0;
+            = (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
     } else {
-        switch (pctl_mode) {
+        switch (active_cmode) {
         case Ewoms::Group::ProductionCMode::NONE:
             iGrp[nwgmax + IGroup::ProdActiveCMode] = 0;
             break;
@@ -591,41 +516,35 @@ void productionGroup(const Ewoms::Schedule&     sched,
     iGrp[nwgmax + 9] = iGrp[nwgmax + IGroup::ProdActiveCMode];
 
     iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::None;
-    switch (prod_cmode) {
+
+    const auto& p_exceed_act = production_controls.exceed_action;
+    switch (deck_cmode) {
     case Ewoms::Group::ProductionCMode::NONE:
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? 0 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0;
         break;
     case Ewoms::Group::ProductionCMode::ORAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? -40000 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 1;
         break;
     case Ewoms::Group::ProductionCMode::WRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? -4000 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 2;
         break;
     case Ewoms::Group::ProductionCMode::GRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? -400 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 3;
         break;
     case Ewoms::Group::ProductionCMode::LRAT:
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? -40 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 4;
         break;
     case Ewoms::Group::ProductionCMode::RESV:
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? -4 : 4; // need to be checked
-        iGrp[nwgmax + IGroup::GConProdCMode] = 5;
         break;
     case Ewoms::Group::ProductionCMode::FLD:
-        if ((higher_lev_ctrl > 0) && (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE)) {
+        if (cgroup && (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE)) {
             iGrp[nwgmax + IGroup::GuideRateDef] = Value::GuideRateMode::Form;
         }
         iGrp[nwgmax + 7] = (p_exceed_act == Ewoms::Group::ExceedAction::NONE) ? 4 : 4;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
         break;
     default:
         iGrp[nwgmax + 7] = 0;
-        iGrp[nwgmax + IGroup::GConProdCMode] = 0; // need to be checked!!
     }
 }
 
@@ -812,6 +731,65 @@ void injectionGroup(const Ewoms::Schedule&     sched,
 }
 
 template <class IGrpArray>
+void storeGroupTree(const Ewoms::Schedule& sched,
+                    const Ewoms::Group& group,
+                    const int nwgmax,
+                    const int ngmaxz,
+                    const std::size_t simStep,
+                    IGrpArray& iGrp) {
+
+    namespace Value = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::Value;
+    using IGroup = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::index;
+    const bool is_field = group.name() == "FIELD";
+
+    // Store index of all child wells or child groups.
+    if (group.wellgroup()) {
+        int igrpCount = 0;
+        for (const auto& well_name : group.wells()) {
+            const auto& well = sched.getWell(well_name, simStep);
+            iGrp[igrpCount] = well.seqIndex() + 1;
+            igrpCount += 1;
+        }
+        iGrp[nwgmax] = group.wells().size();
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::WellGroup;
+    } else  {
+        int igrpCount = 0;
+        for (const auto& group_name : group.groups()) {
+            const auto& child_group = sched.getGroup(group_name, simStep);
+            iGrp[igrpCount] = child_group.insert_index();
+            igrpCount += 1;
+        }
+        iGrp[nwgmax] = group.groups().size();
+        iGrp[nwgmax + IGroup::GroupType] = Value::GroupType::TreeGroup;
+    }
+
+    // Store index of parent group
+    if (is_field)
+        iGrp[nwgmax + IGroup::ParentGroup] = 0;
+    else {
+        const auto& parent_group = sched.getGroup(group.parent(), simStep);
+        if (parent_group.name() == "FIELD")
+            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
+        else
+            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
+    }
+
+    iGrp[nwgmax + IGroup::GroupLevel] = currentGroupLevel(sched, group, simStep);
+}
+
+template <class IGrpArray>
+void storeEFlowingWells(const Ewoms::Group&        group,
+                       const int                nwgmax,
+                       const Ewoms::SummaryState& sumState,
+                       IGrpArray&               iGrp) {
+    using IGroup = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::index;
+    const bool is_field = group.name() == "FIELD";
+    const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
+    const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
+    iGrp[nwgmax + IGroup::EFlowingWells] = static_cast<int>(g_act_pwells) + static_cast<int>(g_act_iwells);
+}
+
+template <class IGrpArray>
 void staticContrib(const Ewoms::Schedule&     sched,
                    const Ewoms::Group&        group,
                    const int                nwgmax,
@@ -822,54 +800,22 @@ void staticContrib(const Ewoms::Schedule&     sched,
                    const std::map<Ewoms::Group::InjectionCMode, int>& cmodeToNum,
                    IGrpArray&               iGrp)
 {
-    using IGroup = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::index;
     const bool is_field = group.name() == "FIELD";
-    if (group.wellgroup()) {
-        int igrpCount = 0;
-        //group has child wells
-        //store the well number (sequence index) in iGrp according to the sequence they are defined
-        for (const auto& well_name : group.wells()) {
-            const auto& well = sched.getWell(well_name, simStep);
-            iGrp[igrpCount] = well.seqIndex() + 1;
-            igrpCount += 1;
-        }
-    } else if (!group.groups().empty()) {
-        int igrpCount = 0;
-        for (const auto& group_name : group.groups()) {
-            const auto& child_group = sched.getGroup(group_name, simStep);
-            iGrp[igrpCount] = child_group.insert_index();
-            igrpCount += 1;
-        }
-    }
 
-    //assign the number of child wells or child groups to
-    // location nwgmax
-    iGrp[nwgmax] = groupSize(group);
+    storeGroupTree(sched, group, nwgmax, ngmaxz, simStep, iGrp);
+    storeEFlowingWells(group, nwgmax, sumState, iGrp);
 
-    // Find number of active production wells and injection wells for group
-    const double g_act_pwells = is_field ? sumState.get("FMWPR", 0) : sumState.get_group_var(group.name(), "GMWPR", 0);
-    const double g_act_iwells = is_field ? sumState.get("FMWIN", 0) : sumState.get_group_var(group.name(), "GMWIN", 0);
-    iGrp[nwgmax + IGroup::EFlowingWells] = g_act_pwells + g_act_iwells;
+    iGrp[nwgmax + 17] = -1;
+    iGrp[nwgmax + 22] = -1;
 
     // Treat al groups which are *not* pure injection groups.
     if (group.getGroupType() != Ewoms::Group::GroupType::INJECTION)
         productionGroup(sched, group, nwgmax, simStep, sumState, pCtrlToPCmode, iGrp);
 
-    //default value -
-    iGrp[nwgmax + 17] = -1;
-    iGrp[nwgmax + 22] = -1;
     // Treat al groups which are *not* pure production groups.
     if (group.getGroupType() != Ewoms::Group::GroupType::PRODUCTION)
         injectionGroup(sched, group, nwgmax, simStep, sumState, cmodeToNum, iGrp);
 
-    iGrp[nwgmax + 26] = groupType(group);
-
-    //find group level ("FIELD" is level 0) and store the level in
-    //location nwgmax + 27
-    iGrp[nwgmax+27] = currentGroupLevel(sched, group, simStep);
-
-    // set values for group probably connected to GCONPROD settings
-    //
     if (is_field)
     {
         //the maximum number of groups in the model
@@ -890,21 +836,6 @@ void staticContrib(const Ewoms::Schedule&     sched,
         iGrp[nwgmax+95] = group.insert_index();
         iGrp[nwgmax+96] = group.insert_index();
     }
-
-    //find parent group and store index of parent group in
-    //location nwgmax + IGroup::ParentGroup
-
-    using IGroup = ::Ewoms::RestartIO::Helpers::VectorItems::IGroup::index;
-    if (is_field)
-        iGrp[nwgmax + IGroup::ParentGroup] = 0;
-    else {
-        const auto& parent_group = sched.getGroup(group.parent(), simStep);
-        if (parent_group.name() == "FIELD")
-            iGrp[nwgmax + IGroup::ParentGroup] = ngmaxz;
-        else
-            iGrp[nwgmax + IGroup::ParentGroup] = parent_group.insert_index();
-    }
-
 }
 } // Igrp
 

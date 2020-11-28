@@ -715,6 +715,7 @@ void addDefaultKeywords(Parser& p) {
    p.addKeyword< ParserKeywords::PVTGWO >();
    p.addKeyword< ParserKeywords::PVTNUM >();
    p.addKeyword< ParserKeywords::PVTO >();
+   p.addKeyword< ParserKeywords::PVTSOL >();
    p.addKeyword< ParserKeywords::PVTW >();
    p.addKeyword< ParserKeywords::PVTWSALT >();
    p.addKeyword< ParserKeywords::PVT_M >();

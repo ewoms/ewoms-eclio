@@ -19,13 +19,12 @@
 #ifndef SUMMARY_STATE_H
 #define SUMMARY_STATE_H
 
-#include <ewoms/common/optional.hh>
-
 #include <chrono>
 #include <iosfwd>
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <set>
 #include <vector>
 
 namespace Ewoms{
@@ -108,6 +107,7 @@ public:
     const_iterator end() const;
     std::size_t num_wells() const;
     std::size_t size() const;
+    bool operator==(const SummaryState& other) const;
 private:
     std::chrono::system_clock::time_point sim_start;
     double elapsed = 0;
@@ -115,13 +115,13 @@ private:
 
     // The first key is the variable and the second key is the well.
     std::unordered_map<std::string, std::unordered_map<std::string, double>> well_values;
-    std::unordered_set<std::string> m_wells;
-    mutable Ewoms::optional<std::vector<std::string>> well_names;
+    std::set<std::string> m_wells;
+    mutable std::optional<std::vector<std::string>> well_names;
 
     // The first key is the variable and the second key is the group.
     std::unordered_map<std::string, std::unordered_map<std::string, double>> group_values;
-    std::unordered_set<std::string> m_groups;
-    mutable Ewoms::optional<std::vector<std::string>> group_names;
+    std::set<std::string> m_groups;
+    mutable std::optional<std::vector<std::string>> group_names;
 };
 
 std::ostream& operator<<(std::ostream& stream, const SummaryState& st);

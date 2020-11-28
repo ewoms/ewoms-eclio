@@ -1887,6 +1887,24 @@ namespace ParserKeywords {
 
 
 
+   class PVTSOL : public ParserKeyword {
+   public:
+       PVTSOL();
+       static const std::string keywordName;
+
+       class ZCO2 {
+       public:
+           static const std::string itemName;
+       };
+
+       class DATA {
+       public:
+           static const std::string itemName;
+       };
+   };
+
+
+
    class PVTW : public ParserKeyword {
    public:
        PVTW();

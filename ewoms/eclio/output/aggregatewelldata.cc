@@ -27,18 +27,20 @@
 
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
-#include <ewoms/eclio/parser/units/unitsystem.hh>
-#include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionast.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actions.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionx.hh>
-#include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/state.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/schedule.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
+
+#include <ewoms/eclio/parser/units/unitsystem.hh>
+#include <ewoms/eclio/parser/units/units.hh>
 
 #include <algorithm>
 #include <cassert>
@@ -227,27 +229,40 @@ namespace {
             }
         }
 
-        template <typename IWellArray>
-        void setCurrentControl(const Ewoms::Well& well,
-                               const int        curr,
-                               IWellArray&      iWell)
+        int preferredPhase(const Ewoms::Well& well)
         {
-            using Ix = VI::IWell::index;
+            using PhaseVal = VI::IWell::Value::Preferred_Phase;
 
-            iWell[Ix::ActWCtrl] = curr;
+            switch (well.getPreferredPhase()) {
+            case Ewoms::Phase::OIL:   return PhaseVal::Oil;
+            case Ewoms::Phase::GAS:   return PhaseVal::Gas;
+            case Ewoms::Phase::WATER: return PhaseVal::Water;
 
-            if (well.predictionMode()) {
-                // Well in prediction mode (WCONPROD, WCONINJE).  Assign
-                // requested control mode for prediction.
-                iWell[Ix::PredReqWCtrl] = curr;
-                iWell[Ix::HistReqWCtrl] = 0;
+            // Should have LIQUID here too...
+
+            default:
+                throw std::invalid_argument {
+                    "Unsupported Preferred Phase '" +
+                    std::to_string(static_cast<int>(well.getPreferredPhase()))
+                    + '\''
+                };
             }
-            else {
-                // Well controlled by observed rates/BHP (WCONHIST,
-                // WCONINJH).  Assign requested control mode for history.
-                iWell[Ix::PredReqWCtrl] = 0; // Possibly =1 instead.
-                iWell[Ix::HistReqWCtrl] = curr;
-            }
+        }
+
+        template <typename IWellArray>
+        void setHistoryControlMode(const Ewoms::Well& well,
+                                   const int        curr,
+                                   IWellArray&      iWell)
+        {
+            iWell[VI::IWell::index::HistReqWCtrl] =
+                well.predictionMode() ? 0 : curr;
+        }
+
+        template <typename IWellArray>
+        void setCurrentControl(const int   curr,
+                               IWellArray& iWell)
+        {
+            iWell[VI::IWell::index::ActWCtrl] = curr;
         }
 
         template <class IWellArray>
@@ -262,6 +277,7 @@ namespace {
             iWell[Ix::IHead] = well.getHeadI() + 1;
             iWell[Ix::JHead] = well.getHeadJ() + 1;
             iWell[Ix::Status] = wellStatus(well.getStatus());
+
             // Connections
             {
                 const auto& conn = well.getConnections();
@@ -290,6 +306,8 @@ namespace {
             iWell[Ix::VFPTab] = wellVFPTab(well, st);
             iWell[Ix::XFlow]  = well.getAllowCrossFlow() ? 1 : 0;
 
+            iWell[Ix::PreferredPhase] = preferredPhase(well);
+
             // The following items aren't fully characterised yet, but
             // needed for restart of M2.  Will need further refinement.
             iWell[Ix::item18] = -100;
@@ -304,7 +322,8 @@ namespace {
             //
             // Observe that the setupCurrentContro() function is called again
             // for open wells in the dynamicContrib() function.
-            setCurrentControl(well, eclipseControlMode(well, st), iWell);
+            setCurrentControl(eclipseControlMode(well, st), iWell);
+            setHistoryControlMode(well, eclipseControlMode(well, st), iWell);
 
             // Multi-segmented well information
             iWell[Ix::MsWID] = 0;  // MS Well ID (0 or 1..#MS wells)
@@ -364,7 +383,7 @@ namespace {
             using Value = VI::IWell::Value::Status;
 
             if (wellControlDefined(xw)) {
-                setCurrentControl(well, ctrlMode(well, xw), iWell);
+                setCurrentControl(ctrlMode(well, xw), iWell);
             }
 
             const auto any_flowing_conn =
@@ -497,17 +516,27 @@ namespace {
                 const auto& pc = well.productionControls(smry);
                 const auto& predMode = well.predictionMode();
 
-                if (pc.oil_rate != 0.0) {
+                if (predMode) {
+                    if ((pc.oil_rate != 0.0)) {
+                        sWell[Ix::OilRateTarget] =
+                            swprop(M::liquid_surface_rate, pc.oil_rate);
+                    }
+
+                    if ((pc.water_rate != 0.0)) {
+                        sWell[Ix::WatRateTarget] =
+                            swprop(M::liquid_surface_rate, pc.water_rate);
+                    }
+
+                    if ((pc.gas_rate != 0.0)) {
+                        sWell[Ix::GasRateTarget] =
+                            swprop(M::gas_surface_rate, pc.gas_rate);
+                        sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
+                    }
+                } else {
                     sWell[Ix::OilRateTarget] =
                         swprop(M::liquid_surface_rate, pc.oil_rate);
-                }
-
-                if (pc.water_rate != 0.0) {
                     sWell[Ix::WatRateTarget] =
                         swprop(M::liquid_surface_rate, pc.water_rate);
-                }
-
-                if (pc.gas_rate != 0.0) {
                     sWell[Ix::GasRateTarget] =
                         swprop(M::gas_surface_rate, pc.gas_rate);
                     sWell[Ix::HistGasRateTarget] = sWell[Ix::GasRateTarget];
@@ -558,6 +587,11 @@ namespace {
                     sWell[Ix::LiqRateTarget]   = getRateLimit(units, M::liquid_surface_rate, pc.liquid_rate);
                     sWell[Ix::ResVRateTarget]  = getRateLimit(units, M::rate, pc.resv_rate);
                     //}
+                }
+                if ((well.getStatus() == Ewoms::Well::Status::SHUT)) {
+                    sWell[Ix::OilRateTarget]   = 0.;
+                    sWell[Ix::WatRateTarget]   = 0.;
+                    sWell[Ix::GasRateTarget]   = 0.;
                 }
             }
             else if (well.isInjector()) {

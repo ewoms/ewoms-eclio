@@ -143,7 +143,7 @@ Well::Well(const RestartIO::RstWell& rst_well,
     guide_rate(def_guide_rate),
     efficiency_factor(rst_well.efficiency_factor),
     solvent_fraction(def_solvent_fraction),
-    prediction_mode(rst_well.pred_requested_control != 0),
+    prediction_mode(rst_well.hist_requested_control == 0),
     econ_limits(std::make_shared<WellEconProductionLimits>()),
     foam_properties(std::make_shared<WellFoamProperties>()),
     polymer_properties(std::make_shared<WellPolymerProperties>()),
@@ -670,13 +670,15 @@ bool Well::updateAutoShutin(bool auto_shutin) {
     return false;
 }
 
-bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg) {
+bool Well::updateConnections(std::shared_ptr<WellConnections> connections_arg, bool force) {
     connections_arg->order(  );
-    if (*this->connections != *connections_arg) {
+    if (force || *this->connections != *connections_arg) {
         this->connections = connections_arg;
+        if (this->connections->empty())
+            this->status = Status::SHUT;
+
         return true;
     }
-
     return false;
 }
 
@@ -701,12 +703,10 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 }
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
-                           const ParseContext& parseContext, ErrorGuard& errors) {
-    const auto& cs = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
-                                         parseContext, errors);
+                          const ParseContext& parseContext, ErrorGuard& errors) {
+    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
+                                                                     parseContext, errors);
 
-    auto new_connections = cs.first;
-    auto new_segments = cs.second;
     this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)) );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
     return true;
@@ -1103,11 +1103,6 @@ bool Well::updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs
         return false;
 }
 
-void Well::forceUpdateConnections(std::shared_ptr<WellConnections> connections_arg) {
-    connections_arg->order();
-    this->connections = std::move(connections_arg);
-}
-
 void Well::filterConnections(const ActiveGridCells& grid) {
     this->connections->filter(grid);
 }
@@ -1237,7 +1232,9 @@ double Well::production_rate(const SummaryState& st, Phase prod_phase) const {
         case Phase::FOAM:
             throw std::invalid_argument( "Production of 'FOAM' requested.");
         case Phase::BRINE:
-        throw std::invalid_argument( "Production of 'BRINE' requested.");
+            throw std::invalid_argument( "Production of 'BRINE' requested.");
+        case Phase::ZFRACTION:
+            throw std::invalid_argument( "Production of 'ZFRACTION' requested.");
     }
 
     throw std::logic_error( "Unreachable state. Invalid Phase value. "

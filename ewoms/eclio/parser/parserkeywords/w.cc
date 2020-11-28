@@ -4281,7 +4281,7 @@ WSEGAICD::WSEGAICD( ) : ParserKeyword("WSEGAICD")
      }
      {
         ParserItem item("STRENGTH", ParserItem::itype::DOUBLE);
-        item.push_backDimension("Pressure*Time*Time/GeometricVolume*GeometricVolume");
+        item.push_backDimension("Pressure*Time*Time/GeometricVolume*GeometricVolume*Density");
         record.addItem(item);
      }
      {

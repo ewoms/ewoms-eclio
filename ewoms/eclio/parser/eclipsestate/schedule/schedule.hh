@@ -21,6 +21,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/restartconfig.hh>
@@ -172,7 +173,8 @@ namespace Ewoms
         time_t simTime(std::size_t timeStep) const;
         double seconds(std::size_t timeStep) const;
         double stepLength(std::size_t timeStep) const;
-        Ewoms::optional<int> exitStatus() const;
+        std::optional<int> exitStatus() const;
+        const UnitSystem& getUnits() const { return this->unit_system; }
 
         const TimeMap& getTimeMap() const;
 
@@ -380,11 +382,11 @@ namespace Ewoms
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 
-        GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const Ewoms::optional<std::string>& parent_name) const;
+        GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections);
+        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
@@ -484,6 +486,7 @@ namespace Ewoms
         void handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);

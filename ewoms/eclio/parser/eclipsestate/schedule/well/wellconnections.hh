@@ -33,6 +33,7 @@ namespace Ewoms {
     class DeckRecord;
     class EclipseGrid;
     class FieldPropsManager;
+    class KeywordLocation;
     class WellConnections {
     public:
 
@@ -59,7 +60,7 @@ namespace Ewoms {
                            const Connection::CTFKind ctf_kind = Connection::CTFKind::DeckValue,
                            const std::size_t seqIndex = 0,
                            const bool defaultSatTabId = true);
-        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties);
+        void loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const KeywordLocation& location);
 
         using const_iterator = std::vector< Connection >::const_iterator;
 
@@ -151,7 +152,8 @@ namespace Ewoms {
                          const std::vector<double>* permx,
                          const std::vector<double>* permy,
                          const std::vector<double>* permz,
-                         const std::vector<double>& ntg);
+                         const std::vector<double>& ntg,
+                         const KeywordLocation& location);
 
         size_t findClosestConnection(int oi, int oj, double oz, size_t start_pos);
         void orderTRACK();

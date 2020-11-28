@@ -37,6 +37,7 @@
 #include <ewoms/eclio/output/data/wells.hh>
 #include <ewoms/eclio/output/data/groups.hh>
 #include <ewoms/eclio/output/summary.hh>
+#include <ewoms/eclio/output/inplace.hh>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
@@ -251,10 +252,10 @@ BOOST_AUTO_TEST_CASE(group_keywords) {
     SummaryState st(std::chrono::system_clock::now());
 
     out::Summary writer( cfg.es, cfg.config, cfg.grid, cfg.schedule , cfg.name );
-    writer.eval(st, 0, 0*day, cfg.es, cfg.schedule, cfg.wells, cfg.grp_nwrk, {});
+    writer.eval(st, 0, 0*day, cfg.wells, cfg.grp_nwrk, {}, {}, {});
     writer.add_timestep( st, 0);
 
-    writer.eval(st, 1, 1*day, cfg.es, cfg.schedule, cfg.wells, cfg.grp_nwrk, {});
+    writer.eval(st, 1, 1*day, cfg.wells, cfg.grp_nwrk, {}, {}, {});
     writer.add_timestep( st, 1);
 
     writer.write();

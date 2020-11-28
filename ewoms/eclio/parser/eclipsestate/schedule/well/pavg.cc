@@ -68,12 +68,9 @@ PAvg::PAvg(double inner_weight, double conn_weight, DepthCorrection depth_correc
     m_open_connections(use_open_connections)
 {}
 
-#if 0
-// seems to be unused in original code...
-static PAvg serializeObject() {
+PAvg PAvg::serializeObject() {
     return PAvg(0.10, 0.30, PAvg::DepthCorrection::NONE, false);
 }
-#endif
 
 PAvg::PAvg(const DeckRecord& record)
     : PAvg()

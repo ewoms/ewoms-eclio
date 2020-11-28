@@ -24,6 +24,7 @@
 #include <ewoms/eclio/opmlog/keywordlocation.hh>
 #include <ewoms/eclio/utility/opminputerror.hh>
 
+#include <ewoms/eclio/output/inplace.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/ioconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
@@ -48,7 +49,7 @@
 #include <ewoms/eclio/output/data/guideratevalue.hh>
 #include <ewoms/eclio/output/data/wells.hh>
 #include <ewoms/eclio/output/data/aquifer.hh>
-
+#include <ewoms/eclio/output/inplace.hh>
 #include <ewoms/eclio/output/regioncache.hh>
 
 #include <ewoms/common/fmt/format.h>
@@ -426,6 +427,9 @@ struct fn_args {
     const Ewoms::out::RegionCache& regionCache;
     const Ewoms::EclipseGrid& grid;
     const std::vector< std::pair< std::string, double > > eff_factors;
+    const Ewoms::Inplace& initial_inplace;
+    const Ewoms::Inplace& inplace;
+    const Ewoms::UnitSystem& unit_system;
 };
 
 /* Since there are several enums in eWoms scattered about more-or-less
@@ -762,6 +766,28 @@ inline quantity bhp( const fn_args& args ) {
     return { p->second.bhp, measure::pressure };
 }
 
+/*
+  This function is slightly ugly - the evaluation of ROEW uses the already
+  calculated WOPT results. We do not really have any formalism for such
+  dependencies between the summary vectors. For this particualar case there is a
+  hack in SummaryConfig which should ensure that this is safe.
+*/
+
+quantity roew(const fn_args& args) {
+    const quantity zero = { 0, measure::identity };
+    const auto& region_name = std::get<std::string>(*args.extra_data);
+    if (!args.initial_inplace.has( region_name, Ewoms::Inplace::Phase::OIL, args.num))
+        return zero;
+
+    double oil_prod = 0;
+    const auto& wells = args.regionCache.wells( region_name, args.num );
+    for (const auto& well : wells)
+        oil_prod += args.st.get_well_var(well, "WOPT");
+
+    oil_prod = args.unit_system.to_si(Ewoms::UnitSystem::measure::volume, oil_prod);
+    return { oil_prod / args.initial_inplace.get( region_name, Ewoms::Inplace::Phase::OIL, args.num ) , measure::identity };
+}
+
 inline quantity temperature( const fn_args& args ) {
     const quantity zero = { 0, measure::temperature };
     if( args.schedule_wells.empty() ) return zero;
@@ -914,6 +940,15 @@ quantity region_rate( const fn_args& args ) {
         return { -sum, rate_unit< phase >() };
 }
 
+quantity rhpv(const fn_args& args) {
+    const auto& inplace = args.inplace;
+    const auto& region_name = std::get<std::string>(*args.extra_data);
+    if (inplace.has( region_name, Ewoms::Inplace::Phase::HydroCarbonPV, args.num ))
+        return { inplace.get( region_name, Ewoms::Inplace::Phase::HydroCarbonPV, args.num ), measure::volume };
+    else
+        return {0, measure::volume};
+}
+
 template < rt phase, bool outputProducer = true, bool outputInjector = true>
 inline quantity potential_rate( const fn_args& args ) {
     double sum = 0.0;
@@ -933,6 +968,80 @@ inline quantity potential_rate( const fn_args& args ) {
     }
 
     return { sum, rate_unit< phase >() };
+}
+
+inline quantity preferred_phase_productivty_index(const fn_args& args) {
+    if (args.schedule_wells.empty())
+        return potential_rate<rt::productivity_index_oil>(args);
+
+    switch (args.schedule_wells.front().getPreferredPhase()) {
+    case Ewoms::Phase::OIL:
+        return potential_rate<rt::productivity_index_oil>(args);
+
+    case Ewoms::Phase::GAS:
+        return potential_rate<rt::productivity_index_gas>(args);
+
+    case Ewoms::Phase::WATER:
+        return potential_rate<rt::productivity_index_water>(args);
+
+    default:
+        break;
+    }
+
+    throw std::invalid_argument {
+        "Unsupported \"preferred\" phase: " +
+        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+    };
+}
+
+inline quantity connection_productivity_index(const fn_args& args) {
+    const quantity zero = { 0.0, rate_unit<rt::productivity_index_oil>() };
+
+    if (args.schedule_wells.empty())
+        return zero;
+
+    auto xwPos = args.wells.find(args.schedule_wells.front().name());
+    if (xwPos == args.wells.end())
+        return zero;
+
+    // The args.num value is the literal value which will go to the
+    // NUMS array in the eclipse SMSPEC file; the values in this array
+    // are offset 1 - whereas we need to use this index here to look
+    // up a completion with offset 0.
+    const auto global_index = static_cast<std::size_t>(args.num) - 1;
+
+    const auto& xcon = xwPos->second.connections;
+    const auto& completion =
+        std::find_if(xcon.begin(), xcon.end(),
+            [global_index](const Ewoms::data::Connection& c)
+        {
+            return c.index == global_index;
+        });
+
+    if (completion == xcon.end())
+        return zero;
+
+    switch (args.schedule_wells.front().getPreferredPhase()) {
+    case Ewoms::Phase::OIL:
+        return { completion->rates.get(rt::productivity_index_oil, 0.0),
+                 rate_unit<rt::productivity_index_oil>() };
+
+    case Ewoms::Phase::GAS:
+        return { completion->rates.get(rt::productivity_index_gas, 0.0),
+                 rate_unit<rt::productivity_index_gas>() };
+
+    case Ewoms::Phase::WATER:
+        return { completion->rates.get(rt::productivity_index_water, 0.0),
+                 rate_unit<rt::productivity_index_water>() };
+
+    default:
+        break;
+    }
+
+    throw std::invalid_argument {
+        "Unsupported \"preferred\" phase: " +
+        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+    };
 }
 
 template < bool isGroup, bool Producer, bool waterInjector, bool gasInjector>
@@ -1420,6 +1529,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "CSIT", mul( crate< rt::brine, injector >, duration ) },
     { "CSPT", mul( crate< rt::brine, producer >, duration ) },
     { "CTFAC", trans_factors },
+    { "CPI", connection_productivity_index },
 
     { "FWPR", rate< rt::wat, producer > },
     { "FOPR", rate< rt::oil, producer > },
@@ -1551,6 +1661,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "ROPT"  , mul( region_rate< rt::oil, producer >, duration ) },
     { "RGPT"  , mul( region_rate< rt::gas, producer >, duration ) },
     { "RWPT"  , mul( region_rate< rt::wat, producer >, duration ) },
+    { "RHPV"  , rhpv },
     //Multisegment well segment data
     { "SOFR", srate< rt::oil > },
     { "SWFR", srate< rt::wat > },
@@ -1561,10 +1672,12 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "SPRDF", segpress<Ewoms::data::SegmentPressures::Value::PDropFriction> },
     { "SPRDA", segpress<Ewoms::data::SegmentPressures::Value::PDropAccel> },
     // Well productivity index
+    { "WPI", preferred_phase_productivty_index },
     { "WPIW", potential_rate< rt::productivity_index_water >},
     { "WPIO", potential_rate< rt::productivity_index_oil >},
     { "WPIG", potential_rate< rt::productivity_index_gas >},
-    { "WPIL", sum( potential_rate< rt::productivity_index_water >, potential_rate< rt::productivity_index_oil>)},
+    { "WPIL", sum( potential_rate< rt::productivity_index_water, true, false >,
+                   potential_rate< rt::productivity_index_oil, true, false >)},
     // Well potential
     { "WWPP", potential_rate< rt::well_potential_water , true, false>},
     { "WOPP", potential_rate< rt::well_potential_oil , true, false>},
@@ -1574,6 +1687,7 @@ static const std::unordered_map< std::string, ofun > funs = {
     { "WOPI", potential_rate< rt::well_potential_oil , false, true>},
     { "WGPI", potential_rate< rt::well_potential_gas , false, true>},
     { "WGIP", potential_rate< rt::well_potential_gas , false, true>}, // Alias for 'WGPI'
+    { "ROEW", roew },
 };
 
 static const std::unordered_map< std::string, Ewoms::UnitSystem::measure> single_values_units = {
@@ -1610,7 +1724,8 @@ static const std::unordered_map< std::string, Ewoms::UnitSystem::measure> region
   {"RGIP"     , Ewoms::UnitSystem::measure::gas_surface_volume },
   {"RGIPL"    , Ewoms::UnitSystem::measure::gas_surface_volume },
   {"RGIPG"    , Ewoms::UnitSystem::measure::gas_surface_volume },
-  {"RWIP"     , Ewoms::UnitSystem::measure::liquid_surface_volume }
+  {"RWIP"     , Ewoms::UnitSystem::measure::liquid_surface_volume },
+  {"RRPV"     , Ewoms::UnitSystem::measure::geometric_volume }
 };
 
 static const std::unordered_map< std::string, Ewoms::UnitSystem::measure> block_units = {
@@ -1827,6 +1942,7 @@ namespace Evaluator {
         const Ewoms::Schedule& sched;
         const Ewoms::EclipseGrid& grid;
         const Ewoms::out::RegionCache& reg;
+        const Ewoms::Inplace initial_inplace;
     };
 
     struct SimulatorResults
@@ -1834,6 +1950,7 @@ namespace Evaluator {
         const Ewoms::data::WellRates& wellSol;
         const Ewoms::data::GroupAndNetworkValues& grpNwrkSol;
         const std::map<std::string, double>& single;
+        const Ewoms::Inplace inplace;
         const std::map<std::string, std::vector<double>>& region;
         const std::map<std::pair<std::string, int>, double>& block;
         const Ewoms::data::Aquifers& aquifers;
@@ -1883,11 +2000,9 @@ namespace Evaluator {
             const fn_args args {
                 wells, this->group_name(), stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
-                static_cast<bool>(this->node_.fip_region)
-                ?   Ewoms::variant<std::string, int>(*this->node_.fip_region)
-                :   Ewoms::variant<std::string, int>(std::string("")),
+                this->node_.fip_region,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
-                std::move(efac.factors)
+                std::move(efac.factors), input.initial_inplace, simRes.inplace, input.sched.getUnits()
             };
 
             const auto& usys = input.es.getUnits();
@@ -2079,6 +2194,7 @@ namespace Evaluator {
             const auto val = st.get_elapsed() + stepSize;
 
             st.update(this->saveKey_, usys.from_si(m, val));
+            st.update("TIME", usys.from_si(m, val));
         }
 
     private:
@@ -2428,11 +2544,9 @@ namespace Evaluator {
 
         const fn_args args {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
-            static_cast<bool>(this->node_->fip_region)
-            ?   Ewoms::optional<Ewoms::variant<std::string, int>>(*this->node_->fip_region)
-            :   Ewoms::nullopt,
+            this->node_->fip_region,
             this->st_, {}, {}, reg, this->grid_,
-            {}
+            {}, {}, {}, Ewoms::UnitSystem(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC)
         };
 
         const auto prm = this->paramFunction_(args);
@@ -2640,6 +2754,27 @@ makeResultSet(const Ewoms::IOConfig& iocfg, const std::string& basenm)
     return { iocfg.getOutputDir(), base };
 }
 
+void validateElapsedTime(const double             secs_elapsed,
+                         const Ewoms::EclipseState& es,
+                         const Ewoms::SummaryState& st)
+{
+    if (! (secs_elapsed < st.get_elapsed()))
+        return;
+
+    const auto& usys    = es.getUnits();
+    const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
+    const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
+    const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
+
+    throw std::invalid_argument {
+        "Elapsed time ("
+            + std::to_string(elapsed) + ' ' + unt
+            + ") must not precede previous elapsed time ("
+            + std::to_string(prev_el) + ' ' + unt
+            + "). Incorrect restart time?"
+            };
+}
+
 } // Anonymous namespace
 
 class Ewoms::out::Summary::SummaryImplementation
@@ -2656,13 +2791,13 @@ public:
     SummaryImplementation& operator=(const SummaryImplementation& rhs) = delete;
     SummaryImplementation& operator=(SummaryImplementation&& rhs) = default;
 
-    void eval(const EclipseState&                es,
-              const Schedule&                    sched,
-              const int                          sim_step,
-              const double                       duration,
+    void eval(const int                          sim_step,
+              const double                       secs_elapsed,
               const data::WellRates&             well_solution,
               const data::GroupAndNetworkValues& grp_nwrk_solution,
-              const GlobalProcessParameters&     single_values,
+              GlobalProcessParameters&           single_values,
+              const Inplace&                     initial_inplace,
+              const Ewoms::Inplace&                inplace,
               const RegionParameters&            region_values,
               const BlockValues&                 block_values,
               const data::Aquifers&              aquifer_values,
@@ -2682,6 +2817,8 @@ private:
     using EvalPtr = SummaryOutputParameters::EvalPtr;
 
     std::reference_wrapper<const Ewoms::EclipseGrid> grid_;
+    std::reference_wrapper<const Ewoms::EclipseState> es_;
+    std::reference_wrapper<const Ewoms::Schedule> sched_;
     Ewoms::out::RegionCache regCache_;
 
     std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
@@ -2731,6 +2868,8 @@ SummaryImplementation(const EclipseState&  es,
                       const Schedule&      sched,
                       const std::string&   basename)
     : grid_          (std::cref(grid))
+    , es_            (std::cref(es))
+    , sched_         (std::cref(sched))
     , regCache_      (sumcfg.fip_regions(), es.globalFieldProps(), grid, sched)
     , deferredSMSpec_(makeDeferredSMSpecCreation(es, grid, sched))
     , rset_          (makeResultSet(es.cfg().io(), basename))
@@ -2762,34 +2901,42 @@ internal_store(const SummaryState& st, const int report_step)
 
 void
 Ewoms::out::Summary::SummaryImplementation::
-eval(const EclipseState&                es,
-     const Schedule&                    sched,
-     const int                          sim_step,
-     const double                       duration,
+eval(const int                          sim_step,
+     const double                       secs_elapsed,
      const data::WellRates&             well_solution,
      const data::GroupAndNetworkValues& grp_nwrk_solution,
-     const GlobalProcessParameters&     single_values,
+     GlobalProcessParameters&           single_values,
+     const Inplace&                     initial_inplace,
+     const Ewoms::Inplace&                inplace,
      const RegionParameters&            region_values,
      const BlockValues&                 block_values,
      const data::Aquifers&              aquifer_values,
      Ewoms::SummaryState&                 st) const
 {
+    validateElapsedTime(secs_elapsed, this->es_, st);
+
+    const double duration = secs_elapsed - st.get_elapsed();
+    single_values["TIMESTEP"] = duration;
+    st.update("TIMESTEP", this->es_.get().getUnits().from_si(Ewoms::UnitSystem::measure::time, duration));
+
     const Evaluator::InputData input {
-        es, sched, this->grid_, this->regCache_
+        this->es_, this->sched_, this->grid_, this->regCache_, initial_inplace
     };
 
     const Evaluator::SimulatorResults simRes {
-        well_solution, grp_nwrk_solution, single_values, region_values, block_values, aquifer_values
+        well_solution, grp_nwrk_solution, single_values, inplace, region_values, block_values, aquifer_values
     };
 
     for (auto& evalPtr : this->outputParameters_.getEvaluators()) {
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
-    for (auto& paramsPair : this->extra_parameters) {
-        auto& evalPtr = paramsPair.second;
+    for (auto& [_, evalPtr] : this->extra_parameters) {
+        (void)_;
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
+
+    st.update_elapsed(duration);
 }
 
 void Ewoms::out::Summary::SummaryImplementation::write()
@@ -3005,6 +3152,7 @@ std::vector<Ewoms::EclIO::SummaryNode> make_default_nodes(const std::string& key
 }
 
 void Ewoms::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
+    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS"};
     auto nodes = std::vector<Ewoms::EclIO::SummaryNode> {};
     std::unordered_set<std::string> summary_keys;
     for (const auto& udq_ptr : sched.udqConfigList())
@@ -3017,20 +3165,31 @@ void Ewoms::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfi
     }
 
     for (const auto& node: nodes) {
+        // Handler already configured/requested through the normal SummaryConfig path.
         if (summary_config.hasSummaryKey(node.unique_key()))
-            // Handler already exists.  Don't add second evaluation.
+            continue;
+
+        // Time related vectors are special cased in the valueKeys_ vector and must be checked explicitly.
+        if (time_vectors.count(node.keyword) > 0)
+            continue;
+
+        // Handler already registered in the summary evaluator, in some other way.
+        if ( std::find(this->valueKeys_.begin(), this->valueKeys_.end(), node.unique_key()) != this->valueKeys_.end())
             continue;
 
         auto fun_pos = funs.find(node.keyword);
-        if (fun_pos != funs.end())
+        if (fun_pos != funs.end()) {
             this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::FunctionRelation>(node, fun_pos->second) );
-        else {
-            auto unit = single_values_units.find(node.keyword);
-            if (unit == single_values_units.end())
-                throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
-
-            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            continue;
         }
+
+        auto unit = single_values_units.find(node.keyword);
+        if (unit != single_values_units.end()) {
+            this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
+            continue;
+        }
+
+        throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
     }
 }
 
@@ -3125,31 +3284,6 @@ createSmryStreamIfNecessary(const int report_step)
     }
 }
 
-namespace {
-
-void validateElapsedTime(const double             secs_elapsed,
-                         const Ewoms::EclipseState& es,
-                         const Ewoms::SummaryState& st)
-{
-    if (! (secs_elapsed < st.get_elapsed()))
-        return;
-
-    const auto& usys    = es.getUnits();
-    const auto  elapsed = usys.from_si(measure::time, secs_elapsed);
-    const auto  prev_el = usys.from_si(measure::time, st.get_elapsed());
-    const auto  unt     = '[' + std::string{ usys.name(measure::time) } + ']';
-
-    throw std::invalid_argument {
-        "Elapsed time ("
-        + std::to_string(elapsed) + ' ' + unt
-        + ") must not precede previous elapsed time ("
-        + std::to_string(prev_el) + ' ' + unt
-        + "). Incorrect restart time?"
-    };
-}
-
-} // Anonymous namespace
-
 namespace Ewoms { namespace out {
 
 Summary::Summary(const EclipseState&  es,
@@ -3163,20 +3297,15 @@ Summary::Summary(const EclipseState&  es,
 void Summary::eval(SummaryState&                      st,
                    const int                          report_step,
                    const double                       secs_elapsed,
-                   const EclipseState&                es,
-                   const Schedule&                    schedule,
                    const data::WellRates&             well_solution,
                    const data::GroupAndNetworkValues& grp_nwrk_solution,
                    GlobalProcessParameters            single_values,
+                   const Inplace&                     initial_inplace,
+                   const Inplace&                     inplace,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Ewoms::data::Aquifers&         aquifer_values) const
 {
-    validateElapsedTime(secs_elapsed, es, st);
-
-    const double duration = secs_elapsed - st.get_elapsed();
-    single_values["TIMESTEP"] = duration;
-    st.update("TIMESTEP", es.getUnits().from_si(Ewoms::UnitSystem::measure::time, duration));
 
     /* Report_step is the one-based sequence number of the containing report.
      * Report_step = 0 for the initial condition, before simulation starts.
@@ -3189,11 +3318,10 @@ void Summary::eval(SummaryState&                      st,
      * wells, groups, connections &c in the Schedule object. */
     const auto sim_step = std::max( 0, report_step - 1 );
 
-    this->pImpl_->eval(es, schedule, sim_step, duration,
+    this->pImpl_->eval(sim_step, secs_elapsed,
                        well_solution, grp_nwrk_solution, single_values,
+                       initial_inplace, inplace,
                        region_values, block_values, aquifer_values, st);
-
-    st.update_elapsed(duration);
 }
 
 void Summary::add_timestep(const SummaryState& st, const int report_step)

@@ -112,18 +112,20 @@ UDQDefine::UDQDefine()
 template <typename T>
 UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
+                     std::size_t report_step,
                      const KeywordLocation& location,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      T&& errors) :
-    UDQDefine(udq_params_arg, keyword, location, deck_data, parseContext, errors)
+    UDQDefine(udq_params_arg, keyword, report_step, location, deck_data, parseContext, errors)
 {}
 
 UDQDefine::UDQDefine(const UDQParams& udq_params_arg,
                      const std::string& keyword,
+                     std::size_t report_step,
                      const KeywordLocation& location,
                      const std::vector<std::string>& deck_data) :
-    UDQDefine(udq_params_arg, keyword, location, deck_data, ParseContext(), ErrorGuard())
+    UDQDefine(udq_params_arg, keyword, report_step, location, deck_data, ParseContext(), ErrorGuard())
 {}
 
 namespace {
@@ -160,13 +162,16 @@ Ewoms::optional<std::string> next_token(const std::string& item, std::size_t off
 
 UDQDefine::UDQDefine(const UDQParams& udq_params,
                      const std::string& keyword,
+                     std::size_t report_step,
                      const KeywordLocation& location,
                      const std::vector<std::string>& deck_data,
                      const ParseContext& parseContext,
                      ErrorGuard& errors) :
     m_keyword(keyword),
     m_var_type(UDQ::varType(keyword)),
-    m_location(location)
+    m_location(location),
+    m_report_step(report_step),
+    m_update_status(UDQUpdate::ON)
 {
     std::vector<std::string> string_tokens;
     for (const std::string& deck_item : deck_data) {
@@ -198,6 +203,11 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
     }
 }
 
+void UDQDefine::update_status(UDQUpdate update, std::size_t report_step) {
+    this->m_update_status = update;
+    this->m_report_step = report_step;
+}
+
 UDQDefine UDQDefine::serializeObject()
 {
     UDQDefine result;
@@ -206,7 +216,8 @@ UDQDefine UDQDefine::serializeObject()
     result.m_var_type = UDQVarType::SEGMENT_VAR;
     result.string_data = "test2";
     result.m_location = KeywordLocation{"KEYWOR", "file", 100};
-
+    result.m_update_status = UDQUpdate::NEXT;
+    result.m_report_step = 99;
     return result;
 }
 
@@ -315,6 +326,10 @@ std::set<UDQTokenType> UDQDefine::func_tokens() const {
     return this->ast->func_tokens();
 }
 
+std::pair<UDQUpdate, std::size_t> UDQDefine::status() const {
+    return std::make_pair(this->m_update_status, this->m_report_step);
+}
+
 bool UDQDefine::operator==(const UDQDefine& data) const {
     if ((ast && !data.ast) || (!ast && data.ast))
         return false;
@@ -324,6 +339,7 @@ bool UDQDefine::operator==(const UDQDefine& data) const {
     return this->keyword() == data.keyword() &&
            this->m_location == data.location() &&
            this->var_type() == data.var_type() &&
+           this->status() == data.status() &&
            this->input_string() == data.input_string();
 }
 

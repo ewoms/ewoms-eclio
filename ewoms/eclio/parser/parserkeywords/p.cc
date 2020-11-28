@@ -2835,6 +2835,43 @@ const std::string PVTO::RS::itemName = "RS";
 const std::string PVTO::DATA::itemName = "DATA";
 
 
+PVTSOL::PVTSOL( ) : ParserKeyword("PVTSOL")
+{
+  setSizeType(OTHER_KEYWORD_IN_DECK);
+  initSizeKeyword("TABDIMS","NTPVT",0);
+  setTableCollection( true );
+  addValidSectionName("PROPS");
+  clearDeckNames();
+  addDeckName("PVTSOL");
+  {
+     ParserRecord record;
+     {
+        ParserItem item("ZCO2", ParserItem::itype::DOUBLE);
+        item.push_backDimension("1");
+        record.addItem(item);
+     }
+     {
+        ParserItem item("DATA", ParserItem::itype::DOUBLE);
+        item.setSizeType(ParserItem::item_size::ALL);
+        item.push_backDimension("Pressure");
+        item.push_backDimension("1");
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("GasDissolutionFactor");
+        item.push_backDimension("OilDissolutionFactor");
+        item.push_backDimension("1");
+        item.push_backDimension("1");
+        item.push_backDimension("Viscosity");
+        item.push_backDimension("Viscosity");
+        record.addItem(item);
+     }
+     addRecord( record );
+  }
+}
+const std::string PVTSOL::keywordName = "PVTSOL";
+const std::string PVTSOL::ZCO2::itemName = "ZCO2";
+const std::string PVTSOL::DATA::itemName = "DATA";
+
+
 PVTW::PVTW( ) : ParserKeyword("PVTW")
 {
   setSizeType(OTHER_KEYWORD_IN_DECK);

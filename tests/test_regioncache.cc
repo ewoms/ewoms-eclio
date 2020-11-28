@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <stdexcept>
+#include <unordered_set>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/eclipsestate.hh>
@@ -36,12 +37,18 @@ using namespace Ewoms;
 
 const char* path = "summary_deck.DATA";
 
+bool cmp_list(const std::vector<std::string>& l1, const std::vector<std::string>& l2) {
+    std::unordered_set<std::string> s1(l1.begin(), l1.end());
+    std::unordered_set<std::string> s2(l2.begin(), l2.end());
+    return s1 == s2;
+}
+
 BOOST_AUTO_TEST_CASE(create) {
     Parser parser;
     Deck deck( parser.parseFile( path ));
     EclipseState es(deck);
     const EclipseGrid& grid = es.getInputGrid();
-    Schedule schedule( deck, es );
+    Schedule schedule( deck, es);
     out::RegionCache rc({"FIPNUM"}, es.fieldProps(), grid, schedule);
     {
         const auto& empty = rc.connections( "FIPNUM", 4 );
@@ -50,11 +57,17 @@ BOOST_AUTO_TEST_CASE(create) {
 
     {
         const auto& top_layer = rc.connections(  "FIPNUM", 1 );
-        BOOST_CHECK_EQUAL( top_layer.size() , 3U );
+        BOOST_CHECK_EQUAL( top_layer.size() , 4U );
         {
             auto pair = top_layer[0];
             BOOST_CHECK_EQUAL( pair.first , "W_1");
             BOOST_CHECK_EQUAL( pair.second , grid.activeIndex( 0,0,0));
         }
     }
+
+    BOOST_CHECK( rc.wells("FIPXYZ", 100).empty() );
+    BOOST_CHECK( rc.wells("FIPXYZ", 1).empty() );
+    BOOST_CHECK( rc.wells("FIPNUM", 100).empty() );
+    BOOST_CHECK( cmp_list(rc.wells("FIPNUM", 1),  {"W_1", "W_2", "W_3", "W_4"}));
+    BOOST_CHECK( cmp_list(rc.wells("FIPNUM", 11), {"W_6"}));
 }

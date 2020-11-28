@@ -254,6 +254,17 @@ namespace {
             || is_in_set(countkw, keyword.substr(1));
     }
 
+    bool is_prod_index(const std::string& keyword) {
+        static const keyword_set countkw {
+            "PI", "PI1", "PI4", "PI5", "PI9",
+            "PIO", "PIG", "PIW", "PIL",
+        };
+
+        return !keyword.empty()
+            && ((keyword[0] == 'W') || (keyword[0] == 'C'))
+            && is_in_set(countkw, keyword.substr(1));
+    }
+
     bool is_liquid_phase(const std::string& keyword) {
         return keyword == "WPIL";
     }
@@ -714,6 +725,7 @@ inline void keywordR2R( SummaryConfig::keyword_list& /* list */,
 
 inline void keywordR( SummaryConfig::keyword_list& list,
                       const DeckKeyword& deck_keyword,
+                      const Schedule& schedule,
                       const TableManager& tables,
                       const ParseContext& parseContext,
                       ErrorGuard& errors ) {
@@ -737,6 +749,10 @@ inline void keywordR( SummaryConfig::keyword_list& list,
         for (size_t region=1; region <= numfip; region++)
             regions.push_back( region );
     }
+
+    // See comment on function roew() in Summary.cpp for this weirdness.
+    if (keyword.rfind("ROEW", 0) == 0)
+        keywordW(list, "WOPT", {}, schedule);
 
     auto param = SummaryConfigNode {
         keyword, SummaryConfigNode::Category::Region, deck_keyword.location()
@@ -1041,7 +1057,7 @@ inline void keywordMISC( SummaryConfig::keyword_list& list,
         case Cat::Group: return keywordG( list, parseContext, errors, keyword, schedule );
         case Cat::Field: return keywordF( list, keyword );
         case Cat::Block: return keywordB( list, keyword, dims );
-        case Cat::Region: return keywordR( list, keyword, tables, parseContext, errors );
+        case Cat::Region: return keywordR( list, keyword, schedule, tables, parseContext, errors );
         case Cat::Connection: return keywordC( list, parseContext, errors, keyword, schedule, dims);
         case Cat::Segment: return keywordS( list, parseContext, errors, keyword, schedule );
         case Cat::Node: return keyword_node( list, node_names, parseContext, errors, keyword );
@@ -1083,9 +1099,30 @@ inline void handleKW( SummaryConfig::keyword_list& list,
 }
 
   inline void uniq( SummaryConfig::keyword_list& vec ) {
-    std::sort( vec.begin(), vec.end() );
-    auto logical_end = std::unique( vec.begin(), vec.end() );
-    vec.erase( logical_end, vec.end() );
+      std::sort( vec.begin(), vec.end());
+      auto logical_end = std::unique( vec.begin(), vec.end() );
+      vec.erase( logical_end, vec.end() );
+      if (vec.empty())
+          return;
+
+      /*
+        This is a desperate hack to ensure that the ROEW keywords come after
+        WOPT keywords, to ensure that the WOPT keywords have been fully
+        evaluated in the SummaryState when we evaluate the ROEW keywords.
+      */
+      std::size_t tail_index = vec.size() - 1;
+      std::size_t item_index = 0;
+      while (true) {
+          if (item_index >= tail_index)
+              break;
+
+          auto& node = vec[item_index];
+          if (node.keyword().rfind("ROEW", 0) == 0) {
+              std::swap( node, vec[tail_index] );
+              tail_index--;
+          }
+          item_index++;
+      }
   }
 }
 
@@ -1104,6 +1141,7 @@ SummaryConfigNode::Type parseKeywordType(std::string keyword) {
     if (is_pressure(keyword)) return SummaryConfigNode::Type::Pressure;
     if (is_count(keyword)) return SummaryConfigNode::Type::Count;
     if (is_control_mode(keyword)) return SummaryConfigNode::Type::Mode;
+    if (is_prod_index(keyword)) return SummaryConfigNode::Type::ProdIndex;
 
     return SummaryConfigNode::Type::Undefined;
 }

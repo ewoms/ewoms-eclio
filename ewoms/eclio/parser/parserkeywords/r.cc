@@ -572,6 +572,7 @@ REGION_PROBE::REGION_PROBE( ) : ParserKeyword("REGION_PROBE")
   addDeckName("RGSAT");
   addDeckName("RGVIS");
   addDeckName("RHPV");
+  addDeckName("RHPV_[0-9A-Z][0-9A-Z][0-9A-Z]");
   addDeckName("RNFT");
   addDeckName("RNIP");
   addDeckName("RODEN");
@@ -581,6 +582,7 @@ REGION_PROBE::REGION_PROBE( ) : ParserKeyword("REGION_PROBE")
   addDeckName("ROEW");
   addDeckName("ROEWG");
   addDeckName("ROEWW");
+  addDeckName("ROEW_[0-9A-Z][0-9A-Z][0-9A-Z]");
   addDeckName("ROIP");
   addDeckName("ROIPG");
   addDeckName("ROIPL");
@@ -617,6 +619,7 @@ REGION_PROBE::REGION_PROBE( ) : ParserKeyword("REGION_PROBE")
   addDeckName("RPRH");
   addDeckName("RPRP");
   addDeckName("RRPV");
+  addDeckName("RRPV_[0-9A-Z][0-9A-Z][0-9A-Z]");
   addDeckName("RRS");
   addDeckName("RRTM");
   addDeckName("RRV");

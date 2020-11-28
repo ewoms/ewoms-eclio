@@ -57,11 +57,13 @@ namespace Ewoms {
         void add_record(const DeckRecord& record, const KeywordLocation& location, std::size_t report_step);
 
         void add_unit(const std::string& keyword, const std::string& unit);
+        void add_update(const std::string& keyword, std::size_t report_step, const KeywordLocation& location, const std::vector<std::string>& data);
         void add_assign(const std::string& quantity, const std::vector<std::string>& selector, double value, std::size_t report_step);
-        void add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression);
+        void add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression, std::size_t report_step);
 
         void eval(std::size_t report_step, const WellMatcher& wm, SummaryState& st, UDQState& udq_state) const;
         const UDQDefine& define(const std::string& key) const;
+        const UDQAssign& assign(const std::string& key) const;
         std::vector<UDQDefine> definitions() const;
         std::vector<UDQDefine> definitions(UDQVarType var_type) const;
         std::vector<UDQInput> input() const;

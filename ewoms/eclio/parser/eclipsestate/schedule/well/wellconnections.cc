@@ -31,6 +31,7 @@
 
 #include <ewoms/eclio/parser/units/units.hh>
 #include <ewoms/eclio/io/rst/connection.hh>
+#include <ewoms/eclio/opmlog/keywordlocation.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/eclipsegrid.hh>
 #include <ewoms/eclio/parser/eclipsestate/grid/fieldpropsmanager.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/connection.hh>
@@ -265,14 +266,14 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                             defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties) {
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const KeywordLocation& location) {
         const auto permx        = field_properties.try_get<double>("PERMX");
         const auto permy        = field_properties.try_get<double>("PERMY");
         const auto permz        = field_properties.try_get<double>("PERMZ");
         const auto& ntg         = field_properties.get_double("NTG");
         const auto& satnum_data = field_properties.get_int("SATNUM");
 
-        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg);
+        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg, location);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record,
@@ -281,7 +282,8 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                       const std::vector<double>* permx,
                                       const std::vector<double>* permy,
                                       const std::vector<double>* permz,
-                                      const std::vector<double>& ntg) {
+                                      const std::vector<double>& ntg,
+                                      const KeywordLocation& location) {
 
         const auto& itemI = record.getItem( "I" );
         const auto defaulted_I = itemI.defaultApplied( 0 ) || itemI.get< int >( 0 ) == 0;
@@ -321,8 +323,13 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             rw = 0.5*unit::feet;
 
         for (int k = K1; k <= K2; k++) {
-            if (!grid.cellActive(I, J, k))
+            if (!grid.cellActive(I, J, k)) {
+                auto msg = fmt::format("Problem with COMPDAT keyword\n"
+                                       "In {} line {}\n"
+                                       "The cell ({},{},{}) is not active and the connection will be ignored", location.filename, location.lineno, I,J,k);
+                OpmLog::warning(msg);
                 continue;
+            }
 
             size_t active_index = grid.activeIndex(I,J,k);
             double CF = -1;

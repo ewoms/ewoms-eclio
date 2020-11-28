@@ -58,6 +58,8 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
         WInjCMode = 16,
         GConProdCMode = 10,
         GInjCMode = 21,
+        GroupType = 26,
+        GroupLevel = 27,
         ParentGroup = 28,
         EFlowingWells = 33,
     };
@@ -73,6 +75,12 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
         Form = 8,
         Comb = 9,
     };
+
+    enum GroupType : int {
+        WellGroup = 0,
+        TreeGroup = 1,
+    };
+
     }
 
     }

@@ -34,6 +34,7 @@ namespace Ewoms {
     class Schedule;
     class SummaryConfig;
     class SummaryState;
+    class Inplace;
 } // namespace Ewoms
 
 namespace Ewoms { namespace data {
@@ -62,11 +63,11 @@ public:
     void eval(SummaryState&                      summary_state,
               const int                          report_step,
               const double                       secs_elapsed,
-              const EclipseState&                es,
-              const Schedule&                    schedule,
               const data::WellRates&             well_solution,
               const data::GroupAndNetworkValues& group_and_nwrk_solution,
               GlobalProcessParameters            single_values,
+              const Inplace&                     initial_inplace,
+              const Inplace&                     inplace,
               const RegionParameters&            region_values = {},
               const BlockValues&                 block_values  = {},
               const data::Aquifers&              aquifers_values = {}) const;

@@ -38,8 +38,7 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
             Status   = 10, // Well status
             VFPTab   = 11, // ID (one-based) of well's current VFP table.
 
-            PredReqWCtrl = 15, // Well's requested control mode from
-                               // simulation deck (WCONINJE, WCONPROD).
+            PreferredPhase = 15, // Well's preferred phase (from WELSPECS)
 
             item18 = 17, // Unknown
             XFlow  = 22,
@@ -107,6 +106,13 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
                 Input = 2, // Connections listed in order of
                            // appearance in simulation model's
                            // COMPDAT keyword.
+            };
+
+            enum Preferred_Phase : int {
+                Oil    = 1,
+                Water  = 2,
+                Gas    = 3,
+                Liquid = 4,
             };
 
             enum PLossMod : int {

@@ -105,32 +105,32 @@ Ewoms::UDQSet make_udq_set(const std::string& name, Ewoms::UDQVarType var_type, 
     {
         auto state = Ewoms::UDQState{0};
 
-        state.add_define("WUOPRL", make_udq_set("WUOPRL",
-                                                Ewoms::UDQVarType::WELL_VAR,
-                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                {210, 211, 212, 213}));
+        state.add_define(0, "WUOPRL", make_udq_set("WUOPRL",
+                                                   Ewoms::UDQVarType::WELL_VAR,
+                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                   {210, 211, 212, 213}));
 
-        state.add_define("WUOPRU", make_udq_set("WUOPRU",
-                                                Ewoms::UDQVarType::WELL_VAR,
-                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                {220, 221, 222, 223}));
+        state.add_define(0, "WUOPRU", make_udq_set("WUOPRU",
+                                                   Ewoms::UDQVarType::WELL_VAR,
+                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                   {220, 221, 222, 223}));
 
-        state.add_define("WULPRL", make_udq_set("WULPRL",
-                                                Ewoms::UDQVarType::WELL_VAR,
-                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                {230, 231, 232, 233}));
+        state.add_define(0, "WULPRL", make_udq_set("WULPRL",
+                                                   Ewoms::UDQVarType::WELL_VAR,
+                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                   {230, 231, 232, 233}));
 
-        state.add_define("WULPRU", make_udq_set("WULPRU",
-                                                Ewoms::UDQVarType::WELL_VAR,
-                                                {"PROD1", "PROD2", "WINJ1", "WINJ2"},
-                                                {160, 161, 162, 163}));
+        state.add_define(0, "WULPRU", make_udq_set("WULPRU",
+                                                   Ewoms::UDQVarType::WELL_VAR,
+                                                   {"PROD1", "PROD2", "WINJ1", "WINJ2"},
+                                                   {160, 161, 162, 163}));
 
-        state.add_define("GUOPRU", make_udq_set("GUOPRU",
-                                                Ewoms::UDQVarType::GROUP_VAR,
-                                                {"WGRP1", "WGRP2", "GRP1"},
-                                                {360, 361, 362}));
+        state.add_define(0, "GUOPRU", make_udq_set("GUOPRU",
+                                                   Ewoms::UDQVarType::GROUP_VAR,
+                                                   {"WGRP1", "WGRP2", "GRP1"},
+                                                   {360, 361, 362}));
 
-        state.add_define("FULPR", Ewoms::UDQSet::scalar("FULPR", 460));
+        state.add_define(0, "FULPR", Ewoms::UDQSet::scalar("FULPR", 460));
         return state;
     }
 

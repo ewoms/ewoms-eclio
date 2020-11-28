@@ -138,6 +138,9 @@ namespace Ewoms {
             this->checkPVTOMonotonicity(deck);
         }
 
+        if( deck.hasKeyword( "PVTSOL" ) )
+           initFullTables(deck, "PVTSOL", m_pvtsolTables);
+
         if( deck.hasKeyword( "PVTW" ) )
             this->m_pvtwTable = PvtwTable( deck.getKeyword( "PVTW" ) );
 
@@ -1049,6 +1052,10 @@ namespace Ewoms {
 
     const std::vector<PvtoTable>& TableManager::getPvtoTables() const {
         return m_pvtoTables;
+    }
+
+    const std::vector<PvtsolTable>& TableManager::getPvtsolTables() const {
+        return m_pvtsolTables;
     }
 
     const std::vector<Rock2dTable>& TableManager::getRock2dTables() const {

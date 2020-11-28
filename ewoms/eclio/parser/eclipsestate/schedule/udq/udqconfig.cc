@@ -18,7 +18,10 @@
 */
 #include "config.h"
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/opmlog/keywordlocation.hh>
+#include <ewoms/eclio/utility/opminputerror.hh>
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/summarystate.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
@@ -86,13 +89,13 @@ namespace Ewoms {
             assignment->second.add_record(selector, value, report_step);
     }
 
-    void UDQConfig::add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression) {
+    void UDQConfig::add_define(const std::string& quantity, const KeywordLocation& location, const std::vector<std::string>& expression, std::size_t report_step) {
         this->add_node(quantity, UDQAction::DEFINE);
         auto defined_iter = this->m_definitions.find( quantity );
         if (defined_iter != this->m_definitions.end())
             this->m_definitions.erase( defined_iter );
 
-        this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, location, expression)));
+        this->m_definitions.insert( std::make_pair(quantity, UDQDefine(this->udq_params, quantity, report_step, location, expression)));
         this->define_order.insert(quantity);
     }
 
@@ -117,15 +120,26 @@ namespace Ewoms {
         this->units[keyword] = unit;
     }
 
+    void UDQConfig::add_update(const std::string& keyword, std::size_t report_step, const KeywordLocation& location, const std::vector<std::string>& data) {
+        if (data.empty())
+            throw OpmInputError( fmt::format("Missing third item: ON|OFF|NEXT for UDQ update of {}", keyword), location);
+
+        if (this->m_definitions.count(keyword) == 0)
+            throw OpmInputError( fmt::format("UDQ variable: {} must be defined before you can use UPDATE", keyword), location);
+
+        auto update_status = UDQ::updateType(data[0]);
+        auto& define = this->m_definitions[keyword];
+        define.update_status( update_status, report_step );
+    }
+
     void UDQConfig::add_record(const DeckRecord& record, const KeywordLocation& location, std::size_t report_step) {
         auto action = UDQ::actionType(record.getItem("ACTION").get<RawString>(0));
         const auto& quantity = record.getItem("QUANTITY").get<std::string>(0);
         const auto& data = RawString::strings( record.getItem("DATA").getData<RawString>() );
 
         if (action == UDQAction::UPDATE)
-            throw std::invalid_argument("The UDQ action UPDATE is not yet implemented in eWoms");
-
-        if (action == UDQAction::UNITS)
+            this->add_update(quantity, report_step, location, data);
+        else if (action == UDQAction::UNITS)
             this->add_unit( quantity, data[0] );
         else {
             if (action == UDQAction::ASSIGN) {
@@ -133,10 +147,14 @@ namespace Ewoms {
                 double value = std::stod(data.back());
                 this->add_assign(quantity, selector, value, report_step);
             } else if (action == UDQAction::DEFINE)
-                this->add_define(quantity, location, data);
+                this->add_define(quantity, location, data, report_step);
             else
                 throw std::runtime_error("Internal error - should not be here");
         }
+    }
+
+    const UDQAssign& UDQConfig::assign(const std::string& key) const {
+        return this->m_assignments.at(key);
     }
 
     const UDQDefine& UDQConfig::define(const std::string& key) const {
@@ -301,8 +319,10 @@ namespace Ewoms {
         }
 
         for (const auto& def : this->definitions(UDQVarType::WELL_VAR)) {
-            auto ws = def.eval(context);
-            context.update_define(def.keyword(), ws);
+            if (udq_state.define(def.keyword(), def.status())) {
+                auto ws = def.eval(context);
+                context.update_define(report_step, def.keyword(), ws);
+            }
         }
 
         for (const auto& assign : this->assignments(UDQVarType::GROUP_VAR)) {
@@ -313,8 +333,10 @@ namespace Ewoms {
         }
 
         for (const auto& def : this->definitions(UDQVarType::GROUP_VAR)) {
-            auto ws = def.eval(context);
-            context.update_define(def.keyword(), ws);
+            if (udq_state.define(def.keyword(), def.status())) {
+                auto ws = def.eval(context);
+                context.update_define(report_step, def.keyword(), ws);
+            }
         }
 
         for (const auto& assign : this->assignments(UDQVarType::FIELD_VAR)) {
@@ -325,8 +347,10 @@ namespace Ewoms {
         }
 
         for (const auto& def : this->definitions(UDQVarType::FIELD_VAR)) {
-            auto field_udq = def.eval(context);
-            context.update_define(def.keyword(), field_udq);
+            if (udq_state.define(def.keyword(), def.status())) {
+                auto field_udq = def.eval(context);
+                context.update_define(report_step, def.keyword(), field_udq);
+            }
         }
     }
 

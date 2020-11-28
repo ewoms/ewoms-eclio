@@ -56,6 +56,7 @@
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtgwtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtgwotable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/pvtotable.hh>
+#include <ewoms/eclio/parser/eclipsestate/tables/pvtsoltable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rocktabtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/rockwnodtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/tables/overburdtable.hh>
@@ -216,6 +217,43 @@ PvtoTable::nonMonotonicSaturatedFVF() const
     }
 
     return nonmonoFVF;
+}
+
+PvtsolTable::PvtsolTable( const DeckKeyword& keyword, size_t tableIdx) :
+    PvtxTable("ZCO2") {
+        m_underSaturatedSchema.addColumn( ColumnSchema( "P"  ,   Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "B_O" ,  Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "B_G" ,  Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "RS" ,   Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "RV" ,   Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "XVOL" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "YVOL" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "MU_O" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_underSaturatedSchema.addColumn( ColumnSchema( "MU_G" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+
+        m_saturatedSchema.addColumn( ColumnSchema( "ZCO2" ,      Table::STRICTLY_INCREASING , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "P"  ,   Table::INCREASING , Table::DEFAULT_NONE ));
+        m_saturatedSchema.addColumn( ColumnSchema( "B_O" ,  Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "B_G" ,  Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "RS" ,   Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "RV" ,   Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "XVOL" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "YVOL" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "MU_O" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+        m_saturatedSchema.addColumn( ColumnSchema( "MU_G" , Table::RANDOM , Table::DEFAULT_LINEAR ));
+
+        PvtxTable::init(keyword , tableIdx);
+    }
+
+PvtsolTable PvtsolTable::serializeObject() {
+    PvtsolTable result;
+    static_cast<PvtxTable&>(result) = PvtxTable::serializeObject();
+
+    return result;
+}
+
+bool PvtsolTable::operator==(const PvtsolTable& data) const {
+    return static_cast<const PvtxTable&>(*this) == static_cast<const PvtxTable&>(data);
 }
 
 SpecheatTable::SpecheatTable(const DeckItem& item)
