@@ -266,14 +266,14 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                             defaultSatTabId);
     }
 
-    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const KeywordLocation& location) {
+    void WellConnections::loadCOMPDAT(const DeckRecord& record, const EclipseGrid& grid, const FieldPropsManager& field_properties, const std::string& wname, const KeywordLocation& location) {
         const auto permx        = field_properties.try_get<double>("PERMX");
         const auto permy        = field_properties.try_get<double>("PERMY");
         const auto permz        = field_properties.try_get<double>("PERMZ");
         const auto& ntg         = field_properties.get_double("NTG");
         const auto& satnum_data = field_properties.get_int("SATNUM");
 
-        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg, location);
+        this->loadCOMPDAT(record, grid, satnum_data, permx, permy, permz, ntg, wname, location);
     }
 
     void WellConnections::loadCOMPDAT(const DeckRecord& record,
@@ -283,6 +283,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
                                       const std::vector<double>* permy,
                                       const std::vector<double>* permz,
                                       const std::vector<double>& ntg,
+                                      const std::string& wname,
                                       const KeywordLocation& location) {
 
         const auto& itemI = record.getItem( "I" );
@@ -326,7 +327,7 @@ inline std::array< size_t, 3> directionIndices(const Ewoms::Connection::Directio
             if (!grid.cellActive(I, J, k)) {
                 auto msg = fmt::format("Problem with COMPDAT keyword\n"
                                        "In {} line {}\n"
-                                       "The cell ({},{},{}) is not active and the connection will be ignored", location.filename, location.lineno, I,J,k);
+                                       "The cell ({},{},{}) in well {} is not active and the connection will be ignored", location.filename, location.lineno, I,J,k, wname);
                 OpmLog::warning(msg);
                 continue;
             }

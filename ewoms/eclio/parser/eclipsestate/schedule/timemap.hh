@@ -36,7 +36,7 @@ namespace Ewoms {
     class DeckKeyword;
     class DeckRecord;
     class KeywordLocation;
-    class TimeMapContext;
+    struct TimeMapContext;
 
     class TimeMap {
     public:
@@ -77,6 +77,7 @@ namespace Ewoms {
         static std::time_t mkdate(int year, int month, int day);
         static std::time_t mkdatetime(int year, int month, int day, int hour, int minute, int second);
         static const std::map<std::string, int>& eclipseMonthIndices();
+        static bool valid_month(const std::string& month_name);
 
         template<class Serializer>
         void serializeOp(Serializer& serializer)

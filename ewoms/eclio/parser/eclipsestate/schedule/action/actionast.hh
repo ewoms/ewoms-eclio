@@ -19,9 +19,10 @@
 #ifndef ActionAST_H
 #define ActionAST_H
 
-#include <string>
-#include <vector>
 #include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionresult.hh>
 
@@ -53,6 +54,7 @@ public:
     {
         serializer(condition);
     }
+    void required_summary(std::unordered_set<std::string>& required_summary) const;
 
 private:
     /*

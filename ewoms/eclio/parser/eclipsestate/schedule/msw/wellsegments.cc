@@ -30,6 +30,8 @@
 #include <math.h>
 #endif
 
+#include <ewoms/common/fmt/format.h>
+
 #include <ewoms/eclio/parser/deck/deckitem.hh>
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/deck/deckrecord.hh>
@@ -531,6 +533,26 @@ namespace Ewoms {
             const double segment_length = this->segmentLength(segment_number);
             // this function can return bool
             segment.updateValve(valve, segment_length);
+            this->addSegment(segment);
+        }
+
+        return true;
+    }
+
+    bool WellSegments::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location) {
+        if (m_comp_pressure_drop == CompPressureDrop::H__) {
+            const std::string msg = fmt::format("to use Autonomous ICD segment with keyword {} "
+                                                "at line {} in file {},\n"
+                                                "you have to activate frictional pressure drop calculation in WELSEGS",
+                                                location.keyword, location.lineno, location.filename);
+            throw std::runtime_error(msg);
+        }
+
+        for (const auto& pair_elem : aicd_pairs) {
+            const int segment_number = pair_elem.first;
+            const AutoICD& auto_icd = pair_elem.second;
+            Segment segment = this->getFromSegmentNumber(segment_number);
+            segment.updateAutoICD(auto_icd);
             this->addSegment(segment);
         }
 

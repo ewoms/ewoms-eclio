@@ -38,6 +38,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellinjectionproperties.hh>
 #include <ewoms/eclio/parser/eclipsestate/summaryconfig/summaryconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqconfig.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/timemap.hh>
 
 #include <ewoms/eclio/parser/units/unitsystem.hh>
 #include <ewoms/eclio/parser/units/units.hh>
@@ -504,11 +505,16 @@ inline quantity glir( const fn_args& args ) {
     double alq_rate = 0;
 
     for (const auto& well : args.schedule_wells) {
-        auto xwPos = args.wells.find(well.name());
-        if (xwPos != args.wells.end())
-            alq_rate += xwPos->second.rates.get(rt::alq, 0.0);
-    }
+        if (well.isInjector())
+            continue;
 
+        auto xwPos = args.wells.find(well.name());
+        if (xwPos == args.wells.end())
+            continue;
+
+        double eff_fac = efac( args.eff_factors, well.name() );
+        alq_rate += eff_fac*xwPos->second.rates.get(rt::alq, well.alq_value());
+    }
     return { alq_rate, measure::gas_surface_rate };
 }
 
@@ -768,22 +774,25 @@ inline quantity bhp( const fn_args& args ) {
 
 /*
   This function is slightly ugly - the evaluation of ROEW uses the already
-  calculated WOPT results. We do not really have any formalism for such
+  calculated COPT results. We do not really have any formalism for such
   dependencies between the summary vectors. For this particualar case there is a
   hack in SummaryConfig which should ensure that this is safe.
 */
 
 quantity roew(const fn_args& args) {
     const quantity zero = { 0, measure::identity };
-    const auto& region_name = std::get<std::string>(*args.extra_data);
+    const auto& region_name = Ewoms::get<std::string>(*args.extra_data);
     if (!args.initial_inplace.has( region_name, Ewoms::Inplace::Phase::OIL, args.num))
         return zero;
 
     double oil_prod = 0;
-    const auto& wells = args.regionCache.wells( region_name, args.num );
-    for (const auto& well : wells)
-        oil_prod += args.st.get_well_var(well, "WOPT");
-
+    for (const auto& cPair : args.regionCache.connections(region_name, args.num)) {
+        const auto& well = cPair.first;
+        const auto& global_index = cPair.second;
+        const auto copt_key = fmt::format("COPT:{}:{}" , well, global_index + 1);
+        if (args.st.has(copt_key))
+            oil_prod += args.st.get(copt_key);
+    }
     oil_prod = args.unit_system.to_si(Ewoms::UnitSystem::measure::volume, oil_prod);
     return { oil_prod / args.initial_inplace.get( region_name, Ewoms::Inplace::Phase::OIL, args.num ) , measure::identity };
 }
@@ -942,7 +951,7 @@ quantity region_rate( const fn_args& args ) {
 
 quantity rhpv(const fn_args& args) {
     const auto& inplace = args.inplace;
-    const auto& region_name = std::get<std::string>(*args.extra_data);
+    const auto& region_name = Ewoms::get<std::string>(*args.extra_data);
     if (inplace.has( region_name, Ewoms::Inplace::Phase::HydroCarbonPV, args.num ))
         return { inplace.get( region_name, Ewoms::Inplace::Phase::HydroCarbonPV, args.num ), measure::volume };
     else
@@ -972,26 +981,47 @@ inline quantity potential_rate( const fn_args& args ) {
 
 inline quantity preferred_phase_productivty_index(const fn_args& args) {
     if (args.schedule_wells.empty())
-        return potential_rate<rt::productivity_index_oil>(args);
+        return {0, rate_unit<rt::productivity_index_oil>()};
 
-    switch (args.schedule_wells.front().getPreferredPhase()) {
-    case Ewoms::Phase::OIL:
-        return potential_rate<rt::productivity_index_oil>(args);
+    const auto& well = args.schedule_wells.front();
+    auto preferred_phase = well.getPreferredPhase();
+    if (well.getStatus() == Ewoms::Well::Status::OPEN) {
 
-    case Ewoms::Phase::GAS:
-        return potential_rate<rt::productivity_index_gas>(args);
+        switch (preferred_phase) {
+        case Ewoms::Phase::OIL:
+            return potential_rate<rt::productivity_index_oil>(args);
 
-    case Ewoms::Phase::WATER:
-        return potential_rate<rt::productivity_index_water>(args);
+        case Ewoms::Phase::GAS:
+            return potential_rate<rt::productivity_index_gas>(args);
 
-    default:
-        break;
+        case Ewoms::Phase::WATER:
+            return potential_rate<rt::productivity_index_water>(args);
+
+        default:
+            break;
+        }
+    } else {
+
+        switch (preferred_phase) {
+        case Ewoms::Phase::OIL:
+            return {0, rate_unit<rt::productivity_index_oil>()};
+
+        case Ewoms::Phase::GAS:
+            return {0, rate_unit<rt::productivity_index_gas>()};
+
+        case Ewoms::Phase::WATER:
+            return {0, rate_unit<rt::productivity_index_water>()};
+
+        default:
+            break;
+
+        }
     }
 
     throw std::invalid_argument {
         "Unsupported \"preferred\" phase: " +
-        std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
-    };
+            std::to_string(static_cast<int>(args.schedule_wells.front().getPreferredPhase()))
+            };
 }
 
 inline quantity connection_productivity_index(const fn_args& args) {
@@ -1997,10 +2027,14 @@ namespace Evaluator {
             EfficiencyFactor efac{};
             efac.setFactors(this->node_, input.sched, wells, sim_step);
 
+            using Foo = Ewoms::variant<std::string,int>;
+            using Bar = Ewoms::optional<Foo>;
             const fn_args args {
                 wells, this->group_name(), stepSize, static_cast<int>(sim_step),
                 std::max(0, this->node_.number),
-                this->node_.fip_region,
+                static_cast<bool>(this->node_.fip_region)
+                ?   Bar(Foo(*this->node_.fip_region))
+                :   Ewoms::nullopt,
                 st, simRes.wellSol, simRes.grpNwrkSol, input.reg, input.grid,
                 std::move(efac.factors), input.initial_inplace, simRes.inplace, input.sched.getUnits()
             };
@@ -2542,9 +2576,13 @@ namespace Evaluator {
     {
         const auto reg = Ewoms::out::RegionCache{};
 
+        using Foo = Ewoms::variant<std::string,int>;
+        using Bar = Ewoms::optional<Foo>;
         const fn_args args {
             {}, "", 0.0, 0, std::max(0, this->node_->number),
-            this->node_->fip_region,
+            static_cast<bool>(this->node_->fip_region)
+            ?   Bar(Foo(*this->node_->fip_region))
+            :   Ewoms::nullopt,
             this->st_, {}, {}, reg, this->grid_,
             {}, {}, {}, Ewoms::UnitSystem(Ewoms::UnitSystem::UnitType::UNIT_TYPE_METRIC)
         };
@@ -2805,6 +2843,7 @@ public:
 
     void internal_store(const SummaryState& st, const int report_step);
     void write();
+    PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
 private:
     struct MiniStep
@@ -2820,6 +2859,7 @@ private:
     std::reference_wrapper<const Ewoms::EclipseState> es_;
     std::reference_wrapper<const Ewoms::Schedule> sched_;
     Ewoms::out::RegionCache regCache_;
+    std::unordered_set<std::string> wbp_wells;
 
     std::unique_ptr<SMSpecStreamDeferredCreation> deferredSMSpec_;
 
@@ -2880,6 +2920,9 @@ SummaryImplementation(const EclipseState&  es,
     this->configureSummaryInput(es, sumcfg, grid, sched);
     this->configureRequiredRestartParameters(sumcfg, sched);
     this->configureUDQ(sumcfg, sched);
+
+    for (const auto& config_node : sumcfg.keywords("WBP*"))
+        this->wbp_wells.insert( config_node.namedEntity() );
 }
 
 void Ewoms::out::Summary::SummaryImplementation::
@@ -2897,6 +2940,18 @@ internal_store(const SummaryState& st, const int report_step)
 
         ms.params[i] = st.get(this->valueKeys_[i]);
     }
+}
+
+Ewoms::PAvgCalculatorCollection Ewoms::out::Summary::SummaryImplementation::wbp_calculators(std::size_t report_step) const {
+    Ewoms::PAvgCalculatorCollection calculators;
+    for (const auto& wname : this->wbp_wells) {
+        if (this->sched_.get().hasWell(wname, report_step)) {
+            const auto& well = this->sched_.get().getWell(wname, report_step);
+            if (well.getStatus() == Ewoms::Well::Status::OPEN)
+                calculators.add(well.pavg_calculator(this->grid_));
+        }
+    }
+    return calculators;
 }
 
 void
@@ -2931,8 +2986,8 @@ eval(const int                          sim_step,
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
-    for (auto& [_, evalPtr] : this->extra_parameters) {
-        (void)_;
+    for (auto& ePair : this->extra_parameters) {
+        auto& evalPtr = ePair.second;
         evalPtr->update(sim_step, duration, input, simRes, st);
     }
 
@@ -3152,11 +3207,14 @@ std::vector<Ewoms::EclIO::SummaryNode> make_default_nodes(const std::string& key
 }
 
 void Ewoms::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfig& summary_config, const Schedule& sched) {
-    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS"};
+    const std::unordered_set<std::string> time_vectors = {"TIME", "DAY", "MONTH", "YEAR", "YEARS", "MNTH"};
     auto nodes = std::vector<Ewoms::EclIO::SummaryNode> {};
     std::unordered_set<std::string> summary_keys;
     for (const auto& udq_ptr : sched.udqConfigList())
         udq_ptr->required_summary(summary_keys);
+
+    for (const auto& action : sched.actions(sched.size() - 1))
+        action.required_summary(summary_keys);
 
     for (const auto& key : summary_keys) {
         const auto& default_nodes = make_default_nodes(key, sched);
@@ -3188,6 +3246,12 @@ void Ewoms::out::Summary::SummaryImplementation::configureUDQ(const SummaryConfi
             this->extra_parameters.emplace( node.unique_key(), std::make_unique<Evaluator::GlobalProcessValue>(node, unit->second));
             continue;
         }
+
+        if (node.is_user_defined())
+            continue;
+
+        if (TimeMap::valid_month(node.keyword))
+            continue;
 
         throw std::logic_error(fmt::format("Evaluation function for: {} not found ", node.keyword));
     }
@@ -3302,6 +3366,7 @@ void Summary::eval(SummaryState&                      st,
                    GlobalProcessParameters            single_values,
                    const Inplace&                     initial_inplace,
                    const Inplace&                     inplace,
+                   const PAvgCalculatorCollection&    ,
                    const RegionParameters&            region_values,
                    const BlockValues&                 block_values,
                    const Ewoms::data::Aquifers&         aquifer_values) const
@@ -3322,6 +3387,10 @@ void Summary::eval(SummaryState&                      st,
                        well_solution, grp_nwrk_solution, single_values,
                        initial_inplace, inplace,
                        region_values, block_values, aquifer_values, st);
+}
+
+PAvgCalculatorCollection Summary::wbp_calculators(std::size_t report_step) const {
+    return this->pImpl_->wbp_calculators(report_step);
 }
 
 void Summary::add_timestep(const SummaryState& st, const int report_step)

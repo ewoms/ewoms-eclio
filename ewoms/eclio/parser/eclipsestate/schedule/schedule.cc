@@ -541,7 +541,7 @@ private:
       Function is quite dangerous - because if this is called while holding a
       Well pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> location) {
+    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, bool update_connections, Ewoms::optional<KeywordLocation> location) {
         auto& dynamic_state = this->wells_static.at(well_name);
         auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
         if (well2->getConnections().empty() && status == Well::Status::OPEN) {
@@ -1467,8 +1467,31 @@ private:
             if (keyword.name() == "WELOPEN")
                 this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
 
+            /*
+              The WELPI functionality is implemented as a two-step process
+              involving both code here in opm-common and opm-simulator. The
+              update process goes like this:
+
+                1. The scalar factor from the WELPI keyword is internalized in
+                   the WellConnections objects. And the event
+                   WELL_PRODUCTIVITY_INDEX is emitted to signal that a PI
+                   recalculation is required.
+
+                2. In opm-simulators the run loop will detect
+                   WELL_PRODUCTIVITY_INDEX event and perform the actual PI
+                   recalculation.
+
+              In the simulator the WELL_PRODUCTIVITY_INDEX event is checked at
+              the start of a new report step. That implies that if an ACTIONX is
+              evaluated to true while processing report step N, this can only be
+              acted upon in the simulator at the start of the following step
+              N+1, this is special cased in the handleWELPI function when it is
+              called with actionx_mode == true. If the interaction between
+              opm-common and the simulator changes in the future this might
+              change.
+            */
             if (keyword.name() == "WELPI")
-                this->handleWELPI(keyword, reportStep, parseContext, errors);
+                this->handleWELPI(keyword, reportStep, parseContext, errors, true, result.wells());
         }
     }
 
@@ -1941,5 +1964,15 @@ bool Schedule::cmp(const Schedule& sched1, const Schedule& sched2, std::size_t r
             std::cerr << std::endl;
     }
     return (count == 0);
+}
+
+PAvgCalculatorCollection Schedule::pavg_calculators(const EclipseGrid& grid, const std::unordered_set<std::string>& wells, std::size_t report_step) const
+{
+    PAvgCalculatorCollection calculators;
+    for (const auto& wname : wells) {
+        const auto& well = this->getWell(wname, report_step);
+        calculators.add(well.pavg_calculator(grid));
+    }
+    return calculators;
 }
 }

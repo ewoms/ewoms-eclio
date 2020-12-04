@@ -513,7 +513,9 @@ std::pair<UDQSet, UDQSet> udq_cast(const UDQSet& lhs, const UDQSet& rhs)
 }
 
 UDQSet operator+(const UDQSet&lhs, const UDQSet& rhs) {
-    auto [left,right] = udq_cast(lhs, rhs);
+    const auto& lrPair = udq_cast(lhs, rhs);
+    auto left = lrPair.first;
+    auto right = lrPair.second;
     left += right;
     return left;
 }
@@ -531,7 +533,9 @@ UDQSet operator+(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator-(const UDQSet&lhs, const UDQSet& rhs) {
-    auto [left,right] = udq_cast(lhs, rhs);
+    const auto& lrPair = udq_cast(lhs, rhs);
+    auto left = lrPair.first;
+    auto right = lrPair.second;
     left -= right;
     return left;
 }
@@ -549,7 +553,9 @@ UDQSet operator-(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator*(const UDQSet&lhs, const UDQSet& rhs) {
-    auto [left,right] = udq_cast(lhs, rhs);
+    const auto& lrPair = udq_cast(lhs, rhs);
+    auto left = lrPair.first;
+    auto right = lrPair.second;
     left *= right;
     return left;
 }
@@ -567,7 +573,9 @@ UDQSet operator*(double lhs, const UDQSet& rhs) {
 }
 
 UDQSet operator/(const UDQSet&lhs, const UDQSet& rhs) {
-    auto [left,right] = udq_cast(lhs, rhs);
+    const auto& lrPair = udq_cast(lhs, rhs);
+    auto left = lrPair.first;
+    auto right = lrPair.second;
     left /= right;
     return left;
 }

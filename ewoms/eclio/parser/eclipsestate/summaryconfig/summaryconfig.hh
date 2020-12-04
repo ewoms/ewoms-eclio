@@ -24,6 +24,7 @@
 #include <ewoms/common/optional.hh>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <ewoms/eclio/io/summarynode.hh>
@@ -193,6 +194,7 @@ namespace Ewoms {
             */
             bool require3DField( const std::string& keyword) const;
             std::set<std::string> fip_regions() const;
+            std::unordered_set<std::string> wbp_wells() const;
 
             bool operator==(const SummaryConfig& data) const;
 

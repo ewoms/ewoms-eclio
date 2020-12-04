@@ -189,13 +189,16 @@ namespace {
                             const RestartValue& restart_value,
                             const EclipseGrid&  grid)
     {
-        for (const auto& [name, vector] : restart_value.solution)
+        for (const auto& rvPair : restart_value.solution) {
+            const auto& name = rvPair.first;
+            const auto& vector = rvPair.second;
             if (vector.data.size() != grid.getNumActive()) {
                 const auto msg = fmt::format("Incorrectly sized solution vector {}.  "
                                              "Expected {} elements, but got {}.", name,
                                              grid.getNumActive(), vector.data.size());
                 throw std::runtime_error(msg);
             }
+        }
 
         if (es.getSimulationConfig().getThresholdPressure().size() > 0) {
             // If the the THPRES option is active the restart_value should have a

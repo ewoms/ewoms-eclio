@@ -19,6 +19,8 @@
 #ifndef ASTNODE_H
 #define ASTNODE_H
 
+#include <unordered_set>
+
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actioncontext.hh>
 
 #include "actionvalue.hh"
@@ -45,6 +47,7 @@ public:
     void add_child(const ASTNode& child);
     size_t size() const;
     std::string func;
+    void required_summary(std::unordered_set<std::string>& required_summary) const;
 
     bool operator==(const ASTNode& data) const;
 

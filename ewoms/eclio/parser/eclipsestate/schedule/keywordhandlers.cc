@@ -152,7 +152,7 @@ namespace {
             for (const auto& name : wellnames) {
                 auto well2 = std::shared_ptr<Well>(new Well( this->getWell(name, handlerContext.currentStep)));
                 auto connections = std::shared_ptr<WellConnections>( new WellConnections( well2->getConnections()));
-                connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager, handlerContext.keyword.location());
+                connections->loadCOMPDAT(record, handlerContext.grid, handlerContext.fieldPropsManager, name, handlerContext.keyword.location());
                 if (well2->updateConnections(connections, handlerContext.grid, handlerContext.fieldPropsManager.get_int("PVTNUM"))) {
                     this->updateWell(std::move(well2), handlerContext.currentStep);
                     wells.insert( name );
@@ -871,13 +871,16 @@ namespace {
             for (const auto& well_name : well_names) {
                 this->updateWellStatus( well_name , handlerContext.currentStep , status, false, handlerContext.keyword.location() );
 
-                const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-                std::optional<VFPProdTable::ALQ_TYPE> alq_type;
+                Ewoms::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 const bool switching_from_injector = !well2->isProducer();
                 auto properties = std::make_shared<Well::WellProductionProperties>(well2->getProductionProperties());
                 bool update_well = false;
+
+                auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+                if(record.getItem("VFP_TABLE").defaultApplied(0))
+                    table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
@@ -936,8 +939,7 @@ namespace {
 
             for (const auto& well_name : well_names) {
                 this->updateWellStatus(well_name, handlerContext.currentStep, status, false, handlerContext.keyword.location());
-                const auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
-                std::optional<VFPProdTable::ALQ_TYPE> alq_type;
+                Ewoms::optional<VFPProdTable::ALQ_TYPE> alq_type;
                 auto& dynamic_state = this->wells_static.at(well_name);
                 auto well2 = std::make_shared<Well>(*dynamic_state[handlerContext.currentStep]);
                 const bool switching_from_injector = !well2->isProducer();
@@ -946,6 +948,10 @@ namespace {
                 properties->clearControls();
                 if (well2->isAvailableForGroupControl())
                     properties->addProductionControl(Well::ProducerCMode::GRUP);
+
+                auto table_nr = record.getItem("VFP_TABLE").get< int >(0);
+                if(record.getItem("VFP_TABLE").defaultApplied(0))
+                    table_nr = properties->VFPTableNumber;
 
                 if (table_nr != 0)
                     alq_type = this->getVFPProdTable(table_nr, handlerContext.currentStep).getALQType();
@@ -1125,7 +1131,7 @@ namespace {
         this->handleWELPI(handlerContext.keyword, handlerContext.currentStep, parseContext, errors);
     }
 
-    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors) {
+    void Schedule::handleWELPI(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, bool actionx_mode, const std::vector<std::string>& matching_wells) {
         // Keyword structure
         //
         //   WELPI
@@ -1139,9 +1145,13 @@ namespace {
         using WELL_NAME = ParserKeywords::WELPI::WELL_NAME;
         using PI        = ParserKeywords::WELPI::STEADY_STATE_PRODUCTIVITY_OR_INJECTIVITY_INDEX_VALUE;
 
+        // See comment in Schedule::applyAction() for this report_step + 1 when called in ACTIONX mode.
+        auto event_step = actionx_mode ? report_step + 1 : report_step;
+
         for (const auto& record : keyword) {
             const auto well_names = this->wellNames(record.getItem<WELL_NAME>().getTrimmedString(0),
-                                                   report_step);
+                                                    report_step,
+                                                    matching_wells);
 
             if (well_names.empty())
                 this->invalidNamePattern(record.getItem<WELL_NAME>().getTrimmedString(0),
@@ -1161,11 +1171,11 @@ namespace {
                 if (well2->updateWellProductivityIndex(rawProdIndex))
                     this->updateWell(std::move(well2), report_step);
 
-                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, report_step);
+                this->addWellGroupEvent(well_name, ScheduleEvents::WELL_PRODUCTIVITY_INDEX, event_step);
             }
         }
 
-        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, report_step);
+        this->m_events.addEvent(ScheduleEvents::WELL_PRODUCTIVITY_INDEX, event_step);
     }
 
     void Schedule::handleWELSEGS(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
@@ -1645,6 +1655,33 @@ namespace {
         }
     }
 
+    void Schedule::handleWSEGAICD(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
+        std::map<std::string, std::vector<std::pair<int, AutoICD> > > auto_icds = AutoICD::fromWSEGAICD(handlerContext.keyword);
+
+        for (auto& icdPair : auto_icds) {
+            auto& well_name_pattern = icdPair.first;
+            auto& aicd_pairs = icdPair.second;
+            const auto well_names = this->wellNames(well_name_pattern, handlerContext.currentStep);
+
+            for (const auto& well_name : well_names) {
+                auto& dynamic_state = this->wells_static.at(well_name);
+                auto well_ptr = std::make_shared<Well>( *dynamic_state[handlerContext.currentStep] );
+
+                const auto& connections = well_ptr->getConnections();
+                const auto& segments = well_ptr->getSegments();
+                for (auto& aicdPair : aicd_pairs) {
+                    const auto& segment_nr = aicdPair.first;
+                    auto& aicd = aicdPair.second;
+                    const auto& outlet_segment_length = segments.segmentLength( segments.getFromSegmentNumber(segment_nr).outletSegment() );
+                    aicd.updateScalingFactor(outlet_segment_length, connections.segment_perf_length(segment_nr));
+                }
+
+                if (well_ptr->updateWSEGAICD(aicd_pairs, handlerContext.keyword.location()) )
+                    this->updateWell(std::move(well_ptr), handlerContext.currentStep);
+            }
+        }
+    }
+
     void Schedule::handleWSEGVALV(const HandlerContext& handlerContext, const ParseContext&, ErrorGuard&) {
         const std::map<std::string, std::vector<std::pair<int, Valve> > > valves = Valve::fromWSEGVALV(handlerContext.keyword);
 
@@ -1878,6 +1915,7 @@ namespace {
             { "WSALT"   , &Schedule::handleWSALT    },
             { "WSEGITER", &Schedule::handleWSEGITER },
             { "WSEGSICD", &Schedule::handleWSEGSICD },
+            { "WSEGAICD", &Schedule::handleWSEGAICD },
             { "WSEGVALV", &Schedule::handleWSEGVALV },
             { "WSKPTAB" , &Schedule::handleWSKPTAB  },
             { "WSOLVENT", &Schedule::handleWSOLVENT },

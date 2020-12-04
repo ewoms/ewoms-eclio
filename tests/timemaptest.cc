@@ -794,4 +794,7 @@ TSTEP
     BOOST_CHECK_NO_THROW( Ewoms::TimeMap(deck2, restart) );
     BOOST_CHECK_NO_THROW( Ewoms::TimeMap(deck3, restart) );
     BOOST_CHECK_THROW( Ewoms::TimeMap(deck4, restart) , std::exception);
+
+    BOOST_CHECK(Ewoms::TimeMap::valid_month("MAR"));
+    BOOST_CHECK(!Ewoms::TimeMap::valid_month("Tulleogtøys"));
 }

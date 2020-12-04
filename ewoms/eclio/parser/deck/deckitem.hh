@@ -133,6 +133,7 @@ namespace Ewoms {
             serializer(dval);
             serializer(ival);
             serializer(sval);
+            serializer.vector(rsval);
             serializer.vector(uval);
             serializer(type);
             serializer(item_name);

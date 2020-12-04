@@ -27,6 +27,7 @@
 
 namespace Ewoms {
     class SICD;
+    class AutoICD;
     class Valve;
     class WellConnections;
 }
@@ -94,6 +95,7 @@ namespace Ewoms {
         bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
 
         bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
+        bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
         const std::vector<Segment>::const_iterator begin() const;
         const std::vector<Segment>::const_iterator end() const;
 

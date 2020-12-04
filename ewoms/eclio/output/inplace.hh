@@ -21,6 +21,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <vector>
 
 namespace Ewoms {
@@ -77,7 +78,7 @@ public:
 
     static const std::vector<Phase>& phases();
 private:
-    std::unordered_map<std::string, std::unordered_map<Phase, std::unordered_map<std::size_t, double>>> phase_values;
+    std::unordered_map<std::string, std::map<Phase, std::unordered_map<std::size_t, double>>> phase_values;
 };
 
 }

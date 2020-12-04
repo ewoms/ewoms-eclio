@@ -19,12 +19,14 @@
 #ifndef EWOMS_OUTPUT_SUMMARY_H
 #define EWOMS_OUTPUT_SUMMARY_H
 
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/pavgcalculatorcollection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/group/group.hh>
 #include <ewoms/eclio/output/data/aquifer.hh>
 
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -68,11 +70,14 @@ public:
               GlobalProcessParameters            single_values,
               const Inplace&                     initial_inplace,
               const Inplace&                     inplace,
+              const PAvgCalculatorCollection&    ,
               const RegionParameters&            region_values = {},
               const BlockValues&                 block_values  = {},
               const data::Aquifers&              aquifers_values = {}) const;
 
     void write() const;
+
+    PAvgCalculatorCollection wbp_calculators(std::size_t report_step) const;
 
 private:
     class SummaryImplementation;

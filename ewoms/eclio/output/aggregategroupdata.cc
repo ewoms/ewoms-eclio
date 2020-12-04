@@ -186,7 +186,7 @@ bool groupInjectionControllable(const Ewoms::Schedule& sched, const Ewoms::Summa
   optional if no such group can be found.
 */
 
-std::optional<Ewoms::Group> controlGroup(const Ewoms::Schedule& sched,
+Ewoms::optional<Ewoms::Group> controlGroup(const Ewoms::Schedule& sched,
                                        const Ewoms::SummaryState& sumState,
                                        const Ewoms::Group& group,
                                        const std::size_t simStep) {

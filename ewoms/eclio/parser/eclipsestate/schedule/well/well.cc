@@ -704,8 +704,10 @@ bool Well::updateSolventFraction(double solvent_fraction_arg) {
 
 bool Well::handleCOMPSEGS(const DeckKeyword& keyword, const EclipseGrid& grid,
                           const ParseContext& parseContext, ErrorGuard& errors) {
-    auto [new_connections, new_segments] = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
-                                                                     parseContext, errors);
+    const auto& csPair = Compsegs::processCOMPSEGS(keyword, *this->connections, *this->segments , grid,
+                                             parseContext, errors);
+    const auto& new_connections = csPair.first;
+    const auto& new_segments = csPair.second;
 
     this->updateConnections( std::make_shared<WellConnections>(std::move(new_connections)) );
     this->updateSegments( std::make_shared<WellSegments>( std::move(new_segments)) );
@@ -1088,6 +1090,15 @@ bool Well::updatePVTTable(int pvt_table_) {
 bool Well::updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs) {
     auto new_segments = std::make_shared<WellSegments>(*this->segments);
     if (new_segments->updateWSEGSICD(sicd_pairs)) {
+        this->segments = new_segments;
+        return true;
+    } else
+        return false;
+}
+
+bool Well::updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location) {
+    auto new_segments = std::make_shared<WellSegments>(*this->segments);
+    if (new_segments->updateWSEGAICD(aicd_pairs, location)) {
         this->segments = new_segments;
         return true;
     } else
@@ -1568,6 +1579,10 @@ bool Well::operator==(const Well& data) const {
            this->getProductionProperties() == data.getProductionProperties() &&
            this->m_pavg == data.m_pavg &&
            this->getInjectionProperties() == data.getInjectionProperties();
+}
+
+PAvgCalculator Well::pavg_calculator(const EclipseGrid& grid) const {
+    return PAvgCalculator(this->name(), grid, this->getConnections(), this->m_pavg);
 }
 
 }

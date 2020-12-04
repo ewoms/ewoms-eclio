@@ -21,7 +21,8 @@
 
 #include <map>
 #include <memory>
-#include <optional>
+#include <ewoms/common/optional.hh>
+#include <unordered_set>
 
 #include <ewoms/eclio/parser/parsecontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/ioconfig/restartconfig.hh>
@@ -44,6 +45,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/vfpprodtable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/network/extnetwork.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/pavg.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/pavgcalculatorcollection.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/well.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/welltestconfig.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellmatcher.hh>
@@ -173,11 +175,12 @@ namespace Ewoms
         time_t simTime(std::size_t timeStep) const;
         double seconds(std::size_t timeStep) const;
         double stepLength(std::size_t timeStep) const;
-        std::optional<int> exitStatus() const;
+        Ewoms::optional<int> exitStatus() const;
         const UnitSystem& getUnits() const { return this->unit_system; }
 
         const TimeMap& getTimeMap() const;
 
+        PAvgCalculatorCollection pavg_calculators(const EclipseGrid& grid, const std::unordered_set<std::string>& wells, std::size_t report_step) const;
         std::size_t numWells() const;
         std::size_t numWells(std::size_t timestep) const;
         bool hasWell(const std::string& wellName) const;
@@ -382,11 +385,11 @@ namespace Ewoms
         void updateNetwork(std::shared_ptr<Network::ExtNetwork> network, std::size_t report_step);
         void updateGuideRateModel(const GuideRateModel& new_model, std::size_t report_step);
 
-        GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const std::optional<std::string>& parent_name) const;
+        GTNode groupTree(const std::string& root_node, std::size_t report_step, std::size_t level, const Ewoms::optional<std::string>& parent_name) const;
         void updateGroup(std::shared_ptr<Group> group, std::size_t reportStep);
         bool checkGroups(const ParseContext& parseContext, ErrorGuard& errors);
         void updateUDQActive( std::size_t timeStep, std::shared_ptr<UDQActive> udq );
-        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, std::optional<KeywordLocation> = {});
+        bool updateWellStatus( const std::string& well, std::size_t reportStep , Well::Status status, bool update_connections, Ewoms::optional<KeywordLocation> = {});
         void addWellToGroup( const std::string& group_name, const std::string& well_name , std::size_t timeStep);
         void iterateScheduleSection(const std::string& input_path, const ParseContext& parseContext ,  ErrorGuard& errors, const SCHEDULESection& , const EclipseGrid& grid,
                                     const FieldPropsManager& fp);
@@ -486,7 +489,7 @@ namespace Ewoms
         void handleGCONPROD(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGCONINJE(const DeckKeyword& keyword, std::size_t current_step, const ParseContext& parseContext, ErrorGuard& errors);
         void handleGLIFTOPT(const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
-        void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors);
+        void handleWELPI   (const DeckKeyword& keyword, std::size_t report_step, const ParseContext& parseContext, ErrorGuard& errors, bool actionx_mode = false, const std::vector<std::string>& matching_wells = {});
 
         // Normal keyword handlers -- in KeywordHandlers.cpp
         void handleBRANPROP (const HandlerContext&, const ParseContext&, ErrorGuard&);
@@ -546,6 +549,7 @@ namespace Ewoms
         void handleWSALT    (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGITER (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGSICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
+        void handleWSEGAICD (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSEGVALV (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSKPTAB  (const HandlerContext&, const ParseContext&, ErrorGuard&);
         void handleWSOLVENT (const HandlerContext&, const ParseContext&, ErrorGuard&);

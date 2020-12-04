@@ -36,6 +36,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/msw/wellsegments.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/scheduletypes.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/pavg.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/well/pavgcalculator.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/productioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/injectioncontrols.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/well/wellfoamproperties.hh>
@@ -56,6 +57,7 @@ class DeckKeyword;
 class UDQActive;
 class UDQConfig;
 class SICD;
+class AutoICD;
 
 namespace RestartIO {
 struct RstWell;
@@ -519,7 +521,7 @@ public:
     bool updatePVTTable(int pvt_table);
     bool updateHead(int I, int J);
     void updateRefDepth();
-    bool updateRefDepth(const std::optional<double>& ref_dpeth);
+    bool updateRefDepth(const Ewoms::optional<double>& ref_dpeth);
     bool updateDrainageRadius(double drainage_radius);
     void updateSegments(std::shared_ptr<WellSegments> segments_arg);
     bool updateConnections(std::shared_ptr<WellConnections> connections, bool force = false);
@@ -540,6 +542,7 @@ public:
     bool updateWellProductivityIndex(const double prodIndex);
     bool updateWSEGSICD(const std::vector<std::pair<int, SICD> >& sicd_pairs);
     bool updateWSEGVALV(const std::vector<std::pair<int, Valve> >& valve_pairs);
+    bool updateWSEGAICD(const std::vector<std::pair<int, AutoICD> >& aicd_pairs, const KeywordLocation& location);
     bool updateWPAVE(const PAvg& pavg);
 
     bool handleWELSEGS(const DeckKeyword& keyword);
@@ -570,6 +573,7 @@ public:
     void applyWellProdIndexScaling(const double       scalingFactor,
                                    std::vector<bool>& scalingApplicable);
     const PAvg& pavg() const;
+    PAvgCalculator pavg_calculator(const EclipseGrid& grid) const;
 
     template<class Serializer>
     void serializeOp(Serializer& serializer)

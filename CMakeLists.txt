@@ -237,9 +237,15 @@ ewoms_add_test(EclRegressionTest
   utils/eclfilescomparator.cc
   utils/eclregressiontest.cc
   CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND
-LIBRARIES "${Boost_LIBRARIES}")
+  LIBRARIES "${Boost_LIBRARIES}")
 
-foreach(TEST_NAME EclIO EGrid ERft ERsm ERst ESmry)
+ewoms_add_test(Inplace
+  SOURCES
+  tests/test_inplace.cc
+  CONDITION Boost_UNIT_TEST_FRAMEWORK_FOUND
+  LIBRARIES "${Boost_LIBRARIES}")
+
+foreach(TEST_NAME EclIO EGrid ERft ERsm ERst EInit ESmry)
   string(TOLOWER "test_${TEST_NAME}.cc" "TEST_SOURCE_FILE")
   ewoms_add_test(${TEST_NAME}
     SOURCES "tests/${TEST_SOURCE_FILE}"
@@ -248,7 +254,7 @@ foreach(TEST_NAME EclIO EGrid ERft ERsm ERst ESmry)
 endforeach()
 
 # deal with the data required by the unit tests
-ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/*INIT" "tests/*.UNSMRY" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.json" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA" "tests/*.param")
+ewoms_recusive_copy_testdata_to_builddir("tests/SPE*" "tests/LGR*" "tests/*INIT" "tests/*.UNSMRY" "tests/*.SMSPEC" "tests/*.EGRID" "tests/*.json" "tests/*.txt " "tests/*.out" "tests/*.grdecl" "tests/*.data" "tests/*.DATA" "tests/*.param")
 
 # link the UNRST files for the restart test to the build directory
 set(FROMDIR "${PROJECT_BINARY_DIR}/restart")

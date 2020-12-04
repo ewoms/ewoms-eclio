@@ -19,9 +19,10 @@
 #ifndef ActionX_HH_
 #define ActionX_HH_
 
-#include <string>
-#include <vector>
 #include <ctime>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include <ewoms/eclio/parser/deck/deckkeyword.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/action/actionast.hh>
@@ -70,6 +71,7 @@ public:
     bool ready(const State& state, std::time_t sim_time) const;
     Action::Result eval(const Action::Context& context) const;
 
+    void required_summary(std::unordered_set<std::string>& required_summary) const;
     std::string name() const { return this->m_name; }
     size_t max_run() const { return this->m_max_run; }
     double min_wait() const { return this->m_min_wait; }

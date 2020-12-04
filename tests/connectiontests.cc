@@ -60,7 +60,7 @@ Ewoms::WellConnections loadCOMPDAT(const std::string& compdat_keyword) {
     const auto& keyword = deck.getKeyword("COMPDAT", 0);
     Ewoms::WellConnections connections(Ewoms::Connection::Order::TRACK, 10,10);
     for (const auto& rec : keyword)
-        connections.loadCOMPDAT(rec, grid, field_props, {});
+        connections.loadCOMPDAT(rec, grid, field_props, "WELL", {});
 
     return connections;
 }

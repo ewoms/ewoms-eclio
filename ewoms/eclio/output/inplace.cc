@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <ewoms/common/optional.hh>
 
 #include <ewoms/common/fmt/format.h>
 
@@ -83,8 +84,8 @@ bool Inplace::has(Phase phase) const {
 namespace {
 std::size_t region_max(const std::unordered_map<std::size_t, double>& region_map) {
     std::size_t max_value = 0;
-    for (const auto& [region_id, _] : region_map) {
-        (void)_;
+    for (const auto& rPair : region_map) {
+        const auto& region_id = rPair.first;
         max_value = std::max(max_value, region_id);
     }
     return max_value;
@@ -93,11 +94,11 @@ std::size_t region_max(const std::unordered_map<std::size_t, double>& region_map
 
 std::size_t Inplace::max_region() const {
     std::size_t max_value = 0;
-    for (const auto& [_, phase_map] : this->phase_values) {
-        (void)_;
-        for (const auto& [__, region_map] : phase_map) {
-            (void)__;
-            max_value = std::max(max_value, region_max(region_map));
+    for (const auto& pvPair : this->phase_values) {
+        const auto& phase_map = pvPair.second;
+        for (const auto& pPair : phase_map) {
+             const auto& region_map = pPair.second;
+             max_value = std::max(max_value, region_max(region_map));
         }
     }
 
@@ -105,17 +106,17 @@ std::size_t Inplace::max_region() const {
 }
 
 std::size_t Inplace::max_region(const std::string& region_name) const {
-    std::optional<std::size_t> max_value;
+    Ewoms::optional<std::size_t> max_value;
     const auto& region_iter = this->phase_values.find(region_name);
     if (region_iter != this->phase_values.end()) {
         max_value = 0;
-        for (const auto& [_, region_map] : region_iter->second) {
-            (void)_;
+        for (const auto& rPair : region_iter->second) {
+            const auto& region_map = rPair.second;
             max_value = std::max(*max_value, region_max(region_map));
         }
     }
 
-    if (!max_value.has_value())
+    if (!static_cast<bool>(max_value))
         throw std::logic_error(fmt::format("No such region: {}", region_name));
 
     return max_value.value();
@@ -125,8 +126,11 @@ std::size_t Inplace::max_region(const std::string& region_name) const {
 std::vector<double> Inplace::get_vector(const std::string& region, Phase phase) const {
     std::vector<double> v(this->max_region(region), 0);
     const auto& region_map = this->phase_values.at(region).at(phase);
-    for (const auto& [region_id, value] : region_map)
+    for (const auto& rPair : region_map) {
+        const auto& region_id = rPair.first;
+        const auto& value = rPair.second;
         v[region_id - 1] = value;
+    }
 
     return v;
 }

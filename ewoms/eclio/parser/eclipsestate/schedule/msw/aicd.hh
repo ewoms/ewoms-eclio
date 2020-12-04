@@ -53,6 +53,15 @@ namespace Ewoms {
             AutoICD::serializeOp(serializer);
         }
 
+        double flowRateExponent() const;
+        double viscExponent() const;
+        double oilDensityExponent() const;
+        double waterDensityExponent() const;
+        double gasDensityExponent() const;
+        double oilViscExponent() const;
+        double waterViscExponent() const;
+        double gasViscExponent() const;
+
     private:
         double m_flow_rate_exponent;
         double m_visc_exponent;

@@ -75,10 +75,10 @@ namespace {
 
         var1_iter->second.erase(var2);
         var2_set.clear();
-        for (const auto& [_, var2_map] : values) {
-            (void)_;
-            for (const auto& [v2, __] : var2_map) {
-                (void)__;
+        for (const auto& vPair : values) {
+            const auto& var2_map = vPair.second;
+            for (const auto& v2Pair : var2_map) {
+                const auto& v2 = v2Pair.first;
                 var2_set.insert(v2);
             }
         }
@@ -191,7 +191,7 @@ namespace {
             return false;
 
         erase_var(this->well_values, this->m_wells, var, well);
-        this->well_names.reset();
+        this->well_names = Ewoms::nullopt;
         return true;
     }
 
@@ -201,7 +201,7 @@ namespace {
             return false;
 
         erase_var(this->group_values, this->m_groups, var, group);
-        this->group_names.reset();
+        this->group_names = Ewoms::nullopt;
         return true;
     }
 
@@ -308,13 +308,17 @@ namespace {
         ser.put_map(this->values);
 
         ser.put(this->well_values.size());
-        for (const auto& [well, v] : this->well_values) {
+        for (const auto& wPair : this->well_values) {
+            const auto& well = wPair.first;
+            const auto& v = wPair.second;
             ser.put(well);
             ser.put_map(v);
         }
 
         ser.put(this->group_values.size());
-        for (const auto& [group, v] : this->group_values) {
+        for (const auto& gPair : this->group_values) {
+            const auto& group = gPair.first;
+            const auto& v = gPair.second;
             ser.put(group);
             ser.put_map(v);
         }
@@ -333,13 +337,13 @@ namespace {
             for (std::size_t var_index = 0; var_index < num_well_var; var_index++) {
                 std::string var = ser.get<std::string>();
                 auto v = ser.get_map<std::string, double>();
-                for (const auto& [well, _] : v) {
-                    (void)_;
+                for (const auto& wPair : v) {
+                    const auto& well = wPair.first;
                     this->m_wells.insert(well);
                 }
                 this->well_values[var] = std::move(v);
             }
-            this->well_names.reset();
+            this->well_names = Ewoms::nullopt;
         }
 
         {
@@ -347,13 +351,13 @@ namespace {
             for (std::size_t var_index = 0; var_index < num_group_var; var_index++) {
                 std::string var = ser.get<std::string>();
                 auto v= ser.get_map<std::string, double>();
-                for (const auto& [group, _] : v) {
-                    (void)_;
+                for (const auto& gPair : v) {
+                    const auto& group = gPair.first;
                     this->m_groups.insert(group);
                 }
                 this->group_values[var] = std::move(v);
             }
-            this->group_names.reset();
+            this->group_names = Ewoms::nullopt;
         }
     }
 
@@ -371,7 +375,7 @@ namespace {
                this->values == other.values &&
                this->well_values == other.well_values &&
                this->m_wells == other.m_wells &&
-               this->wells() == other.wells();
+               this->wells() == other.wells() &&
                this->group_values == other.group_values &&
                this->m_groups == other.m_groups &&
                this->groups() == other.groups();
