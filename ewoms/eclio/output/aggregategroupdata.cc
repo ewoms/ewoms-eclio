@@ -427,7 +427,7 @@ void productionGroup(const Ewoms::Schedule&     sched,
     // Start branching for determining iGrp[nwgmax + 5]
     // use default value if group is not available for group control
 
-    if (cgroup && cgroup->name() == "FIELD")
+    if (cgroup && (*cgroup).name() == "FIELD")
         throw std::logic_error("Got cgroup == FIELD - uncertain logic");
 
     iGrp[nwgmax + 5] = -1;
@@ -443,10 +443,10 @@ void productionGroup(const Ewoms::Schedule&     sched,
             iGrp[nwgmax + 5] = 1;
             if (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE) {
                 if (deck_cmode == Ewoms::Group::ProductionCMode::FLD)
-                    iGrp[nwgmax + 5] = cgroup->insert_index();
+                    iGrp[nwgmax + 5] = (*cgroup).insert_index();
 
                 if (deck_cmode == Ewoms::Group::ProductionCMode::NONE)
-                    iGrp[nwgmax + 5] = cgroup->insert_index();
+                    iGrp[nwgmax + 5] = (*cgroup).insert_index();
             }
             goto CGROUP_DONE;
         }
@@ -483,7 +483,7 @@ void productionGroup(const Ewoms::Schedule&     sched,
     */
 
     if (cgroup && (group.getGroupType() != Ewoms::Group::GroupType::NONE)) {
-        auto cgroup_control = static_cast<int>(sumState.get_group_var(cgroup->name(), "GMCTP", 0));
+        auto cgroup_control = static_cast<int>(sumState.get_group_var((*cgroup).name(), "GMCTP", 0));
         iGrp[nwgmax + IGroup::ProdActiveCMode]
             = (prod_guide_rate_def != Ewoms::Group::GuideRateTarget::NO_GUIDE_RATE) ? cgroup_control : 0;
     } else {

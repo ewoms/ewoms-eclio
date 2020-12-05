@@ -223,7 +223,7 @@ Ewoms::optional<NNCdata> find_nnc(const std::vector<NNCdata>& v, std::size_t c1,
 void check_edit_nnc(const std::vector<NNCdata>& v, std::size_t c1, std::size_t c2, double t) {
     const auto& nnc = find_nnc(v, c1, c2);
     BOOST_REQUIRE(static_cast<bool>(nnc));
-    BOOST_CHECK_CLOSE(nnc->trans, t , 1e-6);
+    BOOST_CHECK_CLOSE((*nnc).trans, t , 1e-6);
 }
 
 void check_nnc(const std::vector<NNCdata>& v, std::size_t c1, std::size_t c2, double t) {
