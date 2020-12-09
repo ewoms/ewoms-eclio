@@ -114,8 +114,10 @@ PAvgCalculator::PAvgCalculator(const std::string& well, const EclipseGrid& grid,
             this->add_neighbour(conn.global_index, make_neighbour(grid, i-1,j-1,k), false);
         }
     }
-    for (const auto& imPair : this->m_index_map)
-        this->m_index_list.push_back(imPair.first);
+    for (const auto& indexMapPair : this->m_index_map) {
+        const auto& ijk = indexMapPair.first;
+        this->m_index_list.push_back(ijk);
+    }
 
     this->pressure.resize( this->m_index_list.size() );
     this->valid_pressure.resize( this->m_index_list.size(), 0 );
