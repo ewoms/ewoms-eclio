@@ -78,7 +78,6 @@ namespace Ewoms {
 
         static bool hasGDFILE(const Deck& deck);
         static bool hasCylindricalKeywords(const Deck& deck);
-        static bool hasSpiderwebKeywords(const Deck& deck);
         static bool hasCornerPointKeywords(const Deck&);
         static bool hasCartesianKeywords(const Deck&);
         size_t  getNumActive( ) const;
@@ -216,6 +215,10 @@ namespace Ewoms {
         // Numerical aquifer cells, needs to be active
         std::unordered_set<size_t> m_aquifer_cells;
 
+        // Radial grids need this for volume calculations.
+        Ewoms::optional<std::vector<double>> m_thetav;
+        Ewoms::optional<std::vector<double>> m_rv;
+
         void updateNumericalAquiferCells(const Deck&);
 
         void initGridFromEGridFile(Ewoms::EclIO::EclFile& egridfile, std::string fileName);
@@ -232,6 +235,7 @@ namespace Ewoms {
 
         void initCylindricalGrid(const Deck&);
         void initSpiderwebGrid(const Deck&);
+        void initSpiderwebOrCylindricalGrid(const Deck&, const bool);
         void initCartesianGrid(const Deck&);
         void initDTOPSGrid(const Deck&);
         void initDVDEPTHZGrid(const Deck&);
