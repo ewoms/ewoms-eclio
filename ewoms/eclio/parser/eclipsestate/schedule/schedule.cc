@@ -521,27 +521,27 @@ private:
     }
 
     void Schedule::shut_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::SHUT, true);
+        this->updateWellStatus(well_name, report_step, true, Well::Status::SHUT);
     }
 
     void Schedule::open_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::OPEN, true);
+        this->updateWellStatus(well_name, report_step, true, Well::Status::OPEN);
     }
 
     void Schedule::stop_well(const std::string& well_name, std::size_t report_step) {
-        this->updateWellStatus(well_name, report_step, Well::Status::STOP, true);
+        this->updateWellStatus(well_name, report_step, true, Well::Status::STOP);
     }
 
     void Schedule::updateWell(std::shared_ptr<Well> well, std::size_t reportStep) {
         auto& dynamic_state = this->wells_static.at(well->name());
-        dynamic_state.update(reportStep, std::move(well));
+        dynamic_state.update_equal(reportStep, std::move(well));
     }
 
     /*
       Function is quite dangerous - because if this is called while holding a
       Well pointer that will go stale and needs to be refreshed.
     */
-    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , Well::Status status, bool update_connections, Ewoms::optional<KeywordLocation> location) {
+    bool Schedule::updateWellStatus( const std::string& well_name, std::size_t reportStep , bool runtime, Well::Status status, Ewoms::optional<KeywordLocation> location) {
         auto& dynamic_state = this->wells_static.at(well_name);
         auto well2 = std::make_shared<Well>(*dynamic_state[reportStep]);
         if (well2->getConnections().empty() && status == Well::Status::OPEN) {
@@ -555,14 +555,26 @@ private:
             return false;
         }
 
+        auto old_status = well2->getStatus();
         bool update = false;
-        if (well2->updateStatus(status, update_connections)) {
-            m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
-            this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+        if (well2->updateStatus(status, reportStep, runtime)) {
             this->updateWell(well2, reportStep);
-            update = true;
             if (status == Well::Status::OPEN)
                 this->rft_config.addWellOpen(well_name, reportStep);
+
+            /*
+              The Well::updateStatus() will always return true because a new
+              WellStatus object should be created. But the new object might have
+              the same value as the previous object; therefor we need to check
+              for an actual status change before we emit a WELL_STATUS_CHANGE
+              event.
+            */
+            if (old_status != status) {
+                this->m_events.addEvent( ScheduleEvents::WELL_STATUS_CHANGE, reportStep );
+                this->addWellGroupEvent( well2->name(), ScheduleEvents::WELL_STATUS_CHANGE, reportStep);
+            }
+
+            update = true;
         }
         return update;
     }
@@ -601,7 +613,7 @@ private:
         }
     }
 
-    void Schedule::applyWELOPEN(const DeckKeyword& keyword, std::size_t currentStep, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
+     void Schedule::applyWELOPEN(const DeckKeyword& keyword, std::size_t currentStep, bool runtime, const ParseContext& parseContext, ErrorGuard& errors, const std::vector<std::string>& matching_wells) {
 
         auto conn_defaulted = []( const DeckRecord& rec ) {
             auto defaulted = []( const DeckItem& item ) {
@@ -612,7 +624,6 @@ private:
         };
 
         constexpr auto open = Well::Status::OPEN;
-        bool action_mode = !matching_wells.empty();
 
         for (const auto& record : keyword) {
             const auto& wellNamePattern = record.getItem( "WELL" ).getTrimmedString(0);
@@ -637,7 +648,7 @@ private:
                                 + std::to_string( days ) + " days";
                             OpmLog::note(msg);
                         } else {
-                            this->updateWellStatus( wname, currentStep, well_status, false );
+                            this->updateWellStatus( wname, currentStep, runtime, well_status);
                             if (well_status == open)
                                 this->rft_config.addWellOpen(wname, currentStep);
                         }
@@ -647,14 +658,33 @@ private:
                 continue;
             }
 
+            /*
+              Some of the connection information has been entered, in this case
+              we *only* update the status of the connections, and not the well
+              itself. Unless all connections are shut - then the well is also
+              shut.
+             */
             for (const auto& wname : well_names) {
-                const auto comp_status = Connection::StateFromString( status_str );
+                if (!runtime) {
+                    auto& dynamic_state = this->wells_static.at(wname);
+                    auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
+                    well_ptr->commitStatus(currentStep);
+                    this->updateWell(well_ptr, currentStep);
+                }
+
+                const auto connection_status = Connection::StateFromString( status_str );
                 {
                     auto& dynamic_state = this->wells_static.at(wname);
                     auto well_ptr = std::make_shared<Well>( *dynamic_state[currentStep] );
-                    if (well_ptr->handleWELOPEN(record, comp_status, action_mode))
-                        // The updateWell call breaks test at line 825 and 831 in ScheduleTests
-                        this->updateWell(std::move(well_ptr), currentStep);
+                    if (well_ptr->handleWELOPENConnections(record, currentStep, connection_status, runtime)) {
+                        const auto& srPair = well_ptr->statusRange();
+                        auto first_step = srPair.first;
+                        auto last_step = srPair.second;
+                        if (last_step)
+                            dynamic_state.update_range(first_step, *last_step, std::move(well_ptr));
+                        else
+                            dynamic_state.update(first_step, std::move(well_ptr));
+                    }
                 }
 
                 m_events.addEvent( ScheduleEvents::COMPLETION_CHANGE, currentStep );
@@ -822,7 +852,7 @@ private:
         const std::string wname = well.name();
 
         m_events.addEvent( ScheduleEvents::NEW_WELL , report_step );
-        wellgroup_events.insert( std::make_pair(wname, Events(this->m_timeMap)));
+        this->wellgroup_events.insert( std::make_pair(wname, Events(this->m_timeMap)));
         this->addWellGroupEvent(wname, ScheduleEvents::NEW_WELL, report_step);
 
         well.setInsertIndex(this->wells_static.size());
@@ -1307,7 +1337,7 @@ private:
                     "All completions in well " + well.name() + " is shut at " + std::to_string ( m_timeMap.getTimePassedUntil(timeStep) / (60*60*24) ) + " days. \n" +
                     "The well is therefore also shut.";
                 OpmLog::note(msg);
-                this->updateWellStatus( well.name(), timeStep, Well::Status::SHUT, false);
+                this->updateWellStatus( well.name(), timeStep, false, Well::Status::SHUT);
             }
         }
     }
@@ -1465,7 +1495,7 @@ private:
                 this->updateUDQ(keyword, reportStep);
 
             if (keyword.name() == "WELOPEN")
-                this->applyWELOPEN(keyword, reportStep, parseContext, errors, result.wells());
+                this->applyWELOPEN(keyword, reportStep, true, parseContext, errors, result.wells());
 
             /*
               The WELPI functionality is implemented as a two-step process
@@ -1673,7 +1703,7 @@ namespace {
                                                  rst_well.ij[0],
                                                  rst_well.ij[1],
                                                  rst_connections);
-                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), grid, fp.get_int("PVTNUM"));
+                well.updateConnections( std::make_shared<WellConnections>( std::move(connections) ), report_step, grid, fp.get_int("PVTNUM"));
             } else {
                 std::unordered_map<int, Ewoms::Segment> rst_segments;
                 for (const auto& rst_segment : rst_well.segments) {
@@ -1681,10 +1711,10 @@ namespace {
                     rst_segments.insert(std::make_pair(rst_segment.segment, std::move(segment)));
                 }
 
-                const auto& tmp = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
-                const auto& connections = tmp.first;
-                const auto& segments = tmp.second;
-                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), grid, fp.get_int("PVTNUM"));
+                const auto& rstPair = Compsegs::rstUpdate(rst_well, rst_connections, rst_segments);
+                auto connections = rstPair.first;
+                auto segments = rstPair.second;
+                well.updateConnections( std::make_shared<WellConnections>(std::move(connections)), report_step, grid, fp.get_int("PVTNUM"));
                 well.updateSegments( std::make_shared<WellSegments>(std::move(segments) ));
             }
 
