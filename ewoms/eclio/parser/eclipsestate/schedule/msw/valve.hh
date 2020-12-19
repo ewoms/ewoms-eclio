@@ -37,7 +37,7 @@ namespace Ewoms {
 
         Valve();
         explicit Valve(const DeckRecord& record);
-        Valve(double conEFlowCoeff,
+        Valve(double conFlowCoeff,
               double conCrossA,
               double conMaxCrossA,
               double pipeAddLength,
@@ -55,7 +55,7 @@ namespace Ewoms {
         static std::map<std::string, std::vector<std::pair<int, Valve> > > fromWSEGVALV(const DeckKeyword& keyword);
 
         // parameters for constriction pressure loss
-        double conEFlowCoefficient() const;
+        double conFlowCoefficient() const;
         double conCrossArea() const;
         double conMaxCrossArea() const;
         double pipeDiameter() const;

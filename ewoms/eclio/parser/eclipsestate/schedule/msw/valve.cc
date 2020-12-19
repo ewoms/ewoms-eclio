@@ -31,7 +31,7 @@ namespace Ewoms {
     {
     }
 
-    Valve::Valve(double conEFlowCoeff,
+    Valve::Valve(double conFlowCoeff,
                  double conCrossA,
                  double conMaxCrossA,
                  double pipeAddLength,
@@ -39,7 +39,7 @@ namespace Ewoms {
                  double pipeRough,
                  double pipeCrossA,
                  ICDStatus stat)
-        : m_con_flow_coeff(conEFlowCoeff)
+        : m_con_flow_coeff(conFlowCoeff)
         , m_con_cross_area(conCrossA)
         , m_con_max_cross_area(conMaxCrossA)
         , m_pipe_additional_length(pipeAddLength)
@@ -132,7 +132,7 @@ namespace Ewoms {
         return m_status;
     }
 
-    double Valve::conEFlowCoefficient() const {
+    double Valve::conFlowCoefficient() const {
         return m_con_flow_coeff;
     }
 
@@ -181,7 +181,7 @@ namespace Ewoms {
     }
 
     bool Valve::operator==(const Valve& data) const {
-        return this->conEFlowCoefficient() == data.conEFlowCoefficient() &&
+        return this->conFlowCoefficient() == data.conFlowCoefficient() &&
                this->conCrossArea() == data.conCrossArea() &&
                this->conMaxCrossArea() == data.conMaxCrossArea() &&
                this->pipeAdditionalLength() == data.pipeAdditionalLength() &&

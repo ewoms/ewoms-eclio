@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK(Ewoms::Segment::SegmentType::VALVE==segment1.segmentType());
 
     const Ewoms::Valve& valv1 = segment1.valve();
-    BOOST_CHECK_EQUAL(valv1.conEFlowCoefficient(), 0.002);
+    BOOST_CHECK_EQUAL(valv1.conFlowCoefficient(), 0.002);
     BOOST_CHECK_EQUAL(valv1.conCrossArea(), 5.);
     BOOST_CHECK_EQUAL(valv1.conMaxCrossArea(), 0.031415926535897934);
     BOOST_CHECK_CLOSE(valv1.pipeAdditionalLength(), 0.1, 1.e-10);
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(testwsegvalv) {
     BOOST_CHECK(Ewoms::Segment::SegmentType::VALVE ==segment2.segmentType());
 
     const Ewoms::Valve& valv2 = segment2.valve();
-    BOOST_CHECK_EQUAL(valv2.conEFlowCoefficient(), 0.001);
+    BOOST_CHECK_EQUAL(valv2.conFlowCoefficient(), 0.001);
     BOOST_CHECK_EQUAL(valv2.conCrossArea(), 6.);
     BOOST_CHECK_EQUAL(valv2.conMaxCrossArea(), 9.);
     BOOST_CHECK_EQUAL(valv2.pipeAdditionalLength(), 0.0);
