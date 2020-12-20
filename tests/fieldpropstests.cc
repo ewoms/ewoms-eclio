@@ -46,6 +46,8 @@
 #include <ewoms/eclio/parser/eclipsestate/grid/satfuncpropertyinitializers.hh>
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
+#include <ewoms/eclio/utility/opminputerror.hh>
+
 #include "ewoms/eclio/parser/eclipsestate/grid/fieldprops.hh"
 
 using namespace Ewoms;
@@ -647,6 +649,60 @@ OPERATE
         BOOST_CHECK_EQUAL(permz[i]  , 2*permy[i]   + to_si(1000));
         BOOST_CHECK_EQUAL(permz[i+3], 3*permx[i+3] + to_si(300));
     }
+}
+
+BOOST_AUTO_TEST_CASE(EPS_Props_Inconsistent) {
+    BOOST_CHECK_THROW(const auto deck = Ewoms::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+-- No GAS keyword
+
+PROPS
+SGCR    -- Requires 'GAS'
+300*0.001 /
+)"), Ewoms::OpmInputError);
+
+    BOOST_CHECK_THROW(const auto deck = Ewoms::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+OIL
+GAS
+-- No ENDSCALE keyword
+
+PROPS
+SOGCR    -- Requires 'ENDSCALE'
+300*0.05 /
+)"), Ewoms::OpmInputError);
+
+    BOOST_CHECK_THROW(const auto deck = Ewoms::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+OIL
+-- GAS
+ENDSCALE
+/
+
+PROPS
+SOGCR    -- Requires 'GAS'
+300*0.05 /
+)"), Ewoms::OpmInputError);
+
+    BOOST_CHECK_THROW(const auto deck = Ewoms::Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3 /
+
+-- OIL
+GAS
+ENDSCALE
+/
+
+PROPS
+SOGCR    -- Requires 'OIL'
+300*0.05 /
+)"), Ewoms::OpmInputError);
 }
 
 namespace {

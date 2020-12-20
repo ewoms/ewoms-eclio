@@ -29,6 +29,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqcontext.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
 #include <ewoms/eclio/opmlog/keywordlocation.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqtoken.hh>
 
 namespace Ewoms {
 
@@ -74,6 +75,7 @@ public:
     void required_summary(std::unordered_set<std::string>& summary_keys) const;
     void update_status(UDQUpdate update_status, std::size_t report_step);
     std::pair<UDQUpdate, std::size_t> status() const;
+    const std::vector<Ewoms::UDQToken> tokens() const;
 
     bool operator==(const UDQDefine& data) const;
 
@@ -91,6 +93,7 @@ public:
 
 private:
     std::string m_keyword;
+    std::vector<Ewoms::UDQToken> m_tokens;
     std::shared_ptr<UDQASTNode> ast;
     UDQVarType m_var_type;
     KeywordLocation m_location;

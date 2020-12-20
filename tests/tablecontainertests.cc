@@ -32,18 +32,24 @@
 #include <string>
 #include <memory>
 
-inline Ewoms::Deck createSWOFDeck() {
-    const char *deckData =
-        "TABDIMS\n"
-        " 2 /\n"
-        "\n"
-        "SWOF\n"
-        " 1 2 3 4\n"
-        " 5 6 7 8 /\n"
-        " 9 10 11 12 /\n";
+namespace {
+    Ewoms::Deck createSWOFDeck()
+    {
+        return Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
 
-    Ewoms::Parser parser;
-    return parser.parseString(deckData);
+TABDIMS
+2 /
+
+PROPS
+SWOF
+1 2 3 4
+5 6 7 8 /
+9 10 11 12 /
+END
+)");
+    }
 }
 
 BOOST_AUTO_TEST_CASE( CreateContainer ) {
@@ -65,4 +71,3 @@ BOOST_AUTO_TEST_CASE( CreateContainer ) {
     BOOST_CHECK_THROW( container[5] , std::invalid_argument );
     BOOST_CHECK_THROW( container[10] , std::invalid_argument );
 }
-

@@ -65,28 +65,339 @@ namespace {
         return inteHead[163];
     }
 
-     // Categorize function in terms of which token-types are used in formula
-    int define_type(const std::set<Ewoms::UDQTokenType> tokens) {
-        int type = -4;
-        std::vector <Ewoms::UDQTokenType> type_1 = {
-        Ewoms::UDQTokenType::elemental_func_sorta,
-        Ewoms::UDQTokenType::elemental_func_sortd,
-        Ewoms::UDQTokenType::elemental_func_undef,
-        Ewoms::UDQTokenType::scalar_func_sum,
-        Ewoms::UDQTokenType::scalar_func_avea,
-        Ewoms::UDQTokenType::scalar_func_aveg,
-        Ewoms::UDQTokenType::scalar_func_aveh,
-        Ewoms::UDQTokenType::scalar_func_max,
-        Ewoms::UDQTokenType::scalar_func_min,
-        Ewoms::UDQTokenType::binary_op_div
-        };
-
-        int num_type_1 = 0;
-        for (const auto& tok_type : type_1) {
-            num_type_1 += tokens.count(tok_type);
+    // function to return true if token is a function
+    bool tokenTypeFunc(const Ewoms::UDQTokenType& token) {
+        bool type = false;
+        if (Ewoms::UDQ::scalarFunc(token) ||
+            Ewoms::UDQ::elementalUnaryFunc(token) ||
+            (token == Ewoms::UDQTokenType::table_lookup)) {
+            type = true;
         }
-        type = (num_type_1 > 0) ? -1 : -4;
         return type;
+    }
+
+    // function to return true if token is a binary operator: type power (exponentiation)
+    bool tokenTypeBinaryPowOp(const Ewoms::UDQTokenType& token) {
+        return (token == Ewoms::UDQTokenType::binary_op_pow) ? true: false;
+    }
+
+    // function to return true if token is a binary operator: type multiply or divide
+    bool tokenTypeBinaryMulDivOp(const Ewoms::UDQTokenType& token) {
+        bool type = false;
+        std::vector <Ewoms::UDQTokenType> type_1 = {
+            Ewoms::UDQTokenType::binary_op_div,
+            Ewoms::UDQTokenType::binary_op_mul
+        };
+        for (const auto& tok_type : type_1) {
+            if (token == tok_type) {
+                type = true;
+                break;
+            }
+        }
+        return type;
+    }
+
+    // function to return true if token is a binary operator: type add or subtract
+    bool tokenTypeBinaryAddSubOp(const Ewoms::UDQTokenType& token) {
+        bool type = false;
+        std::vector <Ewoms::UDQTokenType> type_1 = {
+            Ewoms::UDQTokenType::binary_op_add,
+            Ewoms::UDQTokenType::binary_op_sub
+        };
+        for (const auto& tok_type : type_1) {
+            if (token == tok_type) {
+                type = true;
+                break;
+            }
+        }
+        return type;
+    }
+
+    // function to return true if token is a binary union operator
+    bool tokenTypeBinaryUnionOp(const Ewoms::UDQTokenType& token) {
+        bool type = false;
+        std::vector <Ewoms::UDQTokenType> type_1 = {
+            Ewoms::UDQTokenType::binary_op_uadd,
+            Ewoms::UDQTokenType::binary_op_umul,
+            Ewoms::UDQTokenType::binary_op_umin,
+            Ewoms::UDQTokenType::binary_op_umax
+        };
+        for (const auto& tok_type : type_1) {
+            if (token == tok_type) {
+                type = true;
+                break;
+            }
+        }
+        return type;
+    }
+
+        // function to return true if token is an open or close parenthesis token
+    bool tokenTypeParen(const Ewoms::UDQTokenType& token) {
+        bool type = false;
+        std::vector <Ewoms::UDQTokenType> type_1 = {
+            Ewoms::UDQTokenType::open_paren,
+            Ewoms::UDQTokenType::close_paren,
+        };
+        for (const auto& tok_type : type_1) {
+            if (token == tok_type) {
+                type = true;
+                break;
+            }
+        }
+        return type;
+    }
+
+    // A function to return true if the token is an operator
+    bool operatorToken(const Ewoms::UDQTokenType& token) {
+        bool opTok = false;
+        if (Ewoms::UDQ::scalarFunc(token) ||
+            Ewoms::UDQ::elementalUnaryFunc(token) ||
+            Ewoms::UDQ::binaryFunc(token) ||
+            Ewoms::UDQ::setFunc(token)) {
+            opTok = true;
+        }
+        return opTok;
+    }
+
+        // function to return index number of last binary token not inside bracket that is ending the expression
+    int noOperators(const std::vector<Ewoms::UDQToken>& modTokens) {
+        int noOp = 0;
+        for (const auto& modToken : modTokens) {
+            if (operatorToken(modToken.type()) || tokenTypeParen(modToken.type())) {
+                noOp +=1;
+            }
+        }
+        return noOp;
+    }
+
+    // function to return the precedence of the current operator/function
+    int opFuncPrec(const Ewoms::UDQTokenType& token) {
+        int prec = 0;
+        if (tokenTypeFunc(token)) prec = 6;
+        if (Ewoms::UDQ::cmpFunc(token)) prec = 5;
+        if (tokenTypeBinaryPowOp(token)) prec = 4;
+        if (tokenTypeBinaryMulDivOp(token)) prec = 3;
+        if (tokenTypeBinaryAddSubOp(token)) prec = 2;
+        if (tokenTypeBinaryUnionOp(token)) prec = 1;
+        return prec;
+    }
+
+    struct substOuterParentheses {
+        std::vector<Ewoms::UDQToken> highestLevOperators;
+        std::map<std::size_t, std::vector<Ewoms::UDQToken>> substitutedTokens;
+        int noleadingOpenPar;
+        bool leadChangeSign;
+    };
+
+    // function to return
+    //      a vector of functions and operators at the highest level,
+    //      a map of substituted tokens,
+    //      the number of leading open_paren that bracket the whole expression,
+    //      a logical flag indicating whether there is a leading change of sign in the expression
+
+    substOuterParentheses substitute_outer_parenthesis(const std::vector<Ewoms::UDQToken>& modTokens, int noLeadOpenPar, bool leadChgSgn) {
+        std::map <std::size_t, std::vector<Ewoms::UDQToken>> substTok;
+        std::vector<Ewoms::UDQToken> highLevOp;
+        std::vector<std::size_t> startParen;
+        std::vector<std::size_t> endParen;
+        std::size_t level = 0;
+        std::size_t search_pos = 0;
+        std::size_t subS_max = 0;
+
+        while (search_pos < modTokens.size()) {
+            if (modTokens[search_pos].type() == Ewoms::UDQTokenType::open_paren  && level == 0) {
+                startParen.emplace_back(search_pos);
+                level +=1;
+            }
+            else if (modTokens[search_pos].type() == Ewoms::UDQTokenType::open_paren) {
+                level +=1;
+            }
+            else if (modTokens[search_pos].type() == Ewoms::UDQTokenType::close_paren && level == +1) {
+                endParen.emplace_back(search_pos);
+                level -=1;
+            }
+            else if (modTokens[search_pos].type() == Ewoms::UDQTokenType::close_paren) {
+                level -=1;
+            }
+            search_pos += 1;
+        }
+
+        //
+        //Store all the operators at the highest level
+        //include the ecl_expr tokens and replace the content of parentheses with a comp_expr
+        if (startParen.size() >= 1) {
+            if (startParen[0] > 0) {
+                //First store all tokens before the first start_paren
+                for (std::size_t i = 0; i < startParen[0]; i++) {
+                        highLevOp.emplace_back(modTokens[i]);
+                }
+            }
+
+            //
+            // Replace content of all parentheses at the highest level by an comp_expr
+            // store all tokens including () for all tokens inside a pair of ()
+            // also store the tokens between sets of () and at the end of an expression
+
+            std::string comp_expr;
+            for (std::size_t ind = 0; ind < startParen.size();  ind++) {
+                std::vector<Ewoms::UDQToken> substringToken;
+                for (std::size_t i = startParen[ind]; i < endParen[ind]+1; i++) {
+                    substringToken.emplace_back(modTokens[i]);
+                }
+                // store the content inside the parenthesis
+                std::pair<std::size_t, std::vector<Ewoms::UDQToken>> groupPair = std::make_pair(ind, substringToken);
+                substTok.insert(groupPair);
+
+                //
+                // make the vector of high level tokens
+                //
+                //first add ecl_expr instead of content of (...)
+
+                comp_expr = std::to_string(ind);
+                highLevOp.emplace_back(Ewoms::UDQToken(comp_expr, Ewoms::UDQTokenType::comp_expr));
+                //
+                // store all tokens between end_paren before and start_paren after current ()
+                subS_max = (ind == startParen.size()-1) ? modTokens.size() : startParen[ind+1];
+
+                if ((endParen[ind] + 1) < subS_max) {
+                    for (std::size_t i = endParen[ind] + 1; i < subS_max; i++) {
+                        highLevOp.emplace_back(modTokens[i]);
+                    }
+                }
+            }
+        } else {
+            //
+            // treat the case with no ()
+            for (std::size_t i = 0; i < modTokens.size(); i++) {
+                highLevOp.emplace_back(modTokens[i]);
+            }
+        }
+        //
+        // check if there is a leading minus-sign (change sign)
+        if ((modTokens[0].type() == Ewoms::UDQTokenType::binary_op_sub)) {
+            if (startParen.size() > 0) {
+                // if followed by start_paren linked to end_paren before end of data
+                // set flag and remove from operator list because it is considered as a highest precedence operator
+                // unless () go from token 2 two the end of expression
+                if ((startParen[0] == 1)  && (endParen[0] < modTokens.size()-1)) {
+                    leadChgSgn = true;
+                }
+            } else {
+                // set flag and remove from operator list
+                leadChgSgn = true;
+            }
+            if (leadChgSgn) {
+                // remove from operator list because it is considered as a highest precedence operator and is
+                // therefore not a normal "binary_op_sub" operator
+                std::vector<Ewoms::UDQToken> temp_high_lev_op(highLevOp.begin()+1, highLevOp.end());
+                highLevOp = temp_high_lev_op;
+            }
+        } else if (startParen.size() >= 1) {
+        //
+        // check for leading start_paren combined with end_paren at end of data
+            if ((startParen[0] == 0) && (endParen[0] == modTokens.size()-1)) {
+                //
+                // remove leading and trailing ()
+                const std::vector<Ewoms::UDQToken> modTokens_red(modTokens.begin()+1, modTokens.end()-1);
+                noLeadOpenPar +=1;
+                //
+                // recursive call to itself to re-interpret the token-input
+
+                substOuterParentheses substOpPar = substitute_outer_parenthesis(modTokens_red, noLeadOpenPar, leadChgSgn);
+                highLevOp = substOpPar.highestLevOperators;
+                substTok = substOpPar.substitutedTokens;
+                noLeadOpenPar = substOpPar.noleadingOpenPar;
+                leadChgSgn = substOpPar.leadChangeSign;
+            }
+        }
+        // interpretation of token input is completed return resulting object
+
+        return {
+            highLevOp,
+            substTok,
+            noLeadOpenPar,
+            leadChgSgn
+        };
+    }
+
+    // Categorize function in terms of which token-types are used in formula
+    //
+    // The define_type is (-) the location among a set of tokens of the "top" of the parse tree (AST - abstract syntax tree)
+    // i.e. the location of the lowest precedence operator relative to the total set of operators, functions and open-/close - parenthesis
+    int define_type(const std::vector<Ewoms::UDQToken>& tokens)
+    {
+        int def_type = 0;
+        int noLeadOpenPar = 0;
+        bool leadChgSgn = false;
+
+        //
+        // analyse the expression
+
+        substOuterParentheses expr = substitute_outer_parenthesis(tokens, noLeadOpenPar, leadChgSgn);
+
+        //
+        // loop over high level operators to find operator with lowest precedence and highest index
+
+        int curPrec  = 100;
+        int tmpPrec = 100;
+        std::size_t indLowestPrecOper = 0;
+        for (std::size_t ind = 0; ind < expr.highestLevOperators.size(); ind++) {
+            if ((expr.highestLevOperators[ind].type() != Ewoms::UDQTokenType::ecl_expr) &&
+                (expr.highestLevOperators[ind].type() != Ewoms::UDQTokenType::comp_expr) &&
+                (expr.highestLevOperators[ind].type() != Ewoms::UDQTokenType::number)) {
+                tmpPrec = opFuncPrec(expr.highestLevOperators[ind].type());
+                if (tmpPrec <= curPrec) {
+                    curPrec = tmpPrec;
+                    indLowestPrecOper = ind;
+                }
+            }
+        }
+        //
+        // if lowest precedence operator is the first token (and not equal to change sign)
+        // NOTE: also for the case with outer () removed
+        if ((!expr.leadChangeSign) && (indLowestPrecOper == 0)) {
+            // test if operator is a function (precedence = 6)
+            if ((curPrec == 6) || (expr.highestLevOperators[indLowestPrecOper].type() == Ewoms::UDQTokenType::binary_op_sub) ) {
+                def_type = -1;
+                def_type -= expr.noleadingOpenPar;
+            } else {
+                // def type is 1 when for all other situations (ecl-expression or number)
+                def_type = 1;
+            }
+        } else {
+            //
+            // treat cases which start either with (ecl_experessions, open-parenthes or leadChangeSign
+            def_type = (expr.leadChangeSign) ?  -1 : 0;
+            def_type -= expr.noleadingOpenPar;
+            // calculate position of lowest precedence operator
+            // account for leading change sign operator
+            for (std::size_t ind = 0; ind <= indLowestPrecOper; ind++) {
+                //
+                //count operators, including functions and parentheses (not original ecl_experessions)
+                if (operatorToken(expr.highestLevOperators[ind].type())) {
+                    // single operator - subtract one
+                    def_type -= 1;
+                } else if (expr.highestLevOperators[ind].type() == Ewoms::UDQTokenType::comp_expr) {
+                    // expression in parentheses -  add all operators
+                    std::size_t ind_ce = static_cast<std::size_t>(std::stoi(expr.highestLevOperators[ind].str()));
+                    auto indSubstTok = expr.substitutedTokens.find(ind_ce);
+                    if (indSubstTok != expr.substitutedTokens.end()) {
+                        auto& substTokVec = indSubstTok->second;
+                        //
+                        // count the number of operators & parenthes in this sub-expression
+                        def_type -= noOperators(substTokVec);
+                    } else {
+                        std::cout << "comp_expr index: " << ind_ce << std::endl;
+                        throw std::invalid_argument( "Invalid comp_expr index" );
+                    }
+                } else if ((expr.highestLevOperators[ind].type() != Ewoms::UDQTokenType::ecl_expr) &&
+                        (expr.highestLevOperators[ind].type() != Ewoms::UDQTokenType::number)) {
+                    // unknown token - write warning
+                    Ewoms::OpmLog::warning("define_type - unknown tokenType: " + expr.highestLevOperators[ind].str());
+                }
+            }
+        }
+        return def_type;
     }
 
     namespace iUdq {
@@ -107,12 +418,12 @@ namespace {
         {
             if (udq_input.is<Ewoms::UDQDefine>()) {
                 const auto& udq_define = udq_input.get<Ewoms::UDQDefine>();
-                const auto& tokens = udq_define.func_tokens();
+                const auto& tokens = udq_define.tokens();
                 iUdq[0] = 2;
                 iUdq[1] = define_type(tokens);
             } else {
                 iUdq[0] = 0;
-                iUdq[1] = -4;
+                iUdq[1] = 0;
             }
             iUdq[2] = udq_input.index.typed_insert_index;
         }
@@ -192,6 +503,7 @@ namespace {
         {
             int l_sstr = 8;
             int max_l_str = 128;
+            std::string temp_str;
             // write out the input formula if key is a DEFINE udq
             if (input.is<Ewoms::UDQDefine>()) {
                 const auto& udq_define = input.get<Ewoms::UDQDefine>();
@@ -203,7 +515,17 @@ namespace {
                 }
                 else {
                     for (int i = 0; i < n_sstr; i++) {
-                        zUdl[i] = z_data.substr(i*l_sstr, l_sstr);
+                        if (i == 0) {
+                            temp_str = z_data.substr(i*l_sstr, l_sstr);
+                            //if first character is a minus sign, change to ~
+                            if (temp_str.compare(0,1,"-") == 0) {
+                                temp_str.replace(0,1,"~");
+                            }
+                            zUdl[i] = temp_str;
+                        }
+                        else {
+                            zUdl[i] = z_data.substr(i*l_sstr, l_sstr);
+                        }
                     }
                     //add remainder of last non-zero string
                     if ((z_data.size() % l_sstr) > 0)

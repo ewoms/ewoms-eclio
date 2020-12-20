@@ -28,8 +28,7 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqfunctiontable.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqparams.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
-
-#include "udqtoken.hh"
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqtoken.hh>
 
 namespace Ewoms {
 

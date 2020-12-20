@@ -414,6 +414,9 @@ IPCG::IPCG( ) : ParserKeyword("IPCG")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "ENDSCALE",
+  });
   clearDeckNames();
   addDeckName("IPCG");
   {
@@ -435,6 +438,9 @@ IPCW::IPCW( ) : ParserKeyword("IPCW")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "ENDSCALE",
+  });
   clearDeckNames();
   addDeckName("IPCW");
   {

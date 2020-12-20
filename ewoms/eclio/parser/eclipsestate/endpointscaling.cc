@@ -18,9 +18,81 @@
 */
 #include "config.h"
 
-#include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/eclipsestate/endpointscaling.hh>
+
+#include <ewoms/eclio/parser/deck/deck.hh>
+
+#include <ewoms/eclio/parser/parserkeywords/e.hh>
+#include <ewoms/eclio/parser/parserkeywords/s.hh>
+
 #include <ewoms/common/string.hh>
+
+#include <initializer_list>
+#include <stdexcept>
+#include <string>
+
+namespace {
+    bool hasScaling(const Ewoms::Deck&                          deck,
+                    const char*                               suffix,
+                    const std::initializer_list<std::string>& base)
+    {
+        for (const auto& kw : base) {
+            for (const auto* p : {"", "I"}) {
+                if (deck.hasKeyword(p + kw + suffix)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    bool hasScaling(const Ewoms::Deck&                          deck,
+                    const std::initializer_list<std::string>& base)
+    {
+        const auto direction = std::initializer_list<const char*> {
+            "", "X-", "X", "Y-", "Y", "Z-", "Z"
+        };
+
+        for (const auto* suffix : direction) {
+            if (hasScaling(deck, suffix, base)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool hasHorzScaling(const Ewoms::Deck& deck)
+    {
+        return hasScaling(deck, {
+            Ewoms::ParserKeywords::SGL  ::keywordName,
+            Ewoms::ParserKeywords::SGCR ::keywordName,
+            Ewoms::ParserKeywords::SGU  ::keywordName,
+            Ewoms::ParserKeywords::SOGCR::keywordName,
+            Ewoms::ParserKeywords::SOWCR::keywordName,
+            Ewoms::ParserKeywords::SWL  ::keywordName,
+            Ewoms::ParserKeywords::SWCR ::keywordName,
+            Ewoms::ParserKeywords::SWU  ::keywordName,
+        })
+        || hasScaling(deck, "", {
+            Ewoms::ParserKeywords::SGLPC::keywordName,
+            Ewoms::ParserKeywords::SWLPC::keywordName,
+        });
+    }
+
+    bool hasVertScaling(const Ewoms::Deck& deck)
+    {
+        return hasScaling(deck, {
+            std::string { "KRG"   },
+            std::string { "KRGR"  },
+            std::string { "KRORG" },
+            std::string { "KRORW" },
+            std::string { "KRW"   },
+            std::string { "KRWR"  },
+        });
+    }
+}
 
 namespace Ewoms {
 
@@ -67,21 +139,26 @@ bool EndpointScaling::operator==(const EndpointScaling& data) const {
 namespace {
 
 bool threepoint_scaling( const Deck& deck ) {
-    if( !deck.hasKeyword( "SCALECRS" ) ) return false;
+    using ScaleCRS = ParserKeywords::SCALECRS;
+
+    if (! deck.hasKeyword<ScaleCRS>())
+        return false;
 
     /*
-    * the manual says that Y and N are acceptable values for "YES" and "NO", so
-    * it's *VERY* likely that only the first character is checked. We preserve
-    * this behaviour
-    */
+     * the manual says that Y and N are acceptable values for "YES" and "NO", so
+     * it's *VERY* likely that only the first character is checked. We preserve
+     * this behaviour
+     */
     const auto value = std::toupper(
-                        deck.getKeyword( "SCALECRS" )
-                            .getRecord( 0 )
-                            .getItem( "VALUE" )
-                            .get< std::string >( 0 ).front() );
+        deck.getKeyword<ScaleCRS>()
+            .getRecord(0)
+            .getItem<ScaleCRS::VALUE>()
+            .get<std::string>(0).front());
 
-    if( value != 'Y' && value != 'N' )
-        throw std::invalid_argument( "SCALECRS takes 'YES' or 'NO'" );
+    if (value != 'Y' && value != 'N')
+        throw std::invalid_argument {
+            ScaleCRS::keywordName + " takes 'YES' or 'NO'"
+        };
 
     return value == 'Y';
 }
@@ -128,13 +205,19 @@ bool endscale_revers( const DeckKeyword& kw ) {
 }
 
 EndpointScaling::EndpointScaling( const Deck& deck ) {
-    if( deck.hasKeyword( "ENDSCALE" ) || deck.hasKeyword("SWATINIT")) {
+    const auto has_horz_scaling = hasHorzScaling(deck);
+    const auto has_vert_scaling = hasVertScaling(deck);
+    const auto has_endscale     = deck.hasKeyword<ParserKeywords::ENDSCALE>();
+
+    if (has_horz_scaling || has_vert_scaling || has_endscale ||
+        deck.hasKeyword<ParserKeywords::SWATINIT>())
+    {
         const bool threep_ = threepoint_scaling( deck );
         bool direct_ = false;
         bool reversible_ = true;
 
-        if (deck.hasKeyword("ENDSCALE")) {
-            const auto& endscale = deck.getKeyword( "ENDSCALE" );
+        if (has_endscale) {
+            const auto& endscale = deck.getKeyword<ParserKeywords::ENDSCALE>();
             direct_ = !endscale_nodir( endscale );
             reversible_ = endscale_revers( endscale );
         }

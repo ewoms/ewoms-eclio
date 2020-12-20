@@ -29,13 +29,11 @@
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqastnode.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqdefine.hh>
 #include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqenums.hh>
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqtoken.hh>
 #include <ewoms/eclio/opmlog/opmlog.hh>
 
 #include <ewoms/eclio/parser/rawdeck/rawconsts.hh>
-#include "udqtoken.hh"
 #include "udqparser.hh"
-
-#include <ewoms/common/optional.hh>
 
 namespace Ewoms {
 
@@ -193,8 +191,8 @@ UDQDefine::UDQDefine(const UDQParams& udq_params,
             }
         }
     }
-    std::vector<UDQToken> tokens = make_tokens(string_tokens);
-    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, tokens, parseContext, errors) );
+    this->m_tokens = make_tokens(string_tokens);
+    this->ast = std::make_shared<UDQASTNode>( UDQParser::parse(udq_params, this->m_var_type, this->m_keyword, this->m_location, this->m_tokens, parseContext, errors) );
     this->string_data = "";
     for (std::size_t index = 0; index < deck_data.size(); index++) {
         this->string_data += deck_data[index];
@@ -328,6 +326,10 @@ std::set<UDQTokenType> UDQDefine::func_tokens() const {
 
 std::pair<UDQUpdate, std::size_t> UDQDefine::status() const {
     return std::make_pair(this->m_update_status, this->m_report_step);
+}
+
+const std::vector<UDQToken> UDQDefine::tokens() const {
+    return this->m_tokens;
 }
 
 bool UDQDefine::operator==(const UDQDefine& data) const {

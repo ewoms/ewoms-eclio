@@ -20,7 +20,7 @@
 
 #include <numeric>
 
-#include "udqtoken.hh"
+#include <ewoms/eclio/parser/eclipsestate/schedule/udq/udqtoken.hh>
 
 namespace Ewoms {
 

@@ -49,6 +49,8 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
             HistReqWCtrl = 49, // Well's requested control mode from
                                // simulation deck (WCONHIST, WCONINJH)
 
+            LiftOpt = 53, // Well's lift gas injection to be calculated by optimisation or not
+
             MsWID  = 70, // Multisegment well ID
                          //   Value 0 for regular wells
                          //   Value 1..#MS wells for MS wells
@@ -166,6 +168,11 @@ namespace Ewoms { namespace RestartIO { namespace Helpers { namespace VectorItem
 
             HistBHPTarget     = 55, // Well's historical/observed bottom
                                     // hole pressure target/limit
+
+            LOmaxRate         = 56, // Well's maximum lift gas rate
+            LOweightFac       = 57, // Well's wighting factor for preferential allocation of lift gas
+            LOminRate         = 67, // Well's mimimum lift gas rate
+
         };
     } // SWell
 

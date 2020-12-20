@@ -18,18 +18,94 @@
 */
 #include "config.h"
 
-#include <ostream>
-#include <type_traits>
+#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 
 #include <ewoms/eclio/parser/deck/deck.hh>
 #include <ewoms/eclio/parser/deck/decksection.hh>
+
+#include <ewoms/eclio/parser/parserkeywords/b.hh>
 #include <ewoms/eclio/parser/parserkeywords/c.hh>
+#include <ewoms/eclio/parser/parserkeywords/f.hh>
+#include <ewoms/eclio/parser/parserkeywords/g.hh>
 #include <ewoms/eclio/parser/parserkeywords/n.hh>
+#include <ewoms/eclio/parser/parserkeywords/o.hh>
+#include <ewoms/eclio/parser/parserkeywords/p.hh>
 #include <ewoms/eclio/parser/parserkeywords/s.hh>
 #include <ewoms/eclio/parser/parserkeywords/t.hh>
 #include <ewoms/eclio/parser/parserkeywords/w.hh>
-#include <ewoms/eclio/parser/eclipsestate/runspec.hh>
+
 #include <ewoms/eclio/opmlog/opmlog.hh>
+
+#include <ostream>
+#include <stdexcept>
+#include <type_traits>
+
+namespace {
+    Ewoms::Phases inferActivePhases(const Ewoms::Deck& deck)
+    {
+        return {
+            deck.hasKeyword<Ewoms::ParserKeywords::OIL>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::GAS>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::WATER>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::SOLVENT>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::POLYMER>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::THERMAL>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::POLYMW>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::FOAM>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::BRINE>(),
+            deck.hasKeyword<Ewoms::ParserKeywords::PVTSOL>()
+        };
+    }
+
+    Ewoms::SatFuncControls::ThreePhaseOilKrModel
+    inferThreePhaseOilKrModel(const Ewoms::Deck& deck)
+    {
+        using KroModel = Ewoms::SatFuncControls::ThreePhaseOilKrModel;
+
+        if (deck.hasKeyword<Ewoms::ParserKeywords::STONE1>())
+            return KroModel::Stone1;
+
+        if (deck.hasKeyword<Ewoms::ParserKeywords::STONE>() ||
+            deck.hasKeyword<Ewoms::ParserKeywords::STONE2>())
+            return KroModel::Stone2;
+
+        return KroModel::Default;
+    }
+
+    Ewoms::SatFuncControls::KeywordFamily
+    inferKeywordFamily(const Ewoms::Deck& deck)
+    {
+        const auto phases = inferActivePhases(deck);
+        const auto wat    = phases.active(Ewoms::Phase::WATER);
+        const auto oil    = phases.active(Ewoms::Phase::OIL);
+        const auto gas    = phases.active(Ewoms::Phase::GAS);
+
+        const auto threeP = gas && oil && wat;
+        const auto twoP = (!gas && oil && wat) || (gas && oil && !wat);
+
+        const auto family1 =       // SGOF/SLGOF and/or SWOF
+            (gas && (deck.hasKeyword<Ewoms::ParserKeywords::SGOF>() ||
+                     deck.hasKeyword<Ewoms::ParserKeywords::SLGOF>())) ||
+            (wat && deck.hasKeyword<Ewoms::ParserKeywords::SWOF>());
+
+        // note: we allow for SOF2 to be part of family1 for threeP +
+        // solvent simulations.
+
+        const auto family2 =      // SGFN, SOF{2,3}, SWFN
+            (gas && deck.hasKeyword<Ewoms::ParserKeywords::SGFN>()) ||
+            (oil && ((threeP && deck.hasKeyword<Ewoms::ParserKeywords::SOF3>()) ||
+                     (twoP && deck.hasKeyword<Ewoms::ParserKeywords::SOF2>()))) ||
+            (wat && deck.hasKeyword<Ewoms::ParserKeywords::SWFN>());
+
+        if (family1)
+            return Ewoms::SatFuncControls::KeywordFamily::Family_I;
+
+        if (family2)
+            return Ewoms::SatFuncControls::KeywordFamily::Family_II;
+
+        return Ewoms::SatFuncControls::KeywordFamily::Undefined;
+    }
+}
 
 namespace Ewoms {
 
@@ -270,54 +346,43 @@ SatFuncControls::SatFuncControls()
 SatFuncControls::SatFuncControls(const Deck& deck)
     : SatFuncControls()
 {
-    using Kw = ParserKeywords::TOLCRIT;
+    using TolCrit = ParserKeywords::TOLCRIT;
 
-    if (deck.hasKeyword<Kw>()) {
+    if (deck.hasKeyword<TolCrit>()) {
         // SIDouble doesn't perform any unit conversions here since
         // TOLCRIT is a pure scalar (Dimension = 1).
-        this->tolcrit = deck.getKeyword<Kw>(0).getRecord(0)
-            .getItem<Kw::VALUE>().getSIDouble(0);
+        this->tolcrit = deck.getKeyword<TolCrit>(0).getRecord(0)
+            .getItem<TolCrit::VALUE>().getSIDouble(0);
     }
 
-    if (deck.hasKeyword<ParserKeywords::STONE1>())
-        krmodel = ThreePhaseOilKrModel::Stone1;
-    else if (deck.hasKeyword<ParserKeywords::STONE>() ||
-             deck.hasKeyword<ParserKeywords::STONE2>())
-        krmodel = ThreePhaseOilKrModel::Stone2;
+    this->krmodel = inferThreePhaseOilKrModel(deck);
+    this->satfunc_family = inferKeywordFamily(deck);
 }
 
 SatFuncControls::SatFuncControls(const double tolcritArg,
-                                 ThreePhaseOilKrModel model)
+                                 const ThreePhaseOilKrModel model,
+                                 const KeywordFamily family)
     : tolcrit(tolcritArg)
     , krmodel(model)
+    , satfunc_family(family)
 {}
 
 SatFuncControls SatFuncControls::serializeObject()
 {
-    SatFuncControls result;
-    result.tolcrit = 1.0;
-    result.krmodel = ThreePhaseOilKrModel::Stone2;
-
-    return result;
+    return SatFuncControls {
+        1.0, ThreePhaseOilKrModel::Stone2, KeywordFamily::Family_I
+    };
 }
 
 bool SatFuncControls::operator==(const SatFuncControls& rhs) const
 {
-    return this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold() &&
-           this->krModel() == rhs.krModel();
+    return (this->minimumRelpermMobilityThreshold() == rhs.minimumRelpermMobilityThreshold())
+        && (this->krModel() == rhs.krModel())
+        && (this->family() == rhs.family());
 }
 
 Runspec::Runspec( const Deck& deck ) :
-    active_phases( Phases( deck.hasKeyword( "OIL" ),
-                           deck.hasKeyword( "GAS" ),
-                           deck.hasKeyword( "WATER" ),
-                           deck.hasKeyword( "SOLVENT" ),
-                           deck.hasKeyword( "POLYMER" ),
-                           deck.hasKeyword( "THERMAL" ),
-                           deck.hasKeyword( "POLYMW"  ),
-                           deck.hasKeyword( "FOAM" ),
-                           deck.hasKeyword( "BRINE" ),
-                           deck.hasKeyword( "PVTSOL" ) ) ),
+    active_phases( inferActivePhases(deck) ),
     m_tabdims( deck ),
     endscale( deck ),
     welldims( deck ),

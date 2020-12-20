@@ -26,6 +26,8 @@
 #include <ewoms/eclio/parser/eclipsestate/runspec.hh>
 #include <ewoms/eclio/parser/parser.hh>
 
+#include <stdexcept>
+
 using namespace Ewoms;
 
 BOOST_AUTO_TEST_CASE(PhaseFromString) {
@@ -124,6 +126,72 @@ BOOST_AUTO_TEST_CASE( EndpointScalingWithoutENDSCALE ) {
     BOOST_CHECK( !endscale.nondirectional() );
     BOOST_CHECK( !endscale.reversible() );
     BOOST_CHECK( !endscale.irreversible() );
+}
+
+BOOST_AUTO_TEST_CASE ( EndpointScalingWithoutENDSCALE_WithEPSProps ) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3/
+
+PROPS
+SWL
+300*0.125 /
+END
+)");
+
+    const auto endscale = Runspec { deck }.endpointScaling();
+
+    BOOST_CHECK_MESSAGE( static_cast<bool>(endscale),
+                         "End-point scaling must be activated by SWL keyword");
+
+    BOOST_CHECK_MESSAGE( !endscale.directional(),
+                         "Directional end-point scaling must NOT "
+                         "be activated by SWL keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.nondirectional(),
+                         "Non-directional end-point scaling must "
+                         "be activated by SWL keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.reversible(),
+                         "Reversible nend-point scaling must "
+                         "be activated by SWL keyword" );
+
+    BOOST_CHECK_MESSAGE( !endscale.irreversible(),
+                         "Irreversible end-point scaling must NOT "
+                         "be activated by SWL keyword" );
+}
+
+BOOST_AUTO_TEST_CASE ( EndpointScalingWithoutENDSCALE_WithVertProps ) {
+    const auto deck = Parser{}.parseString(R"(RUNSPEC
+DIMENS
+10 10 3/
+
+PROPS
+KRORW
+300*0.25 /
+END
+)");
+
+    const auto endscale = Runspec { deck }.endpointScaling();
+
+    BOOST_CHECK_MESSAGE( static_cast<bool>(endscale),
+                         "End-point scaling must be activated by KRORW keyword");
+
+    BOOST_CHECK_MESSAGE( !endscale.directional(),
+                         "Directional end-point scaling must NOT "
+                         "be activated by KRORW keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.nondirectional(),
+                         "Non-directional end-point scaling must "
+                         "be activated by KRORW keyword" );
+
+    BOOST_CHECK_MESSAGE( endscale.reversible(),
+                         "Reversible nend-point scaling must "
+                         "be activated by KRORW keyword" );
+
+    BOOST_CHECK_MESSAGE( !endscale.irreversible(),
+                         "Irreversible end-point scaling must NOT "
+                         "be activated by KRORW keyword" );
 }
 
 BOOST_AUTO_TEST_CASE( EndpointScalingDefaulted ) {
@@ -475,6 +543,181 @@ BOOST_AUTO_TEST_CASE( SWATINIT ) {
 
 }
 
+BOOST_AUTO_TEST_CASE(SatFunc_Family)
+{
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+
+TABDIMS
+/
+
+PROPS
+
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Undefined,
+                            "SatFuncControl Deck-constructor must infer Undefined when Tables missing");
+    }
+
+    {
+        const auto sfctrl = ::Ewoms::SatFuncControls{};
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Undefined,
+                            "Default-constructed SatFuncControl must have Undefined keyword family");
+    }
+
+    {
+        const auto sfctrl = ::Ewoms::SatFuncControls{ 5.0e-7, ::Ewoms::SatFuncControls::ThreePhaseOilKrModel::Default, ::Ewoms::SatFuncControls::KeywordFamily::Family_II };
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Family_II,
+                            "SatFuncControl constructor must assign keyword family");
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+0 0 1 0
+1 1 0 0 /
+
+SGOF
+0 0 1 0
+1 1 0 0 /
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Family_I,
+                            "SatFuncControl Deck-constructor must infer Family I from SWOF/SGOF");
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+0 0 1 0
+1 1 0 0 /
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Family_I,
+                            "SatFuncControl Deck-constructor must infer Family I from SWOF");
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWOF
+0 0 1 0
+1 1 0 0 /
+
+SLGOF
+0 0 1 0
+1 1 0 0 /
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Family_I,
+                            "SatFuncControl Deck-constructor must infer Family I from SWOF/SLGOF");
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+WATER
+
+TABDIMS
+/
+
+PROPS
+
+SWFN
+0 0 0
+1 1 0 /
+
+SGFN
+0 0 0
+1 1 0 /
+
+SOF3
+0 0 0
+1 1 1 /
+
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Family_II,
+                            "SatFuncControl Deck-constructor must infer Family II from SWFN/SGFN/SOF3");
+    }
+
+    {
+        const auto deck = ::Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+GAS
+
+TABDIMS
+/
+
+PROPS
+
+SGFN
+0 0 0
+1 1 0 /
+
+SOF2
+0 0
+1 1 /
+
+END
+)");
+
+        const auto rspec = ::Ewoms::Runspec{deck};
+        const auto sfctrl = rspec.saturationFunctionControls();
+
+        BOOST_CHECK_MESSAGE(sfctrl.family() == ::Ewoms::SatFuncControls::KeywordFamily::Family_II,
+                            "SatFuncControl Deck-constructor must infer Family II from SGFN/SOF2");
+    }
+}
+
 BOOST_AUTO_TEST_CASE(TolCrit)
 {
     {
@@ -485,7 +728,7 @@ BOOST_AUTO_TEST_CASE(TolCrit)
     }
 
     {
-        const auto sfctrl = ::Ewoms::SatFuncControls{ 5.0e-7, ::Ewoms::SatFuncControls::ThreePhaseOilKrModel::Default };
+        const auto sfctrl = ::Ewoms::SatFuncControls{ 5.0e-7, ::Ewoms::SatFuncControls::ThreePhaseOilKrModel::Default, ::Ewoms::SatFuncControls::KeywordFamily::Family_II };
         BOOST_CHECK_CLOSE(sfctrl.minimumRelpermMobilityThreshold(), 5.0e-7, 1.0e-10);
         BOOST_CHECK_MESSAGE(!(sfctrl == ::Ewoms::SatFuncControls{}),
                             "Default-constructed SatFuncControl must NOT equal non-default");

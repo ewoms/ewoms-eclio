@@ -641,6 +641,9 @@ SGCR::SGCR( ) : ParserKeyword("SGCR")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "GAS",
+  });
   clearDeckNames();
   addDeckName("SGCR");
   {
@@ -723,6 +726,9 @@ SGFN::SGFN( ) : ParserKeyword("SGFN")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "GAS",
+  });
   clearDeckNames();
   addDeckName("SGFN");
   {
@@ -746,6 +752,9 @@ SGL::SGL( ) : ParserKeyword("SGL")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "GAS",
+  });
   clearDeckNames();
   addDeckName("SGL");
   {
@@ -767,6 +776,9 @@ SGLPC::SGLPC( ) : ParserKeyword("SGLPC")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "GAS",
+  });
   clearDeckNames();
   addDeckName("SGLPC");
   {
@@ -789,6 +801,13 @@ SGOF::SGOF( ) : ParserKeyword("SGOF")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setProhibitedKeywords({
+    "SLGOF",
+  });
+  setRequiredKeywords({
+    "GAS",
+    "OIL",
+  });
   clearDeckNames();
   addDeckName("SGOF");
   {
@@ -813,6 +832,9 @@ SGU::SGU( ) : ParserKeyword("SGU")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "GAS",
+  });
   clearDeckNames();
   addDeckName("SGU");
   {
@@ -1304,6 +1326,12 @@ SLGOF::SLGOF( ) : ParserKeyword("SLGOF")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setProhibitedKeywords({
+    "SGOF",
+  });
+  setRequiredKeywords({
+    "GAS",
+  });
   clearDeckNames();
   addDeckName("SLGOF");
   {
@@ -1430,6 +1458,9 @@ SOF2::SOF2( ) : ParserKeyword("SOF2")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "OIL",
+  });
   clearDeckNames();
   addDeckName("SOF2");
   {
@@ -1453,6 +1484,11 @@ SOF3::SOF3( ) : ParserKeyword("SOF3")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "OIL",
+    "GAS",
+    "WATER",
+  });
   clearDeckNames();
   addDeckName("SOF3");
   {
@@ -1513,6 +1549,11 @@ SOGCR::SOGCR( ) : ParserKeyword("SOGCR")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "GAS",
+    "OIL",
+    "ENDSCALE",
+  });
   clearDeckNames();
   addDeckName("SOGCR");
   {
@@ -1744,6 +1785,11 @@ SOWCR::SOWCR( ) : ParserKeyword("SOWCR")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "OIL",
+    "WATER",
+    "ENDSCALE",
+  });
   clearDeckNames();
   addDeckName("SOWCR");
   {
@@ -2668,6 +2714,9 @@ SWFN::SWFN( ) : ParserKeyword("SWFN")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "WATER",
+  });
   clearDeckNames();
   addDeckName("SWFN");
   {
@@ -2868,6 +2917,10 @@ SWOF::SWOF( ) : ParserKeyword("SWOF")
   setSizeType(OTHER_KEYWORD_IN_DECK);
   initSizeKeyword("TABDIMS","NTSFUN",0);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "OIL",
+    "WATER",
+  });
   clearDeckNames();
   addDeckName("SWOF");
   {

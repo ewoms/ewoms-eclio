@@ -58,76 +58,94 @@ using namespace Ewoms;
 
 namespace {
 
-Ewoms::Deck createSingleRecordDeck() {
-    const char *deckData =
-        "TABDIMS\n"
-        " 2 /\n"
-        "\n"
-        "SWOF\n"
-        " 1 2 3 4\n"
-        " 5 6 7 8 /\n"
-        " 9 10 11 12 /\n";
+Ewoms::Deck createSingleRecordDeck()
+{
+    return Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
 
-    Ewoms::Parser parser;
-    return parser.parseString(deckData);
+TABDIMS
+ 2 /
+
+PROPS
+SWOF
+ 1 2 3 4
+ 5 6 7 8 /
+ 9 10 11 12 /
+
+END
+)");
 }
 
-Ewoms::Deck createSingleRecordDeckWithVd() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "ENDSCALE\n"
-        "2* 1 2 /\n"
-        "PROPS\n"
-        "TABDIMS\n"
-        " 2 /\n"
-        "\n"
-        "SWFN\n"
-        "0.22 .0   7.0 \n"
-        "0.3  .0   4.0 \n"
-        "0.5  .24  2.5 \n"
-        "0.8  .65  1.0 \n"
-        "0.9  .83  .5  \n"
-        "1.0  1.00 .0 /\n"
-        "/\n"
-        "IMPTVD\n"
-        "3000.0 6*0.1 0.31 1*0.1\n"
-        "9000.0 6*0.1 0.32 1*0.1/\n"
-        "ENPTVD\n"
-        "3000.0 0.20 0.20 1.0 0.0 0.04 1.0 0.18 0.22\n"
-        "9000.0 0.22 0.22 1.0 0.0 0.04 1.0 0.18 0.22 /";
+Ewoms::Deck createSingleRecordDeckWithVd()
+{
+    return Ewoms::Parser{}.parseString(R"(RUNSPEC
+WATER
 
-    Ewoms::Parser parser;
-    return parser.parseString(deckData);
+TABDIMS
+ 2 /
+
+ENDSCALE
+2* 1 2 /
+
+PROPS
+
+SWFN
+0.22 .0   7.0
+0.3  .0   4.0
+0.5  .24  2.5
+0.8  .65  1.0
+0.9  .83   .5
+1.0  1.00  .0 /
+/
+
+IMPTVD
+3000.0 6*0.1 0.31 1*0.1
+9000.0 6*0.1 0.32 1*0.1/
+
+ENPTVD
+3000.0 0.20 0.20 1.0 0.0 0.04 1.0 0.18 0.22
+9000.0 0.22 0.22 1.0 0.0 0.04 1.0 0.18 0.22 /
+
+END
+)");
 }
 
-Ewoms::Deck createSingleRecordDeckWithJFunc() {
-    const char *deckData =
-        "RUNSPEC\n"
-        "ENDSCALE\n"
-        "2* 1 2 /\n"
-        "PROPS\n"
-        "JFUNC\n"
-        "  WATER 22.0 /\n"
-        "TABDIMS\n"
-        " 2 /\n"
-        "\n"
-        "SWFN\n"
-        "0.22 .0   7.0 \n"
-        "0.3  .0   4.0 \n"
-        "0.5  .24  2.5 \n"
-        "0.8  .65  1.0 \n"
-        "0.9  .83  .5  \n"
-        "1.0  1.00 .0 /\n"
-        "/\n"
-        "IMPTVD\n"
-        "3000.0 6*0.1 0.31 1*0.1\n"
-        "9000.0 6*0.1 0.32 1*0.1/\n"
-        "ENPTVD\n"
-        "3000.0 0.20 0.20 1.0 0.0 0.04 1.0 0.18 0.22\n"
-        "9000.0 0.22 0.22 1.0 0.0 0.04 1.0 0.18 0.22 /";
+Ewoms::Deck createSingleRecordDeckWithJFunc()
+{
+    return Ewoms::Parser{}.parseString(R"(RUNSPEC
+WATER
 
-    Ewoms::Parser parser;
-    return parser.parseString(deckData);
+TABDIMS
+ 2 /
+
+ENDSCALE
+2* 1 2 /
+
+PROPS
+
+JFUNC
+  WATER 22.0 /
+
+SWFN
+0.22 .0   7.0
+0.3  .0   4.0
+0.5  .24  2.5
+0.8  .65  1.0
+0.9  .83   .5
+1.0  1.00  .0 /
+/
+
+IMPTVD
+3000.0 6*0.1 0.31 1*0.1
+9000.0 6*0.1 0.32 1*0.1/
+
+ENPTVD
+3000.0 0.20 0.20 1.0 0.0 0.04 1.0 0.18 0.22
+9000.0 0.22 0.22 1.0 0.0 0.04 1.0 0.18 0.22 /
+
+END
+)");
 }
 
 Ewoms::Deck createSingleRecordDeckWithJFuncBoth() {
@@ -168,7 +186,7 @@ Ewoms::Deck createSingleRecordDeckWithJFuncBrokenDirection() {
 
 /// used in BOOST_CHECK_CLOSE
 static float epsilon() {
-    return 0.00001;
+    return 0.00001f;
 }
 }
 
@@ -231,19 +249,24 @@ BOOST_AUTO_TEST_CASE( CreateTablesWithJFunc ) {
 /*****************************************************************/
 
 BOOST_AUTO_TEST_CASE(SwofTable_Tests) {
-    const char *deckData =
-        "TABDIMS\n"
-        "2 /\n"
-        "\n"
-        "SWOF\n"
-        " 1 2 3 4\n"
-        " 5 6 7 8/\n"
-        "  9 10 11 12\n"
-        " 13 14 15 16\n"
-        " 17 18 19 20/\n";
+    auto deck = Ewoms::Parser{}.parseString(R"(RUNSPEC
+OIL
+WATER
 
-    Ewoms::Parser parser;
-    auto deck = parser.parseString(deckData);
+TABDIMS
+2 /
+
+PROPS
+
+SWOF
+  1 2 3 4
+  5 6 7 8/
+  9 10 11 12
+ 13 14 15 16
+ 17 18 19 20/
+
+END
+)");
 
     Ewoms::SwofTable swof1Table(deck.getKeyword("SWOF").getRecord(0).getItem(0), false);
     Ewoms::SwofTable swof2Table(deck.getKeyword("SWOF").getRecord(1).getItem(0), false);
@@ -369,19 +392,22 @@ BOOST_AUTO_TEST_CASE(SgwfnTable_Tests) {
 }
 
 BOOST_AUTO_TEST_CASE(SgofTable_Tests) {
-    const char *deckData =
-        "TABDIMS\n"
-        "2 /\n"
-        "\n"
-        "SGOF\n"
-        " 1 2 3 4\n"
-        " 5 6 7 8/\n"
-        "  9 10 11 12\n"
-        " 13 14 15 16\n"
-        " 17 18 19 20/\n";
+    const auto deck = Ewoms::Parser{}.parseString(R"(RUNSPEC
+GAS
+OIL
 
-    Ewoms::Parser parser;
-    auto deck = parser.parseString(deckData);
+TABDIMS
+2 /
+
+SGOF
+  1 2 3 4
+  5 6 7 8/
+  9 10 11 12
+ 13 14 15 16
+ 17 18 19 20/
+
+END
+)");
 
     Ewoms::SgofTable sgof1Table(deck.getKeyword("SGOF").getRecord(0).getItem(0), false);
     Ewoms::SgofTable sgof2Table(deck.getKeyword("SGOF").getRecord(1).getItem(0), false);

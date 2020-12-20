@@ -327,9 +327,9 @@ BOOST_AUTO_TEST_CASE(lgr_1) {
     lgr2.getCellCorners({4, 1, 0}, X, Y, Z);
 
     for (size_t n = 0; n < 8; n++){
-        BOOST_CHECK_EQUAL(abs(lgr2_X_4_1_0[n]- X[n]) < 1e-3, true);
-        BOOST_CHECK_EQUAL(abs(lgr2_Y_4_1_0[n]- Y[n]) < 1e-3, true);
-        BOOST_CHECK_EQUAL(abs(lgr2_Z_4_1_0[n]- Z[n]) < 1e-3, true);
+        BOOST_CHECK_EQUAL(fabs(lgr2_X_4_1_0[n]- X[n]) < 1e-3, true);
+        BOOST_CHECK_EQUAL(fabs(lgr2_Y_4_1_0[n]- Y[n]) < 1e-3, true);
+        BOOST_CHECK_EQUAL(fabs(lgr2_Z_4_1_0[n]- Z[n]) < 1e-3, true);
     }
 
     auto hostcells_ijk = lgr1.hostCellsIJK();

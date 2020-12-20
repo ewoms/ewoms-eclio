@@ -241,6 +241,9 @@ PCG::PCG( ) : ParserKeyword("PCG")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "ENDSCALE",
+  });
   clearDeckNames();
   addDeckName("PCG");
   {
@@ -284,6 +287,9 @@ PCW::PCW( ) : ParserKeyword("PCW")
 {
   setFixedSize( (size_t) 1);
   addValidSectionName("PROPS");
+  setRequiredKeywords({
+    "ENDSCALE",
+  });
   clearDeckNames();
   addDeckName("PCW");
   {
